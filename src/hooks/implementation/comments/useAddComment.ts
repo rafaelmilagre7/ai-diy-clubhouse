@@ -83,6 +83,7 @@ export const useAddComment = (solutionId: string, moduleId: string) => {
             .from('notifications')
             .insert({
               user_id: parentComment.user_id,
+              actor_id: authData.user.id,
               type: 'comment_replied',
               title: `${profile?.name || 'Alguém'} respondeu seu comentário`,
               message: `"${contentPreview}${content.trim().length > 100 ? '...' : ''}"`,

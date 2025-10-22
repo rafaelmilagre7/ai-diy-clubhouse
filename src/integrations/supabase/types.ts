@@ -3846,6 +3846,7 @@ export type Database = {
       notifications: {
         Row: {
           action_url: string | null
+          actor_id: string | null
           category: string | null
           created_at: string
           data: Json | null
@@ -3854,12 +3855,14 @@ export type Database = {
           is_read: boolean | null
           message: string
           priority: number | null
+          read_at: string | null
           title: string
           type: string
           user_id: string
         }
         Insert: {
           action_url?: string | null
+          actor_id?: string | null
           category?: string | null
           created_at?: string
           data?: Json | null
@@ -3868,12 +3871,14 @@ export type Database = {
           is_read?: boolean | null
           message: string
           priority?: number | null
+          read_at?: string | null
           title: string
           type: string
           user_id: string
         }
         Update: {
           action_url?: string | null
+          actor_id?: string | null
           category?: string | null
           created_at?: string
           data?: Json | null
@@ -3882,11 +3887,34 @@ export type Database = {
           is_read?: boolean | null
           message?: string
           priority?: number | null
+          read_at?: string | null
           title?: string
           type?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_networking_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       onboarding_abandonment_points: {
         Row: {

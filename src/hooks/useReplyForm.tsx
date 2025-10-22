@@ -97,6 +97,7 @@ export const useReplyForm = ({
             .from("notifications")
             .insert({
               user_id: topicData.user_id,
+              actor_id: user.id,
               type: "community_reply",
               title: `${profile?.name || "Alguém"} respondeu seu tópico`,
               message: `"${contentPreview}${content.trim().length > 100 ? "..." : ""}"`,

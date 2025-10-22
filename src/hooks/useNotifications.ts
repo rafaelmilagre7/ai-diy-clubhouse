@@ -9,6 +9,7 @@ import { useNotificationSound } from './useNotificationSound';
 export interface Notification {
   id: string;
   user_id: string;
+  actor_id?: string;
   type: string;
   title: string;
   message: string;
@@ -23,6 +24,14 @@ export interface Notification {
   read_at?: string;
   grouped_count?: number;
   grouped_ids?: string[];
+  actor?: {
+    id: string;
+    name: string;
+    avatar_url?: string;
+    company_name?: string;
+    current_position?: string;
+  };
+  grouped_actors?: any[];
 }
 
 // Função para agrupar notificações similares
@@ -38,9 +47,21 @@ const groupNotifications = (notifications: Notification[]): Notification[] => {
       existing.grouped_count = (existing.grouped_count || 1) + 1;
       existing.grouped_ids = [...(existing.grouped_ids || [existing.id]), notification.id];
       
+      // Agrupar avatares (máximo 3)
+      if (!existing.grouped_actors) existing.grouped_actors = [];
+      if (notification.actor && existing.grouped_actors.length < 3) {
+        // Evitar duplicatas
+        const actorExists = existing.grouped_actors.some((a: any) => a.id === notification.actor?.id);
+        if (!actorExists) {
+          existing.grouped_actors.push(notification.actor);
+        }
+      }
+      
       // Atualizar título para refletir o agrupamento
       if (notification.type === 'comment_liked') {
         existing.title = `${existing.grouped_count} pessoas curtiram seu comentário`;
+      } else if (notification.type === 'community_post_liked') {
+        existing.title = `${existing.grouped_count} pessoas curtiram sua resposta`;
       } else if (notification.type === 'comment_replied') {
         existing.title = `${existing.grouped_count} novas respostas no seu comentário`;
       } else if (notification.type === 'new_lesson') {
@@ -50,11 +71,17 @@ const groupNotifications = (notifications: Notification[]): Notification[] => {
       } else if (notification.type === 'community_mention') {
         existing.title = `${existing.grouped_count} novas menções`;
       }
+      
+      // Manter a data mais recente
+      if (new Date(notification.created_at) > new Date(existing.created_at)) {
+        existing.created_at = notification.created_at;
+      }
     } else {
       grouped.set(groupKey, {
         ...notification,
         grouped_count: 1,
-        grouped_ids: [notification.id]
+        grouped_ids: [notification.id],
+        grouped_actors: notification.actor ? [notification.actor] : []
       });
     }
   });
@@ -77,7 +104,12 @@ export const useNotifications = () => {
 
       const { data, error } = await supabase
         .from('notifications')
-        .select('*')
+        .select(`
+          *,
+          actor:profiles!notifications_actor_id_fkey(
+            id, name, avatar_url, company_name, current_position
+          )
+        `)
         .eq('user_id', user.id)
         .or('expires_at.is.null,expires_at.gt.now()')
         .order('created_at', { ascending: false })

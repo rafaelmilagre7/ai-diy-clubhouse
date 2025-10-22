@@ -56,6 +56,9 @@ import PublicProfile from '@/pages/PublicProfile';
 // Profile pages
 import NotificationSettingsPage from '@/pages/profile/NotificationSettingsPage';
 
+// Notifications page
+import Notifications from '@/pages/Notifications';
+
 // Função helper para criar rotas protegidas com MemberLayout
 const createProtectedRoute = (path: string, Component: React.ComponentType<any>) => ({
   path,
@@ -74,6 +77,7 @@ export const memberRoutes: RouteObject[] = [
   
   
   createProtectedRoute("/dashboard", Dashboard),
+  createProtectedRoute("/notifications", Notifications),
   
   createProtectedRoute("/solutions", Solutions),
   createProtectedRoute("/trilha-implementacao", ImplementationTrail),

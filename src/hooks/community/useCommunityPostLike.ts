@@ -83,6 +83,7 @@ export const useCommunityPostLike = (topicId: string) => {
               .from('notifications')
               .insert({
                 user_id: authorId,
+                actor_id: user.id,
                 type: 'community_post_liked',
                 title: `${profile?.name || 'Alguém'} curtiu sua resposta`,
                 message: `"${contentPreview}${postData.content.length > 100 ? '...' : ''}"`,

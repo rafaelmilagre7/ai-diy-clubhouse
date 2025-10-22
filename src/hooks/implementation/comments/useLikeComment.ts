@@ -62,6 +62,7 @@ export const useLikeComment = (solutionId: string, moduleId: string) => {
             .from('notifications')
             .insert({
               user_id: comment.user_id,
+              actor_id: userId,
               type: 'comment_liked',
               title: `${profile?.name || 'Alguém'} curtiu seu comentário`,
               message: `"${contentPreview}${comment.content.length > 100 ? '...' : ''}"`,

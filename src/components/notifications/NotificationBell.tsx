@@ -1,4 +1,4 @@
-import { Bell } from 'lucide-react';
+import { Bell, Check, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -14,6 +14,8 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
+import { NotificationAvatar } from './NotificationAvatar';
+import { NotificationAvatarStack } from './NotificationAvatarStack';
 
 export const NotificationBell = () => {
   const navigate = useNavigate();
@@ -22,6 +24,7 @@ export const NotificationBell = () => {
     unreadCount, 
     markAsRead, 
     markAllAsRead,
+    deleteNotification,
     isLoading 
   } = useNotifications();
 
@@ -191,13 +194,20 @@ export const NotificationBell = () => {
                 onClick={() => handleNotificationClick(notification)}
                 className={cn(
                   "flex items-start gap-3 p-4 cursor-pointer transition-all duration-fast",
-                  "border-b border-border/50 hover:bg-surface-elevated/70",
+                  "border-b border-border/50 hover:bg-surface-elevated/70 group",
                   !notification.is_read && "bg-aurora-primary/5"
                 )}
               >
-                <span className="text-2xl mt-1 flex-shrink-0">
-                  {getNotificationIcon(notification.type)}
-                </span>
+                {/* Avatar único ou stack */}
+                {notification.grouped_count && notification.grouped_count > 1 ? (
+                  <NotificationAvatarStack actors={notification.grouped_actors || []} />
+                ) : notification.actor ? (
+                  <NotificationAvatar actor={notification.actor} size="md" />
+                ) : (
+                  <span className="text-2xl mt-1 flex-shrink-0">
+                    {getNotificationIcon(notification.type)}
+                  </span>
+                )}
                 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2 mb-1">
@@ -215,9 +225,36 @@ export const NotificationBell = () => {
                         </span>
                       )}
                     </p>
-                    {!notification.is_read && (
-                      <span className="w-2 h-2 bg-aurora-primary rounded-full flex-shrink-0 mt-1.5 animate-pulse" />
-                    )}
+                    
+                    {/* Botões de ação (aparecem no hover) */}
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {!notification.is_read && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 hover:bg-aurora-primary/10 hover:text-aurora-primary"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead(notification.grouped_ids || [notification.id]);
+                          }}
+                          title="Marcar como lida"
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 text-textSecondary hover:text-destructive hover:bg-destructive/10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteNotification(notification.id);
+                        }}
+                        title="Deletar notificação"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                   
                   <p className="text-xs text-textSecondary line-clamp-2 mb-2">

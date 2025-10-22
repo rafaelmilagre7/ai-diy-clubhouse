@@ -226,6 +226,7 @@ export const useLessonComments = (lessonId: string) => {
             .from('notifications')
             .insert({
               user_id: parentComment.user_id,
+              actor_id: user.id,
               type: 'comment_replied',
               title: `${profile?.name || 'Alguém'} respondeu seu comentário`,
               message: `"${contentPreview}${content.trim().length > 100 ? '...' : ''}"`,
@@ -343,6 +344,7 @@ export const useLessonComments = (lessonId: string) => {
             .from('notifications')
             .insert({
               user_id: commentData.user_id,
+              actor_id: user.id,
               type: 'comment_liked',
               title: `${profile?.name || 'Alguém'} curtiu seu comentário`,
               message: `"${contentPreview}${commentData.content.length > 100 ? '...' : ''}"`,
