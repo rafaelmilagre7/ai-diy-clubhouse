@@ -14,8 +14,6 @@ export const useCertificateRefresh = () => {
     
     // Limpar cache do template engine
     localStorage.removeItem('certificate-template-cache');
-    
-    console.log('✅ Cache de certificados limpo - novo design será aplicado');
   }, [queryClient]);
 
   const forceTemplateRegeneration = useCallback(() => {
@@ -31,8 +29,6 @@ export const useCertificateRefresh = () => {
     }));
     
     refreshCertificates();
-    
-    console.log('🎨 Template hardcoded VIVER DE IA neon ativo - versão 5.0');
   }, [refreshCertificates]);
 
   return {

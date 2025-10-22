@@ -13,8 +13,6 @@ export const useNPSEvolution = (options?: UseNPSEvolutionOptions) => {
   return useQuery({
     queryKey: ['nps-evolution', options?.dateRange],
     queryFn: async (): Promise<NPSEvolutionData> => {
-      console.log('[useNPSEvolution] Buscando dados de evolução...');
-
       const { data, error } = await supabase.rpc('get_nps_evolution_data', {
         p_start_date: options?.dateRange?.from?.toISOString(),
         p_end_date: options?.dateRange?.to?.toISOString()
@@ -24,8 +22,6 @@ export const useNPSEvolution = (options?: UseNPSEvolutionOptions) => {
         console.error('[useNPSEvolution] Erro ao buscar dados:', error);
         throw error;
       }
-
-      console.log('[useNPSEvolution] Dados recebidos:', data);
 
       // Parse dos dados
       const monthlyEvolution: NPSMonthlyEvolution[] = (data?.monthly_evolution || []).map((item: any) => ({

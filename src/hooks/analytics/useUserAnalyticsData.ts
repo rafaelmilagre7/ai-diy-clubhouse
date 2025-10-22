@@ -104,13 +104,6 @@ export const useUserAnalyticsData = ({ timeRange, role = 'all' }: UseUserAnalyti
         };
 
         setData(processedData);
-        
-        console.log('📊 Dados de usuários carregados (sincronizados):', {
-          totalUsers: processedData.totalUsers,
-          activeUsers: processedData.activeUsers,
-          growthData: processedData.usersByTime.length,
-          roleDistribution: processedData.userRoleDistribution.length
-        });
 
       } catch (error: any) {
         console.error('Erro ao carregar analytics de usuários:', error);

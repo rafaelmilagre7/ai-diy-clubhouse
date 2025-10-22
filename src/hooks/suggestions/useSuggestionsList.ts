@@ -12,8 +12,6 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
   } = useQuery({
     queryKey: ['suggestions', categoryId, filter],
     queryFn: async () => {
-      console.log('Buscando sugestões...', { categoryId, filter });
-      
       try {
         // Buscar sugestões com dados do perfil do usuário usando JOIN
         let query = supabase
@@ -53,7 +51,6 @@ export const useSuggestionsList = (categoryId?: string, filter: 'popular' | 'rec
           profiles: undefined
         }));
 
-        console.log('Sugestões encontradas:', mappedData?.length, mappedData);
         return mappedData || [];
       } catch (error) {
         console.error('Erro na consulta de sugestões:', error);

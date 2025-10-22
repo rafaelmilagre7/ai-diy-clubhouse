@@ -114,12 +114,6 @@ export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'al
         };
 
         setData(processedData);
-        
-        console.log('📈 Dados analytics gerais carregados (sincronizados):', {
-          solutionPopularity: processedData.solutionPopularity.length,
-          implementationsByCategory: processedData.implementationsByCategory.length,
-          userGrowth: processedData.usersByTime.length
-        });
 
       } catch (error: any) {
         console.error('Erro ao carregar analytics gerais:', error);

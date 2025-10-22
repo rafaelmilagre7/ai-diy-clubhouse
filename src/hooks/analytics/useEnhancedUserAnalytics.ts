@@ -146,21 +146,6 @@ export const useEnhancedUserAnalytics = (params: EnhancedUserAnalyticsParams) =>
         totalUsers > 0 ? (completedOnboarding / totalUsers) * 100 : 0
       )));
 
-      console.log('📊 [USER-ANALYTICS] Dados brutos:', {
-        totalUsers,
-        usersFetched: usersArray.length,
-        rpcTotals,
-        activityDataLength: (activityData as any[])?.length,
-        progressDataLength: (progressData as any[])?.length,
-        usersWithActivity: usersWithActivity.size,
-        activeUsers,
-        completedOnboarding,
-        activationRate,
-        timeRange: params.timeRange,
-        startDate,
-        endDate
-      });
-
       // Calcular novos usuários baseado no timeRange selecionado
       const getNewUsersCount = () => {
         const now = Date.now();

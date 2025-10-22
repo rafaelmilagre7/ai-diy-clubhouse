@@ -129,13 +129,6 @@ export const useEnhancedAnalyticsData = (timeRange: string) => {
         };
 
         setData(processedData);
-        
-        console.log('📊 Enhanced Analytics carregados:', {
-          totalUsers: processedData.metrics.totalUsers,
-          activeUsers: processedData.metrics.activeUsers,
-          solutionPopularity: processedData.solutionPopularity.length,
-          userGrowth: processedData.usersByTime.length
-        });
 
       } catch (error: any) {
         console.error('Erro ao carregar enhanced analytics:', error);

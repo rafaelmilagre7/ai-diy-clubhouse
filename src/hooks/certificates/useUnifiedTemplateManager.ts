@@ -100,13 +100,6 @@ export const useUnifiedTemplateManager = (courseId?: string) => {
           });
         }
 
-        console.log('✅ Templates unificados carregados:', {
-          total: allTemplates.length,
-          course: allTemplates.filter(t => t.type === 'course').length,
-          solution: allTemplates.filter(t => t.type === 'solution').length,
-          default: allTemplates.filter(t => t.type === 'default').length
-        });
-
         return allTemplates;
 
       } catch (error) {

@@ -100,12 +100,6 @@ export const useAdminStatsData = () => {
         };
 
         setData(processedData);
-        
-        console.log('📈 Admin Stats carregados:', {
-          totalUsers: processedData.totalUsers,
-          activeUsers: processedData.activeUsersLast7Days,
-          usersByRole: processedData.usersByRole.length
-        });
 
       } catch (error: any) {
         console.error('Erro ao carregar admin stats:', error);

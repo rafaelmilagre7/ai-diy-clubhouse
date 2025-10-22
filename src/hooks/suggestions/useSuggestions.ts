@@ -18,8 +18,6 @@ export const useSuggestions = () => {
   } = useQuery({
     queryKey: ['suggestions', filter, searchQuery],
     queryFn: async () => {
-      console.log('Buscando sugestões...', { filter, searchQuery });
-      
       try {
         // Buscar sugestões com dados do perfil do usuário usando JOIN
         let query = supabase
@@ -80,7 +78,6 @@ export const useSuggestions = () => {
           });
         }
 
-        console.log('Sugestões encontradas:', mappedData.length, mappedData);
         return mappedData;
       } catch (error) {
         console.error('Erro na consulta de sugestões:', error);

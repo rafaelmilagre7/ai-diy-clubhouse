@@ -27,8 +27,6 @@ export const useSuggestionCreation = () => {
       setIsSubmitting(true);
       
       try {
-        console.log("Enviando sugestão:", values);
-
         const { data, error } = await supabase
           .from('suggestions')
           .insert({
@@ -48,8 +46,6 @@ export const useSuggestionCreation = () => {
         
         // Registrar o voto automático do criador
         if (data && data.length > 0) {
-          console.log("Sugestão criada com sucesso:", data[0]);
-          
           const { error: voteError } = await supabase
             .from('suggestion_votes')
             .insert({

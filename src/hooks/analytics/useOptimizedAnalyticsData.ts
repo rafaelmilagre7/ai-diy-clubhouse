@@ -66,7 +66,6 @@ export const useOptimizedAnalyticsData = (options: OptimizedAnalyticsOptions) =>
       if (enableCache && hasCache(cacheKey)) {
         const cachedData = getCachedData(cacheKey);
         if (cachedData && typeof cachedData === 'object' && cachedData !== null) {
-          console.log('📊 Cache hit para analytics:', filterHash);
           return {
             ...cachedData,
             _meta: { fromCache: true, cacheHit: true }
@@ -75,7 +74,6 @@ export const useOptimizedAnalyticsData = (options: OptimizedAnalyticsOptions) =>
       }
 
       // Buscar dados frescos
-      console.log('🔄 Buscando dados frescos para analytics:', filterHash);
       const startTime = Date.now();
       
       // Usar dados do fallback se disponível

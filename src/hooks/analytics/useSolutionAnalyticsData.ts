@@ -113,12 +113,6 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
         };
 
         setData(processedData);
-        
-        console.log('🎯 Dados de soluções carregados (sincronizados):', {
-          totalSolutions: processedData.totalSolutions,
-          totalImplementations: processedData.totalImplementations,
-          avgCompletionRate: processedData.averageCompletionRate
-        });
 
       } catch (error: any) {
         console.error('Erro ao carregar analytics de soluções:', error);

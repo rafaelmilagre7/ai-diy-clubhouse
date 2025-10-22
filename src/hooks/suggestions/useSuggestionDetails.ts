@@ -20,7 +20,6 @@ export const useSuggestionDetails = () => {
     
     try {
       setIsLoading(true);
-      console.log('Buscando detalhes da sugestão:', id);
       
       // Buscar sugestão com dados do perfil do usuário usando JOIN
       const { data, error } = await supabase

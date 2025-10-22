@@ -87,13 +87,6 @@ export const useRealAnalyticsData = (timeRange: string = '30d') => {
         };
 
         setData(analyticsData);
-
-        console.log('📊 Dados analytics carregados:', {
-          userGrowth: analyticsData.userGrowth.length,
-          solutionPerformance: analyticsData.solutionPerformance.length,
-          topContent: analyticsData.topContent.length
-        });
-
       } catch (error: any) {
         console.error('Erro ao carregar analytics:', error);
         setError(error.message || 'Erro ao carregar dados de analytics');

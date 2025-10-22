@@ -118,7 +118,6 @@ export const useNpsData = (startDate: string | null) => {
         
         // Log para depuração
         log(`Dados de NPS recuperados: ${rawData?.length || 0} respostas encontradas`);
-        console.log('Dados brutos de NPS:', rawData);
         
         // Se não houver dados, retornar dados simulados para demonstração
         if (!rawData || rawData.length === 0) {
@@ -226,17 +225,6 @@ export const useNpsData = (startDate: string | null) => {
             courseTitle: response.courseTitle
           }))
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        
-        // Log para depuração
-        console.log('NPS processado:', {
-          overall: npsScore,
-          distribution: {
-            promoters: Math.round(promotersPercent),
-            neutrals: Math.round(neutralsPercent),
-            detractors: Math.round(detractorsPercent)
-          },
-          perLesson: perLessonNps.slice(0, 3) // Mostra apenas primeiros 3 para log
-        });
         
         return {
           npsData: {

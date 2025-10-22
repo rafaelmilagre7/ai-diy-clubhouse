@@ -97,12 +97,6 @@ export const useLmsAnalyticsData = (timeRange: string) => {
         };
 
         setData(processedData);
-        
-        console.log('🎓 Dados de LMS carregados (sincronizados):', {
-          totalCourses: processedData.totalCourses,
-          totalEnrollments: processedData.totalEnrollments,
-          averageProgress: processedData.averageProgress
-        });
 
       } catch (error: any) {
         console.error('Erro ao carregar analytics de LMS:', error);

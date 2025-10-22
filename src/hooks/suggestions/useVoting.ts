@@ -18,7 +18,6 @@ export const useVoting = () => {
 
       try {
         setVoteLoading(true);
-        console.log("Votando:", { voteType, suggestionId, userId: user.id });
         
         const { data: existingVote } = await supabase
           .from('suggestion_votes')
