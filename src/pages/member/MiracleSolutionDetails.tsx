@@ -16,7 +16,7 @@ export default function MiracleSolutionDetails() {
     queryKey: ['miracle-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
-        .from('miracle_ai_solutions')
+        .from('ai_generated_solutions')
         .select('*')
         .eq('id', id)
         .single();

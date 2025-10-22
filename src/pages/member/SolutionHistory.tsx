@@ -38,7 +38,7 @@ export default function SolutionHistory() {
     setDeletingId(id);
     try {
       const { error } = await supabase
-        .from('miracle_ai_solutions')
+        .from('ai_generated_solutions')
         .delete()
         .eq('id', id);
 
