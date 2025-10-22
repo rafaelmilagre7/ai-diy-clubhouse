@@ -34,39 +34,27 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
 
   const completeSolutionMutation = useMutation({
     mutationFn: async () => {
-      console.log("🔧 [DEBUG] Iniciando finalização da implementação...");
-      
       if (!user?.id) {
-        console.error("🔧 [DEBUG] Usuário não autenticado!");
         throw new Error('User not authenticated');
       }
 
-      console.log("🔧 [DEBUG] Dados da requisição:", {
-        user_id: user.id,
-        solution_id: solutionId,
-        is_completed: true,
-        completion_percentage: 100
-      });
-
-      // Mark solution as completed
+      // Update user_solutions
       const { data: progressData, error: progressError } = await supabase
-        .from('progress')
-        .upsert({
-          user_id: user.id,
-          solution_id: solutionId,
+        .from('user_solutions')
+        .update({ 
           is_completed: true,
           completion_percentage: 100,
           completed_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id,solution_id'
-        });
+        })
+        .eq('user_id', user.id)
+        .eq('solution_id', solutionId)
+        .select()
+        .single();
 
       if (progressError) {
-        console.error("🔧 [DEBUG] Erro ao atualizar progresso:", progressError);
+        console.error("Erro ao atualizar progresso:", progressError);
         throw progressError;
       }
-      
-      console.log("🔧 [DEBUG] Progresso atualizado com sucesso:", progressData);
 
       // Create certificate
       const { data: certificateRecord, error: certificateError } = await supabase
@@ -82,11 +70,9 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         .single();
 
       if (certificateError) {
-        console.error("🔧 [DEBUG] Erro ao criar certificado:", certificateError);
+        console.error("Erro ao criar certificado:", certificateError);
         throw certificateError;
       }
-      
-      console.log("🔧 [DEBUG] Certificado criado com sucesso:", certificateRecord);
 
       return { progressData, certificateRecord };
     },
@@ -134,8 +120,6 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ['user-certificates'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-progress'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
-      
-      console.log("🔧 [DEBUG] Cache invalidado para forçar atualização do dashboard");
     },
     onError: (error) => {
       if (completionProcessedRef.current) return;

@@ -65,19 +65,16 @@ export function WhatsAppDebugPanel() {
   const runDiagnostics = async () => {
     setLoading(true);
     try {
-      devLog.debug('Iniciando diagnósticos...');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { action: 'check' }
       });
 
       if (error) {
-        devLog.error('Erro:', error);
+        console.error('Erro:', error);
         toast.error('Erro ao executar diagnósticos');
         return;
       }
 
-      devLog.success('Resultado:', data);
       setDiagnostics(data);
       
       if (data.overall_status === 'success') {
@@ -102,8 +99,6 @@ export function WhatsAppDebugPanel() {
 
     setTestingPhone(true);
     try {
-      devLog.debug('Testando envio para:', testPhone.substring(0, 5) + '***');
-      
       const { data, error } = await supabase.functions.invoke('whatsapp-config-check', {
         body: { 
           action: 'test-send',

@@ -32,8 +32,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', solutionId],
     queryFn: async () => {
-      console.log('Buscando ferramentas para solution_id:', solutionId);
-      
       // Buscar ferramentas da solução com JOIN para obter detalhes das ferramentas
       const { data, error } = await supabase
         .from('solution_tools')
@@ -72,7 +70,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
         })
       );
       
-      console.log('Ferramentas com detalhes encontradas:', toolsWithDetails);
       return toolsWithDetails as ToolWithDetails[];
     }
   });

@@ -25,10 +25,9 @@ export const TestVideoDurations = () => {
     updateDurations(undefined, {
       onSuccess: (data) => {
         // Os dados já são tratados pelo hook
-        devLog.success('Teste concluído:', data);
       },
       onError: (error) => {
-        devLog.error('Erro no teste:', error);
+        console.error('Erro no teste:', error);
       }
     });
   };

@@ -10,7 +10,6 @@ export const ManualUpdateButton = () => {
   const handleManualUpdate = async () => {
     setIsUpdating(true);
     try {
-      devLog.component('Iniciando atualização manual das durações...');
       toast.info('Iniciando atualização das durações dos vídeos...');
       
       const { data, error } = await supabase.functions.invoke('update-video-durations', {
@@ -18,16 +17,13 @@ export const ManualUpdateButton = () => {
       });
       
       if (error) {
-        devLog.error('Erro na edge function:', error);
+        console.error('Erro na edge function:', error);
         toast.error('Erro na atualização: ' + error.message);
         return;
       }
       
-      devLog.success('Resposta da edge function:', data);
-      
       if (data.success > 0) {
         toast.success(`${data.success} vídeo(s) atualizados com sucesso!`);
-        devLog.success('Atualização concluída! Recarregando em 3 segundos...');
         
         // Recarregar após 3 segundos
         setTimeout(() => {
@@ -38,7 +34,7 @@ export const ManualUpdateButton = () => {
       }
       
     } catch (error: any) {
-      devLog.error('Erro crítico:', error);
+      console.error('Erro crítico:', error);
       toast.error('Erro crítico na atualização: ' + error.message);
     } finally {
       setIsUpdating(false);

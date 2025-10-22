@@ -27,21 +27,16 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
   const { data: videoLessons, isLoading } = useQuery({
     queryKey: ['solution-video-resources', solutionId],
     queryFn: async () => {
-      console.log('VideoTab: Buscando vídeos para solução:', solutionId);
-      
       const { data, error } = await supabase
         .from('solution_resources')
         .select('*')
         .eq('solution_id', solutionId)
-        .eq('type', 'video')
-        .is('module_id', null);
+        .eq('resource_type', 'video_resource');
 
       if (error) {
         console.error('VideoTab: Erro ao buscar vídeos:', error);
         throw error;
       }
-      
-      console.log('VideoTab: Dados encontrados:', data);
       
       // Transformar os dados para o formato esperado
       const transformedData = data?.map(resource => ({
@@ -53,7 +48,6 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
         order_index: resource.order_index || 0
       })) || [];
       
-      console.log('VideoTab: Dados transformados:', transformedData);
       return transformedData;
     }
   });

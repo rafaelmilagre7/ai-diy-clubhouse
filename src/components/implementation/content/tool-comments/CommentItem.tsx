@@ -64,7 +64,6 @@ export const CommentItem = ({ comment, solutionId, moduleId, onReply, onDelete }
               src={profileAvatarUrl} 
               alt={profileName}
               className="object-cover"
-              onError={() => console.log('Erro ao carregar avatar:', profileAvatarUrl)}
             />
             <AvatarFallback className="bg-aurora-primary/10 text-aurora-primary font-medium border border-aurora-primary/20">
               {getInitials(profileName)}
