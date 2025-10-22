@@ -314,7 +314,7 @@ EXEMPLOS DE TÍTULOS RUINS:
 
 Crie um plano completo seguindo o formato JSON especificado.`;
 
-    console.log(`[BUILDER] 🚀 Chamando Lovable AI (Gemini 2.5 Flash)...`);
+    console.log(`[BUILDER] 🚀 Chamando Lovable AI (Claude Sonnet 4.5)...`);
 
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
@@ -522,26 +522,37 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     }
 
     console.log(`[BUILDER] ✅ JSON válido extraído com JSON mode`);
+    console.log(`[BUILDER] 📊 JSON recebido (primeiros 500 chars):`, JSON.stringify(solutionData).substring(0, 500));
     console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
-    console.log(`[BUILDER] 📝 Título gerado: "${solutionData.title}"`);
+    console.log(`[BUILDER] 📝 Título recebido da IA: "${solutionData.title}"`);
 
-    // 🔧 VALIDAÇÃO E FALLBACK PARA TÍTULO
-    if (!solutionData.title || solutionData.title === 'undefined' || solutionData.title.trim() === '') {
-      console.warn("[BUILDER] ⚠️ Título não gerado pela IA, criando fallback...");
+    // 🔧 VALIDAÇÃO ROBUSTA E FALLBACK CRÍTICO PARA TÍTULO
+    const invalidTitles = [undefined, null, 'undefined', 'null', ''];
+    const titleIsInvalid = invalidTitles.includes(solutionData.title) || 
+                          (typeof solutionData.title === 'string' && solutionData.title.trim() === '');
+    
+    if (titleIsInvalid) {
+      console.warn("[BUILDER] ⚠️ Título inválido detectado, criando fallback inteligente...");
       
-      // Criar título inteligente com base na ideia
-      const ideaWords = idea.split(' ').slice(0, 8).join(' ');
-      solutionData.title = `Solução: ${ideaWords}${idea.split(' ').length > 8 ? '...' : ''}`;
+      // Criar título inteligente: pegar primeira sentença ou primeiras 8 palavras
+      const firstSentence = idea.split(/[.!?]/)[0].trim();
+      const intelligentTitle = firstSentence.length > 60 
+        ? firstSentence.substring(0, 57) + '...'
+        : firstSentence.length > 10 
+          ? firstSentence 
+          : `Solução: ${idea.split(' ').slice(0, 8).join(' ')}${idea.split(' ').length > 8 ? '...' : ''}`;
       
-      console.log(`[BUILDER] 🔧 Título fallback: "${solutionData.title}"`);
+      solutionData.title = intelligentTitle;
+      console.log(`[BUILDER] 🔧 Título fallback aplicado: "${solutionData.title}"`);
+    } else {
+      // Garantir que título não exceda 60 caracteres
+      if (solutionData.title.length > 60) {
+        solutionData.title = solutionData.title.substring(0, 57) + '...';
+        console.log(`[BUILDER] ✂️ Título truncado para 60 chars: "${solutionData.title}"`);
+      }
     }
 
-    // Garantir que título não exceda 60 caracteres
-    if (solutionData.title.length > 60) {
-      solutionData.title = solutionData.title.substring(0, 57) + '...';
-    }
-
-    console.log(`[BUILDER] ✅ Título final: "${solutionData.title}"`);
+    console.log(`[BUILDER] ✅ Título final validado: "${solutionData.title}"`);
 
     // Salvar no banco (sem lovable_prompt ainda)
     const generationTime = Date.now() - startTime;
