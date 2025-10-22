@@ -54,8 +54,6 @@ export async function ensureStorageBucketExists(bucketName: string): Promise<boo
     const exists = buckets?.some(bucket => bucket.name === bucketName);
     
     if (!exists) {
-      console.log(`Bucket ${bucketName} não existe. Tentando criar...`);
-      
       const { error: createError } = await supabase.storage.createBucket(bucketName, {
         public: true,
         fileSizeLimit: 314572800 // 300MB

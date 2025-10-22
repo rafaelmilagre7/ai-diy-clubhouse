@@ -208,7 +208,6 @@ export const ensureBucketExists = async (bucketName: string): Promise<boolean> =
   // Importante: clientes (anon key) NÃO podem listar/criar buckets.
   // Para evitar erros 400/401, não verificamos nada aqui no client.
   // Confiamos que os buckets já foram criados pelo backend/migrações.
-  console.debug(`[UPLOAD_SYSTEM] Skip check for bucket: ${bucketName}`);
   return true;
 };
 
@@ -220,8 +219,6 @@ export const unifiedUpload = async (
   file: File,
   options: UploadOptions = {}
 ): Promise<UploadResponse> => {
-  console.log('[UPLOAD_SYSTEM] Iniciando upload unificado:', file.name);
-  
   try {
     // Determinar configuração
     let config: UploadConfig;
@@ -239,8 +236,6 @@ export const unifiedUpload = async (
     } else {
       config = UPLOAD_CONTEXTS.GENERAL;
     }
-
-    console.log('[UPLOAD_SYSTEM] Configuração:', config);
 
     // Validar arquivo
     const validationError = validateFile(file, config);
@@ -276,8 +271,6 @@ export const unifiedUpload = async (
     const fileName = `${timestamp}-${randomId}.${fileExtension}`;
     const filePath = config.folder ? `${config.folder}/${fileName}` : fileName;
 
-    console.log('[UPLOAD_SYSTEM] Upload para:', config.bucket, filePath);
-
     options.onProgress?.(50);
 
     // Upload do arquivo
@@ -305,8 +298,6 @@ export const unifiedUpload = async (
       .getPublicUrl(data.path);
 
     options.onProgress?.(100);
-
-    console.log('[UPLOAD_SYSTEM] Upload concluído:', publicUrl);
 
     return {
       success: true,
@@ -378,8 +369,6 @@ export const legacyUpload = async (
   folder?: string,
   onProgress?: (progress: number) => void
 ): Promise<UploadResponse> => {
-  console.log('[UPLOAD_SYSTEM] Upload legado detectado, convertendo para sistema unificado');
-  
   const context = mapLegacyBucketToContext(bucketName);
   
   return unifiedUpload(file, {

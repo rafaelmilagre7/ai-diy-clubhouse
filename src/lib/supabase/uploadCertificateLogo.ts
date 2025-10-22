@@ -28,7 +28,6 @@ export const uploadCertificateLogo = async () => {
       .from('certificates')
       .getPublicUrl('logo/viver-de-ia-logo.png');
 
-    console.log('Logo enviada com sucesso:', publicUrlData.publicUrl);
     return publicUrlData.publicUrl;
   } catch (error) {
     console.error('Erro no processo de upload:', error);

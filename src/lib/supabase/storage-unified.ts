@@ -108,8 +108,6 @@ export const uploadFileUnified = async (
   folder?: string,
   onProgress?: (progress: number) => void
 ): Promise<{ publicUrl: string; path: string }> => {
-  console.log(`[STORAGE_UNIFIED] Iniciando upload para bucket: ${bucketName}`);
-  
   // Validar arquivo
   const validation = validateFileForBucket(file, bucketName);
   if (!validation.valid) {
@@ -138,7 +136,6 @@ export const uploadFileUnified = async (
       
       if (!createError) {
         targetBucket = bucketName;
-        console.log(`[STORAGE_UNIFIED] Bucket ${bucketName} criado com sucesso`);
       }
     }
   }
@@ -175,8 +172,6 @@ export const uploadFileUnified = async (
     .getPublicUrl(data.path);
   
   onProgress?.(100);
-  
-  console.log(`[STORAGE_UNIFIED] Upload concluído: ${publicUrl}`);
   
   return {
     publicUrl,
