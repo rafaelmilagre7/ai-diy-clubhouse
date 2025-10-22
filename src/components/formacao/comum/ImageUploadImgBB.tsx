@@ -61,7 +61,6 @@ export const ImageUploadImgBB = ({
     setProgress(10);
 
     try {
-      console.log("📷 ImageUploadImgBB - Iniciando upload seguro via Edge Function");
       setProgress(30);
 
       // Criar FormData para a Edge Function segura
@@ -85,8 +84,6 @@ export const ImageUploadImgBB = ({
         throw new Error(data?.error || 'Falha no upload da imagem');
       }
       
-      console.log("📷 ImageUploadImgBB - Upload bem-sucedido via Edge Function:", data.data);
-      
       // Usar a URL pública retornada pelo ImgBB via Edge Function
       const imageUrl = data.data.url || data.data.display_url;
       onChange(imageUrl);
@@ -99,7 +96,6 @@ export const ImageUploadImgBB = ({
         variant: "default",
       });
     } catch (error: any) {
-      console.error("📷 ImageUploadImgBB - Erro no upload:", error);
       logError("secure_imgbb_upload_error", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
       toast({
@@ -135,7 +131,6 @@ export const ImageUploadImgBB = ({
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
-              console.error("Erro ao carregar imagem:", value);
               setError("Não foi possível carregar a imagem. O URL pode estar quebrado.");
             }}
           />

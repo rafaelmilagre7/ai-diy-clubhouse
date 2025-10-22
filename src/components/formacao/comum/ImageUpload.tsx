@@ -32,18 +32,14 @@ export const ImageUpload = ({
 
   const setupStorageIfNeeded = async () => {
     try {
-      console.log('⚙️ Configurando storage automaticamente...');
       const { data, error } = await supabase.functions.invoke('setup-storage');
       
       if (error) {
-        console.error('Erro ao configurar storage:', error);
         return false;
       }
       
-      console.log('✅ Storage configurado:', data);
       return true;
     } catch (error) {
-      console.error('Erro ao invocar setup-storage:', error);
       return false;
     }
   };
@@ -84,9 +80,6 @@ export const ImageUpload = ({
     setProgress(0);
 
     try {
-      console.log(`Iniciando upload para bucket: ${bucketName}, pasta: ${folderPath}`);
-      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
-      
       // Upload direto - funciona conforme teste
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(bucketName)
@@ -100,14 +93,10 @@ export const ImageUpload = ({
         throw new Error(uploadError.message);
       }
 
-      console.log("Upload concluído:", uploadData);
-
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from(bucketName)
         .getPublicUrl(filePath);
-
-      console.log("URL pública gerada:", urlData.publicUrl);
 
       if (!urlData.publicUrl) {
         throw new Error("URL pública não foi gerada");
@@ -156,7 +145,6 @@ export const ImageUpload = ({
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
-              console.error("Erro ao carregar imagem:", value);
               setError("Não foi possível carregar a imagem. O arquivo pode não existir mais.");
             }}
           />

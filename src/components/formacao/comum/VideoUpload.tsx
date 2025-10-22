@@ -67,7 +67,6 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       toast.success("URL do YouTube adicionada com sucesso");
     } catch (error) {
       setError("Erro ao processar URL do YouTube. Verifique se o formato está correto.");
-      console.error("Erro ao processar URL do YouTube:", error);
     }
   };
 
@@ -98,9 +97,6 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       const fileName = `${Date.now()}-${file.name}`;
       const filePath = `videos/${fileName}`;
       
-      console.log(`Iniciando upload de vídeo para bucket: ${STORAGE_BUCKETS.LEARNING_VIDEOS}`);
-      console.log(`Fazendo upload do arquivo: ${fileName} para ${filePath}`);
-      
       // Upload direto - funciona conforme correção dos outros uploads
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from(STORAGE_BUCKETS.LEARNING_VIDEOS)
@@ -114,14 +110,10 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
         throw new Error(uploadError.message);
       }
 
-      console.log("Upload de vídeo concluído:", uploadData);
-
       // Obter URL pública
       const { data: urlData } = supabase.storage
         .from(STORAGE_BUCKETS.LEARNING_VIDEOS)
         .getPublicUrl(filePath);
-
-      console.log("URL pública do vídeo gerada:", urlData.publicUrl);
 
       if (!urlData.publicUrl) {
         throw new Error("URL pública não foi gerada");
@@ -137,7 +129,6 @@ export const VideoUpload: React.FC<VideoUploadProps> = ({
       
       toast.success("Vídeo enviado com sucesso");
     } catch (error: any) {
-      console.error("Erro ao fazer upload:", error);
       setError(`Erro no upload: ${error.message || "Tente novamente ou use uma URL do YouTube"}`);
       toast.error("Falha no upload do vídeo");
     } finally {

@@ -33,8 +33,7 @@ export const ImageUpload = ({
         .then(url => {
           setOptimizedUrl(url);
         })
-        .catch(error => {
-          console.warn('[ImageUpload] Erro na otimização:', error);
+        .catch(() => {
           setOptimizedUrl(value);
         });
     } else {
@@ -100,7 +99,6 @@ export const ImageUpload = ({
               } else {
                 target.src = "https://placehold.co/600x400?text=Imagem+não+encontrada";
               }
-              console.error("Erro ao carregar imagem:", optimizedUrl);
             }}
           />
           <Button

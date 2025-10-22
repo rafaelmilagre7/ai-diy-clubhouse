@@ -35,8 +35,7 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
         .then(optimizedUrl => {
           setOptimizedSrc(optimizedUrl);
         })
-        .catch(error => {
-          console.warn('[OptimizedImage] Falha na otimização, usando URL original:', error);
+        .catch(() => {
           setOptimizedSrc(src);
         })
         .finally(() => {
@@ -46,7 +45,6 @@ export const OptimizedImage: React.FC<OptimizedImageProps> = ({
   }, [src, enableOptimization, priority, optimizeImageURL]);
 
   const handleError = useCallback(() => {
-    console.warn('[OptimizedImage] Erro ao carregar imagem:', optimizedSrc);
     setHasError(true);
     
     // Tentar fallback se disponível

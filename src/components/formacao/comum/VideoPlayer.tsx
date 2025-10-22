@@ -17,9 +17,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   videoType = 'youtube',
   thumbnailUrl 
 }) => {
-  // Log para debugging
-  console.log("VideoPlayer recebeu:", { videoUrl, videoType, thumbnailUrl });
-  
   // Extrair ID do vídeo Panda da URL, se aplicável
   const extractPandaVideoId = (url: string): string | null => {
     // Verificar se a URL é válida
@@ -29,28 +26,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       // Padrão de URL do Panda: https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=VIDEO_ID
       const match = url.match(/embed\/\?v=([^&]+)/);
       if (match && match[1]) {
-        console.log("ID de vídeo Panda extraído (padrão 1):", match[1]);
         return match[1];
       }
       
       // Outro padrão comum
       const altMatch = url.match(/\/embed\/([^/?]+)/);
       if (altMatch && altMatch[1]) {
-        console.log("ID de vídeo Panda extraído (padrão 2):", altMatch[1]);
         return altMatch[1];
       }
       
       // Verificar se o ID do vídeo pode estar diretamente na URL
       const directIdMatch = url.match(/([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/i);
       if (directIdMatch && directIdMatch[1]) {
-        console.log("ID de vídeo Panda extraído (diretamente):", directIdMatch[1]);
         return directIdMatch[1];
       }
       
-      console.log("Não foi possível extrair ID do vídeo Panda da URL:", url);
       return null;
     } catch (error) {
-      console.error("Erro ao processar URL do vídeo Panda:", error);
       return null;
     }
   };
@@ -70,14 +62,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const match = url.match(regex);
       
       if (match && match[1]) {
-        console.log("ID de vídeo YouTube extraído:", match[1]);
         return match[1];
       }
       
-      console.log("Não foi possível extrair ID do vídeo YouTube da URL:", url);
       return null;
     } catch (error) {
-      console.error("Erro ao processar URL do vídeo YouTube:", error);
       return null;
     }
   };
@@ -98,7 +87,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   if (effectiveVideoType === 'panda' || (videoUrl && videoUrl.includes('pandavideo'))) {
     const videoId = extractPandaVideoId(videoUrl) || '';
     if (!videoId) {
-      console.warn("ID de vídeo Panda não pôde ser extraído:", videoUrl);
       return (
         <div className="aspect-video bg-muted flex items-center justify-center rounded-md">
           <p className="text-muted-foreground text-sm">Erro ao processar vídeo Panda. URL inválida.</p>
@@ -124,7 +112,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </div>
       );
     } else {
-      console.warn("ID de vídeo YouTube não pôde ser extraído:", videoUrl);
       return (
         <div className="aspect-video bg-muted flex items-center justify-center rounded-md">
           <p className="text-muted-foreground text-sm">Erro ao processar vídeo do YouTube. URL inválida.</p>

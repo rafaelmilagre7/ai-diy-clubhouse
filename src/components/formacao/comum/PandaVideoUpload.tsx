@@ -115,12 +115,8 @@ export const PandaVideoUpload = ({
       formData.append("title", videoFile.name.replace(/\.[^/.]+$/, ""));
       formData.append("private", "true");
 
-      // Verificar tamanho antes do envio
-      console.log(`Iniciando upload do vídeo: ${videoFile.name}, tamanho: ${bytesToSize(videoFile.size)}, tipo: ${videoFile.type}`);
-
       // URL da Edge Function do Supabase com o ID completo do projeto
       const functionUrl = 'https://zotzvtepvpnkcoobdubt.functions.supabase.co/upload-panda-video';
-      console.log("Chamando Edge Function:", functionUrl);
       
       // Adicionar tempo limite estendido para vídeos maiores
       const controller = new AbortController();
@@ -186,7 +182,6 @@ export const PandaVideoUpload = ({
           // Se falhar ao ler como JSON, tente ler como texto
           try {
             const errorText = await clonedResponse.text();
-            console.error("Resposta não-JSON do servidor:", errorText);
             
             if (response.status === 500) {
               errorMessage = "Erro interno do servidor. Tente novamente em alguns instantes.";
@@ -231,7 +226,6 @@ export const PandaVideoUpload = ({
       let responseText;
       try {
         responseText = await response.text();
-        console.log("Resposta bruta do servidor:", responseText);
       } catch (textError) {
         clearInterval(progressInterval);
         console.error("Erro ao ler resposta do servidor:", textError);
@@ -250,8 +244,6 @@ export const PandaVideoUpload = ({
         result = JSON.parse(responseText);
       } catch (parseError) {
         clearInterval(progressInterval);
-        console.error("Erro ao analisar resposta JSON:", parseError);
-        console.error("Resposta que falhou no parse:", responseText);
         throw new Error(`Erro ao processar resposta do servidor: ${parseError.message}`);
       }
 
@@ -263,8 +255,6 @@ export const PandaVideoUpload = ({
       }
 
       const videoInfo = result.video;
-      
-      console.log("Upload concluído com sucesso:", videoInfo);
       
       // Atualizar componente com informações do vídeo
       onChange(

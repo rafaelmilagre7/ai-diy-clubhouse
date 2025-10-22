@@ -25,23 +25,14 @@ export const PandaVideoEmbed: React.FC<PandaVideoEmbedProps> = ({
       return;
     }
     
-    console.log('🎥 PandaVideoEmbed - Processando iframe:', embedCode);
     const videoInfo = extractPandaVideoInfo(embedCode);
-    console.log('🎥 PandaVideoEmbed - Resultado da extração:', videoInfo);
     
     if (!videoInfo || !videoInfo.videoId) {
-      console.error('🎥 PandaVideoEmbed - Falha na extração do videoId');
       setError('O código de incorporação parece ser inválido. Certifique-se de que é um iframe do Panda Video.');
       return;
     }
     
     setError(null);
-    console.log('🎥 PandaVideoEmbed - Chamando onChange com:', {
-      embedCode,
-      videoId: videoInfo.videoId,
-      url: videoInfo.url,
-      thumbnailUrl: videoInfo.thumbnailUrl
-    });
     onChange(
       embedCode,
       videoInfo.videoId,
