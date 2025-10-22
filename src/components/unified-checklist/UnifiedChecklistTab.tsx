@@ -34,7 +34,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   const [showSaveButtons, setShowSaveButtons] = useState<Record<string, boolean>>({});
   const [viewMode, setViewMode] = useState<'list' | 'kanban'>(() => {
     const saved = localStorage.getItem(`checklist-view-${solutionId}`);
-    return (saved as 'list' | 'kanban') || 'list';
+    return (saved as 'list' | 'kanban') || 'kanban'; // Padrão: Kanban
   });
 
   const handleViewModeChange = (mode: 'list' | 'kanban') => {

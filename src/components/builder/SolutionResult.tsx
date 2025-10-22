@@ -1,9 +1,9 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Share2, Download } from 'lucide-react';
+import { Star, Share2, Download, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
@@ -21,6 +21,31 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   solution, 
   onNewIdea
 }) => {
+  // Estado para controlar expansão de seções on-demand
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(sectionId)) {
+        newSet.delete(sectionId);
+      } else {
+        newSet.add(sectionId);
+        // Simular pequeno delay de loading para UX
+        if (!loadingSections.has(sectionId)) {
+          setLoadingSections(new Set([sectionId]));
+          setTimeout(() => {
+            setLoadingSections(new Set());
+          }, 300);
+        }
+      }
+      return newSet;
+    });
+  };
+
+  const isExpanded = (sectionId: string) => expandedSections.has(sectionId);
+  const isLoading = (sectionId: string) => loadingSections.has(sectionId);
   
   return (
     <motion.div
@@ -78,7 +103,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </LiquidGlassCard>
       </motion.div>
 
-      {/* Arquitetura Visual (Fluxograma) - 3º Bloco */}
+      {/* Arquitetura Visual (Fluxograma) - 3º Bloco - ON DEMAND */}
       {solution.architecture_flowchart && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -86,13 +111,43 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           transition={{ delay: 0.2 }}
         >
           <LiquidGlassCard className="p-6">
-            <div className="mb-4">
-              <h3 className="text-xl font-bold mb-2">Arquitetura da Solução</h3>
-              <p className="text-sm text-muted-foreground">
-                Fluxograma técnico completo da solução de ponta a ponta
-              </p>
-            </div>
-            <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
+            <button
+              onClick={() => toggleSection('architecture')}
+              className="w-full flex items-center justify-between mb-4 group"
+            >
+              <div className="text-left">
+                <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                  Arquitetura da Solução
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Fluxograma técnico completo da solução de ponta a ponta
+                </p>
+              </div>
+              {isExpanded('architecture') ? (
+                <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              )}
+            </button>
+            
+            <AnimatePresence mode="wait">
+              {isExpanded('architecture') && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isLoading('architecture') ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
           </LiquidGlassCard>
         </motion.div>
       )}
@@ -114,22 +169,52 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </LiquidGlassCard>
       </motion.div>
 
-      {/* Checklist de Implementação */}
+      {/* Checklist de Implementação - ON DEMAND */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
       >
         <LiquidGlassCard className="p-6">
-          <div className="mb-4">
-            <h3 className="text-xl font-bold mb-2">Checklist de Implementação</h3>
-            <p className="text-sm text-muted-foreground">
-              Passos práticos para transformar sua ideia em realidade
-            </p>
-          </div>
-          <UnifiedChecklistTab 
-            solutionId={solution.id}
-          />
+          <button
+            onClick={() => toggleSection('checklist')}
+            className="w-full flex items-center justify-between mb-4 group"
+          >
+            <div className="text-left">
+              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                Plano de Ação
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Passos práticos para transformar sua ideia em realidade
+              </p>
+            </div>
+            {isExpanded('checklist') ? (
+              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            )}
+          </button>
+          
+          <AnimatePresence mode="wait">
+            {isExpanded('checklist') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isLoading('checklist') ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <UnifiedChecklistTab 
+                    solutionId={solution.id}
+                  />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </LiquidGlassCard>
       </motion.div>
 
