@@ -112,8 +112,59 @@ export default function EmailLogs() {
   });
 
   const handleExport = async () => {
-    // TODO: Implementar export para CSV
-    console.log('Export logs');
+    try {
+      const query = supabase
+        .from('invite_delivery_events')
+        .select(`
+          *,
+          invites (
+            email,
+            role:user_roles(name)
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (eventTypeFilter && eventTypeFilter !== 'all') {
+        query.eq('event_type', eventTypeFilter);
+      }
+
+      if (searchTerm) {
+        query.or(`email_id.ilike.%${searchTerm}%`);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+
+      // Converter para CSV
+      const csvHeaders = ['Data', 'Email', 'Tipo de Evento', 'Email ID', 'Papel', 'Detalhes'];
+      const csvRows = (data || []).map(log => [
+        format(new Date(log.created_at), 'dd/MM/yyyy HH:mm', { locale: ptBR }),
+        log.invites?.email || 'N/A',
+        EVENT_LABELS[log.event_type] || log.event_type,
+        log.email_id || 'N/A',
+        log.invites?.role?.name || 'N/A',
+        log.event_data ? JSON.stringify(log.event_data) : ''
+      ]);
+
+      const csvContent = [
+        csvHeaders.join(','),
+        ...csvRows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      // Download do arquivo
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `email-logs-${format(new Date(), 'yyyy-MM-dd')}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Erro ao exportar logs:', error);
+    }
   };
 
   if (isLoading) {

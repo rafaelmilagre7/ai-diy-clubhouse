@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Send, Eye, Users, Mail, Bell, Calendar } from 'lucide-react';
 import { useCommunications, AdminCommunication } from '@/hooks/admin/useCommunications';
 import { toast } from 'sonner';
+import { supabase } from '@/lib/supabase';
 
 interface CommunicationEditorProps {
   communication?: AdminCommunication | null;
@@ -73,12 +74,28 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
 
   useEffect(() => {
     // Calcular alcance estimado baseado nos roles selecionados
-    if (formData.target_roles.length > 0) {
-      // TODO: Implementar cálculo real baseado na contagem de usuários por role
-      setEstimatedReach(formData.target_roles.length * 50); // Placeholder
-    } else {
-      setEstimatedReach(0);
-    }
+    const fetchRealReach = async () => {
+      if (formData.target_roles.length === 0) {
+        setEstimatedReach(0);
+        return;
+      }
+
+      try {
+        const { count, error } = await supabase
+          .from('profiles')
+          .select('*', { count: 'exact', head: true })
+          .in('role_id', formData.target_roles);
+
+        if (error) throw error;
+        setEstimatedReach(count || 0);
+      } catch (error) {
+        console.error('Erro ao calcular alcance:', error);
+        // Fallback para estimativa se houver erro
+        setEstimatedReach(formData.target_roles.length * 50);
+      }
+    };
+
+    fetchRealReach();
   }, [formData.target_roles]);
 
   const handleRoleToggle = (roleId: string) => {

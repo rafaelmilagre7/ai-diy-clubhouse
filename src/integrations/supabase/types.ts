@@ -1791,6 +1791,41 @@ export type Database = {
           },
         ]
       }
+      implementation_progress: {
+        Row: {
+          completed_steps: number[]
+          created_at: string
+          id: string
+          solution_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_steps?: number[]
+          created_at?: string
+          id?: string
+          solution_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_steps?: number[]
+          created_at?: string
+          id?: string
+          solution_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "implementation_progress_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       implementation_requests: {
         Row: {
           created_at: string

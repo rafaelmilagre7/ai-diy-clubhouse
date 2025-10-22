@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Clock, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 interface ChecklistItem {
   step_number: number;
@@ -22,9 +25,41 @@ export const ImplementationChecklist: React.FC<ImplementationChecklistProps> = (
   checklist,
   solutionId 
 }) => {
+  const { user } = useAuth();
   const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleToggle = (stepNumber: number) => {
+  // Carregar progresso salvo ao montar
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('implementation_progress')
+          .select('completed_steps')
+          .eq('user_id', user.id)
+          .eq('solution_id', solutionId)
+          .maybeSingle();
+
+        if (error) throw error;
+
+        if (data?.completed_steps) {
+          setCompletedSteps(new Set(data.completed_steps));
+        }
+      } catch (error) {
+        console.error('Erro ao carregar progresso:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadProgress();
+  }, [user, solutionId]);
+
+  const handleToggle = async (stepNumber: number) => {
+    if (!user) return;
+
     setCompletedSteps(prev => {
       const newSet = new Set(prev);
       if (newSet.has(stepNumber)) {
@@ -32,7 +67,29 @@ export const ImplementationChecklist: React.FC<ImplementationChecklistProps> = (
       } else {
         newSet.add(stepNumber);
       }
-      // TODO: Salvar progresso no banco
+      
+      // Salvar progresso no banco
+      const saveProgress = async () => {
+        try {
+          const { error } = await supabase
+            .from('implementation_progress')
+            .upsert({
+              user_id: user.id,
+              solution_id: solutionId,
+              completed_steps: Array.from(newSet),
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'user_id,solution_id'
+            });
+
+          if (error) throw error;
+        } catch (error) {
+          console.error('Erro ao salvar progresso:', error);
+          toast.error('Erro ao salvar progresso');
+        }
+      };
+
+      saveProgress();
       return newSet;
     });
   };
