@@ -38,8 +38,6 @@ const DataAuditPage = () => {
     setReport(null);
 
     try {
-      console.log('🔍 Executando auditoria de dados duplicados...');
-      
       const { data, error } = await supabase.functions.invoke('audit-duplicates');
       
       if (error) {

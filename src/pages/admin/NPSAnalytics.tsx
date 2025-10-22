@@ -72,13 +72,6 @@ const NPSAnalytics: React.FC = () => {
   // Hook para dados de evolução
   const { data: evolutionData, isLoading: evolutionLoading } = useNPSEvolution({ dateRange });
 
-  // Log de depuração
-  console.log('NPSAnalytics - Estado:', { analyticsLoading, isError, error, analyticsData });
-
-  if (error) {
-    console.error('Erro no NPSAnalytics:', error);
-  }
-
   // Mapear dados para interface anterior (compatibilidade)
   const analytics = analyticsData ? {
     total_responses: analyticsData.feedbackData.length,

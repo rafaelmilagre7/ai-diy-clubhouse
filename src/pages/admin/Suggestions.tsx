@@ -47,7 +47,6 @@ import { toast } from 'sonner';
 import LoadingScreen from '@/components/common/LoadingScreen';
 
 const AdminSuggestionsPage = () => {
-  console.log('Renderizando AdminSuggestionsPage');
   const { suggestions, refetch, isLoading: suggestionsLoading, error } = useSuggestions();
   const { removeSuggestion, updateSuggestionStatus, loading } = useAdminSuggestions();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -102,21 +101,8 @@ const AdminSuggestionsPage = () => {
     }
   };
 
-  // Log para debug
-  useEffect(() => {
-    console.log('AdminSuggestionsPage montado');
-    console.log('Sugestões:', suggestions);
-    console.log('Estado de carregamento:', suggestionsLoading);
-    console.log('Erro:', error);
-    
-    return () => {
-      console.log('AdminSuggestionsPage desmontado');
-    };
-  }, [suggestions, suggestionsLoading, error]);
-
   const handleRemoveSuggestion = async () => {
     if (selectedSuggestion) {
-      console.log('Removendo sugestão:', selectedSuggestion);
       const success = await removeSuggestion(selectedSuggestion);
       if (success) {
         toast.success('Sugestão removida com sucesso');
@@ -141,7 +127,6 @@ const AdminSuggestionsPage = () => {
   const handleUpdateStatus = async (status: string, suggestionId: string) => {
     try {
       setSelectedSuggestion(suggestionId);
-      console.log('Atualizando status da sugestão:', suggestionId, status);
       const success = await updateSuggestionStatus(suggestionId, status);
       if (success) {
         toast.success(`Sugestão marcada como ${getStatusLabel(status)}`);
@@ -154,7 +139,6 @@ const AdminSuggestionsPage = () => {
   };
 
   const viewSuggestionDetails = (suggestionId: string) => {
-    console.log('Navegando para detalhes da sugestão (admin):', suggestionId);
     navigate(`/admin/suggestions/${suggestionId}`);
   };
 

@@ -65,7 +65,6 @@ const FormacaoMateriais = () => {
       
       if (error) throw error;
       
-      console.log("FormacaoMateriais: Recursos carregados:", data?.length || 0);
       setRecursos(data || []);
     } catch (error) {
       console.error("Erro ao buscar recursos:", error);

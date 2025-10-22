@@ -33,7 +33,6 @@ export const TestPlan: React.FC = () => {
       timestamp: new Date().toLocaleTimeString()
     };
     setTestResults(prev => [...prev, result]);
-    console.log(`[TEST] ${step}: ${status} - ${message}`, details);
   };
 
   const runCompleteTest = async () => {

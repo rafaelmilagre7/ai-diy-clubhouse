@@ -25,7 +25,6 @@ const FormacaoAulaEditar = () => {
 
       try {
         setLoading(true);
-        console.log("Buscando aula com ID:", id);
         
         const { data, error } = await supabase
           .from('learning_lessons')
@@ -46,7 +45,6 @@ const FormacaoAulaEditar = () => {
           return;
         }
 
-        console.log("Aula encontrada:", data);
         setAula(data as LearningLesson);
       } catch (error: any) {
         console.error("Erro ao buscar aula:", error);

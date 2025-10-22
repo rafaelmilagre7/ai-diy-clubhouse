@@ -33,7 +33,7 @@ const ValidateCertificate = () => {
           };
         }
       } catch (error) {
-        console.log('Não é certificado de solução, tentando curso...');
+        // Se não for certificado de solução, será tentado como certificado de curso
       }
       
       // Se não for certificado de solução, tentar como certificado de curso

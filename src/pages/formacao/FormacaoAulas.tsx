@@ -35,8 +35,6 @@ const FormacaoAulas = () => {
 
   // Detectar se estamos na rota geral ou específica
   const isGeneralView = !id;
-  
-  console.log('FormacaoAulas: Modo de visualização:', isGeneralView ? 'Geral' : 'Módulo específico', { id });
 
   // Buscar detalhes do módulo
   const fetchModulo = async () => {
@@ -65,11 +63,9 @@ const FormacaoAulas = () => {
   // Buscar aulas do módulo
   const fetchAulas = async () => {
     if (!id) {
-      console.warn("FormacaoAulas: ID do módulo não encontrado");
       return;
     }
     
-    console.log("FormacaoAulas: Buscando aulas para módulo", id);
     setLoadingAulas(true);
     
     try {
@@ -80,14 +76,11 @@ const FormacaoAulas = () => {
         .order('order_index', { ascending: true })
         .order('title', { ascending: true });
       
-      console.log("FormacaoAulas: Resposta do Supabase:", { data, error });
-      
       if (error) {
         console.error("FormacaoAulas: Erro na query:", error);
         throw error;
       }
       
-      console.log("FormacaoAulas: Aulas encontradas:", data?.length || 0);
       setAulas(data || []);
     } catch (error) {
       console.error("FormacaoAulas: Erro ao buscar aulas:", error);

@@ -43,10 +43,8 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
       const canReceive = await canReceiveNewInvite(testEmail);
       
       if (canReceive) {
-        console.log("✅ Email já está limpo, prosseguindo para envio");
         setFlowStep('inviting');
       } else {
-        console.log("🧹 Email precisa ser limpo primeiro");
         
         // Buscar o usuário pelo email
         const { data: userData } = await supabase
@@ -56,7 +54,6 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
           .maybeSingle();
 
         if (userData) {
-          console.log("🗑️ Limpando usuário encontrado:", userData);
           const deleteSuccess = await deleteUser(userData.id, testEmail, true); // Soft delete sempre
           
           if (!deleteSuccess) {
@@ -67,13 +64,11 @@ export const InviteTestFlow: React.FC<InviteTestFlowProps> = ({ roles, onInviteC
           await new Promise(resolve => setTimeout(resolve, 1000));
           setFlowStep('inviting');
         } else {
-          console.log("👤 Usuário não encontrado, prosseguindo direto");
           setFlowStep('inviting');
         }
       }
       
       // Criar novo convite
-      console.log("📧 Criando novo convite...");
       const inviteResult = await createInvite(testEmail, selectedRole, `Convite de teste via fluxo automatizado`);
       
       if (inviteResult) {

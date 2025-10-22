@@ -160,8 +160,6 @@ const InvitesManagement = () => {
                 roles={mappedRoles}
                 rolesLoading={rolesLoading}
                 onProceedWithContacts={async (contacts, roleId) => {
-                  console.log(`🚀 [INVITES-MGT] Iniciando criação de ${contacts.length} convites com roleId: ${roleId}`);
-                  
                   setShowProgressModal(true);
                   
                   const result = await createBulkInvites(contacts, roleId);
@@ -187,7 +185,6 @@ const InvitesManagement = () => {
         progress={progress}
         onCancel={() => {
           // TODO: Implementar cancelamento se necessário
-          console.log('Cancel bulk invite requested');
         }}
       />
     </div>
