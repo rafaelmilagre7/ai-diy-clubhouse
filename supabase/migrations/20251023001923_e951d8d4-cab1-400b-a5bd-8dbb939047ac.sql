@@ -1,0 +1,8 @@
+
+-- Habilitar REPLICA IDENTITY FULL em todas as tabelas necessárias
+ALTER TABLE IF EXISTS public.notifications REPLICA IDENTITY FULL;
+ALTER TABLE IF EXISTS public.conversations REPLICA IDENTITY FULL;
+ALTER TABLE IF EXISTS public.direct_messages REPLICA IDENTITY FULL;
+ALTER TABLE IF EXISTS public.message_reactions REPLICA IDENTITY FULL;
+ALTER TABLE IF EXISTS public.network_connections REPLICA IDENTITY FULL;
+ALTER TABLE IF EXISTS public.profiles REPLICA IDENTITY FULL;
