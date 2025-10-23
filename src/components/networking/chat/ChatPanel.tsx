@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { OnlineIndicator } from '@/components/realtime/OnlineIndicator';
 import { useDirectMessages } from '@/hooks/useDirectMessages';
 import { MessageBubble } from './MessageBubble';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,11 +83,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
           </Button>
         )}
         
-        <Avatar className="h-10 w-10 ring-2 ring-primary/20">
+        <Avatar className="h-10 w-10 ring-2 ring-primary/20 relative">
           <AvatarImage src={recipientAvatar} alt={recipientName} />
           <AvatarFallback className="bg-gradient-to-br from-primary/20 to-primary/10">
             {getInitials(recipientName)}
           </AvatarFallback>
+          <OnlineIndicator 
+            userId={recipientId} 
+            className="absolute bottom-0 right-0"
+          />
         </Avatar>
         
         <div className="flex-1 min-w-0">

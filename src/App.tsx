@@ -32,9 +32,9 @@ function App() {
           <AuthProvider>
             <SecurityProvider>
               <RealtimeProviderV2
-                enableNotifications={true}  // Fase 1: ATIVA
-                enablePresence={false}      // Fase 2: DESATIVA (mude para true quando quiser ativar)
-                enableChat={false}          // Fase 3: DESATIVA (mude para true quando quiser ativar)
+                enableNotifications={true}  // Fase 1: ✅ ATIVA
+                enablePresence={true}       // Fase 2: ✅ ATIVA
+                enableChat={true}           // Fase 3: ✅ ATIVA
                 enableSound={true}
                 enableDesktopNotifications={true}
               >

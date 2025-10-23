@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Menu, MessageCircle } from "lucide-react";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { RealtimeNotificationsBadge } from "@/components/realtime/RealtimeNotificationsBadge";
+import { LiveUpdateIndicator } from "@/components/realtime/LiveUpdateIndicator";
 import { InboxDrawer } from "@/components/networking/chat/InboxDrawer";
 import { useUnreadCount } from "@/hooks/networking/useUnreadCount";
 import { useNavigate } from "react-router-dom";
@@ -49,7 +50,10 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
         <div className="hidden md:block" />
 
         {/* Área de ações do usuário */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {/* Indicador de usuários online */}
+          <LiveUpdateIndicator className="hidden sm:flex" />
+          
           {/* Inbox de Mensagens */}
           <Button
             variant="ghost"

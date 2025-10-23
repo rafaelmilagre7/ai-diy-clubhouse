@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { AdminTable } from "@/components/admin/ui/AdminTable";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { OnlineIndicator } from "@/components/realtime/OnlineIndicator";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -42,10 +43,17 @@ export const RecentMatchesTable = () => {
       label: 'Usuário',
       render: (item: any) => (
         <div className="flex items-center gap-2">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={item.user_profile?.avatar_url} />
-            <AvatarFallback>{item.user_profile?.name?.[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={item.user_profile?.avatar_url} />
+              <AvatarFallback>{item.user_profile?.name?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <OnlineIndicator 
+              userId={item.user_profile?.id} 
+              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border"
+              showOffline={false}
+            />
+          </div>
           <span className="text-sm">{item.user_profile?.name}</span>
         </div>
       ),
@@ -55,10 +63,17 @@ export const RecentMatchesTable = () => {
       label: 'Match',
       render: (item: any) => (
         <div className="flex items-center gap-2">
-          <Avatar className="w-8 h-8">
-            <AvatarImage src={item.matched_profile?.avatar_url} />
-            <AvatarFallback>{item.matched_profile?.name?.[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="w-8 h-8">
+              <AvatarImage src={item.matched_profile?.avatar_url} />
+              <AvatarFallback>{item.matched_profile?.name?.[0]?.toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <OnlineIndicator 
+              userId={item.matched_profile?.id} 
+              className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border"
+              showOffline={false}
+            />
+          </div>
           <span className="text-sm">{item.matched_profile?.name}</span>
         </div>
       ),
