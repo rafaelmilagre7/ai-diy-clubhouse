@@ -92,55 +92,83 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   }, [normalizedItems]);
 
   const handleDragEnd = (result: DropResult) => {
+    console.log('🎯 handleDragEnd iniciado:', result);
+    
     const { source, destination } = result;
 
     // Validações básicas
-    if (!destination) return;
-    if (source.droppableId === destination.droppableId && source.index === destination.index) return;
+    if (!destination) {
+      console.log('❌ Sem destination, abortando');
+      return;
+    }
+    
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      console.log('❌ Mesma posição, abortando');
+      return;
+    }
 
     const sourceColumn = source.droppableId as ColumnType;
     const destColumn = destination.droppableId as ColumnType;
-
-    // Clonar os arrays de cada coluna
-    const newItemsByColumn = {
-      todo: [...itemsByColumn.todo],
-      in_progress: [...itemsByColumn.in_progress],
-      done: [...itemsByColumn.done]
-    };
-
-    // Remover o item da coluna de origem
-    const [movedItem] = newItemsByColumn[sourceColumn].splice(source.index, 1);
-
-    // Atualizar o item movido com nova coluna e status
-    const updatedMovedItem = {
-      ...movedItem,
-      column: destColumn,
-      completed: destColumn === 'done',
-      completedAt: destColumn === 'done' ? new Date().toISOString() : movedItem.completedAt
-    };
-
-    // Inserir o item na coluna de destino
-    newItemsByColumn[destColumn].splice(destination.index, 0, updatedMovedItem);
-
-    // Recalcular orders sequenciais para todas as colunas
-    const finalItems: UnifiedChecklistItem[] = [];
     
-    (Object.keys(newItemsByColumn) as ColumnType[]).forEach(columnKey => {
-      newItemsByColumn[columnKey].forEach((item, index) => {
-        finalItems.push({
+    console.log('📍 Movendo de', sourceColumn, 'índice', source.index, 'para', destColumn, 'índice', destination.index);
+
+    // Criar cópia completa de todos os itens
+    const allItems = [...normalizedItems];
+    
+    // Encontrar o item sendo movido
+    const movedItem = allItems.find(item => 
+      item.column === sourceColumn && 
+      itemsByColumn[sourceColumn].findIndex(i => i.id === item.id) === source.index
+    );
+    
+    if (!movedItem) {
+      console.log('❌ Item não encontrado');
+      return;
+    }
+    
+    console.log('📦 Item sendo movido:', movedItem.title);
+
+    // Atualizar todos os itens
+    const updatedItems = allItems.map(item => {
+      // O item que está sendo movido
+      if (item.id === movedItem.id) {
+        console.log('✏️ Atualizando item movido para coluna:', destColumn);
+        return {
           ...item,
-          order: index,
-          column: columnKey
-        });
-      });
+          column: destColumn,
+          completed: destColumn === 'done',
+          order: destination.index,
+          completedAt: destColumn === 'done' ? new Date().toISOString() : item.completedAt
+        };
+      }
+      
+      // Itens que permaneceram na coluna de origem (ajustar order)
+      if (item.column === sourceColumn && sourceColumn !== destColumn) {
+        const currentIndex = itemsByColumn[sourceColumn].findIndex(i => i.id === item.id);
+        if (currentIndex > source.index) {
+          return { ...item, order: currentIndex - 1 };
+        }
+      }
+      
+      // Itens na coluna de destino (ajustar order)
+      if (item.column === destColumn && item.id !== movedItem.id) {
+        const currentIndex = itemsByColumn[destColumn].findIndex(i => i.id === item.id);
+        if (currentIndex >= destination.index) {
+          return { ...item, order: currentIndex + 1 };
+        }
+      }
+      
+      return item;
     });
+
+    console.log('💾 Salvando items atualizados:', updatedItems);
 
     // Salvar no banco de dados
     updateMutation.mutate({
       checklistData: {
         ...checklistData,
         checklist_data: {
-          items: finalItems,
+          items: updatedItems,
           lastUpdated: new Date().toISOString()
         }
       },
