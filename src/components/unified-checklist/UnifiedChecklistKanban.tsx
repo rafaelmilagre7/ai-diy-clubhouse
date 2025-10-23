@@ -23,30 +23,27 @@ interface UnifiedChecklistKanbanProps {
 
 type ColumnType = 'todo' | 'in_progress' | 'done';
 
-const COLUMNS: { id: ColumnType; title: string; icon: any; bgGradient: string; borderColor: string; headerBg: string }[] = [
+const COLUMNS: { id: ColumnType; title: string; icon: any; gradient: string; glowColor: string }[] = [
   { 
     id: 'todo', 
     title: 'A Fazer', 
     icon: Clock,
-    bgGradient: 'from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50',
-    borderColor: 'border-slate-200 dark:border-slate-700',
-    headerBg: 'bg-slate-100 dark:bg-slate-800'
+    gradient: 'bg-gradient-muted',
+    glowColor: 'status-neutral'
   },
   { 
     id: 'in_progress', 
     title: 'Em Progresso', 
     icon: TrendingUp,
-    bgGradient: 'from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30',
-    borderColor: 'border-amber-200 dark:border-amber-800',
-    headerBg: 'bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/50 dark:to-orange-900/50'
+    gradient: 'bg-gradient-warning-subtle',
+    glowColor: 'status-warning'
   },
   { 
     id: 'done', 
     title: 'Concluído', 
     icon: Sparkles,
-    bgGradient: 'from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30',
-    borderColor: 'border-emerald-200 dark:border-emerald-800',
-    headerBg: 'bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50'
+    gradient: 'bg-gradient-success-subtle',
+    glowColor: 'status-success'
   },
 ];
 
@@ -201,34 +198,53 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Tooltip Educativo com Design Rico */}
+      {/* Tooltip Educativo - Design System Completo */}
       {showKanbanTip && (
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
+          className="animate-scale-in"
         >
-          <Card className="p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/30 shadow-lg">
+          <Card className="glass-card-hover p-6 border-2 border-primary/20 shadow-aurora">
             <div className="flex items-start gap-4">
-              <div className="p-3 rounded-xl bg-primary/20 border border-primary/30">
-                <Lightbulb className="h-6 w-6 text-primary" />
-              </div>
+              <motion.div 
+                className="p-3 rounded-xl bg-gradient-aurora shadow-glow-sm"
+                animate={{ rotate: [0, 5, 0, -5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Lightbulb className="h-6 w-6 text-primary-foreground" />
+              </motion.div>
               <div className="flex-1">
-                <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                <h4 className="font-bold text-xl mb-3 aurora-gradient-text flex items-center gap-2">
                   Como usar o Kanban
-                  <Badge variant="secondary" className="text-xs">Dica</Badge>
+                  <Badge variant="secondary" className="text-xs font-normal bg-primary/10 text-primary border-primary/20">
+                    Dica
+                  </Badge>
                 </h4>
-                <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                  <li className="flex items-start gap-2">
-                    <GripVertical className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                    <span>Arraste os cards entre as colunas para organizar suas tarefas</span>
+                <ul className="space-y-3 text-sm mb-4">
+                  <li className="flex items-start gap-3 group">
+                    <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <GripVertical className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-muted-foreground leading-relaxed">
+                      Arraste os cards entre as colunas para organizar suas tarefas
+                    </span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-success" />
-                    <span>Ao mover para "Concluído", o item será automaticamente marcado como completo</span>
+                  <li className="flex items-start gap-3 group">
+                    <div className="p-1.5 rounded-lg bg-status-success/10 group-hover:bg-status-success/20 transition-colors">
+                      <CheckCircle className="h-4 w-4 text-status-success" />
+                    </div>
+                    <span className="text-muted-foreground leading-relaxed">
+                      Ao mover para "Concluído", o item será automaticamente marcado como completo
+                    </span>
                   </li>
-                  <li className="flex items-start gap-2">
-                    <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-                    <span>Clique em um card para ver todos os detalhes e adicionar notas</span>
+                  <li className="flex items-start gap-3 group">
+                    <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
+                      <Sparkles className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-muted-foreground leading-relaxed">
+                      Clique em um card para ver todos os detalhes e adicionar notas
+                    </span>
                   </li>
                 </ul>
                 <Button
@@ -237,7 +253,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                     setShowKanbanTip(false);
                     localStorage.setItem(`kanban-tip-seen-${solutionId}`, 'true');
                   }}
-                  className="w-full sm:w-auto"
+                  className="w-full sm:w-auto aurora-button"
                 >
                   Entendi, vamos lá! 🚀
                 </Button>
@@ -247,60 +263,85 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         </motion.div>
       )}
 
-      {/* Header com Estatísticas Ricas */}
-      <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-2 shadow-sm">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+      {/* Header com Estatísticas - Design System Completo */}
+      <Card className="aurora-card p-8 shadow-aurora">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <div>
-            <h3 className="text-xl font-bold flex items-center gap-2">
-              Seu Progresso
-              {stats.percentage === 100 && <Sparkles className="h-5 w-5 text-success animate-pulse" />}
+            <h3 className="text-2xl font-bold flex items-center gap-3 mb-2">
+              <span className="aurora-gradient-text">Seu Progresso</span>
+              {stats.percentage === 100 && (
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1, rotate: 360 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                >
+                  <Sparkles className="h-6 w-6 text-status-success animate-pulse" />
+                </motion.div>
+              )}
             </h3>
-            <p className="text-sm text-muted-foreground mt-1">
+            <p className="text-sm text-muted-foreground">
               Acompanhe sua jornada de implementação
             </p>
           </div>
-          <Badge variant="secondary" className="text-base px-4 py-2 font-bold">
+          <Badge 
+            variant="secondary" 
+            className={cn(
+              "text-lg px-5 py-2.5 font-bold shadow-md transition-all",
+              stats.percentage === 100 && "bg-gradient-success text-white shadow-glow-sm"
+            )}
+          >
             {stats.done}/{stats.total}
           </Badge>
         </div>
         
-        <div className="space-y-2">
+        <div className="space-y-3">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-medium">Conclusão</span>
-            <span className="font-bold text-primary">{stats.percentage}%</span>
+            <span className="font-semibold text-muted-foreground">Conclusão</span>
+            <span className="font-bold text-lg aurora-gradient-text">{stats.percentage}%</span>
           </div>
-          <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden">
+          <div className="relative w-full h-4 bg-muted rounded-full overflow-hidden shadow-inner">
             <motion.div 
-              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary-glow to-success rounded-full"
+              className="absolute inset-y-0 left-0 aurora-progress rounded-full"
               initial={{ width: 0 }}
               animate={{ width: `${stats.percentage}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
+              transition={{ duration: 1, ease: "easeOut" }}
             />
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-4 mt-6">
-          <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
-            <div className="flex items-center gap-2 mb-1">
-              <Clock className="h-4 w-4 text-slate-600 dark:text-slate-400" />
-              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">A Fazer</span>
+        <div className="grid grid-cols-3 gap-4 mt-8">
+          <motion.div 
+            className="glass-card p-4 rounded-xl hover:shadow-md transition-all"
+            whileHover={{ y: -2 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="h-5 w-5 text-status-neutral" />
+              <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">A Fazer</span>
             </div>
-            <p className="text-2xl font-bold">{stats.todo}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-            <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Em Progresso</span>
+            <p className="text-3xl font-bold">{stats.todo}</p>
+          </motion.div>
+          
+          <motion.div 
+            className="glass-card p-4 rounded-xl border-2 border-status-warning/20 hover:shadow-glow-sm transition-all"
+            whileHover={{ y: -2 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <TrendingUp className="h-5 w-5 text-status-warning" />
+              <span className="text-xs font-semibold text-status-warning uppercase tracking-wide">Em Progresso</span>
             </div>
-            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.in_progress}</p>
-          </div>
-          <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
-            <div className="flex items-center gap-2 mb-1">
-              <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Concluídos</span>
+            <p className="text-3xl font-bold text-status-warning">{stats.in_progress}</p>
+          </motion.div>
+          
+          <motion.div 
+            className="glass-card p-4 rounded-xl border-2 border-status-success/20 hover:shadow-glow-sm transition-all"
+            whileHover={{ y: -2 }}
+          >
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="h-5 w-5 text-status-success" />
+              <span className="text-xs font-semibold text-status-success uppercase tracking-wide">Concluídos</span>
             </div>
-            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.done}</p>
-          </div>
+            <p className="text-3xl font-bold text-status-success">{stats.done}</p>
+          </motion.div>
         </div>
       </Card>
 
@@ -313,41 +354,64 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
             return (
               <div key={column.id} className="space-y-3">
-                {/* Column Header - Design Rico */}
+                {/* Column Header - Design System */}
                 <div className={cn(
-                  "p-4 rounded-xl border-2 shadow-sm",
-                  column.headerBg,
-                  column.borderColor
+                  "glass-card-hover p-5 rounded-2xl border-2 shadow-md transition-all duration-300",
+                  column.gradient,
+                  column.id === 'done' && "border-status-success/30",
+                  column.id === 'in_progress' && "border-status-warning/30",
+                  column.id === 'todo' && "border-border"
                 )}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/50 dark:bg-black/20">
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <h3 className="font-bold">{column.title}</h3>
+                      <motion.div 
+                        className={cn(
+                          "p-2.5 rounded-xl shadow-sm",
+                          column.id === 'done' && "bg-gradient-success",
+                          column.id === 'in_progress' && "bg-gradient-warning",
+                          column.id === 'todo' && "bg-muted"
+                        )}
+                        whileHover={{ scale: 1.1, rotate: 5 }}
+                      >
+                        <Icon className={cn(
+                          "h-5 w-5",
+                          column.id === 'done' && "text-white",
+                          column.id === 'in_progress' && "text-white",
+                          column.id === 'todo' && "text-muted-foreground"
+                        )} />
+                      </motion.div>
+                      <h3 className="font-bold text-base">{column.title}</h3>
                     </div>
                     <Badge 
                       variant="secondary" 
-                      className="font-bold px-3 py-1 text-sm"
+                      className={cn(
+                        "font-bold px-4 py-1.5 text-sm shadow-sm",
+                        column.id === 'done' && "bg-status-success/10 text-status-success border-status-success/20",
+                        column.id === 'in_progress' && "bg-status-warning/10 text-status-warning border-status-warning/20"
+                      )}
                     >
                       {items.length}
                     </Badge>
                   </div>
                 </div>
 
-                {/* Droppable Area */}
+                {/* Droppable Area - Design System */}
                 <Droppable droppableId={column.id}>
                   {(provided, snapshot) => (
                     <div
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={cn(
-                        "min-h-[300px] rounded-xl border-2 p-4 transition-all duration-300",
-                        "bg-gradient-to-br",
-                        column.bgGradient,
+                        "min-h-[400px] rounded-2xl border-2 p-5 transition-all duration-300 backdrop-blur-sm",
+                        column.gradient,
                         snapshot.isDraggingOver 
-                          ? "border-primary shadow-lg ring-4 ring-primary/20 scale-[1.02]" 
-                          : cn("border-dashed", column.borderColor)
+                          ? "border-primary shadow-aurora ring-4 ring-primary/20 scale-[1.01]" 
+                          : cn(
+                              "border-dashed",
+                              column.id === 'done' && "border-status-success/30",
+                              column.id === 'in_progress' && "border-status-warning/30",
+                              column.id === 'todo' && "border-border"
+                            )
                       )}
                     >
                       <AnimatePresence mode="popLayout">
@@ -377,36 +441,36 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 className={cn(
-                                  "mb-3 last:mb-0",
+                                  "mb-4 last:mb-0",
                                   snapshot.isDragging && "z-50"
                                 )}
                                 layout
-                                initial={{ opacity: 0, scale: 0.8 }}
+                                initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.8 }}
-                                whileHover={{ scale: 1.02 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                whileHover={{ scale: 1.03 }}
                                 transition={{ duration: 0.2 }}
                               >
                                 <Card 
                                   className={cn(
-                                    "group relative cursor-pointer transition-all duration-200",
-                                    "hover:shadow-lg hover:border-primary/50",
-                                    snapshot.isDragging && "rotate-2 shadow-2xl scale-105 ring-4 ring-primary/30 border-primary"
+                                    "group relative cursor-pointer transition-all duration-300 glass-card-hover",
+                                    "hover:shadow-aurora hover:border-primary/40",
+                                    snapshot.isDragging && "rotate-3 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary"
                                   )}
                                   onClick={() => handleCardClick(item)}
                                 >
                                   {/* Drag Handle */}
                                   <div 
                                     {...provided.dragHandleProps}
-                                    className="absolute top-2 right-2 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing hover:bg-muted"
+                                    className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing hover:bg-primary/10 hover:shadow-glow-sm"
                                     onClick={(e) => e.stopPropagation()}
                                   >
-                                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                    <GripVertical className="h-4 w-4 text-primary" />
                                   </div>
 
-                                  <div className="p-4 space-y-3">
-                                    <div className="pr-8">
-                                      <h4 className="font-semibold leading-tight mb-2">
+                                  <div className="p-5 space-y-4">
+                                    <div className="pr-10">
+                                      <h4 className="font-semibold text-base leading-tight mb-2 group-hover:aurora-gradient-text transition-all">
                                         {item.title}
                                       </h4>
                                       
@@ -420,8 +484,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                     {/* Badges */}
                                     <div className="flex flex-wrap gap-2">
                                       {item.metadata?.estimated_time && (
-                                        <Badge variant="outline" className="text-xs gap-1">
-                                          <Clock className="h-3 w-3" />
+                                        <Badge variant="outline" className="text-xs gap-1.5 hover:bg-primary/10 transition-colors">
+                                          <Clock className="h-3.5 w-3.5" />
                                           {item.metadata.estimated_time}
                                         </Badge>
                                       )}
@@ -430,10 +494,10 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                         <Badge 
                                           variant="outline" 
                                           className={cn(
-                                            "text-xs",
-                                            item.metadata.difficulty === 'easy' && "border-green-500/30 text-green-600",
-                                            item.metadata.difficulty === 'medium' && "border-yellow-500/30 text-yellow-600",
-                                            item.metadata.difficulty === 'hard' && "border-red-500/30 text-red-600"
+                                            "text-xs font-semibold",
+                                            item.metadata.difficulty === 'easy' && "border-difficulty-beginner/40 text-difficulty-beginner bg-difficulty-beginner/10",
+                                            item.metadata.difficulty === 'medium' && "border-difficulty-intermediate/40 text-difficulty-intermediate bg-difficulty-intermediate/10",
+                                            item.metadata.difficulty === 'hard' && "border-difficulty-advanced/40 text-difficulty-advanced bg-difficulty-advanced/10"
                                           )}
                                         >
                                           {item.metadata.difficulty === 'easy' && '⚡ Fácil'}
@@ -445,10 +509,10 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
                                     {/* Footer com indicador de notas */}
                                     {item.notes && (
-                                      <div className="pt-2 border-t border-border/50">
-                                        <p className="text-xs text-muted-foreground italic flex items-center gap-1">
-                                          <span>✏️</span>
-                                          Tem notas pessoais
+                                      <div className="pt-3 border-t border-border/50">
+                                        <p className="text-xs text-muted-foreground italic flex items-center gap-1.5 hover:text-primary transition-colors">
+                                          <span className="text-base">✏️</span>
+                                          <span>Tem notas pessoais</span>
                                         </p>
                                       </div>
                                     )}
@@ -469,30 +533,51 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         </div>
       </DragDropContext>
 
-      {/* Completion Message - Design Rico */}
+      {/* Completion Message - Design System Completo */}
       {stats.percentage === 100 && (
         <motion.div
-          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          initial={{ opacity: 0, y: 30, scale: 0.9 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-success/20 via-success/10 to-transparent border-2 border-success/30 p-8 text-center shadow-lg"
+          transition={{ type: "spring", stiffness: 200 }}
+          className="relative overflow-hidden rounded-3xl bg-gradient-success-subtle border-2 border-status-success/40 p-10 text-center shadow-aurora"
         >
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_70%)]" />
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2, type: "spring" }}
-          >
-            <Sparkles className="h-16 w-16 text-success mx-auto mb-4 animate-pulse" />
-          </motion.div>
-          <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-success to-emerald-600 bg-clip-text text-transparent">
-            Parabéns! Missão Cumprida! 🎉
-          </h3>
-          <p className="text-muted-foreground mb-4">
-            Você completou todos os itens do plano de ação. Continue assim!
-          </p>
-          <div className="flex items-center justify-center gap-2 text-sm text-success">
-            <CheckCircle className="h-4 w-4" />
-            <span className="font-semibold">{stats.total} de {stats.total} tarefas concluídas</span>
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.15),transparent_70%)]" />
+          <div className="relative z-10">
+            <motion.div
+              initial={{ scale: 0, rotate: -180 }}
+              animate={{ scale: 1, rotate: 0 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 150 }}
+              className="inline-block mb-6"
+            >
+              <div className="p-6 rounded-full bg-gradient-success shadow-glow">
+                <Sparkles className="h-16 w-16 text-white animate-pulse" />
+              </div>
+            </motion.div>
+            <motion.h3 
+              className="text-3xl font-bold mb-3"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <span className="aurora-gradient-text">Parabéns! Missão Cumprida!</span> 🎉
+            </motion.h3>
+            <motion.p 
+              className="text-muted-foreground mb-6 text-lg"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.4 }}
+            >
+              Você completou todos os itens do plano de ação. Continue assim!
+            </motion.p>
+            <motion.div 
+              className="flex items-center justify-center gap-2 text-status-success font-semibold"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.5 }}
+            >
+              <CheckCircle className="h-5 w-5" />
+              <span>{stats.total} de {stats.total} tarefas concluídas</span>
+            </motion.div>
           </div>
         </motion.div>
       )}
