@@ -454,36 +454,31 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
-                                className={cn(
-                                  "mb-4 last:mb-0",
-                                  snapshot.isDragging && "z-50"
-                                )}
+                                className="mb-4 last:mb-0"
                                 style={provided.draggableProps.style}
                               >
                                 <Card 
                                   className={cn(
-                                    "group relative glass-card-hover select-none cursor-grab active:cursor-grabbing",
-                                    snapshot.isDragging && "shadow-aurora-strong ring-4 ring-primary/30 border-primary rotate-2"
+                                    "group relative select-none p-5 transition-shadow",
+                                    snapshot.isDragging ? "shadow-lg ring-2 ring-primary cursor-grabbing" : "cursor-grab hover:shadow-md"
                                   )}
                                 >
+                                  {/* Botão Info para abrir modal */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      e.preventDefault();
+                                      handleCardClick(item);
+                                    }}
+                                    className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 z-10"
+                                    title="Ver detalhes"
+                                  >
+                                    <Info className="h-4 w-4 text-primary" />
+                                  </button>
 
-                                   {/* Botão Info para abrir modal - só aparece quando NÃO está arrastando */}
-                                   {!snapshot.isDragging && (
-                                     <button
-                                       onClick={(e) => {
-                                         e.stopPropagation();
-                                         handleCardClick(item);
-                                       }}
-                                       className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:shadow-glow-sm z-10"
-                                       title="Ver detalhes"
-                                     >
-                                       <Info className="h-4 w-4 text-primary" />
-                                     </button>
-                                   )}
-
-                                  <div className="p-5 space-y-4">
+                                  <div className="space-y-4">
                                     <div className="pr-10">
-                                      <h4 className="font-semibold text-base leading-tight mb-2 group-hover:aurora-gradient-text transition-all">
+                                      <h4 className="font-semibold text-base leading-tight mb-2">
                                         {item.title}
                                       </h4>
                                       
@@ -497,7 +492,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                     {/* Badges */}
                                     <div className="flex flex-wrap gap-2">
                                       {item.metadata?.estimated_time && (
-                                        <Badge variant="outline" className="text-xs gap-1.5 hover:bg-primary/10 transition-colors">
+                                        <Badge variant="outline" className="text-xs gap-1.5">
                                           <Clock className="h-3.5 w-3.5" />
                                           {item.metadata.estimated_time}
                                         </Badge>
@@ -523,7 +518,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                     {/* Footer com indicador de notas */}
                                     {item.notes && (
                                       <div className="pt-3 border-t border-border/50">
-                                        <p className="text-xs text-muted-foreground italic flex items-center gap-1.5 hover:text-primary transition-colors">
+                                        <p className="text-xs text-muted-foreground italic flex items-center gap-1.5">
                                           <span className="text-base">✏️</span>
                                           <span>Tem notas pessoais</span>
                                         </p>
