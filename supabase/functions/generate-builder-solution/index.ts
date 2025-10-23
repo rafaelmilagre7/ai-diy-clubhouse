@@ -443,152 +443,125 @@ Crie um plano completo seguindo o formato JSON especificado.`;
 
     const aiCallStart = Date.now();
 
-    // TOOL CALLING para FORÇAR JSON válido e completo
-    const toolDefinition = {
-      type: "function",
-      function: {
-        name: "create_solution_plan",
-        description: "Criar plano detalhado de implementação de solução com IA",
-        parameters: {
-          type: "object",
-          properties: {
-            title: { type: "string", description: "Título SINTÉTICO, PROFISSIONAL e CURTO (20-60 chars). NUNCA copie o início da ideia literalmente. EXTRAIA a essência e reformule. Formato: [Tecnologia/Sistema] + [Resultado]. PROIBIDO começar com: Implementar, Criar, Fazer, Quero, Preciso, Desenvolver" },
-            short_description: { type: "string", description: "Descrição em 3-5 frases" },
-            tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp, CRM, Dashboard). Evite tags genéricas demais" },
-            technical_overview: {
-              type: "object",
-              properties: {
-                complexity: { type: "string", enum: ["low", "medium", "high"] },
-                estimated_time: { type: "string" },
-                main_stack: { type: "string" }
+    // Definir tool definition baseado no modo
+    let toolDefinition: any;
+    
+    if (mode === "quick") {
+      // MODO QUICK: Gera apenas overview + framework (15-30s)
+      toolDefinition = {
+        type: "function",
+        function: {
+          name: "create_quick_solution",
+          description: "Criar visão geral rápida da solução (apenas essencial)",
+          parameters: {
+            type: "object",
+            properties: {
+              title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (20-60 chars). NUNCA copie literalmente. EXTRAIA essência. Formato: [Tecnologia] + [Resultado]. PROIBIDO: Implementar, Criar, Fazer" },
+              short_description: { type: "string", description: "Descrição objetiva em 3-5 frases sobre O QUE é e COMO funciona" },
+              tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp)" },
+              technical_overview: {
+                type: "object",
+                properties: {
+                  complexity: { type: "string", enum: ["low", "medium", "high"] },
+                  estimated_time: { type: "string" },
+                  main_stack: { type: "string" }
+                },
+                required: ["complexity", "estimated_time", "main_stack"]
               },
-              required: ["complexity", "estimated_time", "main_stack"]
-            },
-            business_context: { type: "string", description: "Contexto de negócio em 2-4 parágrafos" },
-            competitive_advantages: {
-              type: "array",
-              items: {
+              framework_quadrants: {
                 type: "object",
                 properties: {
-                  title: { type: "string" },
-                  description: { type: "string" }
-                },
-                required: ["title", "description"]
-              }
-            },
-            expected_kpis: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  metric: { type: "string" },
-                  target: { type: "string" },
-                  description: { type: "string" }
-                },
-                required: ["metric", "target", "description"]
-              }
-            },
-            mind_map: {
-              type: "object",
-              properties: {
-                central_idea: { type: "string" },
-                branches: {
-                  type: "array",
-                  items: {
+                  quadrant1_automation: {
                     type: "object",
                     properties: {
-                      name: { type: "string" },
-                      children: { type: "array", items: { type: "string" } }
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      items: { type: "array", items: { type: "string" } },
+                      tool_names: { type: "array", items: { type: "string" } },
+                      integration_details: { type: "string" }
                     },
-                    required: ["name", "children"]
-                  }
-                }
-              },
-              required: ["central_idea", "branches"]
-            },
-            framework_quadrants: {
-              type: "object",
-              properties: {
-                quadrant1_automation: {
-                  type: "object",
-                  properties: {
-                    title: { type: "string" },
-                    description: { type: "string" },
-                    items: { type: "array", items: { type: "string" } },
-                    tool_names: { type: "array", items: { type: "string" } },
-                    integration_details: { type: "string" }
+                    required: ["title", "description", "items", "tool_names"]
+                  },
+                  quadrant2_ai: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      items: { type: "array", items: { type: "string" } },
+                      tool_names: { type: "array", items: { type: "string" } },
+                      ai_strategy: { type: "string" }
+                    },
+                    required: ["title", "description", "items", "tool_names"]
+                  },
+                  quadrant3_data: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      items: { type: "array", items: { type: "string" } },
+                      tool_names: { type: "array", items: { type: "string" } }
+                    },
+                    required: ["title", "description", "items", "tool_names"]
+                  },
+                  quadrant4_interface: {
+                    type: "object",
+                    properties: {
+                      title: { type: "string" },
+                      description: { type: "string" },
+                      items: { type: "array", items: { type: "string" } },
+                      tool_names: { type: "array", items: { type: "string" } }
+                    },
+                    required: ["title", "description", "items", "tool_names"]
                   }
                 },
-                quadrant2_ai: { type: "object" },
-                quadrant3_data: { type: "object" },
-                quadrant4_interface: { type: "object" }
+                required: ["quadrant1_automation", "quadrant2_ai", "quadrant3_data", "quadrant4_interface"]
               }
             },
-            required_tools: {
-              type: "object",
-              properties: {
-                essential: { type: "array" },
-                optional: { type: "array" }
-              }
-            },
-            architecture_flowchart: {
-              type: "object",
-              properties: {
-                mermaid_code: { type: "string", description: "Código Mermaid completo do fluxograma de arquitetura (graph TD ou graph LR)" },
-                description: { type: "string", description: "Descrição do fluxograma em 1-2 frases" }
-              },
-              required: ["mermaid_code", "description"]
-            },
-            data_flow_diagram: {
-              type: "object",
-              properties: {
-                mermaid_code: { type: "string", description: "Código Mermaid do fluxo de dados (flowchart LR ou sequenceDiagram)" },
-                description: { type: "string", description: "Descrição do fluxo de dados em 1-2 frases" }
-              },
-              required: ["mermaid_code", "description"]
-            },
-            user_journey_map: {
-              type: "object",
-              properties: {
-                mermaid_code: { type: "string", description: "Código Mermaid da jornada do usuário (journey)" },
-                description: { type: "string", description: "Descrição da jornada em 1-2 frases" }
-              },
-              required: ["mermaid_code", "description"]
-            },
-            technical_stack_diagram: {
-              type: "object",
-              properties: {
-                mermaid_code: { type: "string", description: "Código Mermaid da stack tecnológica (graph TB)" },
-                description: { type: "string", description: "Descrição da stack em 1-2 frases" }
-              },
-              required: ["mermaid_code", "description"]
-            },
-            implementation_checklist: {
-              type: "array",
-              items: {
+            required: ["title", "short_description", "tags", "technical_overview", "framework_quadrants"]
+          }
+        }
+      };
+    } else {
+      // MODO COMPLETE: Gera tudo (2-3min) - mantém o original
+      toolDefinition = {
+        type: "function",
+        function: {
+          name: "create_solution_plan",
+          description: "Criar plano detalhado de implementação de solução com IA",
+          parameters: {
+            type: "object",
+            properties: {
+              title: { type: "string", description: "Título SINTÉTICO, PROFISSIONAL e CURTO (20-60 chars)" },
+              short_description: { type: "string", description: "Descrição em 3-5 frases" },
+              tags: { type: "array", items: { type: "string" } },
+              technical_overview: {
                 type: "object",
                 properties: {
-                  step_number: { type: "integer" },
-                  title: { type: "string" },
-                  description: { type: "string" },
+                  complexity: { type: "string", enum: ["low", "medium", "high"] },
                   estimated_time: { type: "string" },
-                  difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
-                  dependencies: { type: "array", items: { type: "integer" } },
-                  validation_criteria: { type: "string" },
-                  common_pitfalls: { type: "string" },
-                  resources: { type: "array", items: { type: "string" } }
+                  main_stack: { type: "string" }
                 },
-                required: ["step_number", "title", "description"]
-              }
-            }
-          },
-          required: ["title", "short_description", "technical_overview", "business_context", "competitive_advantages", "expected_kpis", "mind_map", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart", "data_flow_diagram", "user_journey_map", "technical_stack_diagram"]
+                required: ["complexity", "estimated_time", "main_stack"]
+              },
+              business_context: { type: "string" },
+              competitive_advantages: { type: "array" },
+              expected_kpis: { type: "array" },
+              mind_map: { type: "object" },
+              framework_quadrants: { type: "object" },
+              required_tools: { type: "object" },
+              architecture_flowchart: { type: "object" },
+              data_flow_diagram: { type: "object" },
+              user_journey_map: { type: "object" },
+              technical_stack_diagram: { type: "object" },
+              implementation_checklist: { type: "array" }
+            },
+            required: ["title", "short_description", "technical_overview", "framework_quadrants", "required_tools", "implementation_checklist", "architecture_flowchart"]
+          }
         }
-      }
-    };
+      };
+    }
 
-    // Call Lovable AI com modo QUICK (apenas essencial)
-    const isQuickMode = true; // Primeira geração é sempre rápida
+    console.log(`[BUILDER][${requestId}] 📦 Tool: ${toolDefinition.function.name}`);
     
     const aiResponse = await fetch(lovableAIUrl, {
       method: "POST",
@@ -603,10 +576,11 @@ Crie um plano completo seguindo o formato JSON especificado.`;
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 64000, // Geração completa
-        response_format: { type: 'json_object' }
+        max_tokens: mode === "quick" ? 8000 : 64000,
+        tools: [toolDefinition],
+        tool_choice: { type: "function", function: { name: toolDefinition.function.name } }
       }),
-      signal: AbortSignal.timeout(180000), // 3 minutos para geração completa
+      signal: AbortSignal.timeout(mode === "quick" ? 60000 : 180000)
     });
 
     if (!aiResponse.ok) {
@@ -628,113 +602,120 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     const aiData = await aiResponse.json();
     const aiResponseTime = Date.now() - aiCallStart;
 
-    console.log(`[BUILDER] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
-    console.log(`[BUILDER] 📊 Tokens: ${aiData.usage?.total_tokens || 'N/A'}`);
+    console.log(`[BUILDER][${requestId}] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
+    console.log(`[BUILDER][${requestId}] 📊 Tokens: ${aiData.usage?.total_tokens || 'N/A'}`);
 
-    // Extrair dados do message content
+    // Extrair dados do tool_calls (não content)
     const message = aiData.choices?.[0]?.message;
-    if (!message || !message.content) {
-      console.error("[BUILDER] ❌ Resposta não contém content");
+    if (!message || !message.tool_calls?.[0]) {
+      console.error("[BUILDER] ❌ Resposta não contém tool_calls");
       throw new Error("Resposta inválida da IA");
     }
 
     let solutionData;
     try {
-      solutionData = JSON.parse(message.content);
+      const toolCall = message.tool_calls[0];
+      solutionData = JSON.parse(toolCall.function.arguments);
     } catch (parseError) {
       console.error("[BUILDER] ❌ Erro ao fazer parse do JSON:", parseError);
       throw new Error("JSON inválido na resposta");
     }
 
-    console.log(`[BUILDER] ✅ JSON válido extraído com JSON mode`);
-    console.log(`[BUILDER] 📊 JSON recebido (primeiros 500 chars):`, JSON.stringify(solutionData).substring(0, 500));
-    console.log(`[BUILDER] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
-    console.log(`[BUILDER] 📝 Título recebido da IA: "${solutionData.title}"`);
+    console.log(`[BUILDER][${requestId}] ✅ JSON válido extraído via tool calling`);
+    console.log(`[BUILDER][${requestId}] 📊 Modo: ${mode}, campos: ${Object.keys(solutionData).length}`);
+    console.log(`[BUILDER][${requestId}] 📝 Título: "${solutionData.title}"`);
 
-    // 🔍 VALIDAÇÃO DE SINTAXE MERMAID
-    const validateMermaidSyntax = (code: string, type: string): { valid: boolean; errors: string[] } => {
-      const errors: string[] = [];
+    // Validações apenas para modo complete
+    if (mode === "complete") {
+      console.log(`[BUILDER][${requestId}] ✓ Checklist: ${solutionData.implementation_checklist?.length || 0} steps`);
+      console.log(`[BUILDER][${requestId}] ✓ Diagramas: ${Object.keys(solutionData).filter(k => k.includes('diagram') || k.includes('flowchart') || k.includes('map')).length}`);
       
-      if (!code || code.trim() === '') {
-        errors.push('Código Mermaid vazio');
-        return { valid: false, errors };
-      }
-      
-      const lines = code.split('\n').map(l => l.trim()).filter(l => l.length > 0);
-      
-      // Validar tipo de diagrama
-      if (type === 'architecture' || type === 'stack') {
-        if (!lines[0].match(/^graph\s+(TD|LR|TB|RL)/i)) {
-          errors.push(`Primeira linha deve ser "graph TD/LR/TB/RL", encontrado: "${lines[0]}"`);
-        }
-        // Detectar uso incorreto de chaves
-        if (code.includes('{') && !code.match(/\{\s*\}/)) {
-          errors.push('Uso inválido de chaves {} em graph (use apenas para decisões vazias ou remova)');
-        }
-      }
-      
-      if (type === 'dataflow') {
-        if (!lines[0].match(/^flowchart\s+(LR|TD|TB|RL)/i) && !lines[0].match(/^sequenceDiagram/i)) {
-          errors.push(`Primeira linha deve ser "flowchart LR/TD" ou "sequenceDiagram", encontrado: "${lines[0]}"`);
-        }
-      }
-      
-      if (type === 'journey') {
-        if (lines[0].toLowerCase() !== 'journey') {
-          errors.push(`Primeira linha deve ser "journey", encontrado: "${lines[0]}"`);
+      const validateMermaidSyntax = (code: string, type: string): { valid: boolean; errors: string[] } => {
+        const errors: string[] = [];
+        
+        if (!code || code.trim() === '') {
+          errors.push('Código Mermaid vazio');
+          return { valid: false, errors };
         }
         
-        // Validar formato de tarefas: "Task: SCORE: Actor"
-        const taskLines = lines.filter(l => !l.startsWith('title') && !l.startsWith('section') && l.includes(':'));
-        for (const taskLine of taskLines) {
-          const parts = taskLine.split(':');
-          if (parts.length >= 2) {
-            const scorePart = parts[1].trim();
-            if (!/^\d+$/.test(scorePart)) {
-              errors.push(`Journey: score deve ser número de 1-5, encontrado "${scorePart}" em: "${taskLine}"`);
+        const lines = code.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+        
+        // Validar tipo de diagrama
+        if (type === 'architecture' || type === 'stack') {
+          if (!lines[0].match(/^graph\s+(TD|LR|TB|RL)/i)) {
+            errors.push(`Primeira linha deve ser "graph TD/LR/TB/RL", encontrado: "${lines[0]}"`);
+          }
+          // Detectar uso incorreto de chaves
+          if (code.includes('{') && !code.match(/\{\s*\}/)) {
+            errors.push('Uso inválido de chaves {} em graph (use apenas para decisões vazias ou remova)');
+          }
+        }
+        
+        if (type === 'dataflow') {
+          if (!lines[0].match(/^flowchart\s+(LR|TD|TB|RL)/i) && !lines[0].match(/^sequenceDiagram/i)) {
+            errors.push(`Primeira linha deve ser "flowchart LR/TD" ou "sequenceDiagram", encontrado: "${lines[0]}"`);
+          }
+        }
+        
+        if (type === 'journey') {
+          if (lines[0].toLowerCase() !== 'journey') {
+            errors.push(`Primeira linha deve ser "journey", encontrado: "${lines[0]}"`);
+          }
+          
+          // Validar formato de tarefas: "Task: SCORE: Actor"
+          const taskLines = lines.filter(l => !l.startsWith('title') && !l.startsWith('section') && l.includes(':'));
+          for (const taskLine of taskLines) {
+            const parts = taskLine.split(':');
+            if (parts.length >= 2) {
+              const scorePart = parts[1].trim();
+              if (!/^\d+$/.test(scorePart)) {
+                errors.push(`Journey: score deve ser número de 1-5, encontrado "${scorePart}" em: "${taskLine}"`);
+              }
             }
           }
         }
-      }
-      
-      return { valid: errors.length === 0, errors };
-    };
+        
+        return { valid: errors.length === 0, errors };
+      };
 
-    // Validar cada diagrama
-    if (solutionData.architecture_flowchart?.mermaid_code) {
-      const validation = validateMermaidSyntax(solutionData.architecture_flowchart.mermaid_code, 'architecture');
-      if (!validation.valid) {
-        console.warn('[BUILDER] ⚠️ Erros em architecture_flowchart:', validation.errors);
-      } else {
-        console.log('[BUILDER] ✅ architecture_flowchart: sintaxe válida');
+      // Validar cada diagrama
+      if (solutionData.architecture_flowchart?.mermaid_code) {
+        const validation = validateMermaidSyntax(solutionData.architecture_flowchart.mermaid_code, 'architecture');
+        if (!validation.valid) {
+          console.warn('[BUILDER] ⚠️ Erros em architecture_flowchart:', validation.errors);
+        } else {
+          console.log('[BUILDER] ✅ architecture_flowchart: sintaxe válida');
+        }
       }
-    }
 
-    if (solutionData.data_flow_diagram?.mermaid_code) {
-      const validation = validateMermaidSyntax(solutionData.data_flow_diagram.mermaid_code, 'dataflow');
-      if (!validation.valid) {
-        console.warn('[BUILDER] ⚠️ Erros em data_flow_diagram:', validation.errors);
-      } else {
-        console.log('[BUILDER] ✅ data_flow_diagram: sintaxe válida');
+      if (solutionData.data_flow_diagram?.mermaid_code) {
+        const validation = validateMermaidSyntax(solutionData.data_flow_diagram.mermaid_code, 'dataflow');
+        if (!validation.valid) {
+          console.warn('[BUILDER] ⚠️ Erros em data_flow_diagram:', validation.errors);
+        } else {
+          console.log('[BUILDER] ✅ data_flow_diagram: sintaxe válida');
+        }
       }
-    }
 
-    if (solutionData.user_journey_map?.mermaid_code) {
-      const validation = validateMermaidSyntax(solutionData.user_journey_map.mermaid_code, 'journey');
-      if (!validation.valid) {
-        console.warn('[BUILDER] ⚠️ Erros em user_journey_map:', validation.errors);
-      } else {
-        console.log('[BUILDER] ✅ user_journey_map: sintaxe válida');
+      if (solutionData.user_journey_map?.mermaid_code) {
+        const validation = validateMermaidSyntax(solutionData.user_journey_map.mermaid_code, 'journey');
+        if (!validation.valid) {
+          console.warn('[BUILDER] ⚠️ Erros em user_journey_map:', validation.errors);
+        } else {
+          console.log('[BUILDER] ✅ user_journey_map: sintaxe válida');
+        }
       }
-    }
 
-    if (solutionData.technical_stack_diagram?.mermaid_code) {
-      const validation = validateMermaidSyntax(solutionData.technical_stack_diagram.mermaid_code, 'stack');
-      if (!validation.valid) {
-        console.warn('[BUILDER] ⚠️ Erros em technical_stack_diagram:', validation.errors);
-      } else {
-        console.log('[BUILDER] ✅ technical_stack_diagram: sintaxe válida');
+      if (solutionData.technical_stack_diagram?.mermaid_code) {
+        const validation = validateMermaidSyntax(solutionData.technical_stack_diagram.mermaid_code, 'stack');
+        if (!validation.valid) {
+          console.warn('[BUILDER] ⚠️ Erros em technical_stack_diagram:', validation.errors);
+        } else {
+          console.log('[BUILDER] ✅ technical_stack_diagram: sintaxe válida');
+        }
       }
+    } else {
+      console.log(`[BUILDER][${requestId}] ⚡ MODO QUICK: Validações Mermaid puladas`);
     }
 
     // 🔧 FUNÇÃO DE SANITIZAÇÃO MERMAID
@@ -857,17 +838,17 @@ Crie um plano completo seguindo o formato JSON especificado.`;
 
     console.log(`[BUILDER] ✅ Título final validado: "${solutionData.title}"`);
 
-    // ========== 🆕 INJETAR LOVABLE NAS FERRAMENTAS AUTOMATICAMENTE ==========
-    console.log('[BUILDER] 🚀 Verificando se Lovable está nas ferramentas...');
+    // ========== INJETAR LOVABLE (somente em modo complete) ==========
+    if (mode === "complete" && solutionData.required_tools) {
+      console.log('[BUILDER] 🚀 Verificando se Lovable está nas ferramentas...');
 
-    // Verificar se Lovable já está na lista
-    const lovableExists = solutionData.required_tools?.essential?.some(
-      (tool: any) => tool.name?.toLowerCase().includes('lovable')
-    ) || solutionData.required_tools?.optional?.some(
-      (tool: any) => tool.name?.toLowerCase().includes('lovable')
-    );
+      const lovableExists = solutionData.required_tools?.essential?.some(
+        (tool: any) => tool.name?.toLowerCase().includes('lovable')
+      ) || solutionData.required_tools?.optional?.some(
+        (tool: any) => tool.name?.toLowerCase().includes('lovable')
+      );
 
-    if (!lovableExists) {
+      if (!lovableExists) {
       console.log('[BUILDER] ➕ Lovable não encontrado, adicionando como ferramenta recomendada');
       
       // Buscar dados do Lovable no catálogo de tools
@@ -901,39 +882,48 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         solutionData.required_tools.optional = [];
       }
       
-      // Adicionar como opcional (recomendada) por padrão
-      solutionData.required_tools.optional.unshift(lovableToolData);
-      console.log('[BUILDER] ✅ Lovable adicionado como ferramenta recomendada');
-    } else {
-      console.log('[BUILDER] ✓ Lovable já está na lista de ferramentas');
+        // Adicionar como opcional (recomendada) por padrão
+        solutionData.required_tools.optional.unshift(lovableToolData);
+        console.log('[BUILDER] ✅ Lovable adicionado como ferramenta recomendada');
+      } else {
+        console.log('[BUILDER] ✓ Lovable já está na lista de ferramentas');
+      }
     }
 
-    // Salvar no banco (SOLUÇÃO COMPLETA)
+    // Salvar no banco (adaptar campos conforme modo)
     const generationTime = Date.now() - startTime;
+
+    // Campos base (sempre presentes)
+    const insertData: any = {
+      user_id: userId,
+      original_idea: idea,
+      title: solutionData.title,
+      short_description: solutionData.short_description,
+      tags: solutionData.tags || ['IA Generativa'],
+      framework_mapping: solutionData.framework_quadrants,
+      generation_model: "google/gemini-2.5-flash",
+      generation_time_ms: generationTime,
+      generation_status: mode === "quick" ? "quick" : "complete",
+      is_complete: mode === "complete"
+    };
+
+    // Campos opcionais (apenas em modo complete)
+    if (mode === "complete") {
+      insertData.mind_map = solutionData.mind_map;
+      insertData.required_tools = solutionData.required_tools;
+      insertData.implementation_checklist = solutionData.implementation_checklist;
+      insertData.architecture_flowchart = solutionData.architecture_flowchart;
+      insertData.data_flow_diagram = solutionData.data_flow_diagram;
+      insertData.user_journey_map = solutionData.user_journey_map;
+      insertData.technical_stack_diagram = solutionData.technical_stack_diagram;
+      insertData.lovable_prompt = solutionData.lovable_prompt;
+    }
 
     const { data: insertedSolution, error: saveError } = await supabase
       .from("ai_generated_solutions")
-      .insert({
-        user_id: userId,
-        original_idea: idea,
-        title: solutionData.title,
-        short_description: solutionData.short_description,
-        tags: solutionData.tags || ['IA Generativa'], // Tags dinâmicas com fallback
-        framework_mapping: solutionData.framework_quadrants,
-        mind_map: solutionData.mind_map,
-        required_tools: solutionData.required_tools,
-        implementation_checklist: solutionData.implementation_checklist,
-        architecture_flowchart: solutionData.architecture_flowchart,
-        data_flow_diagram: solutionData.data_flow_diagram,
-        user_journey_map: solutionData.user_journey_map,
-        technical_stack_diagram: solutionData.technical_stack_diagram,
-        generation_model: "google/gemini-2.5-flash",
-        generation_time_ms: generationTime,
-        generation_status: mode === "quick" ? "quick" : "complete",
-        is_complete: mode === "complete"
-      })
-    .select()
-    .single();
+      .insert(insertData)
+      .select()
+      .single();
 
     // Assign to outer scope for timeout handler
     savedSolution = insertedSolution;

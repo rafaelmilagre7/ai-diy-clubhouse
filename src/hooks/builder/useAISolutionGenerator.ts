@@ -40,10 +40,11 @@ export const useAISolutionGenerator = () => {
     const startTime = Date.now();
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-ai-solution', {
+      const { data, error } = await supabase.functions.invoke('generate-builder-solution', {
         body: {
           idea: idea.trim(),
-          userId: user.id
+          userId: user.id,
+          mode: 'quick' // 🆕 Modo quick por padrão
         }
       });
 
