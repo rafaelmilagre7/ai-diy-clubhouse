@@ -380,11 +380,12 @@ ${contextFromAnswers}
 ⚠️ INSTRUÇÕES CRÍTICAS PARA O TÍTULO (CAMPO OBRIGATÓRIO):
 - O campo "title" no JSON NUNCA pode ser: undefined, null, "undefined", "null", "" (vazio) ou menor que 10 caracteres
 - Analise a DOR CENTRAL e o OBJETIVO FINAL do usuário (não o processo, mas o resultado)
-- **SINTETIZE**: Não copie o início da ideia literalmente - extraia a ESSÊNCIA
-- Tamanho ideal: 15-80 caracteres (mínimo 10, máximo 80)
-- FORMATO: [Tecnologia/Sistema] + [Resultado Específico] ou [Ação] + [Tecnologia] + [Benefício]
-- **PROIBIDO**: Começar com "Implementar", "Criar", "Fazer", "Quero", "Preciso"
-- **PROIBIDO**: Copiar palavra por palavra o início da ideia do usuário
+- **SINTETIZE**: Não copie o início da ideia literalmente - EXTRAIA a essência e reformule profissionalmente
+- Tamanho ideal: 30-60 caracteres (mínimo 20, máximo 60)
+- FORMATO: [Tecnologia/Sistema] + [Resultado Específico] OU [Benefício] + [Método]
+- **PROIBIDO ABSOLUTO**: Começar com "Implementar", "Criar", "Fazer", "Quero", "Preciso", "Desenvolver"
+- **PROIBIDO ABSOLUTO**: Copiar palavra por palavra o início da ideia do usuário
+- **OBRIGATÓRIO**: Título deve ser sintético, profissional e auto-explicativo
 
 EXEMPLOS DE SÍNTESE PROFISSIONAL:
 Ideia: "Quero implementar uma inteligência artificial para resumir o atendimento dos corredores e me mandar por e-mail no fim do dia"
@@ -448,8 +449,9 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         parameters: {
           type: "object",
           properties: {
-            title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (15-80 chars). NUNCA copie o início da ideia literalmente. SINTETIZE: [Tecnologia/Sistema] + [Resultado]. Proibido começar com: Implementar, Criar, Fazer, Quero" },
+            title: { type: "string", description: "Título SINTÉTICO, PROFISSIONAL e CURTO (20-60 chars). NUNCA copie o início da ideia literalmente. EXTRAIA a essência e reformule. Formato: [Tecnologia/Sistema] + [Resultado]. PROIBIDO começar com: Implementar, Criar, Fazer, Quero, Preciso, Desenvolver" },
             short_description: { type: "string", description: "Descrição em 3-5 frases" },
+            tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp, CRM, Dashboard). Evite tags genéricas demais" },
             technical_overview: {
               type: "object",
               properties: {
@@ -594,14 +596,14 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt + '\n\n🚀 MODO RÁPIDO ATIVADO: Gere APENAS title, short_description e framework_quadrants. Ignore diagramas, ferramentas e checklist por enquanto. Foque em qualidade e contexto nesses 3 campos essenciais.' },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 32000, // Reduzido para geração rápida
+        max_tokens: 64000, // Geração completa
         response_format: { type: 'json_object' }
       }),
-      signal: AbortSignal.timeout(90000), // 90s para geração rápida
+      signal: AbortSignal.timeout(180000), // 3 minutos para geração completa
     });
 
     if (!aiResponse.ok) {
@@ -770,10 +772,14 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     // Detectar título truncado no meio de palavra (termina com palavra incompleta)
     const endsWithIncompleteWord = titleString.length > 40 && !titleString.match(/[\s\-][\w]{3,}$/);
     
+    // Validação mais rigorosa: título muito longo também é inválido
+    const titleTooLong = titleString.length > 60;
+    
     const titleIsInvalid = 
       invalidTitles.includes(solutionData.title) || 
       titleString === '' ||
-      titleString.length < 10 || // Título muito curto
+      titleString.length < 20 || // Título muito curto (mínimo 20 chars)
+      titleTooLong || // Título muito longo (máximo 60 chars)
       /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,2}\.$/.test(titleString) || // Palavras isoladas com ponto
       isLiteralCopy || // Cópia literal da ideia
       startsWithForbiddenVerb || // Começa com verbo proibido
@@ -831,18 +837,18 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         fallbackTitle = `Solução de Automação ${shortId}`;
       }
       
-      // Limitar a 80 caracteres
-      solutionData.title = fallbackTitle.length > 80 
-        ? fallbackTitle.substring(0, 77) + '...'
+      // Limitar a 60 caracteres
+      solutionData.title = fallbackTitle.length > 60 
+        ? fallbackTitle.substring(0, 57) + '...'
         : fallbackTitle;
       
       console.log(`[BUILDER] 🔧 Título fallback inteligente: "${solutionData.title}"`);
       console.log(`[BUILDER] 📝 Palavras-chave extraídas: ${mainWords.join(', ')}`);
     } else {
-      // Garantir que título não exceda 80 caracteres
-      if (titleString.length > 80) {
-        solutionData.title = titleString.substring(0, 77) + '...';
-        console.log(`[BUILDER] ✂️ Título truncado para 80 chars: "${solutionData.title}"`);
+      // Garantir que título não exceda 60 caracteres
+      if (titleString.length > 60) {
+        solutionData.title = titleString.substring(0, 57) + '...';
+        console.log(`[BUILDER] ✂️ Título truncado para 60 chars: "${solutionData.title}"`);
       }
     }
 
@@ -899,7 +905,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       console.log('[BUILDER] ✓ Lovable já está na lista de ferramentas');
     }
 
-    // Salvar no banco (MODO RÁPIDO - apenas essencial)
+    // Salvar no banco (SOLUÇÃO COMPLETA)
     const generationTime = Date.now() - startTime;
 
     const { data: insertedSolution, error: saveError } = await supabase
@@ -909,17 +915,18 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         original_idea: idea,
         title: solutionData.title,
         short_description: solutionData.short_description,
+        tags: solutionData.tags || ['IA Generativa'], // Tags dinâmicas com fallback
         framework_mapping: solutionData.framework_quadrants,
-        mind_map: null, // Será completado depois
-        required_tools: null, // Será completado depois
-        implementation_checklist: null, // Será completado depois
-        architecture_flowchart: null, // Será completado depois
-        data_flow_diagram: null, // Será completado depois
-        user_journey_map: null, // Será completado depois
-        technical_stack_diagram: null, // Será completado depois
+        mind_map: solutionData.mind_map,
+        required_tools: solutionData.required_tools,
+        implementation_checklist: solutionData.implementation_checklist,
+        architecture_flowchart: solutionData.architecture_flowchart,
+        data_flow_diagram: solutionData.data_flow_diagram,
+        user_journey_map: solutionData.user_journey_map,
+        technical_stack_diagram: solutionData.technical_stack_diagram,
         generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
-        is_complete: false, // Flag para indicar que precisa ser completado
+        is_complete: true, // Solução completa desde o início
       })
     .select()
     .single();
@@ -935,22 +942,10 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     // Incrementar contador
     await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });
 
-    console.log(`[BUILDER] ✅ === GERAÇÃO RÁPIDA CONCLUÍDA ===`);
+    console.log(`[BUILDER] ✅ === GERAÇÃO COMPLETA CONCLUÍDA ===`);
     console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
     console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
-    console.log(`[BUILDER] 🚀 Modo rápido ativado - detalhes serão completados on-demand`);
-
-    // Retornar imediatamente sem gerar prompt Lovable
-    return new Response(
-      JSON.stringify({
-        success: true,
-        solution: savedSolution,
-        generation_time_ms: generationTime,
-        tokens_used: aiData.usage?.total_tokens,
-        is_complete: false, // Indica que precisa ser completado
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-    );
+    console.log(`[BUILDER] 📊 Tags: ${solutionData.tags?.join(', ') || 'IA Generativa'}`);
     
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {

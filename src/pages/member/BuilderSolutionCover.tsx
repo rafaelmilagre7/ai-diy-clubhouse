@@ -23,34 +23,6 @@ export default function BuilderSolutionCover() {
         .single();
 
       if (error) throw error;
-
-      // Se a solução não está completa, completar automaticamente
-      if (!data.is_complete) {
-        console.log('[BUILDER-COVER] 🔄 Solução incompleta, completando detalhes...');
-        
-        try {
-          const { data: completionData, error: completionError } = await supabase.functions.invoke(
-            'complete-builder-solution',
-            { body: { solutionId: id } }
-          );
-
-          if (completionError) {
-            console.error('[BUILDER-COVER] ❌ Erro ao completar:', completionError);
-            toast.error('Erro ao carregar detalhes completos');
-            return data; // Retorna parcial mesmo assim
-          }
-
-          if (completionData?.solution) {
-            toast.success('Detalhes carregados com sucesso!');
-            return completionData.solution;
-          }
-        } catch (err) {
-          console.error('[BUILDER-COVER] ❌ Erro ao completar:', err);
-          toast.error('Erro ao carregar detalhes');
-          return data; // Retorna parcial
-        }
-      }
-
       return data;
     },
   });
@@ -160,18 +132,16 @@ export default function BuilderSolutionCover() {
                     )}
                   </div>
 
-                  {/* Badges de contexto */}
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="secondary" className="text-sm px-4 py-1">
-                      IA Generativa
-                    </Badge>
-                    <Badge variant="secondary" className="text-sm px-4 py-1">
-                      Automação
-                    </Badge>
-                    <Badge variant="secondary" className="text-sm px-4 py-1">
-                      Cloud Native
-                    </Badge>
-                  </div>
+                  {/* Badges dinâmicas */}
+                  {solution.tags && solution.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {solution.tags.map((tag: string, index: number) => (
+                        <Badge key={index} variant="secondary" className="text-sm px-4 py-1">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Ideia Original */}

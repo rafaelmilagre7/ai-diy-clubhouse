@@ -2,26 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LOADING_MESSAGES = [
-  "Analisando arquitetura de automação avançada...",
-  "Mapeando fluxos de integração entre plataformas...",
-  "Processando 10.000+ soluções implementadas...",
-  "Combinando Claude, GPT-4 e frameworks especializados...",
-  "Estruturando conectividade entre ferramentas...",
-  "Refinando estratégia de implementação...",
-  "Otimizando arquitetura para escalabilidade...",
-  "Sincronizando APIs e microsserviços...",
-  "Aplicando inteligência conectiva ao seu desafio...",
-  "Projetando automações de alto impacto...",
-  "Desenhando arquitetura técnica personalizada...",
-  "Identificando pontos críticos de otimização...",
-  "Calibrando sistemas de automação empresarial...",
-  "Simplificando complexidade operacional...",
-  "Superando limitações técnicas convencionais...",
-  "Orquestrando integração de dados estratégicos...",
-  "Construindo ponte entre IA e processos reais...",
-  "Extraindo insights de casos de sucesso...",
-  "Alinhando solução com objetivos de negócio...",
-  "Projetando sua infraestrutura de automação..."
+  "Analisando viabilidade estratégica e ROI potencial...",
+  "Identificando gaps operacionais e pontos de melhoria...",
+  "Mapeando oportunidades de ganho de eficiência real...",
+  "Projetando arquitetura escalável para seu crescimento...",
+  "Calibrando solução para a realidade do seu mercado...",
+  "Aplicando frameworks de automação empresarial testados...",
+  "Conectando inteligência artificial com processos práticos...",
+  "Desenhando fluxos de automação de alto impacto...",
+  "Estruturando integrações entre suas ferramentas...",
+  "Identificando métricas críticas de performance...",
+  "Projetando jornada do usuário otimizada...",
+  "Mapeando dependências técnicas e requisitos...",
+  "Analisando stack tecnológica ideal para seu caso...",
+  "Extraindo insights de milhares de implementações reais...",
+  "Simplificando complexidade em passos executáveis...",
+  "Traduzindo necessidade de negócio em arquitetura técnica...",
+  "Construindo roadmap prático de implementação...",
+  "Alinhando tecnologia com seus objetivos estratégicos...",
+  "Desenhando integração de dados e APIs críticas...",
+  "Projetando infraestrutura pronta para escalar..."
 ];
 
 export const BuilderProcessingExperience = () => {

@@ -152,20 +152,50 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </motion.div>
       )}
 
-      {/* Ferramentas Necessárias - 4º Bloco */}
+      {/* Ferramentas Necessárias - ON DEMAND */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
         <LiquidGlassCard className="p-6">
-          <div className="mb-4">
-            <h3 className="text-xl font-bold mb-2">Ferramentas Necessárias</h3>
-            <p className="text-sm text-muted-foreground">
-              Recursos essenciais e opcionais para implementação
-            </p>
-          </div>
-          <RequiredToolsGrid tools={solution.required_tools} />
+          <button
+            onClick={() => toggleSection('tools')}
+            className="w-full flex items-center justify-between mb-4 group"
+          >
+            <div className="text-left">
+              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                Ferramentas Necessárias
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Recursos essenciais e opcionais para implementação
+              </p>
+            </div>
+            {isExpanded('tools') ? (
+              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            )}
+          </button>
+          
+          <AnimatePresence mode="wait">
+            {isExpanded('tools') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isLoading('tools') ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <RequiredToolsGrid tools={solution.required_tools} />
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </LiquidGlassCard>
       </motion.div>
 
@@ -217,6 +247,69 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           </AnimatePresence>
         </LiquidGlassCard>
       </motion.div>
+
+      {/* Prompt Lovable - ON DEMAND */}
+      {solution.lovable_prompt && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+        >
+          <LiquidGlassCard className="p-6">
+            <button
+              onClick={() => toggleSection('lovable')}
+              className="w-full flex items-center justify-between mb-4 group"
+            >
+              <div className="text-left">
+                <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                  Prompt Lovable
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Cole este prompt no Lovable para criar sua aplicação
+                </p>
+              </div>
+              {isExpanded('lovable') ? (
+                <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              ) : (
+                <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+              )}
+            </button>
+            
+            <AnimatePresence mode="wait">
+              {isExpanded('lovable') && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {isLoading('lovable') ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <pre className="bg-surface-elevated/50 p-4 rounded-lg overflow-x-auto text-sm">
+                        <code>{solution.lovable_prompt}</code>
+                      </pre>
+                      <Button
+                        onClick={() => {
+                          navigator.clipboard.writeText(solution.lovable_prompt);
+                          toast.success('Prompt copiado!');
+                        }}
+                        className="absolute top-4 right-4"
+                        size="sm"
+                      >
+                        Copiar
+                      </Button>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </LiquidGlassCard>
+        </motion.div>
+      )}
 
     </motion.div>
   );
