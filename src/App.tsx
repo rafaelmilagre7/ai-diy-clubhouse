@@ -10,6 +10,7 @@ import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
 import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
+import { RealtimeProvider } from "@/contexts/RealtimeProvider";
 
 
 const queryClient = new QueryClient({
@@ -30,17 +31,24 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <SecurityProvider>
-              <LoggingProvider>
-                <BrowserRouter>
-                  <div className="min-h-screen bg-background font-sans antialiased">
-                    <AppRoutes />
-                    <Toaster />
-                    <Sonner />
-                    {/* Dashboard de performance apenas em desenvolvimento */}
-                    <PerformanceDashboard />
-                  </div>
-                </BrowserRouter>
-              </LoggingProvider>
+              <RealtimeProvider
+                enableNotifications={true}
+                enablePresence={true}
+                enableSound={true}
+                enableDesktopNotifications={true}
+              >
+                <LoggingProvider>
+                  <BrowserRouter>
+                    <div className="min-h-screen bg-background font-sans antialiased">
+                      <AppRoutes />
+                      <Toaster />
+                      <Sonner />
+                      {/* Dashboard de performance apenas em desenvolvimento */}
+                      <PerformanceDashboard />
+                    </div>
+                  </BrowserRouter>
+                </LoggingProvider>
+              </RealtimeProvider>
             </SecurityProvider>
           </AuthProvider>
         </TooltipProvider>

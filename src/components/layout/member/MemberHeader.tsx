@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Menu, MessageCircle } from "lucide-react";
 import { MemberUserMenu } from "./MemberUserMenu";
-import { NotificationBell } from "@/components/notifications/NotificationBell";
+import { RealtimeNotificationsBadge } from "@/components/realtime/RealtimeNotificationsBadge";
 import { InboxDrawer } from "@/components/networking/chat/InboxDrawer";
 import { useUnreadCount } from "@/hooks/networking/useUnreadCount";
+import { useNavigate } from "react-router-dom";
 
 interface MemberHeaderProps {
   onSignOut: () => void;
@@ -29,6 +30,7 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
 }) => {
   const [isInboxOpen, setIsInboxOpen] = useState(false);
   const { data: unreadCount = 0 } = useUnreadCount();
+  const navigate = useNavigate();
 
   return (
     <>
@@ -66,8 +68,10 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
             )}
           </Button>
 
-          {/* Notificações */}
-          <NotificationBell />
+          {/* Notificações Realtime */}
+          <RealtimeNotificationsBadge 
+            onClick={() => navigate('/notifications')}
+          />
           
           {/* Menu do usuário */}
           <MemberUserMenu />
