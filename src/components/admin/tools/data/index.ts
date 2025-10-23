@@ -6,6 +6,7 @@ import { communicationTools } from './communicationTools';
 import { productivityTools } from './productivityTools';
 import { developmentTools } from './developmentTools';
 import { analyticsTools } from './analyticsTools';
+import { crmTools } from './crmTools';
 import { ToolItem } from '../types/toolItemTypes';
 
 export const availableTools: ToolItem[] = [
@@ -15,7 +16,8 @@ export const availableTools: ToolItem[] = [
   ...communicationTools,
   ...productivityTools,
   ...developmentTools,
-  ...analyticsTools
+  ...analyticsTools,
+  ...crmTools
 ];
 
 export * from './aiTools';
@@ -25,3 +27,4 @@ export * from './communicationTools';
 export * from './productivityTools';
 export * from './developmentTools';
 export * from './analyticsTools';
+export * from './crmTools';

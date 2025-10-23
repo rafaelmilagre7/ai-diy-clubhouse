@@ -16,9 +16,9 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
     {
       key: 'quadrant1_automation',
       data: framework?.quadrant1_automation,
-      title: 'Automação',
+      title: '🤖 Automação No-Code',
       icon: Zap,
-      color: 'from-amber-500/20 to-orange-400/10',      // ⚡ Laranja (energia/automação)
+      color: 'from-amber-500/20 to-orange-400/10',
       borderColor: 'border-amber-400/30',
       iconBg: 'bg-amber-500/10',
       iconColor: 'text-amber-500',
@@ -27,9 +27,9 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
     {
       key: 'quadrant2_ai',
       data: framework?.quadrant2_ai,
-      title: 'IA',
+      title: '🧠 Modelos de IA',
       icon: Brain,
-      color: 'from-purple-500/20 to-violet-400/10',     // 🧠 Roxo (cérebro/IA)
+      color: 'from-purple-500/20 to-violet-400/10',
       borderColor: 'border-purple-400/30',
       iconBg: 'bg-purple-500/10',
       iconColor: 'text-purple-500',
@@ -38,9 +38,9 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
     {
       key: 'quadrant3_data',
       data: framework?.quadrant3_data,
-      title: 'Dados e Contexto',
+      title: '📊 Dados Simples',
       icon: Database,
-      color: 'from-blue-500/20 to-cyan-400/10',         // 📊 Azul (dados/informação)
+      color: 'from-blue-500/20 to-cyan-400/10',
       borderColor: 'border-blue-400/30',
       iconBg: 'bg-blue-500/10',
       iconColor: 'text-blue-500',
@@ -49,9 +49,9 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
     {
       key: 'quadrant4_interface',
       data: framework?.quadrant4_interface,
-      title: 'Interface',
+      title: '🎨 Canais de Contato',
       icon: Monitor,
-      color: 'from-teal-500/20 to-emerald-400/10',      // 🎨 Verde (interface/experiência)
+      color: 'from-teal-500/20 to-emerald-400/10',
       borderColor: 'border-teal-400/30',
       iconBg: 'bg-teal-500/10',
       iconColor: 'text-teal-500',

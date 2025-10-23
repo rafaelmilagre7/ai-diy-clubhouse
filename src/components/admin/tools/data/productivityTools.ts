@@ -43,5 +43,12 @@ export const productivityTools: ToolItem[] = [
     url: "https://hotmail.com/",
     description: "Plataforma de email da Microsoft com calendário e gerenciamento de tarefas",
     icon: "Mail"
+  },
+  {
+    id: "airtable",
+    name: "Airtable",
+    url: "https://airtable.com/",
+    description: "Plataforma de banco de dados visual com recursos de planilha e relacionamentos",
+    icon: "Database"
   }
 ];

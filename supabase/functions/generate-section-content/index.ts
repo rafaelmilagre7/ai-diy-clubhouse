@@ -73,52 +73,46 @@ serve(async (req) => {
     const lovableUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
     const prompts: Record<string, string> = {
-      framework: `Analise esta ideia e gere APENAS o framework_quadrants (4 quadrantes) no formato JSON:
+      framework: `Você é Rafael Milagre. Gere framework de 4 PILARES: 1) Automação No-Code (Lovable→Make→N8N→ManyChat), 2) IA (APIs comerciais GPT-5/Gemini/Claude), 3) Dados Simples (Sheets→Airtable→Supabase), 4) Canais (WhatsApp/Email/Site).
 
 IDEIA: "${solution.original_idea}"
 TÍTULO: "${solution.title}"
-DESCRIÇÃO: "${solution.short_description}"
 
-Retorne APENAS um objeto JSON puro com a estrutura:
+Retorne JSON puro:
 {
   "framework_quadrants": {
     "quadrant1_automation": {
-      "title": "🤖 Automação",
-      "description": "...",
-      "items": ["...", "..."],
-      "tool_names": ["..."],
-      "integration_details": "..."
+      "title": "🤖 Automação No-Code",
+      "description": "Conectar ferramentas visuais sem programar",
+      "items": ["Lovable: [caso]", "Make: [cenário]", "ManyChat: [bot]"],
+      "tool_names": ["Lovable", "Make", "ManyChat"],
+      "integration_details": "Como conectam ponta a ponta"
     },
     "quadrant2_ai": {
-      "title": "🧠 IA",
-      "description": "...",
-      "items": ["...", "..."],
-      "tool_names": ["..."],
-      "ai_strategy": "..."
+      "title": "🧠 Modelos de IA",
+      "description": "APIs comerciais e ferramentas prontas",
+      "items": ["GPT-5: [uso]", "Gemini: [caso]"],
+      "tool_names": ["GPT-5", "Gemini"],
+      "ai_strategy": "Estratégia detalhada via Make"
     },
     "quadrant3_data": {
-      "title": "📊 Dados",
-      "description": "...",
-      "items": ["...", "..."],
-      "tool_names": ["..."],
-      "data_architecture": "..."
+      "title": "📊 Dados Simples",
+      "description": "Sheets→Airtable→Supabase",
+      "items": ["Sheets: [estrutura]", "Airtable: [relações]"],
+      "tool_names": ["Google Sheets", "Airtable"],
+      "data_architecture": "Fluxo completo dos dados"
     },
     "quadrant4_interface": {
-      "title": "🎨 Interface",
-      "description": "...",
-      "items": ["...", "..."],
-      "tool_names": ["..."],
-      "ux_considerations": "..."
+      "title": "🎨 Canais de Contato",
+      "description": "Onde roda - WhatsApp/Email/Site",
+      "items": ["WhatsApp: [bot]", "Email: [relatórios]"],
+      "tool_names": ["WhatsApp", "Email"],
+      "ux_considerations": "Jornada do usuário completa"
     }
   },
   "mind_map": {
-    "central_idea": "...",
-    "branches": [
-      {
-        "name": "FASE 1: ...",
-        "children": ["...", "..."]
-      }
-    ]
+    "central_idea": "Frase impactante",
+    "branches": [{"name": "FASE 1", "children": ["..."]}]
   }
 }`,
       
