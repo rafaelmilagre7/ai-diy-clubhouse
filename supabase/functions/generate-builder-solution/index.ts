@@ -1259,18 +1259,20 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     } else if (savedSolution?.id) {
       console.log(`[BUILDER][${requestId}] 🚀 Iniciando geração de Lovable Prompt em BACKGROUND`);
       
-      // Chamar função assíncrona SEM AWAIT (executa em background)
-      generateLovablePromptAsync(
-        savedSolution.id,
-        solutionData,
-        idea,
-        answers,
-        requestId,
-        supabase,
-        lovableApiKey
-      ).catch(err => {
-        console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Lovable Prompt:`, err);
-      });
+      // ✅ FASE 1 FIX: Usar EdgeRuntime.waitUntil para garantir que roda em background
+      EdgeRuntime.waitUntil(
+        generateLovablePromptAsync(
+          savedSolution.id,
+          solutionData,
+          idea,
+          answers,
+          requestId,
+          supabase,
+          lovableApiKey
+        ).catch(err => {
+          console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Lovable Prompt:`, err);
+        })
+      );
     }
 
     return new Response(

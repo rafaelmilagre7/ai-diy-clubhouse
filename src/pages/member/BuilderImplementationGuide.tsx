@@ -22,18 +22,26 @@ export default function BuilderImplementationGuide() {
   const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState<Set<string>>(new Set());
   const [activeTab, setActiveTab] = useState('automation');
 
-  const { data: solution, isLoading } = useQuery({
-    queryKey: ['builder-solution', id],
+  const { data: solution, isLoading, isError, error } = useQuery({
+    queryKey: ['builder-solution-implementation', id],
     queryFn: async () => {
+      console.log('🔍 [DEBUG-IMPL] Carregando solution com id:', id);
       const { data, error } = await supabase
         .from('ai_generated_solutions')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [DEBUG-IMPL] Erro ao carregar:', error);
+        throw error;
+      }
+      
+      console.log('✅ [DEBUG-IMPL] Solution carregada:', data?.title);
       return data;
     },
+    retry: 1,
+    staleTime: 30000
   });
 
   // Sincronizar solutionData com solution
@@ -43,7 +51,7 @@ export default function BuilderImplementationGuide() {
     }
   }, [solution]);
 
-  // Função para gerar fluxo sob demanda
+  // Função para gerar fluxo sob demanda com timeout e retry
   const generateFlowIfNeeded = async (flowType: string) => {
     const fieldMapping: Record<string, string> = {
       'automation': 'automation_journey_flow',
@@ -52,12 +60,21 @@ export default function BuilderImplementationGuide() {
       'api_map': 'api_integration_map'
     };
 
+    const flowLabels: Record<string, string> = {
+      'automation': 'Jornada de Automação',
+      'ai_arch': 'Arquitetura IA',
+      'checklist': 'Checklist Deploy',
+      'api_map': 'Mapa de APIs'
+    };
+
     const field = fieldMapping[flowType];
     
     // Se já tem conteúdo OU já tentou gerar, não faz nada
     if (!solutionData || solutionData[field] || hasAttemptedGeneration.has(flowType) || generatingFlows.has(flowType)) {
       return;
     }
+
+    console.log(`🔍 [DEBUG-IMPL] Gerando flow: ${flowType}`);
 
     // Marcar como "tentando gerar"
     setHasAttemptedGeneration(prev => new Set([...prev, flowType]));
@@ -71,7 +88,8 @@ export default function BuilderImplementationGuide() {
     };
 
     try {
-      const { data, error } = await supabase.functions.invoke('generate-implementation-flows', {
+      // ✅ FASE 3: Adicionar timeout de 40 segundos
+      const invokePromise = supabase.functions.invoke('generate-implementation-flows', {
         body: {
           solutionId: solutionData.id,
           flowType: flowTypeMapping[flowType],
@@ -79,21 +97,50 @@ export default function BuilderImplementationGuide() {
         }
       });
 
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Timeout após 40s')), 40000)
+      );
+
+      const { data, error } = await Promise.race([
+        invokePromise,
+        timeoutPromise
+      ]) as any;
+
       if (error) throw error;
 
       if (data?.success) {
+        console.log(`✅ [DEBUG-IMPL] Flow ${flowType} gerado com sucesso`);
         setSolutionData((prev: any) => ({
           ...prev,
           [field]: data.content
         }));
-        toast.success('Fluxo gerado com sucesso! 🎉');
+        toast.success(`Fluxo "${flowLabels[flowType]}" gerado! 🎉`);
+      } else {
+        throw new Error('Resposta sem sucesso');
       }
     } catch (err: any) {
-      console.error('Erro ao gerar fluxo:', err);
+      console.error(`❌ [DEBUG-IMPL] Erro ao gerar ${flowType}:`, err);
+      
+      // ✅ FASE 3: Mensagem de erro amigável com retry
       toast.error('Erro ao gerar fluxo', {
-        description: 'Tente novamente em instantes.'
+        description: err.message?.includes('Timeout') 
+          ? 'A geração está demorando mais que o esperado. Tente novamente.'
+          : 'Ocorreu um erro. Tente novamente em instantes.',
+        action: {
+          label: 'Tentar novamente',
+          onClick: () => {
+            setHasAttemptedGeneration(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(flowType);
+              return newSet;
+            });
+            generateFlowIfNeeded(flowType);
+          }
+        },
+        duration: 10000
       });
-      // Remover da lista de tentativas para permitir retry
+      
+      // Remover da lista de tentativas para permitir retry manual
       setHasAttemptedGeneration(prev => {
         const newSet = new Set(prev);
         newSet.delete(flowType);
@@ -114,6 +161,22 @@ export default function BuilderImplementationGuide() {
       generateFlowIfNeeded(activeTab);
     }
   }, [activeTab, solutionData]);
+
+  // ✅ FASE 2: Renderização explícita de erro
+  if (isError) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-16 space-y-4">
+          <p className="text-destructive font-semibold text-xl">Erro ao carregar solução</p>
+          <p className="text-sm text-muted-foreground">{error?.message || 'Erro desconhecido'}</p>
+          <Button onClick={() => navigate(-1)} className="mt-4">
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
