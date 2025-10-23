@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from 'react';
+import { Mic } from 'lucide-react';
+import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
-import { AIVoiceInput } from '@/components/ui/ai-voice-input';
 
 interface VoiceInputProps {
   onTranscription: (text: string) => void;
@@ -140,17 +141,72 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const getStatusText = () => {
+    if (isTranscribing) return "Transcrevendo...";
+    if (isRecording) return "Gravando...";
+    return "Gravar áudio";
   };
 
   return (
-    <AIVoiceInput
-      onStart={startRecording}
-      onStop={stopRecording}
-      isRecording={isRecording}
-      isTranscribing={isTranscribing}
-      disabled={disabled}
-      visualizerBars={48}
-    />
+    <div className="w-full py-2">
+      <div className="relative max-w-xl w-full mx-auto flex items-center flex-col gap-2">
+        <button
+          className={cn(
+            "group w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200",
+            isRecording || isTranscribing
+              ? "bg-surface-elevated/50"
+              : "bg-surface-elevated/50 hover:bg-surface-elevated border border-border hover:border-primary/50",
+            disabled && "opacity-50 cursor-not-allowed"
+          )}
+          type="button"
+          onClick={isRecording ? stopRecording : startRecording}
+          disabled={disabled}
+          title={getStatusText()}
+        >
+          {isRecording ? (
+            <div
+              className="w-5 h-5 rounded-sm bg-primary animate-pulse"
+            />
+          ) : isTranscribing ? (
+            <div
+              className="w-5 h-5 rounded-sm animate-spin bg-primary/50"
+              style={{ animationDuration: "1s" }}
+            />
+          ) : (
+            <Mic className="w-5 h-5 text-foreground/70 group-hover:text-primary transition-colors" />
+          )}
+        </button>
+
+        {(isRecording || isTranscribing) && (
+          <>
+            <span className="font-mono text-xs text-muted-foreground">
+              {formatTime(recordingTime)}
+            </span>
+
+            {isRecording && (
+              <div className="h-3 w-48 flex items-center justify-center gap-0.5">
+                {[...Array(32)].map((_, i) => (
+                  <div
+                    key={i}
+                    className="w-0.5 rounded-full transition-all duration-300 bg-primary/40 animate-pulse"
+                    style={{
+                      height: `${20 + Math.random() * 80}%`,
+                      animationDelay: `${i * 0.05}s`,
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground">
+              {getStatusText()}
+            </p>
+          </>
+        )}
+      </div>
+    </div>
   );
 }

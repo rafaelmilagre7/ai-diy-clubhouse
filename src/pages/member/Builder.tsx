@@ -226,7 +226,7 @@ export default function Builder() {
   };
 
   const handleVoiceTranscription = (text: string) => {
-    handleGenerateSolution(text);
+    setCurrentIdea(text);
   };
 
   if (accessLoading) {
@@ -293,14 +293,14 @@ export default function Builder() {
               </p>
             </motion.div>
 
-            {/* Input centralizado com voice input */}
+            {/* Input centralizado com voice input integrado */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="w-full max-w-2xl mb-12"
+              className="w-full max-w-2xl mb-8"
             >
-              <div className="relative">
+              <div className="flex flex-col items-center gap-4">
                 <AIInputWithValidation
                   placeholder="Ex: Quero automatizar atendimento no WhatsApp e integrar com meu CRM..."
                   onSubmit={handleGenerateSolution}
@@ -309,13 +309,13 @@ export default function Builder() {
                   maxHeight={200}
                   minChars={30}
                   maxChars={2000}
+                  value={currentIdea}
+                  onChange={setCurrentIdea}
                 />
-                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-                  <VoiceInput 
-                    onTranscription={handleVoiceTranscription}
-                    disabled={isGenerating || isAnalyzing}
-                  />
-                </div>
+                <VoiceInput 
+                  onTranscription={handleVoiceTranscription}
+                  disabled={isGenerating || isAnalyzing}
+                />
               </div>
             </motion.div>
 

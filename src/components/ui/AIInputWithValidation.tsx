@@ -15,6 +15,8 @@ interface AIInputWithValidationProps {
   onSubmit?: (value: string) => void | Promise<void>;
   className?: string;
   disabled?: boolean;
+  value?: string;
+  onChange?: (value: string) => void;
 }
 
 export function AIInputWithValidation({
@@ -27,9 +29,11 @@ export function AIInputWithValidation({
   loadingDuration = 3000,
   onSubmit,
   className,
-  disabled = false
+  disabled = false,
+  value: externalValue,
+  onChange: externalOnChange
 }: AIInputWithValidationProps) {
-  const [inputValue, setInputValue] = useState("");
+  const [internalValue, setInternalValue] = useState("");
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
   
@@ -37,6 +41,9 @@ export function AIInputWithValidation({
     minHeight,
     maxHeight,
   });
+
+  const inputValue = externalValue !== undefined ? externalValue : internalValue;
+  const setInputValue = externalOnChange || setInternalValue;
 
   const charCount = inputValue.length;
   const isNearLimit = charCount > maxChars * 0.9;
@@ -72,8 +79,11 @@ export function AIInputWithValidation({
     setError("");
     setSubmitted(true);
     await onSubmit?.(inputValue);
-    setInputValue("");
-    adjustHeight(true);
+    
+    if (externalValue === undefined) {
+      setInputValue("");
+      adjustHeight(true);
+    }
     
     setTimeout(() => {
       setSubmitted(false);
