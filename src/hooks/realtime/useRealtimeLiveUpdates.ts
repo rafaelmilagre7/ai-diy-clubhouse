@@ -1,175 +1,148 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/contexts/auth';
 import { useQueryClient } from '@tanstack/react-query';
-import { useRealtimeConnection } from './useRealtimeConnection';
-
-interface LiveUpdate {
-  table: string;
-  event: 'INSERT' | 'UPDATE' | 'DELETE';
-  record: any;
-}
-
-interface UseRealtimeLiveUpdatesOptions {
-  tables: {
-    name: string;
-    filter?: string;
-    queryKeys: string[][];
-  }[];
-  onUpdate?: (update: LiveUpdate) => void;
-}
 
 /**
- * Hook para receber atualizações ao vivo de várias tabelas
- * Exemplos de uso:
- * - Comentários em tempo real
- * - Likes/reações atualizadas
- * - Contador de visualizações
- * - Status de aprovação instantâneo
+ * Hook genérico para atualizações ao vivo
+ * Fase 4: Likes, comentários, views em tempo real
+ * 
+ * Características:
+ * - Aceita múltiplas tabelas
+ * - Escuta INSERT, UPDATE, DELETE
+ * - Invalidar queries específicas
+ * - Callbacks customizados
  */
-export function useRealtimeLiveUpdates(options: UseRealtimeLiveUpdatesOptions) {
-  const { tables, onUpdate } = options;
+
+interface UseRealtimeLiveUpdatesOptions {
+  tables: Array<{
+    name: string;
+    events?: ('INSERT' | 'UPDATE' | 'DELETE')[];
+    filter?: string;
+  }>;
+  queryKeys?: string[][];
+  onUpdate?: (table: string, event: string, payload: any) => void;
+}
+
+export function useRealtimeLiveUpdates({
+  tables,
+  queryKeys = [],
+  onUpdate,
+}: UseRealtimeLiveUpdatesOptions) {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
+  const [isConnected, setIsConnected] = useState(false);
 
-  // Conexão ao canal de atualizações ao vivo
-  const { channel, status } = useRealtimeConnection({
-    channelName: 'live-updates',
-    onConnect: () => {
-      console.log('✅ [LIVE-UPDATES] Canal conectado');
-    },
-  });
-
-  // Handler genérico para atualizações
-  const handleUpdate = useCallback(
-    (table: string, queryKeys: string[][], event: 'INSERT' | 'UPDATE' | 'DELETE') => (payload: any) => {
-      console.log(`🔄 [LIVE-UPDATES] ${event} em ${table}:`, payload);
-
-      // Invalidar queries relacionadas
-      queryKeys.forEach((queryKey) => {
-        queryClient.invalidateQueries({ queryKey });
-      });
-
-      // Callback customizado
-      onUpdate?.({
-        table,
-        event,
-        record: payload.new || payload.old,
-      });
-    },
-    [queryClient, onUpdate]
-  );
-
-  // Inscrever em mudanças de todas as tabelas
   useEffect(() => {
-    if (!channel) return;
+    if (!user?.id || tables.length === 0) {
+      console.log('⏸️ useRealtimeLiveUpdates: Sem usuário ou tabelas');
+      return;
+    }
 
-    console.log('📡 [LIVE-UPDATES] Inscrevendo em atualizações ao vivo:', tables.map(t => t.name));
+    const channelName = `live-updates:${user.id}`;
+    console.log('🔌 Conectando ao canal de live updates:', channelName);
 
-    tables.forEach((table) => {
-      // INSERT
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
+    let channel = supabase.channel(channelName);
+
+    // Adicionar listeners para cada tabela
+    tables.forEach(({ name, events = ['INSERT', 'UPDATE', 'DELETE'], filter }) => {
+      events.forEach((event) => {
+        const config: any = {
+          event,
           schema: 'public',
-          table: table.name,
-          ...(table.filter && { filter: table.filter }),
-        },
-        handleUpdate(table.name, table.queryKeys, 'INSERT')
-      );
+          table: name,
+        };
 
-      // UPDATE
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: table.name,
-          ...(table.filter && { filter: table.filter }),
-        },
-        handleUpdate(table.name, table.queryKeys, 'UPDATE')
-      );
+        if (filter) {
+          config.filter = filter;
+        }
 
-      // DELETE
-      channel.on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: table.name,
-          ...(table.filter && { filter: table.filter }),
-        },
-        handleUpdate(table.name, table.queryKeys, 'DELETE')
-      );
+        channel = channel.on('postgres_changes', config, (payload) => {
+          console.log(`📊 Update em ${name} (${event}):`, payload);
+
+          // Callback customizado
+          if (onUpdate) {
+            onUpdate(name, event, payload);
+          }
+
+          // Invalidar queries específicas
+          if (queryKeys.length > 0) {
+            queryKeys.forEach((queryKey) => {
+              queryClient.invalidateQueries({ queryKey });
+            });
+          }
+
+          // Invalidar queries relacionadas à tabela
+          queryClient.invalidateQueries({ queryKey: [name] });
+        });
+      });
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [channel]); // Apenas quando o canal mudar (tables é estável)
+
+    channel.subscribe((status) => {
+      console.log('📡 Status live updates:', status);
+      
+      if (status === 'SUBSCRIBED') {
+        setIsConnected(true);
+        console.log('✅ Canal de live updates conectado');
+      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+        setIsConnected(false);
+        console.error('❌ Erro no canal de live updates');
+      } else if (status === 'CLOSED') {
+        setIsConnected(false);
+        console.log('🔌 Canal de live updates fechado');
+      }
+    });
+
+    // Cleanup
+    return () => {
+      console.log('🧹 Limpando canal de live updates');
+      setIsConnected(false);
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, JSON.stringify(tables), JSON.stringify(queryKeys), onUpdate, queryClient]);
 
   return {
-    isConnected: status.isConnected,
-    isReconnecting: status.isReconnecting,
+    isConnected,
   };
 }
 
-/**
- * Hook especializado para comentários em tempo real
- */
-export function useRealtimeComments(resourceId: string) {
+// Hooks especializados para casos comuns
+
+export function useRealtimeComments(resourceId?: string) {
   return useRealtimeLiveUpdates({
     tables: [
       {
         name: 'comments',
-        filter: `resource_id=eq.${resourceId}`,
-        queryKeys: [['comments', resourceId]],
+        events: ['INSERT', 'UPDATE', 'DELETE'],
+        filter: resourceId ? `resource_id=eq.${resourceId}` : undefined,
       },
     ],
+    queryKeys: [['comments', resourceId].filter(Boolean)],
   });
 }
 
-/**
- * Hook especializado para likes/reações em tempo real
- */
-export function useRealtimeLikes(resourceId: string) {
+export function useRealtimeLikes(resourceId?: string) {
   return useRealtimeLiveUpdates({
     tables: [
       {
         name: 'likes',
-        filter: `resource_id=eq.${resourceId}`,
-        queryKeys: [['likes', resourceId]],
-      },
-      {
-        name: 'reactions',
-        filter: `resource_id=eq.${resourceId}`,
-        queryKeys: [['reactions', resourceId]],
+        events: ['INSERT', 'DELETE'],
+        filter: resourceId ? `resource_id=eq.${resourceId}` : undefined,
       },
     ],
+    queryKeys: [['likes', resourceId].filter(Boolean)],
   });
 }
 
-/**
- * Hook especializado para visualizações em tempo real
- */
-export function useRealtimeViews(resourceId: string) {
+export function useRealtimeViews(resourceId?: string) {
   return useRealtimeLiveUpdates({
     tables: [
       {
         name: 'views',
-        filter: `resource_id=eq.${resourceId}`,
-        queryKeys: [['views', resourceId]],
+        events: ['INSERT'],
+        filter: resourceId ? `resource_id=eq.${resourceId}` : undefined,
       },
     ],
-  });
-}
-
-/**
- * Hook especializado para status de sugestões em tempo real
- */
-export function useRealtimeSuggestionStatus(suggestionId: string) {
-  return useRealtimeLiveUpdates({
-    tables: [
-      {
-        name: 'suggestions',
-        filter: `id=eq.${suggestionId}`,
-        queryKeys: [['suggestion', suggestionId], ['suggestions']],
-      },
-    ],
+    queryKeys: [['views', resourceId].filter(Boolean)],
   });
 }

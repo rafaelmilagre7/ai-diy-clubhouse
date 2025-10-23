@@ -1,73 +1,36 @@
 import { cn } from '@/lib/utils';
-import { usePresence } from '@/hooks/realtime/usePresence';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { formatDistanceToNow } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
+import { useSimplePresence } from '@/hooks/realtime/useSimplePresence';
 
 interface OnlineIndicatorProps {
   userId: string;
-  showTooltip?: boolean;
-  size?: 'sm' | 'md' | 'lg';
   className?: string;
+  showOffline?: boolean;
 }
 
+/**
+ * Indicador de status online/offline
+ * Fase 2: Bolinha verde/cinza no avatar
+ */
 export function OnlineIndicator({ 
   userId, 
-  showTooltip = true, 
-  size = 'md',
-  className 
+  className,
+  showOffline = true 
 }: OnlineIndicatorProps) {
-  const { isUserOnline, getUserLastSeen } = usePresence();
-  
-  const isOnline = isUserOnline(userId);
-  const lastSeen = getUserLastSeen(userId);
+  const { isUserOnline } = useSimplePresence();
+  const online = isUserOnline(userId);
 
-  const sizeClasses = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4',
-  };
-
-  const indicator = (
-    <div
-      className={cn(
-        'rounded-full border-2 border-background',
-        isOnline ? 'bg-green-500' : 'bg-gray-400',
-        sizeClasses[size],
-        className
-      )}
-    />
-  );
-
-  if (!showTooltip) {
-    return indicator;
+  if (!online && !showOffline) {
+    return null;
   }
 
-  const getTooltipText = () => {
-    if (isOnline) {
-      return 'Online agora';
-    }
-    
-    if (lastSeen) {
-      return `Visto ${formatDistanceToNow(lastSeen, {
-        addSuffix: true,
-        locale: ptBR,
-      })}`;
-    }
-    
-    return 'Offline';
-  };
-
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          {indicator}
-        </TooltipTrigger>
-        <TooltipContent>
-          <p className="text-sm">{getTooltipText()}</p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div
+      className={cn(
+        'w-3 h-3 rounded-full border-2 border-background',
+        online ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
+        className
+      )}
+      title={online ? 'Online' : 'Offline'}
+    />
   );
 }

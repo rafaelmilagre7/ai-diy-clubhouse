@@ -1,77 +1,41 @@
-import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { Users } from 'lucide-react';
+import { useSimplePresence } from '@/hooks/realtime/useSimplePresence';
 import { cn } from '@/lib/utils';
 
 interface LiveUpdateIndicatorProps {
-  isConnected: boolean;
-  label?: string;
-  showLabel?: boolean;
-  size?: 'sm' | 'md' | 'lg';
   className?: string;
+  showIcon?: boolean;
 }
 
-export function LiveUpdateIndicator({
-  isConnected,
-  label = 'Ao vivo',
-  showLabel = true,
-  size = 'md',
+/**
+ * Indicador de atividade ao vivo
+ * Fase 4: Badge "X pessoas online"
+ */
+export function LiveUpdateIndicator({ 
   className,
+  showIcon = true 
 }: LiveUpdateIndicatorProps) {
-  const sizeClasses = {
-    sm: 'w-2 h-2',
-    md: 'w-3 h-3',
-    lg: 'w-4 h-4',
-  };
+  const { getOnlineCount, isConnected } = useSimplePresence();
+  const count = getOnlineCount();
 
-  const textSizeClasses = {
-    sm: 'text-xs',
-    md: 'text-sm',
-    lg: 'text-base',
-  };
-
-  if (!showLabel) {
-    return (
-      <motion.div
-        className={cn(
-          'rounded-full',
-          isConnected ? 'bg-green-500' : 'bg-gray-400',
-          sizeClasses[size],
-          className
-        )}
-        animate={{
-          scale: isConnected ? [1, 1.2, 1] : 1,
-          opacity: isConnected ? [1, 0.7, 1] : 0.5,
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
-    );
+  if (!isConnected || count === 0) {
+    return null;
   }
 
   return (
-    <Badge
-      variant={isConnected ? 'default' : 'secondary'}
-      className={cn('gap-2', textSizeClasses[size], className)}
+    <Badge 
+      variant="secondary" 
+      className={cn(
+        'flex items-center gap-1.5 animate-in fade-in-50',
+        className
+      )}
     >
-      <motion.div
-        className={cn(
-          'rounded-full',
-          isConnected ? 'bg-white' : 'bg-gray-400',
-          sizeClasses[size]
-        )}
-        animate={{
-          scale: isConnected ? [1, 1.3, 1] : 1,
-        }}
-        transition={{
-          duration: 2,
-          repeat: Infinity,
-          ease: 'easeInOut',
-        }}
-      />
-      {label}
+      {showIcon && <Users className="h-3 w-3" />}
+      <span className="text-xs">
+        {count} online
+      </span>
+      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
     </Badge>
   );
 }

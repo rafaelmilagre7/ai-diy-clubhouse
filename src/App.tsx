@@ -10,7 +10,7 @@ import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
 import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
-import { RealtimeProvider } from "@/contexts/RealtimeProvider";
+import { RealtimeProviderV2 } from "@/contexts/RealtimeProviderV2";
 
 
 const queryClient = new QueryClient({
@@ -31,7 +31,13 @@ function App() {
         <TooltipProvider>
           <AuthProvider>
             <SecurityProvider>
-              {/* Realtime temporariamente desabilitado para diagnóstico */}
+              <RealtimeProviderV2
+                enableNotifications={true}  // Fase 1: ATIVA
+                enablePresence={false}      // Fase 2: DESATIVA (mude para true quando quiser ativar)
+                enableChat={false}          // Fase 3: DESATIVA (mude para true quando quiser ativar)
+                enableSound={true}
+                enableDesktopNotifications={true}
+              >
                 <LoggingProvider>
                   <BrowserRouter>
                     <div className="min-h-screen bg-background font-sans antialiased">
@@ -43,7 +49,7 @@ function App() {
                     </div>
                   </BrowserRouter>
                 </LoggingProvider>
-              
+              </RealtimeProviderV2>
             </SecurityProvider>
           </AuthProvider>
         </TooltipProvider>
