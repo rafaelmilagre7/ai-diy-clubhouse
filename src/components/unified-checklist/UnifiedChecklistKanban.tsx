@@ -94,25 +94,20 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const handleDragEnd = (result: DropResult) => {
     const { source, destination } = result;
 
+    // Validações básicas
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
 
     const sourceColumn = source.droppableId as ColumnType;
     const destColumn = destination.droppableId as ColumnType;
 
-    // Criar cópias dos arrays
-    const sourceItems = [...itemsByColumn[sourceColumn]];
-    const destItems = sourceColumn === destColumn ? sourceItems : [...itemsByColumn[destColumn]];
+    // Encontrar o item que foi movido
+    const sourceItems = itemsByColumn[sourceColumn];
+    const movedItem = sourceItems[source.index];
 
-    // Remover do source
-    const [movedItem] = sourceItems.splice(source.index, 1);
-
-    // Adicionar ao destination
-    destItems.splice(destination.index, 0, movedItem);
-
-    // Reordenar: atribuir orders sequenciais para garantir ordem correta
+    // Criar lista completa atualizada
     const updatedItems = normalizedItems.map(item => {
-      // Se é o item movido, atualizar coluna, completed e order
+      // O item que foi movido
       if (item.id === movedItem.id) {
         return {
           ...item,
@@ -122,33 +117,53 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
           completedAt: destColumn === 'done' ? new Date().toISOString() : undefined
         };
       }
-
-      // Reordenar itens da coluna de origem (se mudou de coluna)
-      if (sourceColumn !== destColumn && item.column === sourceColumn) {
-        const newIndex = sourceItems.findIndex(i => i.id === item.id);
-        return { ...item, order: newIndex };
+      
+      // Itens que ficaram na coluna de origem (após remoção)
+      if (item.column === sourceColumn && sourceColumn !== destColumn) {
+        const itemIndexInSource = sourceItems.findIndex(i => i.id === item.id);
+        if (itemIndexInSource > source.index) {
+          return { ...item, order: itemIndexInSource - 1 };
+        }
       }
-
-      // Reordenar itens da coluna de destino
+      
+      // Itens na coluna de destino (após inserção)
       if (item.column === destColumn && item.id !== movedItem.id) {
-        const newIndex = destItems.findIndex(i => i.id === item.id);
-        return { ...item, order: newIndex };
+        const destItems = itemsByColumn[destColumn];
+        const itemIndexInDest = destItems.findIndex(i => i.id === item.id);
+        
+        if (sourceColumn === destColumn) {
+          // Mover dentro da mesma coluna
+          if (source.index < destination.index) {
+            // Movendo para baixo
+            if (itemIndexInDest > source.index && itemIndexInDest <= destination.index) {
+              return { ...item, order: itemIndexInDest - 1 };
+            }
+          } else {
+            // Movendo para cima
+            if (itemIndexInDest >= destination.index && itemIndexInDest < source.index) {
+              return { ...item, order: itemIndexInDest + 1 };
+            }
+          }
+        } else {
+          // Mover entre colunas diferentes
+          if (itemIndexInDest >= destination.index) {
+            return { ...item, order: itemIndexInDest + 1 };
+          }
+        }
       }
-
+      
       return item;
     });
 
     // Salvar no banco
-    const updatedChecklistData: UnifiedChecklistData = {
-      ...checklistData,
-      checklist_data: {
-        items: updatedItems,
-        lastUpdated: new Date().toISOString()
-      }
-    };
-
     updateMutation.mutate({
-      checklistData: updatedChecklistData,
+      checklistData: {
+        ...checklistData,
+        checklist_data: {
+          items: updatedItems,
+          lastUpdated: new Date().toISOString()
+        }
+      },
       solutionId,
       checklistType,
       templateId
@@ -439,19 +454,14 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                 {...provided.dragHandleProps}
                                 className={cn(
                                   "mb-4 last:mb-0",
-                                  snapshot.isDragging ? "z-50 cursor-grabbing" : "cursor-grab"
+                                  snapshot.isDragging && "z-50"
                                 )}
-                                style={{
-                                  ...provided.draggableProps.style,
-                                  userSelect: 'none',
-                                  transition: snapshot.isDragging ? 'none' : 'transform 0.2s ease',
-                                }}
+                                style={provided.draggableProps.style}
                               >
                                 <Card 
                                   className={cn(
-                                    "group relative glass-card-hover select-none",
-                                    !snapshot.isDragging && "transition-all duration-200 hover:shadow-aurora hover:border-primary/40",
-                                    snapshot.isDragging && "rotate-2 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary transition-none"
+                                    "group relative glass-card-hover select-none cursor-grab active:cursor-grabbing",
+                                    snapshot.isDragging && "shadow-aurora-strong ring-4 ring-primary/30 border-primary rotate-2"
                                   )}
                                 >
 
