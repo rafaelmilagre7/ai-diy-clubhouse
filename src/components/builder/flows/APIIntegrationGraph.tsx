@@ -28,6 +28,15 @@ interface APIIntegrationGraphProps {
 }
 
 export const APIIntegrationGraph = ({ data }: APIIntegrationGraphProps) => {
+  // Validação de dados para evitar erro quando nodes/edges são undefined
+  if (!data || !data.nodes || !Array.isArray(data.nodes) || !data.edges || !Array.isArray(data.edges)) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Mapa de integração não disponível</p>
+      </div>
+    );
+  }
+
   const { nodes, edges } = data;
 
   const getNodeIcon = (type: string) => {

@@ -25,6 +25,15 @@ interface AutomationJourneyFlowProps {
 }
 
 export const AutomationJourneyFlow = ({ data }: AutomationJourneyFlowProps) => {
+  // Validação de dados para evitar erro quando steps é undefined
+  if (!data || !data.steps || !Array.isArray(data.steps)) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Jornada de automação não disponível</p>
+      </div>
+    );
+  }
+
   const { steps, total_time, difficulty } = data;
 
   return (

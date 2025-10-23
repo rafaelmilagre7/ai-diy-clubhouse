@@ -28,6 +28,15 @@ interface DeployChecklistAccordionProps {
 }
 
 export const DeployChecklistAccordion = ({ data, solutionId }: DeployChecklistAccordionProps) => {
+  // Validação de dados para evitar erro quando items é undefined
+  if (!data || !data.items || !Array.isArray(data.items)) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Checklist não disponível</p>
+      </div>
+    );
+  }
+
   const { items, total_time, difficulty } = data;
   const [completedTasks, setCompletedTasks] = useState<Set<string>>(new Set());
 
