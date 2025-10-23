@@ -250,17 +250,6 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   }, [allCompleted, onComplete]);
 
-  // Sincronizar itemNotes com checklistItems quando carregarem
-  useEffect(() => {
-    if (checklistItems.length > 0) {
-      const notesMap: Record<string, string> = {};
-      checklistItems.forEach(item => {
-        notesMap[item.id] = item.notes || '';
-      });
-      setItemNotes(notesMap);
-    }
-  }, [checklistItems]);
-
   if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist || isLoadingAlternative || isLoadingDirect) {
     return (
       <div className="flex items-center justify-center h-64">

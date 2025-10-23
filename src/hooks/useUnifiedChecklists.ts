@@ -12,6 +12,7 @@ export interface UnifiedChecklistItem {
   completedAt?: string;
   column?: 'todo' | 'in_progress' | 'done';
   order?: number;
+  metadata?: any; // Dados extras como estimated_time, difficulty, etc
 }
 
 // Helper para normalizar items (garantir coluna e ordem)
