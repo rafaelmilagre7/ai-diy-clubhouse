@@ -17,7 +17,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
         initial={{ scale: 0.8, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.8, opacity: 0 }}
-        className="flex flex-col items-center gap-6 px-8 py-12 max-w-md"
+        className="flex flex-col items-center gap-6 px-8 py-12 max-w-2xl"
       >
         {/* Animação geométrica elegante */}
         {(status === 'validating' || status === 'loading-questions') && (
@@ -115,14 +115,26 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
               >
                 Ideia validada com sucesso
               </motion.h3>
-              <motion.p
+              <motion.div
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-muted-foreground text-sm"
+                className="text-muted-foreground text-sm max-w-lg text-left space-y-2"
               >
-                {message || 'Sua ideia é viável e pode ser implementada com IA'}
-              </motion.p>
+                <p className="leading-relaxed">
+                  {message ? message.split('\n\nFerramentas sugeridas:')[0] : 'Sua ideia é viável e pode ser implementada com IA'}
+                </p>
+                {message && message.includes('Ferramentas sugeridas:') && (
+                  <div className="pt-2 border-t border-border/50">
+                    <p className="text-xs font-semibold text-green-500 mb-1">
+                      Ferramentas sugeridas:
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {message.split('Ferramentas sugeridas:')[1]?.trim()}
+                    </p>
+                  </div>
+                )}
+              </motion.div>
             </>
           )}
 
@@ -140,7 +152,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-muted-foreground text-sm"
+                className="text-muted-foreground text-sm max-w-lg text-left leading-relaxed"
               >
                 {message || 'Infelizmente, não é possível desenvolver esse projeto usando IA no nosso fluxo atual'}
               </motion.p>

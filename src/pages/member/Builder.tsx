@@ -163,7 +163,7 @@ export default function Builder() {
         return;
       }
 
-      const { viable, reason } = data;
+      const { viable, reason, tools } = data;
 
       if (!viable) {
         // Não é viável
@@ -173,13 +173,16 @@ export default function Builder() {
         setTimeout(() => {
           setValidationStatus('idle');
           setCurrentIdea('');
-        }, 4000);
+        }, 5000);
         return;
       }
 
       // É viável! Mostrar sucesso e continuar
       setValidationStatus('success');
-      setValidationMessage(reason || 'Sua ideia é viável e pode ser implementada!');
+      const toolsList = tools && Array.isArray(tools) && tools.length > 0 
+        ? `\n\nFerramentas sugeridas: ${tools.join(', ')}` 
+        : '';
+      setValidationMessage((reason || 'Sua ideia é viável e pode ser implementada!') + toolsList);
 
       // Aguardar 1s para mostrar sucesso e então carregar perguntas
       setTimeout(async () => {
