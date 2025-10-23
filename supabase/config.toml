@@ -265,6 +265,9 @@ verify_jwt = false
 [functions.generate-ai-solution]
 verify_jwt = false
 
+[functions.generate-section-content]
+verify_jwt = false
+
 [functions.transcribe-audio]
 verify_jwt = false
 

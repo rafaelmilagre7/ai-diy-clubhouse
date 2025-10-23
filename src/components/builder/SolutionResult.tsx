@@ -24,24 +24,73 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   // Estado para controlar expansão de seções on-demand
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
+  const [solutionData, setSolutionData] = useState<any>(solution);
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(sectionId)) {
+  const toggleSection = async (sectionId: string) => {
+    // Se já expandido, apenas fechar
+    if (expandedSections.has(sectionId)) {
+      setExpandedSections(prev => {
+        const newSet = new Set(prev);
         newSet.delete(sectionId);
-      } else {
-        newSet.add(sectionId);
-        // Simular pequeno delay de loading para UX
-        if (!loadingSections.has(sectionId)) {
-          setLoadingSections(new Set([sectionId]));
-          setTimeout(() => {
-            setLoadingSections(new Set());
-          }, 300);
+        return newSet;
+      });
+      return;
+    }
+
+    // Mapear sectionId para campo do banco e tipo
+    const sectionMapping: Record<string, { field: string; type: string }> = {
+      'tools': { field: 'required_tools', type: 'tools' },
+      'checklist': { field: 'implementation_checklist', type: 'checklist' },
+      'architecture': { field: 'architecture_flowchart', type: 'architecture' },
+      'lovable': { field: 'lovable_prompt', type: 'lovable' }
+    };
+
+    const mapping = sectionMapping[sectionId];
+    const hasContent = mapping && solutionData[mapping.field];
+
+    // Se já tem conteúdo, apenas expandir
+    if (hasContent) {
+      setExpandedSections(prev => new Set([...prev, sectionId]));
+      return;
+    }
+
+    // Caso contrário, gerar conteúdo sob demanda
+    setLoadingSections(prev => new Set([...prev, sectionId]));
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-section-content', {
+        body: {
+          solutionId: solutionData.id,
+          sectionType: mapping.type,
+          userId: solutionData.user_id
         }
+      });
+
+      if (error) throw error;
+
+      if (data?.success) {
+        // Atualizar estado local
+        setSolutionData((prev: any) => ({
+          ...prev,
+          [mapping.field]: data.content
+        }));
+        
+        // Expandir seção
+        setExpandedSections(prev => new Set([...prev, sectionId]));
+        toast.success('Conteúdo gerado com sucesso! 🎉');
       }
-      return newSet;
-    });
+    } catch (err: any) {
+      console.error('Erro ao gerar seção:', err);
+      toast.error('Erro ao gerar conteúdo', {
+        description: 'Tente novamente em instantes.'
+      });
+    } finally {
+      setLoadingSections(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(sectionId);
+        return newSet;
+      });
+    }
   };
 
   const isExpanded = (sectionId: string) => expandedSections.has(sectionId);
@@ -99,12 +148,12 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
               Os 4 pilares essenciais da sua solução com IA
             </p>
           </div>
-          <FrameworkQuadrants framework={solution.framework_mapping} />
+          <FrameworkQuadrants framework={solutionData.framework_mapping} />
         </LiquidGlassCard>
       </motion.div>
 
       {/* Arquitetura Visual (Fluxograma) - 3º Bloco - ON DEMAND */}
-      {solution.architecture_flowchart && (
+      {(solutionData.architecture_flowchart || true) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -143,7 +192,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                   ) : (
-                    <ArchitectureFlowchart flowchart={solution.architecture_flowchart} />
+                    <ArchitectureFlowchart flowchart={solutionData.architecture_flowchart} />
                   )}
                 </motion.div>
               )}
@@ -191,7 +240,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
                     <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
                 ) : (
-                  <RequiredToolsGrid tools={solution.required_tools} />
+                  <RequiredToolsGrid tools={solutionData.required_tools} />
                 )}
               </motion.div>
             )}
@@ -239,7 +288,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
                   </div>
                 ) : (
                   <UnifiedChecklistTab 
-                    solutionId={solution.id}
+                    solutionId={solutionData.id}
                   />
                 )}
               </motion.div>
@@ -249,7 +298,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       </motion.div>
 
       {/* Prompt Lovable - ON DEMAND */}
-      {solution.lovable_prompt && (
+      {(solutionData.lovable_prompt || true) && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -290,11 +339,11 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
                   ) : (
                     <div className="relative">
                       <pre className="bg-surface-elevated/50 p-4 rounded-lg overflow-x-auto text-sm">
-                        <code>{solution.lovable_prompt}</code>
+                        <code>{solutionData.lovable_prompt}</code>
                       </pre>
                       <Button
                         onClick={() => {
-                          navigator.clipboard.writeText(solution.lovable_prompt);
+                          navigator.clipboard.writeText(solutionData.lovable_prompt);
                           toast.success('Prompt copiado!');
                         }}
                         className="absolute top-4 right-4"

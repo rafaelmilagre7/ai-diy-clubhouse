@@ -119,6 +119,7 @@ export type Database = {
           data_flow_diagram: Json | null
           framework_mapping: Json | null
           generation_model: string | null
+          generation_status: string | null
           generation_time_ms: number | null
           id: string
           implementation_checklist: Json | null
@@ -147,6 +148,7 @@ export type Database = {
           data_flow_diagram?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
+          generation_status?: string | null
           generation_time_ms?: number | null
           id?: string
           implementation_checklist?: Json | null
@@ -175,6 +177,7 @@ export type Database = {
           data_flow_diagram?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
+          generation_status?: string | null
           generation_time_ms?: number | null
           id?: string
           implementation_checklist?: Json | null

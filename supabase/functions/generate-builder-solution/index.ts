@@ -32,7 +32,8 @@ const GenerateRequestSchema = z.object({
       question: z.string().max(500, "Pergunta muito longa"),
       answer: z.string().max(2000, "Resposta muito longa")
     })
-  ).max(10, "Máximo de 10 perguntas permitidas").optional()
+  ).max(10, "Máximo de 10 perguntas permitidas").optional(),
+  mode: z.enum(["quick", "complete"]).optional().default("quick") // Modo de geração
 });
 
 serve(async (req) => {
@@ -62,7 +63,9 @@ serve(async (req) => {
       );
     }
 
-    const { idea, userId, answers = [] } = validationResult.data;
+    const { idea, userId, answers = [], mode = "quick" } = validationResult.data;
+    
+    console.log(`[BUILDER][${requestId}] 🎯 Modo de geração: ${mode.toUpperCase()}`);
     
     // Variable to hold saved solution for timeout handler
     let savedSolution: any = null;
@@ -926,7 +929,8 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         technical_stack_diagram: solutionData.technical_stack_diagram,
         generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
-        is_complete: true, // Solução completa desde o início
+        generation_status: mode === "quick" ? "quick" : "complete",
+        is_complete: mode === "complete"
       })
     .select()
     .single();
