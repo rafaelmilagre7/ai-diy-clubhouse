@@ -27,19 +27,22 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
       try {
         console.log(`[Mermaid][${flowId}] 🎨 Renderizando...`);
         
-        // Sanitizar código Mermaid removendo metadados inválidos
+        // Sanitizar código Mermaid de forma mais robusta
         let cleanedCode = mermaidCode.trim();
-        // Remove linhas com metadados incorretos (id: e title: no final)
         const lines = cleanedCode.split('\n');
-        const lastLine = lines[lines.length - 1];
-        if (lastLine.includes(' id:') || lastLine.includes(' title:')) {
-          // Remove tudo após o último ] antes dos metadados
-          const match = lastLine.match(/^(.+?\])/);
-          if (match) {
-            lines[lines.length - 1] = match[1];
-            cleanedCode = lines.join('\n');
+        
+        // Processar cada linha
+        const cleanLines = lines.map(line => {
+          // Remove metadados inválidos (id:, title:) que aparecem após ]
+          if (line.includes(']') && (line.includes(' id:') || line.includes(' title:'))) {
+            const bracketIndex = line.lastIndexOf(']');
+            return line.substring(0, bracketIndex + 1);
           }
-        }
+          return line;
+        }).filter(line => line.trim().length > 0);
+        
+        cleanedCode = cleanLines.join('\n');
+        console.log(`[Mermaid][${flowId}] Código sanitizado:`, cleanedCode.substring(0, 100) + '...');
         
         const uniqueId = `mermaid-${flowId}-${Date.now()}`;
         const { svg } = await mermaid.render(uniqueId, cleanedCode);
@@ -72,25 +75,31 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
     renderDiagram();
   }, [mermaidCode, flowId, isInitialized]);
 
-  if (error) {
-    return (
-      <div className="text-center py-8 text-destructive">
-        <p>{error}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative">
-      {isRendering && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    <div className="relative group">
+      {error ? (
+        <div className="text-center py-8 space-y-3">
+          <p className="text-destructive text-sm">{error}</p>
+          <p className="text-xs text-muted-foreground">
+            Este diagrama precisa ser regenerado pela IA devido a um erro de sintaxe.
+          </p>
         </div>
+      ) : (
+        <>
+          {isRendering && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          )}
+          <div 
+            ref={containerRef} 
+            className="mermaid-container w-full overflow-x-auto py-4 transition-transform duration-200"
+            style={{ 
+              transformOrigin: 'top left',
+            }}
+          />
+        </>
       )}
-      <div 
-        ref={containerRef} 
-        className="mermaid-container w-full overflow-x-auto py-4"
-      />
     </div>
   );
 };
