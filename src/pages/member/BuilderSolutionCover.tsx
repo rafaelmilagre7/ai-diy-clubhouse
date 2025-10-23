@@ -1,17 +1,19 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode } from 'lucide-react';
+import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 export default function BuilderSolutionCover() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [generatingSection, setGeneratingSection] = useState<string | null>(null);
 
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
@@ -26,6 +28,75 @@ export default function BuilderSolutionCover() {
       return data;
     },
   });
+
+  // Mapear cards para campos do banco e tipos de seção
+  const sectionMapping: Record<string, { field: string; type: string; label: string }> = {
+    'framework': { field: 'framework_mapping', type: 'framework', label: 'Framework de Implementação' },
+    'arquitetura': { field: 'automation_journey_flow', type: 'architecture', label: 'Arquitetura e Fluxos' },
+    'ferramentas': { field: 'required_tools', type: 'tools', label: 'Ferramentas Necessárias' },
+    'checklist': { field: 'implementation_checklist', type: 'checklist', label: 'Plano de Ação' },
+    'prompt': { field: 'lovable_prompt', type: 'lovable', label: 'Prompt Lovable' }
+  };
+
+  const handleCardClick = async (cardPath: string) => {
+    const sectionKey = cardPath.split('/').pop() as string;
+    const sectionInfo = sectionMapping[sectionKey];
+    
+    if (!sectionInfo || !solution) return;
+    
+    const hasContent = solution[sectionInfo.field] !== null && solution[sectionInfo.field] !== undefined;
+    
+    // Se já tem conteúdo, navega direto
+    if (hasContent) {
+      navigate(cardPath);
+      return;
+    }
+    
+    // Caso contrário, gera sob demanda
+    setGeneratingSection(sectionInfo.label);
+    
+    try {
+      console.log(`[COVER] Gerando ${sectionInfo.type} para solução ${solution.id}`);
+      
+      const { data, error } = await supabase.functions.invoke('generate-section-content', {
+        body: {
+          solutionId: solution.id,
+          sectionType: sectionInfo.type,
+          userId: solution.user_id
+        }
+      });
+      
+      if (error) {
+        console.error('[COVER] Erro ao gerar:', error);
+        throw error;
+      }
+      
+      if (data?.success) {
+        console.log(`[COVER] ✅ ${sectionInfo.label} gerado!`);
+        toast.success(`${sectionInfo.label} gerado com sucesso! 🎉`);
+        
+        // Invalidar cache para recarregar dados
+        await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+        
+        // Navegar para a página
+        navigate(cardPath);
+      } else {
+        throw new Error('Resposta sem sucesso');
+      }
+    } catch (err: any) {
+      console.error('[COVER] Erro:', err);
+      toast.error('Erro ao gerar conteúdo', {
+        description: 'Tente novamente em instantes.',
+        action: {
+          label: 'Tentar novamente',
+          onClick: () => handleCardClick(cardPath)
+        },
+        duration: 10000
+      });
+    } finally {
+      setGeneratingSection(null);
+    }
+  };
 
   const cards = [
     {
@@ -162,7 +233,8 @@ export default function BuilderSolutionCover() {
               return (
                 <motion.button
                   key={index}
-                  onClick={() => navigate(card.path)}
+                  onClick={() => handleCardClick(card.path)}
+                  disabled={!!generatingSection}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.08 }}
@@ -173,6 +245,7 @@ export default function BuilderSolutionCover() {
                     cursor-pointer overflow-hidden text-left
                     bg-gradient-to-br ${card.color}
                     ${card.borderColor} hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/30
+                    disabled:opacity-50 disabled:cursor-not-allowed
                   `}
                 >
                   {/* Glow effect animado no hover */}
@@ -206,6 +279,23 @@ export default function BuilderSolutionCover() {
               );
             })}
           </div>
+
+          {/* Loading Modal */}
+          {generatingSection && (
+            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
+              <LiquidGlassCard className="p-8 max-w-md mx-4">
+                <div className="text-center space-y-4">
+                  <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+                  <h3 className="text-xl font-bold">
+                    Gerando {generatingSection}...
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Isso pode levar até 30 segundos
+                  </p>
+                </div>
+              </LiquidGlassCard>
+            </div>
+          )}
         </motion.div>
       </div>
     </div>

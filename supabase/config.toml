@@ -266,7 +266,7 @@ verify_jwt = false
 verify_jwt = false
 
 [functions.generate-section-content]
-verify_jwt = false
+verify_jwt = true
 
 [functions.transcribe-audio]
 verify_jwt = false

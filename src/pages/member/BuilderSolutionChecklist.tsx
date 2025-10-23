@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
@@ -8,13 +8,15 @@ import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklist
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: solution, isLoading } = useQuery({
+  const { data: solution, isLoading, refetch } = useQuery({
     queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase

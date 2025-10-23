@@ -727,77 +727,20 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     let toolDefinition: any;
     
     if (mode === "quick") {
-      // MODO QUICK: Gera apenas overview + framework (15-30s)
+      // MODO QUICK: Gera APENAS capa (título, descrição, tags) - 5-10s
       toolDefinition = {
         type: "function",
         function: {
           name: "create_quick_solution",
-          description: "Criar visão geral rápida da solução (apenas essencial)",
+          description: "Criar apenas a capa da solução (título, descrição e tags)",
           parameters: {
             type: "object",
             properties: {
               title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (20-60 chars). NUNCA copie literalmente. EXTRAIA essência. Formato: [Tecnologia] + [Resultado]. PROIBIDO: Implementar, Criar, Fazer" },
               short_description: { type: "string", description: "Descrição objetiva em 3-5 frases sobre O QUE é e COMO funciona" },
-              tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp)" },
-              technical_overview: {
-                type: "object",
-                properties: {
-                  complexity: { type: "string", enum: ["low", "medium", "high"] },
-                  estimated_time: { type: "string" },
-                  main_stack: { type: "string" }
-                },
-                required: ["complexity", "estimated_time", "main_stack"]
-              },
-              framework_quadrants: {
-                type: "object",
-                properties: {
-                  quadrant1_automation: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      items: { type: "array", items: { type: "string" } },
-                      tool_names: { type: "array", items: { type: "string" } },
-                      integration_details: { type: "string" }
-                    },
-                    required: ["title", "description", "items", "tool_names"]
-                  },
-                  quadrant2_ai: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      items: { type: "array", items: { type: "string" } },
-                      tool_names: { type: "array", items: { type: "string" } },
-                      ai_strategy: { type: "string" }
-                    },
-                    required: ["title", "description", "items", "tool_names"]
-                  },
-                  quadrant3_data: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      items: { type: "array", items: { type: "string" } },
-                      tool_names: { type: "array", items: { type: "string" } }
-                    },
-                    required: ["title", "description", "items", "tool_names"]
-                  },
-                  quadrant4_interface: {
-                    type: "object",
-                    properties: {
-                      title: { type: "string" },
-                      description: { type: "string" },
-                      items: { type: "array", items: { type: "string" } },
-                      tool_names: { type: "array", items: { type: "string" } }
-                    },
-                    required: ["title", "description", "items", "tool_names"]
-                  }
-                },
-                required: ["quadrant1_automation", "quadrant2_ai", "quadrant3_data", "quadrant4_interface"]
-              }
+              tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp)" }
             },
-            required: ["title", "short_description", "tags", "technical_overview", "framework_quadrants"]
+            required: ["title", "short_description", "tags"]
           }
         }
       };
@@ -1180,7 +1123,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       title: solutionData.title,
       short_description: solutionData.short_description,
       tags: solutionData.tags || ['IA Generativa'],
-      framework_mapping: solutionData.framework_quadrants,
+      framework_mapping: mode === "complete" ? solutionData.framework_quadrants : null,
       generation_model: "google/gemini-2.5-flash",
       generation_time_ms: generationTime,
       generation_status: mode === "quick" ? "quick" : "complete",

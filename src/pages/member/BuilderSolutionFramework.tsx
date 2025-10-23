@@ -1,19 +1,22 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { FrameworkQuadrants } from '@/components/builder/FrameworkQuadrants';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 export default function BuilderSolutionFramework() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: solution, isLoading } = useQuery({
+  const { data: solution, isLoading, refetch } = useQuery({
     queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,12 +30,53 @@ export default function BuilderSolutionFramework() {
     },
   });
 
+  // Auto-geração se framework não existir
+  useEffect(() => {
+    const generateIfNeeded = async () => {
+      if (!solution || solution.framework_mapping || isGenerating) return;
+
+      console.log('[FRAMEWORK] Framework não existe, gerando automaticamente...');
+      setIsGenerating(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-section-content', {
+          body: {
+            solutionId: solution.id,
+            sectionType: 'framework',
+            userId: solution.user_id
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          console.log('[FRAMEWORK] ✅ Framework gerado!');
+          toast.success('Framework gerado com sucesso! 🎉');
+          await refetch();
+        }
+      } catch (err: any) {
+        console.error('[FRAMEWORK] Erro:', err);
+        toast.error('Erro ao gerar framework', {
+          description: 'Tente recarregar a página.',
+          action: {
+            label: 'Voltar',
+            onClick: () => navigate(`/ferramentas/builder/solution/${id}`)
+          }
+        });
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateIfNeeded();
+  }, [solution, isGenerating]);
+
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Carregando framework..." />;
+  }
+
+  if (isGenerating || !solution?.framework_mapping) {
+    return <LoadingScreen message="Gerando Framework de Implementação..." />;
   }
 
   if (!solution) {

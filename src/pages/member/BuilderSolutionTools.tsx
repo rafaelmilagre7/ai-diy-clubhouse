@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Search } from 'lucide-react';
@@ -9,13 +9,16 @@ import { RequiredToolsGrid } from '@/components/builder/RequiredToolsGrid';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
+import { toast } from 'sonner';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 export default function BuilderSolutionTools() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: solution, isLoading } = useQuery({
+  const { data: solution, isLoading, refetch } = useQuery({
     queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,21 +32,30 @@ export default function BuilderSolutionTools() {
     },
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  useEffect(() => {
+    const generateIfNeeded = async () => {
+      if (!solution || solution.required_tools || isGenerating) return;
+      setIsGenerating(true);
+      try {
+        const { data } = await supabase.functions.invoke('generate-section-content', {
+          body: { solutionId: solution.id, sectionType: 'tools', userId: solution.user_id }
+        });
+        if (data?.success) {
+          toast.success('Ferramentas geradas! 🎉');
+          await refetch();
+        }
+      } catch (err) {
+        toast.error('Erro ao gerar ferramentas');
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+    generateIfNeeded();
+  }, [solution, isGenerating]);
 
-  if (!solution) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <p className="text-center text-muted-foreground">Solução não encontrada</p>
-      </div>
-    );
-  }
+  if (isLoading) return <LoadingScreen message="Carregando ferramentas..." />;
+  if (isGenerating || !solution?.required_tools) return <LoadingScreen message="Gerando lista de ferramentas..." />;
+  if (!solution) return <div className="container mx-auto px-4 py-8"><p className="text-center text-muted-foreground">Solução não encontrada</p></div>;
 
   const filterTools = (tools: any[]) => {
     if (!searchQuery) return tools;

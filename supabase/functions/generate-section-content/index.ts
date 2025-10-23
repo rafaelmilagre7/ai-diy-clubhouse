@@ -7,18 +7,9 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// Schema de validação
-const GenerateSectionSchema = z.object({
+const RequestSchema = z.object({
   solutionId: z.string().uuid("ID de solução inválido"),
-  sectionType: z.enum([
-    "architecture",
-    "tools",
-    "checklist",
-    "lovable",
-    "data_flow",
-    "user_journey",
-    "technical_stack"
-  ]),
+  sectionType: z.enum(["framework", "tools", "checklist", "architecture", "lovable"]),
   userId: z.string().uuid("ID de usuário inválido")
 });
 
@@ -27,369 +18,323 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const requestId = crypto.randomUUID();
-  console.log(`[SECTION-GEN][${requestId}] === GERAÇÃO DE SEÇÃO INICIADA ===`);
-
   try {
-    // Verificar autenticação
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return new Response(
-        JSON.stringify({ error: 'Token de autenticação necessário' }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const token = authHeader.replace('Bearer ', '');
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
-
-    if (authError || !user) {
-      console.error(`[SECTION-GEN][${requestId}] ❌ Token inválido:`, authError);
-      return new Response(
-        JSON.stringify({ error: 'Token de autenticação inválido ou expirado' }),
-        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    console.log(`[SECTION-GEN][${requestId}] 🔐 Usuário autenticado: ${user.id}`);
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const validationResult = GenerateSectionSchema.safeParse(body);
-    
-    if (!validationResult.success) {
-      const firstError = validationResult.error.errors[0];
-      return new Response(
-        JSON.stringify({ error: firstError.message }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const { solutionId, sectionType, userId } = RequestSchema.parse(body);
 
-    const { solutionId, sectionType, userId } = validationResult.data;
-    
-    console.log(`[SECTION-GEN][${requestId}] 🎯 Seção: ${sectionType}`);
-    console.log(`[SECTION-GEN][${requestId}] 📄 Solução ID: ${solutionId.substring(0, 8)}***`);
+    console.log(`[SECTION-GEN] Gerando ${sectionType} para solução ${solutionId}`);
 
-    // Buscar solução existente
-    const { data: solution, error: solutionError } = await supabase
+    // Buscar solução e verificar permissão
+    const { data: solution, error: fetchError } = await supabase
       .from("ai_generated_solutions")
       .select("*")
       .eq("id", solutionId)
       .eq("user_id", userId)
       .single();
 
-    if (solutionError || !solution) {
-      console.error(`[SECTION-GEN][${requestId}] ❌ Solução não encontrada`);
+    if (fetchError || !solution) {
       return new Response(
-        JSON.stringify({ error: "Solução não encontrada" }),
+        JSON.stringify({ error: "Solução não encontrada ou sem permissão" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Buscar ferramentas disponíveis
-    const { data: tools } = await supabase
-      .from("tools")
-      .select("id, name, category, official_url, logo_url")
-      .eq("status", true);
+    // Mapear tipo de seção para campos do banco
+    const fieldMapping: Record<string, string[]> = {
+      framework: ["framework_mapping", "mind_map"],
+      tools: ["required_tools"],
+      checklist: ["implementation_checklist"],
+      architecture: ["automation_journey_flow", "ai_architecture_tree", "deploy_checklist_structured", "api_integration_map"],
+      lovable: ["lovable_prompt"]
+    };
 
-    const toolsContext = tools
-      ? tools.map((t) => `- ${t.name} (${t.category}) | Logo: ${t.logo_url || 'N/A'}`).join("\n")
-      : "Nenhuma ferramenta disponível";
+    const fieldsToGenerate = fieldMapping[sectionType];
+    const primaryField = fieldsToGenerate[0];
 
-    // Construir prompt específico para cada seção
-    let systemPrompt = "";
-    let userPrompt = "";
-    let toolDefinition: any = null;
-
-    if (sectionType === "tools") {
-      systemPrompt = `Você é um especialista em ferramentas e tecnologias para IA e automação.
-
-FERRAMENTAS DISPONÍVEIS NO CATÁLOGO:
-${toolsContext}
-
-OBJETIVO: Gerar lista COMPLETA e DETALHADA de ferramentas necessárias (essenciais e opcionais).
-
-REGRAS:
-✓ Use SEMPRE as ferramentas do catálogo disponível acima
-✓ COPIE exatamente o logo_url da lista acima
-✓ Se não houver logo, use https://logo.clearbit.com/[dominio].com
-✓ Ferramentas essenciais: 4-8 itens (insubstituíveis)
-✓ Ferramentas opcionais: 3-6 itens (melhoram mas não são críticas)
-✓ Seja ESPECÍFICO: por que essencial, setup real, custo real
-✓ Se a solução envolve criar aplicação web/dashboard, SEMPRE inclua Lovable`;
-
-      userPrompt = `CONTEXTO DA SOLUÇÃO:
-Título: ${solution.title}
-Descrição: ${solution.short_description}
-Ideia Original: ${solution.original_idea}
-
-Framework: ${JSON.stringify(solution.framework_mapping)}
-
-Gere a lista COMPLETA de ferramentas necessárias (essenciais + opcionais).`;
-
-      toolDefinition = {
-        type: "function",
-        function: {
-          name: "generate_tools_list",
-          description: "Gerar lista completa de ferramentas",
-          parameters: {
-            type: "object",
-            properties: {
-              essential: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    category: { type: "string" },
-                    reason: { type: "string", description: "4-6 frases explicando por que é essencial" },
-                    setup_complexity: { type: "string", enum: ["easy", "medium", "hard"] },
-                    setup_steps: { type: "string", description: "Passos específicos de configuração" },
-                    cost_estimate: { type: "string", description: "Custo mensal em USD" },
-                    logo_url: { type: "string", description: "URL da logo (COPIE da lista disponível)" },
-                    alternatives: { type: "array", items: { type: "string" } }
-                  },
-                  required: ["name", "category", "reason", "setup_complexity", "cost_estimate", "logo_url"]
-                }
-              },
-              optional: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    name: { type: "string" },
-                    category: { type: "string" },
-                    reason: { type: "string", description: "Por que PODE ser útil" },
-                    when_to_use: { type: "string", description: "Em qual cenário usar" },
-                    cost_estimate: { type: "string" },
-                    logo_url: { type: "string" }
-                  },
-                  required: ["name", "category", "reason", "cost_estimate", "logo_url"]
-                }
-              }
-            },
-            required: ["essential", "optional"]
-          }
-        }
-      };
-    } else if (sectionType === "checklist") {
-      systemPrompt = `Você é Rafael Milagre - especialista em execução prática.
-
-OBJETIVO: Criar checklist ULTRA-DETALHADO de implementação (12-25 steps).
-
-REGRAS RAFAEL MILAGRE:
-✓ ULTRA-ESPECÍFICO: não "configurar API", mas "acesse console.x.com, clique..."
-✓ Cada step = mini-tutorial (5-8 frases)
-✓ Métricas mensuráveis
-✓ Sem passos genéricos: tudo executável`;
-
-      userPrompt = `CONTEXTO DA SOLUÇÃO:
-Título: ${solution.title}
-Descrição: ${solution.short_description}
-Ideia Original: ${solution.original_idea}
-
-Framework: ${JSON.stringify(solution.framework_mapping)}
-
-Crie checklist COMPLETO de implementação (12-25 passos).`;
-
-      toolDefinition = {
-        type: "function",
-        function: {
-          name: "generate_checklist",
-          description: "Gerar checklist detalhado",
-          parameters: {
-            type: "object",
-            properties: {
-              steps: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    step_number: { type: "integer" },
-                    title: { type: "string" },
-                    description: { type: "string", description: "5-8 frases ULTRA-DETALHADAS" },
-                    estimated_time: { type: "string" },
-                    difficulty: { type: "string", enum: ["easy", "medium", "hard"] },
-                    dependencies: { type: "array", items: { type: "integer" } },
-                    validation_criteria: { type: "string", description: "Como validar conclusão" },
-                    common_pitfalls: { type: "string", description: "Erros comuns" },
-                    resources: { type: "array", items: { type: "string" } }
-                  },
-                  required: ["step_number", "title", "description", "estimated_time", "difficulty"]
-                }
-              }
-            },
-            required: ["steps"]
-          }
-        }
-      };
-    } else if (sectionType === "architecture") {
-      systemPrompt = `Você é um arquiteto de software especialista.
-
-OBJETIVO: Gerar o diagrama Mermaid do FLUXO DE ARQUITETURA completo.
-
-⚠️ INSTRUÇÕES MERMAID (CRÍTICO):
-- Use "graph TD" ou "graph LR" (NUNCA "flowchart" para architecture)
-- Nós: [ ] retângulos, ( ) arredondados, (( )) círculos, [( )] banco
-- NUNCA use chaves { } em graphs
-- Conexões: -->|texto| ou apenas -->
-- Estilos: style NODEID fill:#cor,stroke:#cor,color:#fff
-- Máximo 15 nós
-
-EXEMPLO VÁLIDO:
-graph TD
-  A[Usuário] -->|mensagem| B(WhatsApp API)
-  B --> C{Make}
-  C -->|qualifica| D[GPT-4]
-  D --> E[(CRM)]
-  style D fill:#3b82f6`;
-
-      userPrompt = `CONTEXTO:
-Título: ${solution.title}
-Descrição: ${solution.short_description}
-
-Gere o diagrama Mermaid representando TODO o fluxo técnico.`;
-
-      toolDefinition = {
-        type: "function",
-        function: {
-          name: "generate_architecture",
-          description: "Gerar diagrama de arquitetura",
-          parameters: {
-            type: "object",
-            properties: {
-              mermaid_code: { type: "string", description: "Código Mermaid completo (graph TD ou LR)" },
-              description: { type: "string", description: "Descrição em 1-2 frases" }
-            },
-            required: ["mermaid_code", "description"]
-          }
-        }
-      };
-    } else if (sectionType === "lovable") {
-      systemPrompt = `Você é um especialista em criar prompts para a plataforma Lovable.
-
-OBJETIVO: Gerar prompt COMPLETO e EXECUTÁVEL para criar a aplicação no Lovable.
-
-ESTRUTURA DO PROMPT:
-1. Objetivo claro (2-3 frases)
-2. Funcionalidades principais (lista detalhada)
-3. Arquitetura técnica (stack, integrações)
-4. UI/UX (design, componentes)
-5. Dados (schemas, relacionamentos)
-
-O prompt deve ser COPY-PASTE-READY para o Lovable gerar a aplicação.`;
-
-      userPrompt = `CONTEXTO DA SOLUÇÃO:
-Título: ${solution.title}
-Descrição: ${solution.short_description}
-Framework: ${JSON.stringify(solution.framework_mapping)}
-
-Gere prompt Lovable COMPLETO e EXECUTÁVEL.`;
-
-      toolDefinition = {
-        type: "function",
-        function: {
-          name: "generate_lovable_prompt",
-          description: "Gerar prompt para Lovable",
-          parameters: {
-            type: "object",
-            properties: {
-              prompt: { type: "string", description: "Prompt completo e copy-paste-ready" }
-            },
-            required: ["prompt"]
-          }
-        }
-      };
+    // Verificar se já existe (cache)
+    if (solution[primaryField]) {
+      console.log(`[SECTION-GEN] ${sectionType} já existe, retornando cache`);
+      return new Response(
+        JSON.stringify({ 
+          success: true, 
+          cached: true,
+          content: solution[primaryField] 
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
 
-    // Chamar Lovable AI
-    console.log(`[SECTION-GEN][${requestId}] 🚀 Chamando Lovable AI...`);
-    
-    const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
-    const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
+    // Gerar conteúdo via Lovable AI
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    const lovableUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
 
-    const aiResponse = await fetch(lovableAIUrl, {
+    const prompts: Record<string, string> = {
+      framework: `Analise esta ideia e gere APENAS o framework_quadrants (4 quadrantes) no formato JSON:
+
+IDEIA: "${solution.original_idea}"
+TÍTULO: "${solution.title}"
+DESCRIÇÃO: "${solution.short_description}"
+
+Retorne APENAS um objeto JSON puro com a estrutura:
+{
+  "framework_quadrants": {
+    "quadrant1_automation": {
+      "title": "🤖 Automação",
+      "description": "...",
+      "items": ["...", "..."],
+      "tool_names": ["..."],
+      "integration_details": "..."
+    },
+    "quadrant2_ai": {
+      "title": "🧠 IA",
+      "description": "...",
+      "items": ["...", "..."],
+      "tool_names": ["..."],
+      "ai_strategy": "..."
+    },
+    "quadrant3_data": {
+      "title": "📊 Dados",
+      "description": "...",
+      "items": ["...", "..."],
+      "tool_names": ["..."],
+      "data_architecture": "..."
+    },
+    "quadrant4_interface": {
+      "title": "🎨 Interface",
+      "description": "...",
+      "items": ["...", "..."],
+      "tool_names": ["..."],
+      "ux_considerations": "..."
+    }
+  },
+  "mind_map": {
+    "central_idea": "...",
+    "branches": [
+      {
+        "name": "FASE 1: ...",
+        "children": ["...", "..."]
+      }
+    ]
+  }
+}`,
+      
+      tools: `Analise esta solução e gere APENAS a lista de ferramentas necessárias no formato JSON:
+
+IDEIA: "${solution.original_idea}"
+TÍTULO: "${solution.title}"
+DESCRIÇÃO: "${solution.short_description}"
+
+Retorne APENAS um objeto JSON puro:
+{
+  "required_tools": {
+    "essential": [
+      {
+        "name": "Nome da ferramenta",
+        "category": "Categoria",
+        "reason": "Por que é essencial (4-6 frases)",
+        "setup_complexity": "easy/medium/hard",
+        "setup_steps": "Passos específicos",
+        "cost_estimate": "USD/mês",
+        "logo_url": "https://logo.clearbit.com/[dominio].com",
+        "alternatives": ["Alt 1", "Alt 2"]
+      }
+    ],
+    "optional": [...]
+  }
+}`,
+      
+      checklist: `Analise esta solução e gere APENAS o checklist de implementação no formato JSON:
+
+IDEIA: "${solution.original_idea}"
+TÍTULO: "${solution.title}"
+DESCRIÇÃO: "${solution.short_description}"
+
+Retorne APENAS um array JSON:
+{
+  "implementation_checklist": [
+    {
+      "step_number": 1,
+      "title": "...",
+      "description": "Descrição ULTRA-DETALHADA (5-8 frases)",
+      "estimated_time": "2 horas",
+      "difficulty": "easy/medium/hard",
+      "dependencies": [],
+      "validation_criteria": "Como saber se foi concluído",
+      "common_pitfalls": "3-5 erros comuns",
+      "resources": ["URL tutorial"]
+    }
+  ]
+}`,
+      
+      architecture: `Analise esta solução e gere os 4 fluxos práticos de implementação no formato JSON:
+
+IDEIA: "${solution.original_idea}"
+TÍTULO: "${solution.title}"
+DESCRIÇÃO: "${solution.short_description}"
+
+Retorne APENAS um objeto JSON puro:
+{
+  "automation_journey_flow": {
+    "title": "Jornada de Automação",
+    "steps": [
+      {
+        "phase": "Trigger",
+        "description": "...",
+        "tools": ["..."],
+        "estimated_time": "..."
+      }
+    ]
+  },
+  "ai_architecture_tree": {
+    "title": "Árvore de Decisão IA",
+    "nodes": [
+      {
+        "id": "input",
+        "label": "...",
+        "type": "input/decision/action",
+        "children": ["..."]
+      }
+    ]
+  },
+  "deploy_checklist_structured": {
+    "title": "Checklist de Deploy",
+    "categories": [
+      {
+        "name": "Infraestrutura",
+        "items": ["...", "..."]
+      }
+    ]
+  },
+  "api_integration_map": {
+    "title": "Mapa de Integrações",
+    "integrations": [
+      {
+        "name": "...",
+        "type": "REST/GraphQL/Webhook",
+        "endpoints": ["..."],
+        "auth": "..."
+      }
+    ]
+  }
+}`,
+      
+      lovable: `Gere um prompt Lovable completo e profissional para esta solução:
+
+IDEIA: "${solution.original_idea}"
+TÍTULO: "${solution.title}"
+DESCRIÇÃO: "${solution.short_description}"
+
+Retorne APENAS um objeto JSON:
+{
+  "lovable_prompt": "# 🎯 CONTEXTO DO PROJETO\\n\\n[2-3 parágrafos]\\n\\n# 📋 ESPECIFICAÇÃO TÉCNICA\\n\\n## Stack Tecnológica\\n- Frontend: ...\\n- Backend: ...\\n\\n## Funcionalidades Core\\n1. **Feature 1**: ...\\n\\n# 🔄 WORKFLOWS\\n...",
+  "complexity": "low/medium/high",
+  "estimated_time": "..."
+}` 
+    };
+
+    const systemPrompt = prompts[sectionType];
+
+    console.log(`[SECTION-GEN] Chamando Lovable AI para ${sectionType}...`);
+
+    const aiResponse = await fetch(lovableUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableAIKey}`,
+        Authorization: `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
+          { role: "system", content: "Você é um assistente que retorna APENAS JSON válido, sem markdown, sem explicações." },
+          { role: "user", content: systemPrompt }
         ],
-        tools: [toolDefinition],
-        tool_choice: { type: "function", function: { name: toolDefinition.function.name } }
+        temperature: 0.7,
+        max_tokens: 8000
       }),
+      signal: AbortSignal.timeout(60000)
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
-      console.error(`[SECTION-GEN][${requestId}] ❌ AI Error: ${errorText}`);
-      return new Response(
-        JSON.stringify({ error: "Erro ao gerar conteúdo com IA" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      console.error(`[SECTION-GEN] Erro na AI: ${aiResponse.status} - ${errorText}`);
+      throw new Error(`Erro na API de IA: ${aiResponse.status}`);
     }
 
     const aiData = await aiResponse.json();
-    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
-    
-    if (!toolCall) {
-      console.error(`[SECTION-GEN][${requestId}] ❌ Sem tool call na resposta`);
-      return new Response(
-        JSON.stringify({ error: "Resposta inesperada da IA" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+    const content = aiData.choices?.[0]?.message?.content;
+
+    if (!content) {
+      throw new Error("Resposta vazia da IA");
     }
 
-    const generatedContent = JSON.parse(toolCall.function.arguments);
-    console.log(`[SECTION-GEN][${requestId}] ✅ Conteúdo gerado com sucesso`);
+    // Parse do JSON retornado
+    let parsedContent;
+    try {
+      // Remover markdown se houver
+      const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+      parsedContent = JSON.parse(cleanContent);
+    } catch (parseError) {
+      console.error("[SECTION-GEN] Erro ao fazer parse:", content);
+      throw new Error("JSON inválido retornado pela IA");
+    }
+
+    // Preparar update baseado no tipo de seção
+    const updateData: Record<string, any> = {};
+    
+    if (sectionType === "framework") {
+      updateData.framework_mapping = parsedContent.framework_quadrants;
+      updateData.mind_map = parsedContent.mind_map;
+    } else if (sectionType === "tools") {
+      updateData.required_tools = parsedContent.required_tools;
+    } else if (sectionType === "checklist") {
+      updateData.implementation_checklist = parsedContent.implementation_checklist;
+    } else if (sectionType === "architecture") {
+      updateData.automation_journey_flow = parsedContent.automation_journey_flow;
+      updateData.ai_architecture_tree = parsedContent.ai_architecture_tree;
+      updateData.deploy_checklist_structured = parsedContent.deploy_checklist_structured;
+      updateData.api_integration_map = parsedContent.api_integration_map;
+    } else if (sectionType === "lovable") {
+      updateData.lovable_prompt = parsedContent.lovable_prompt;
+    }
 
     // Atualizar no banco
-    const updateData: any = {};
-    
-    if (sectionType === "tools") {
-      updateData.required_tools = generatedContent;
-    } else if (sectionType === "checklist") {
-      updateData.implementation_checklist = generatedContent.steps;
-    } else if (sectionType === "architecture") {
-      updateData.architecture_flowchart = generatedContent;
-    } else if (sectionType === "lovable") {
-      updateData.lovable_prompt = generatedContent.prompt;
-    }
-
     const { error: updateError } = await supabase
       .from("ai_generated_solutions")
       .update(updateData)
-      .eq("id", solutionId);
+      .eq("id", solutionId)
+      .eq("user_id", userId);
 
     if (updateError) {
-      console.error(`[SECTION-GEN][${requestId}] ❌ Erro ao atualizar banco:`, updateError);
-    } else {
-      console.log(`[SECTION-GEN][${requestId}] 💾 Banco atualizado`);
+      console.error("[SECTION-GEN] Erro ao atualizar:", updateError);
+      throw new Error("Erro ao salvar conteúdo gerado");
     }
 
-    // Retornar conteúdo
+    console.log(`[SECTION-GEN] ✅ ${sectionType} gerado e salvo com sucesso`);
+
     return new Response(
       JSON.stringify({ 
-        success: true,
-        content: generatedContent,
-        sectionType
+        success: true, 
+        cached: false,
+        content: parsedContent 
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
-  } catch (err: any) {
-    console.error(`[SECTION-GEN][${requestId}] ❌ Erro:`, err);
+  } catch (error: any) {
+    console.error("[SECTION-GEN] Erro:", error);
     return new Response(
-      JSON.stringify({ error: err.message || "Erro inesperado" }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ 
+        error: error.message || "Erro ao gerar conteúdo",
+        details: error.toString()
+      }),
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, "Content-Type": "application/json" } 
+      }
     );
   }
 });
