@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, ArrowRight, MessageSquare, Calendar } from 'lucide-react';
+import { Layout, ArrowRight, MessageSquare, Calendar, History } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useBuilderAI } from '@/hooks/builder/useBuilderAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
 import { BuilderProcessingExperience } from '@/components/builder/BuilderProcessingExperience';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { AIInputWithValidation } from '@/components/ui/AIInputWithValidation';
+import { VoiceInput } from '@/components/builder/VoiceInput';
 import { useAISolutionAccess } from '@/hooks/builder/useAISolutionAccess';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { Button } from '@/components/ui/button';
 
 const exampleIdeas = [
   {
@@ -34,6 +36,7 @@ export default function Builder() {
   const { analyzeIdea, generateSolution, isAnalyzing, isGenerating, questions } = useBuilderAI();
   const [currentIdea, setCurrentIdea] = useState<string>('');
   const [showWizard, setShowWizard] = useState(false);
+  const [clickedExample, setClickedExample] = useState<number | null>(null);
   const { 
     hasAccess, 
     generationsUsed, 
@@ -215,8 +218,15 @@ export default function Builder() {
     setCurrentIdea('');
   };
 
-  const handleExampleClick = (example: typeof exampleIdeas[0]) => {
-    handleGenerateSolution(example.description);
+  const handleExampleClick = async (example: typeof exampleIdeas[0], index: number) => {
+    setClickedExample(index);
+    await handleGenerateSolution(example.description);
+    // Reset após 2s (tempo suficiente para ver o feedback)
+    setTimeout(() => setClickedExample(null), 2000);
+  };
+
+  const handleVoiceTranscription = (text: string) => {
+    handleGenerateSolution(text);
   };
 
   if (accessLoading) {
@@ -278,27 +288,35 @@ export default function Builder() {
               <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Builder
               </h1>
-              <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-                Extraia o cérebro do Rafael Milagre e transforme suas ideias em soluções executáveis de IA
+              <p className="text-muted-foreground text-base max-w-2xl mx-auto leading-tight">
+                Transforme ideias em soluções executáveis de IA
               </p>
             </motion.div>
 
-            {/* Input centralizado */}
+            {/* Input centralizado com voice input */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
               className="w-full max-w-2xl mb-12"
             >
-              <AIInputWithValidation
-                placeholder="Ex: Quero automatizar atendimento no WhatsApp e integrar com meu CRM..."
-                onSubmit={handleGenerateSolution}
-                disabled={isGenerating || isAnalyzing}
-                minHeight={56}
-                maxHeight={200}
-                minChars={30}
-                maxChars={2000}
-              />
+              <div className="relative">
+                <AIInputWithValidation
+                  placeholder="Ex: Quero automatizar atendimento no WhatsApp e integrar com meu CRM..."
+                  onSubmit={handleGenerateSolution}
+                  disabled={isGenerating || isAnalyzing}
+                  minHeight={56}
+                  maxHeight={200}
+                  minChars={30}
+                  maxChars={2000}
+                />
+                <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
+                  <VoiceInput 
+                    onTranscription={handleVoiceTranscription}
+                    disabled={isGenerating || isAnalyzing}
+                  />
+                </div>
+              </div>
             </motion.div>
 
             {/* Exemplos */}
@@ -306,7 +324,7 @@ export default function Builder() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="w-full max-w-2xl"
+              className="w-full max-w-2xl mt-8"
             >
               <p className="text-sm text-muted-foreground text-center mb-4">
                 Ou escolha um exemplo:
@@ -314,27 +332,51 @@ export default function Builder() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {exampleIdeas.map((example, index) => {
                   const IconComponent = example.icon;
+                  const isClicked = clickedExample === index;
+                  
                   return (
                     <motion.button
                       key={index}
-                      onClick={() => handleExampleClick(example)}
+                      onClick={() => handleExampleClick(example, index)}
+                      disabled={isClicked || isAnalyzing || isGenerating}
                       className={`
                         group relative p-4 rounded-2xl border transition-all duration-200 text-left overflow-hidden
                         bg-gradient-to-br ${example.color}
                         ${example.borderColor} hover:border-primary/50
+                        ${isClicked ? 'border-primary ring-2 ring-primary/20' : ''}
+                        ${(isAnalyzing || isGenerating) && !isClicked ? 'opacity-50 cursor-not-allowed' : ''}
                       `}
-                      whileHover={{ scale: 1.02, y: -2 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={!isClicked && !isAnalyzing && !isGenerating ? { scale: 1.02, y: -2 } : {}}
+                      whileTap={!isClicked && !isAnalyzing && !isGenerating ? { scale: 0.98 } : {}}
                     >
+                      {isClicked && (
+                        <motion.div
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          className="absolute inset-0 bg-primary/10 rounded-2xl"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
                       <div className="relative">
                         <div className="flex items-start justify-between mb-2">
                           <div className="p-2 rounded-lg bg-background/50">
-                            <IconComponent className="h-5 w-5 text-primary" />
+                            <IconComponent className={`h-5 w-5 ${isClicked ? 'text-primary' : 'text-primary'}`} />
                           </div>
-                          <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                          {isClicked ? (
+                            <motion.div
+                              initial={{ scale: 0, rotate: -180 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              className="h-5 w-5 rounded-full bg-primary flex items-center justify-center"
+                            >
+                              <svg className="h-3 w-3 text-primary-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                              </svg>
+                            </motion.div>
+                          ) : (
+                            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
+                          )}
                         </div>
-                        <h3 className="font-semibold text-foreground mb-1 group-hover:text-primary transition-colors">
+                        <h3 className={`font-semibold mb-1 transition-colors ${isClicked ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
                           {example.title}
                         </h3>
                         <p className="text-sm text-muted-foreground line-clamp-2">
@@ -347,19 +389,22 @@ export default function Builder() {
               </div>
             </motion.div>
 
-            {/* Botão Ver Histórico - movido para o final */}
+            {/* Botão Ver Histórico - melhorado */}
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
               className="w-full max-w-2xl text-center mt-12"
             >
-              <button
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => navigate('/ferramentas/builder/historico')}
-                className="text-sm text-muted-foreground hover:text-primary transition-colors underline decoration-dotted underline-offset-4"
+                className="gap-2"
               >
-                Ver histórico
-              </button>
+                <History className="h-4 w-4" />
+                Ver histórico de soluções
+              </Button>
             </motion.div>
           </motion.div>
         )}

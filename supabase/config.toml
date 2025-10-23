@@ -259,6 +259,9 @@ verify_jwt = false
 [functions.generate-ai-solution]
 verify_jwt = false
 
+[functions.transcribe-audio]
+verify_jwt = false
+
 [functions.batch-send-invites]
 verify_jwt = false
 
