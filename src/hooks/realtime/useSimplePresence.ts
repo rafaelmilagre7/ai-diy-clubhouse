@@ -67,7 +67,7 @@ export function useSimplePresence() {
     const presenceChannel = supabase.channel(channelName, {
       config: {
         presence: {
-          key: user.id, // Usar user_id como chave única
+          key: user.id,
         },
       },
     });
@@ -76,17 +76,62 @@ export function useSimplePresence() {
       .on('presence', { event: 'sync' }, () => {
         const state = presenceChannel.presenceState();
         console.log('🔄 Presença sincronizada:', Object.keys(state).length, 'usuários');
-        updateOnlineUsers(state);
+        
+        // Atualizar usuários online inline
+        const users: Record<string, OnlineUser> = {};
+        Object.entries(state).forEach(([key, presence]) => {
+          const presenceArray = Array.isArray(presence) ? presence : [presence];
+          const latest = presenceArray[0] as any;
+          if (latest && latest.user_id) {
+            users[key] = {
+              userId: latest.user_id,
+              name: latest.name,
+              avatarUrl: latest.avatar_url,
+              onlineAt: new Date(latest.online_at),
+            };
+          }
+        });
+        setOnlineUsers(users);
       })
-      .on('presence', { event: 'join' }, ({ key, newPresences }) => {
+      .on('presence', { event: 'join' }, ({ key }) => {
         console.log('👋 Usuário entrou:', key);
         const state = presenceChannel.presenceState();
-        updateOnlineUsers(state);
+        
+        // Atualizar inline
+        const users: Record<string, OnlineUser> = {};
+        Object.entries(state).forEach(([k, presence]) => {
+          const presenceArray = Array.isArray(presence) ? presence : [presence];
+          const latest = presenceArray[0] as any;
+          if (latest && latest.user_id) {
+            users[k] = {
+              userId: latest.user_id,
+              name: latest.name,
+              avatarUrl: latest.avatar_url,
+              onlineAt: new Date(latest.online_at),
+            };
+          }
+        });
+        setOnlineUsers(users);
       })
-      .on('presence', { event: 'leave' }, ({ key, leftPresences }) => {
+      .on('presence', { event: 'leave' }, ({ key }) => {
         console.log('👋 Usuário saiu:', key);
         const state = presenceChannel.presenceState();
-        updateOnlineUsers(state);
+        
+        // Atualizar inline
+        const users: Record<string, OnlineUser> = {};
+        Object.entries(state).forEach(([k, presence]) => {
+          const presenceArray = Array.isArray(presence) ? presence : [presence];
+          const latest = presenceArray[0] as any;
+          if (latest && latest.user_id) {
+            users[k] = {
+              userId: latest.user_id,
+              name: latest.name,
+              avatarUrl: latest.avatar_url,
+              onlineAt: new Date(latest.online_at),
+            };
+          }
+        });
+        setOnlineUsers(users);
       })
       .subscribe(async (status) => {
         console.log('📡 Status presença:', status);
@@ -105,6 +150,22 @@ export function useSimplePresence() {
 
           await presenceChannel.track(presenceState);
           console.log('✅ Presença rastreada:', presenceState);
+          
+          // Heartbeat: atualizar presença a cada 30s
+          const heartbeatInterval = setInterval(async () => {
+            const updatedState: PresenceState = {
+              user_id: user.id,
+              name: profile?.name,
+              avatar_url: profile?.avatar_url,
+              online_at: new Date().toISOString(),
+            };
+            await presenceChannel.track(updatedState);
+            console.log('💓 Heartbeat enviado');
+          }, 30000);
+
+          // Salvar interval no canal para cleanup
+          (presenceChannel as any)._heartbeatInterval = heartbeatInterval;
+          
         } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
           setIsConnected(false);
           console.error('❌ Erro no canal de presença');
@@ -116,29 +177,20 @@ export function useSimplePresence() {
 
     setChannel(presenceChannel);
 
-    // Heartbeat: atualizar presença a cada 30s
-    const heartbeatInterval = setInterval(async () => {
-      if (presenceChannel && isConnected) {
-        const presenceState: PresenceState = {
-          user_id: user.id,
-          name: profile?.name,
-          avatar_url: profile?.avatar_url,
-          online_at: new Date().toISOString(),
-        };
-        await presenceChannel.track(presenceState);
-        console.log('💓 Heartbeat enviado');
-      }
-    }, 30000);
-
     // Cleanup
     return () => {
       console.log('🧹 Limpando canal de presença');
-      clearInterval(heartbeatInterval);
+      
+      // Limpar heartbeat
+      if ((presenceChannel as any)._heartbeatInterval) {
+        clearInterval((presenceChannel as any)._heartbeatInterval);
+      }
+      
       setIsConnected(false);
       setOnlineUsers({});
       supabase.removeChannel(presenceChannel);
     };
-  }, [user?.id, profile?.name, profile?.avatar_url, updateOnlineUsers, isConnected]);
+  }, [user?.id]); // ✅ APENAS user?.id
 
   // Verificar se usuário está online
   const isUserOnline = useCallback((userId: string) => {

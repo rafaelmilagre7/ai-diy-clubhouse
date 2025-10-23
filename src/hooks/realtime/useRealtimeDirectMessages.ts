@@ -88,7 +88,30 @@ export function useRealtimeDirectMessages({
           filter: `recipient_id=eq.${user.id}`,
         },
         (payload) => {
-          handleNewMessage(payload.new);
+          console.log('💬 Nova mensagem recebida:', payload);
+
+          // Se não for do usuário atual (mensagem recebida)
+          if (payload.new.sender_id !== user?.id) {
+            // Invalidar queries de mensagens
+            queryClient.invalidateQueries({ queryKey: ['direct-messages'] });
+            queryClient.invalidateQueries({ queryKey: ['conversations'] });
+            queryClient.invalidateQueries({ queryKey: ['unread-messages-count'] });
+
+            // Som
+            if (enableSound) {
+              const audio = new Audio('/sounds/message.mp3');
+              audio.volume = 0.3;
+              audio.play().catch(err => console.log('Erro ao tocar som:', err));
+            }
+
+            // Toast opcional
+            if (enableToast) {
+              toast.info('Nova mensagem', {
+                description: payload.new.content?.substring(0, 50) + '...',
+                duration: 3000,
+              });
+            }
+          }
         }
       )
       // Escutar UPDATE (read receipts, edições)
@@ -101,7 +124,11 @@ export function useRealtimeDirectMessages({
           filter: `sender_id=eq.${user.id}`,
         },
         (payload) => {
-          handleMessageUpdate(payload.new);
+          console.log('📖 Mensagem atualizada:', payload);
+
+          // Invalidar queries
+          queryClient.invalidateQueries({ queryKey: ['direct-messages'] });
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
         }
       )
       .subscribe((status) => {
@@ -125,7 +152,7 @@ export function useRealtimeDirectMessages({
       setIsConnected(false);
       supabase.removeChannel(channel);
     };
-  }, [user?.id, handleNewMessage, handleMessageUpdate]);
+  }, [user?.id]); // ✅ APENAS user?.id
 
   return {
     isConnected,

@@ -108,7 +108,39 @@ export function useSimpleNotifications({
         },
         (payload) => {
           const notification = payload.new as NotificationPayload;
-          handleNewNotification(notification);
+          console.log('📬 Nova notificação recebida:', notification);
+
+          // Invalidar queries para atualizar contadores
+          queryClient.invalidateQueries({ queryKey: ['unread-count'] });
+          queryClient.invalidateQueries({ queryKey: ['notifications'] });
+
+          // Toast animado
+          if (enableToast) {
+            toast.info(notification.title, {
+              description: notification.message,
+              duration: 5000,
+            });
+          }
+
+          // Som
+          if (enableSound) {
+            playSound();
+          }
+
+          // Notificação desktop
+          if (
+            enableDesktopNotifications &&
+            'Notification' in window &&
+            Notification.permission === 'granted' &&
+            document.hidden
+          ) {
+            new Notification(notification.title, {
+              body: notification.message,
+              icon: '/favicon.ico',
+              badge: '/favicon.ico',
+              tag: notification.id,
+            });
+          }
         }
       )
       .subscribe((status) => {
@@ -136,7 +168,7 @@ export function useSimpleNotifications({
       setIsReconnecting(false);
       supabase.removeChannel(channel);
     };
-  }, [user?.id, handleNewNotification]); // Dependencies fixas
+  }, [user?.id]); // ✅ APENAS user?.id - funções externas causam reconexões!
 
   return {
     isConnected,
