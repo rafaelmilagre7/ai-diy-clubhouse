@@ -13,12 +13,13 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [audioLevels, setAudioLevels] = useState<number[]>(new Array(32).fill(0));
+  const [audioLevels, setAudioLevels] = useState<number[]>(new Array(40).fill(0.2));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number>();
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -38,38 +39,52 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
 
   useEffect(() => {
     return () => {
-      if (mediaRecorderRef.current && isRecording) {
+      if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
       }
-      if (audioContextRef.current) {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close();
+      }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
 
   const visualizeAudio = () => {
-    if (!analyserRef.current) return;
+    if (!analyserRef.current || !isRecording) return;
 
     const analyser = analyserRef.current;
-    const bufferLength = analyser.frequencyBinCount;
+    const bufferLength = analyser.fftSize;
     const dataArray = new Uint8Array(bufferLength);
     
     const animate = () => {
       if (!isRecording) return;
       
-      analyser.getByteFrequencyData(dataArray);
+      // Usar time domain data para visualização mais responsiva
+      analyser.getByteTimeDomainData(dataArray);
       
-      // Pegar 32 valores distribuídos ao longo do espectro
-      const step = Math.floor(bufferLength / 32);
-      const levels = Array.from({ length: 32 }, (_, i) => {
-        const index = i * step;
-        const value = dataArray[index] || 0;
-        // Normalizar para 0-1 e ajustar sensibilidade
-        return Math.min(1, (value / 255) * 1.5);
-      });
+      // Calcular 40 níveis de áudio
+      const barCount = 40;
+      const samplesPerBar = Math.floor(bufferLength / barCount);
+      const levels: number[] = [];
+      
+      for (let i = 0; i < barCount; i++) {
+        let sum = 0;
+        for (let j = 0; j < samplesPerBar; j++) {
+          const index = i * samplesPerBar + j;
+          // Converter de 0-255 para variação em torno de 128
+          const value = Math.abs(dataArray[index] - 128);
+          sum += value;
+        }
+        // Média e normalização (0 a 1)
+        const average = sum / samplesPerBar;
+        const normalized = Math.min(1, (average / 128) * 2.5); // Amplificar para melhor visualização
+        levels.push(Math.max(0.1, normalized)); // Mínimo de 0.1 para sempre ter barras visíveis
+      }
       
       setAudioLevels(levels);
       animationFrameRef.current = requestAnimationFrame(animate);
@@ -80,14 +95,25 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      
+      streamRef.current = stream;
       
       // Configurar Web Audio API para análise
       audioContextRef.current = new AudioContext();
       const source = audioContextRef.current.createMediaStreamSource(stream);
       analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      analyserRef.current.smoothingTimeConstant = 0.8;
+      
+      // Configurações otimizadas para visualização responsiva
+      analyserRef.current.fftSize = 1024; // Aumentar para mais precisão
+      analyserRef.current.smoothingTimeConstant = 0.3; // Menos suavização = mais responsivo
+      
       source.connect(analyserRef.current);
       
       const mediaRecorder = new MediaRecorder(stream, {
@@ -105,26 +131,33 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
 
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
-        await transcribeAudio(audioBlob);
         
-        stream.getTracks().forEach(track => track.stop());
-        setRecordingTime(0);
-        setAudioLevels(new Array(32).fill(0));
-        
+        // Limpar recursos
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+          streamRef.current = null;
+        }
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }
-        if (audioContextRef.current) {
+        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
           audioContextRef.current.close();
         }
+        
+        setRecordingTime(0);
+        setAudioLevels(new Array(40).fill(0.2));
+        
+        await transcribeAudio(audioBlob);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      
+      // Iniciar visualização
       visualizeAudio();
 
-      toast.success('Gravação iniciada', {
-        description: 'Fale sua ideia claramente'
+      toast.success('Gravando áudio', {
+        description: 'Fale claramente no microfone'
       });
 
     } catch (error) {
@@ -136,7 +169,7 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   };
 
   const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
@@ -181,7 +214,7 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
         return;
       }
 
-      toast.success('Transcrição concluída! 🎉');
+      toast.success('Transcrição concluída!');
       onTranscription(transcription);
 
     } catch (error) {
@@ -202,8 +235,8 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
 
   const getStatusText = () => {
     if (isTranscribing) return "Transcrevendo...";
-    if (isRecording) return "Gravando...";
-    return "Gravar áudio";
+    if (isRecording) return "Ouvindo...";
+    return "Clique para gravar";
   };
 
   return (
@@ -211,56 +244,64 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       <div className="relative max-w-xl w-full mx-auto flex items-center flex-col gap-2">
         <button
           className={cn(
-            "group w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200",
-            isRecording || isTranscribing
-              ? "bg-surface-elevated/50"
+            "group w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 relative",
+            isRecording
+              ? "bg-primary/10 ring-2 ring-primary/30"
               : "bg-surface-elevated/50 hover:bg-surface-elevated border border-border hover:border-primary/50",
+            isTranscribing && "bg-surface-elevated/50",
             disabled && "opacity-50 cursor-not-allowed"
           )}
           type="button"
           onClick={isRecording ? stopRecording : startRecording}
-          disabled={disabled}
+          disabled={disabled || isTranscribing}
           title={getStatusText()}
         >
+          {isRecording && (
+            <div className="absolute inset-0 rounded-xl bg-primary/20 animate-pulse" />
+          )}
           {isRecording ? (
-            <div className="w-4 h-4 rounded-sm bg-primary animate-pulse" />
+            <div className="w-5 h-5 rounded-sm bg-primary relative z-10" />
           ) : isTranscribing ? (
             <div
-              className="w-4 h-4 rounded-sm animate-spin bg-primary/50"
+              className="w-5 h-5 rounded-sm animate-spin bg-primary/50"
               style={{ animationDuration: "1s" }}
             />
           ) : (
-            <Mic className="w-4 h-4 text-foreground/70 group-hover:text-primary transition-colors" />
+            <Mic className="w-5 h-5 text-foreground/70 group-hover:text-primary transition-colors" />
           )}
         </button>
 
-        {(isRecording || isTranscribing) && (
+        {isRecording && (
           <>
-            <span className="font-mono text-xs text-muted-foreground">
+            <span className="font-mono text-xs text-primary font-semibold">
               {formatTime(recordingTime)}
             </span>
 
-            {isRecording && (
-              <div className="h-3 w-48 flex items-center justify-center gap-0.5">
-                {audioLevels.map((level, i) => {
-                  const height = Math.max(20, level * 100);
-                  return (
-                    <div
-                      key={i}
-                      className="w-0.5 rounded-full bg-primary/50 transition-all duration-75"
-                      style={{
-                        height: `${height}%`,
-                      }}
-                    />
-                  );
-                })}
-              </div>
-            )}
+            <div className="h-12 w-64 flex items-center justify-center gap-[2px] bg-surface-elevated/30 rounded-lg px-2 border border-primary/20">
+              {audioLevels.map((level, i) => {
+                const height = Math.max(8, level * 100);
+                return (
+                  <div
+                    key={i}
+                    className="w-[4px] rounded-full bg-gradient-to-t from-primary to-primary/40 transition-all duration-100 ease-out"
+                    style={{
+                      height: `${height}%`,
+                    }}
+                  />
+                );
+              })}
+            </div>
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-primary font-medium">
               {getStatusText()}
             </p>
           </>
+        )}
+
+        {isTranscribing && (
+          <p className="text-xs text-muted-foreground animate-pulse">
+            {getStatusText()}
+          </p>
         )}
       </div>
     </div>
