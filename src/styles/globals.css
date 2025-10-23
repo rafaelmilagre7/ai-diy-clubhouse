@@ -16,6 +16,20 @@
   background-size: 200% 100%;
 }
 
+/* Drag and Drop Cursor Utilities */
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+/* Smooth transitions for dropped items */
+.dnd-smooth-drop {
+  transition: transform 0.2s cubic-bezier(0.2, 0, 0, 1);
+}
+
 /* Animações para os componentes da comunidade */
 @keyframes blob {
   0% {

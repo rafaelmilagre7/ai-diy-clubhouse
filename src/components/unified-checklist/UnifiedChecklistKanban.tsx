@@ -3,10 +3,11 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, Loader, Lightbulb, Sparkles, TrendingUp, GripVertical } from "lucide-react";
+import { Clock, CheckCircle, Loader, Lightbulb, Sparkles, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChecklistCardModal } from './ChecklistCardModal';
+import { useClickDragDetection } from '@/hooks/useClickDragDetection';
 import { 
   useUpdateUnifiedChecklist,
   type UnifiedChecklistItem,
@@ -224,10 +225,10 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                 <ul className="space-y-3 text-sm mb-4">
                   <li className="flex items-start gap-3 group">
                     <div className="p-1.5 rounded-lg bg-primary/10 group-hover:bg-primary/20 transition-colors">
-                      <GripVertical className="h-4 w-4 text-primary" />
+                      <Sparkles className="h-4 w-4 text-primary" />
                     </div>
                     <span className="text-muted-foreground leading-relaxed">
-                      Arraste os cards entre as colunas para organizar suas tarefas
+                      <strong>Clique e segure</strong> um card para arrastá-lo entre as colunas
                     </span>
                   </li>
                   <li className="flex items-start gap-3 group">
@@ -434,39 +435,40 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                           </motion.div>
                         )}
 
-                        {items.map((item, index) => (
-                          <Draggable key={item.id} draggableId={item.id} index={index}>
-                            {(provided, snapshot) => (
-                              <motion.div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                className={cn(
-                                  "mb-4 last:mb-0",
-                                  snapshot.isDragging && "z-50"
-                                )}
-                                layout
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                whileHover={{ scale: 1.03 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <Card 
-                                  className={cn(
-                                    "group relative cursor-pointer transition-all duration-300 glass-card-hover",
-                                    "hover:shadow-aurora hover:border-primary/40",
-                                    snapshot.isDragging && "rotate-3 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary"
-                                  )}
-                                  onClick={() => handleCardClick(item)}
-                                >
-                                  {/* Drag Handle */}
-                                  <div 
+                        {items.map((item, index) => {
+                          // Hook de detecção de clique vs arrasto para cada card
+                          const CardWithDetection = () => {
+                            const clickDragHandlers = useClickDragDetection({
+                              onQuickClick: () => handleCardClick(item),
+                              clickThreshold: 200,
+                              moveThreshold: 5
+                            });
+
+                            return (
+                              <Draggable key={item.id} draggableId={item.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing hover:bg-primary/10 hover:shadow-glow-sm"
-                                    onClick={(e) => e.stopPropagation()}
+                                    {...(!snapshot.isDragging && clickDragHandlers)}
+                                    className={cn(
+                                      "mb-4 last:mb-0 dnd-smooth-drop",
+                                      snapshot.isDragging ? "z-50 cursor-grabbing" : "cursor-grab",
+                                      "transition-all duration-200"
+                                    )}
+                                    style={{
+                                      ...provided.draggableProps.style,
+                                      userSelect: snapshot.isDragging ? 'none' : 'auto',
+                                    }}
                                   >
-                                    <GripVertical className="h-4 w-4 text-primary" />
-                                  </div>
+                                    <Card 
+                                      className={cn(
+                                        "group relative transition-all duration-300 glass-card-hover select-none",
+                                        !snapshot.isDragging && "hover:shadow-aurora hover:border-primary/40 hover:scale-[1.02]",
+                                        snapshot.isDragging && "rotate-3 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary"
+                                      )}
+                                    >
 
                                   <div className="p-5 space-y-4">
                                     <div className="pr-10">
@@ -517,11 +519,15 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                       </div>
                                     )}
                                   </div>
-                                </Card>
-                              </motion.div>
-                            )}
-                          </Draggable>
-                        ))}
+                                    </Card>
+                                  </div>
+                                )}
+                              </Draggable>
+                            );
+                          };
+
+                          return <CardWithDetection key={item.id} />;
+                        })}
                       </AnimatePresence>
                       {provided.placeholder}
                     </div>
