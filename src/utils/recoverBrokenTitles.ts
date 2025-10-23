@@ -31,13 +31,28 @@ export async function recoverBrokenTitles(userId: string): Promise<number> {
     // Filtrar soluções com título quebrado
     const brokenSolutions = allSolutions.filter(solution => {
       const title = solution.title ? String(solution.title).trim() : '';
+      const idea = solution.original_idea ? String(solution.original_idea).toLowerCase().trim() : '';
+      const ideaStart = idea.substring(0, 50);
+      const titleLower = title.toLowerCase();
+      
+      // Detectar cópia literal da ideia
+      const isLiteralCopy = titleLower.startsWith(ideaStart.substring(0, 30));
+      
+      // Detectar verbos proibidos
+      const startsWithForbiddenVerb = /^(implementar|criar|fazer|quero|preciso|gostaria|desenvolver)/i.test(title);
+      
+      // Detectar truncamento no meio de palavra
+      const endsWithIncompleteWord = title.length > 40 && !title.match(/[\s\-][\w]{3,}$/);
       
       return (
         !title || 
         title === 'undefined' || 
         title === 'null' ||
         title.length < 10 ||
-        /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,3}\..*$/.test(title) // Padrão: "Palavra Palavra. Resto"
+        /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,3}\..*$/.test(title) || // Padrão: "Palavra Palavra. Resto"
+        isLiteralCopy ||
+        startsWithForbiddenVerb ||
+        endsWithIncompleteWord
       );
     });
 
@@ -52,18 +67,64 @@ export async function recoverBrokenTitles(userId: string): Promise<number> {
     let correctedCount = 0;
     for (const solution of brokenSolutions) {
       try {
-        // Criar título profissional baseado na ideia original
+        // 🧠 FALLBACK INTELIGENTE: Extrair palavras-chave e sintetizar
         const idea = solution.original_idea || '';
-        const firstSentence = idea.split(/[.!?]/)[0].trim();
-        const cleanedIdea = firstSentence
-          .substring(0, 80)
-          .replace(/^(eu\s+quero|quero|preciso|gostaria)\s+/gi, '')
-          .trim();
         
-        // Capitalizar primeira letra
-        const newTitle = cleanedIdea.charAt(0).toUpperCase() + cleanedIdea.slice(1);
+        // Remover palavras comuns (stopwords)
+        const stopwords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 
+                           'para', 'com', 'por', 'que', 'e', 'um', 'uma', 'eu', 'meu', 'minha',
+                           'quero', 'preciso', 'gostaria', 'criar', 'fazer', 'implementar', 'desenvolver'];
         
-        // Truncar se necessário
+        // Extrair palavras significativas
+        const words = idea
+          .toLowerCase()
+          .replace(/[^\w\sáéíóúâêôãõç]/g, ' ')
+          .split(/\s+/)
+          .filter(w => w.length > 3 && !stopwords.includes(w));
+        
+        // Identificar tecnologias/palavras-chave importantes
+        const techKeywords = ['whatsapp', 'crm', 'email', 'chatbot', 'dashboard', 'ia', 'inteligencia', 'artificial',
+                             'automatico', 'automacao', 'sistema', 'relatorio', 'notificacao', 'analise', 'dados',
+                             'lead', 'cliente', 'atendimento', 'vendas', 'estoque', 'pedido'];
+        
+        const foundTech = words.filter(w => techKeywords.some(tk => w.includes(tk) || tk.includes(w)));
+        const mainWords = foundTech.length > 0 ? foundTech.slice(0, 3) : words.slice(0, 3);
+        
+        // Construir título profissional
+        let newTitle = '';
+        
+        if (mainWords.length >= 2) {
+          // Capitalizar palavras
+          const capitalizedWords = mainWords.map(w => 
+            w.charAt(0).toUpperCase() + w.slice(1)
+          );
+          
+          // Formato: "Sistema de [palavra1] + [palavra2]"
+          newTitle = `Sistema de ${capitalizedWords[0]}`;
+          if (capitalizedWords[1]) {
+            newTitle += ` + ${capitalizedWords[1]}`;
+          }
+        } else if (mainWords.length === 1) {
+          // Apenas uma palavra-chave
+          const word = mainWords[0].charAt(0).toUpperCase() + mainWords[0].slice(1);
+          newTitle = `Sistema de ${word}`;
+        } else {
+          // Fallback: extrair primeira frase e limpar
+          const firstSentence = idea.split(/[.!?]/)[0].trim();
+          newTitle = firstSentence
+            .substring(0, 60)
+            .replace(/^(eu\s+quero|quero|preciso|gostaria|implementar|criar|fazer)\s+/gi, '')
+            .trim();
+          
+          if (newTitle.length > 10) {
+            newTitle = newTitle.charAt(0).toUpperCase() + newTitle.slice(1);
+          } else {
+            // Último recurso: ID único
+            newTitle = `Solução de Automação ${solution.id.substring(0, 6).toUpperCase()}`;
+          }
+        }
+        
+        // Limitar a 80 caracteres
         const finalTitle = newTitle.length > 80 
           ? newTitle.substring(0, 77) + '...'
           : newTitle;

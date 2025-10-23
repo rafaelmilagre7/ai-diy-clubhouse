@@ -379,18 +379,39 @@ ${contextFromAnswers}
 
 ⚠️ INSTRUÇÕES CRÍTICAS PARA O TÍTULO (CAMPO OBRIGATÓRIO):
 - O campo "title" no JSON NUNCA pode ser: undefined, null, "undefined", "null", "" (vazio) ou menor que 10 caracteres
-- Analise a DOR CENTRAL e o OBJETIVO do usuário
-- Crie um título ESPECÍFICO que mencione a principal tecnologia/benefício
+- Analise a DOR CENTRAL e o OBJETIVO FINAL do usuário (não o processo, mas o resultado)
+- **SINTETIZE**: Não copie o início da ideia literalmente - extraia a ESSÊNCIA
 - Tamanho ideal: 15-80 caracteres (mínimo 10, máximo 80)
-- FORMATO: [Ação/Resultado] + [Como/Com que] 
-- Use palavras da IDEIA ORIGINAL do usuário quando possível
+- FORMATO: [Tecnologia/Sistema] + [Resultado Específico] ou [Ação] + [Tecnologia] + [Benefício]
+- **PROIBIDO**: Começar com "Implementar", "Criar", "Fazer", "Quero", "Preciso"
+- **PROIBIDO**: Copiar palavra por palavra o início da ideia do usuário
 
-EXEMPLOS DE TÍTULOS EXCELENTES:
-✅ "Sistema de Qualificação Automática de Leads via WhatsApp"
-✅ "Qualificação de Leads via WhatsApp + GPT" (baseado em: automatizar qualificação no whatsapp)
-✅ "Dashboard Analytics para E-commerce" (baseado em: dashboard para acompanhar vendas)
-✅ "Chatbot Atendimento 24h com IA" (baseado em: atendimento automático)
-✅ "CRM Automático com Integração Make" (baseado em: crm que se atualiza sozinho)
+EXEMPLOS DE SÍNTESE PROFISSIONAL:
+Ideia: "Quero implementar uma inteligência artificial para resumir o atendimento dos corredores e me mandar por e-mail no fim do dia"
+✅ CORRETO: "Resumo Automático de Atendimentos via IA + E-mail"
+✅ CORRETO: "Sistema de Resumo IA para Atendimentos Diários"
+❌ ERRADO: "Implementar uma inteligência artificial para resumir o atendimento dos cor" (cópia literal truncada)
+
+Ideia: "automatizar qualificação de leads no whatsapp usando IA"
+✅ CORRETO: "Qualificação Automática de Leads via WhatsApp + IA"
+✅ CORRETO: "Sistema de Qualificação de Leads com IA no WhatsApp"
+❌ ERRADO: "Automatizar qualificação de leads no whatsapp" (cópia literal)
+
+Ideia: "dashboard para acompanhar vendas da loja online em tempo real"
+✅ CORRETO: "Dashboard Analytics em Tempo Real para E-commerce"
+✅ CORRETO: "Painel de Vendas Online com Atualização Instantânea"
+❌ ERRADO: "Dashboard para acompanhar vendas da loja online" (cópia literal)
+
+Ideia: "criar um chatbot que responde dúvidas dos clientes 24 horas"
+✅ CORRETO: "Chatbot Atendimento 24/7 com IA"
+✅ CORRETO: "Assistente Virtual Inteligente para Suporte Contínuo"
+❌ ERRADO: "Criar um chatbot que responde dúvidas dos clientes" (cópia literal)
+
+MAIS EXEMPLOS DE TÍTULOS EXCELENTES:
+✅ "CRM Automático com Sincronização Make"
+✅ "Pipeline de Dados via Airtable + Google Sheets"
+✅ "Notificações Inteligentes de Estoque Baixo"
+✅ "Gerador de Relatórios Automatizado com IA"
 
 EXEMPLOS DE TÍTULOS RUINS (NÃO FAZER):
 ❌ "undefined" ou qualquer variação (NUNCA retorne isso)
@@ -398,13 +419,16 @@ EXEMPLOS DE TÍTULOS RUINS (NÃO FAZER):
 ❌ "Projeto Builder" (sem contexto)
 ❌ "Sistema Inteligente" (vago)
 ❌ "" (vazio - PROIBIDO)
+❌ Qualquer título que comece com verbos de ação no infinitivo
 
-🔴 REGRAS:
-1. SEMPRE extraia palavras-chave da ideia original
-2. Seja ESPECÍFICO sobre o que a solução FAZ
+🔴 REGRAS OBRIGATÓRIAS:
+1. **SINTETIZE**: Extraia conceitos-chave, não copie palavras literais da ideia
+2. Seja ESPECÍFICO sobre o que a solução FAZ (resultado final, não processo)
 3. Mencione a TECNOLOGIA principal se relevante (IA, WhatsApp, CRM, etc)
 4. O título deve fazer sentido SEM ler a descrição
 5. O campo "title" no JSON DEVE ter pelo menos 10 caracteres de conteúdo válido
+6. **NUNCA** comece com: "Implementar", "Criar", "Fazer", "Quero", "Preciso", "Gostaria"
+7. **TESTE MENTAL**: Se o título parece uma cópia do início da ideia, REESCREVA
 
 Crie um plano completo seguindo o formato JSON especificado.`;
 
@@ -424,7 +448,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         parameters: {
           type: "object",
           properties: {
-            title: { type: "string", description: "Título ESPECÍFICO extraído da ideia original, mencionando tecnologia/benefício principal (15-50 chars)" },
+            title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (15-80 chars). NUNCA copie o início da ideia literalmente. SINTETIZE: [Tecnologia/Sistema] + [Resultado]. Proibido começar com: Implementar, Criar, Fazer, Quero" },
             short_description: { type: "string", description: "Descrição em 3-5 frases" },
             technical_overview: {
               type: "object",
@@ -731,38 +755,89 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       console.log('[BUILDER] 🔧 Mermaid sanitizado com sucesso');
     }
 
-    // 🔧 VALIDAÇÃO ROBUSTA DO TÍTULO
+    // 🔧 VALIDAÇÃO ROBUSTA E INTELIGENTE DO TÍTULO
     const invalidTitles = [undefined, null, 'undefined', 'null', ''];
     const titleString = solutionData.title ? String(solutionData.title).trim() : '';
+    
+    // Detectar cópias literais da ideia (primeiros 50 chars da ideia)
+    const ideaStart = idea.substring(0, 50).toLowerCase().trim();
+    const titleLower = titleString.toLowerCase();
+    const isLiteralCopy = titleLower.startsWith(ideaStart.substring(0, 30));
+    
+    // Detectar títulos que começam com verbos de ação proibidos
+    const startsWithForbiddenVerb = /^(implementar|criar|fazer|quero|preciso|gostaria|desenvolver)/i.test(titleString);
+    
+    // Detectar título truncado no meio de palavra (termina com palavra incompleta)
+    const endsWithIncompleteWord = titleString.length > 40 && !titleString.match(/[\s\-][\w]{3,}$/);
+    
     const titleIsInvalid = 
       invalidTitles.includes(solutionData.title) || 
       titleString === '' ||
-      titleString.length < 10 || // Título muito curto é suspeito
-      /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,2}\.$/.test(titleString); // Padrão de palavras isoladas com ponto
+      titleString.length < 10 || // Título muito curto
+      /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,2}\.$/.test(titleString) || // Palavras isoladas com ponto
+      isLiteralCopy || // Cópia literal da ideia
+      startsWithForbiddenVerb || // Começa com verbo proibido
+      endsWithIncompleteWord; // Truncado no meio de palavra
     
     if (titleIsInvalid) {
       console.warn("[BUILDER] ⚠️ Título inválido detectado:", {
         received: solutionData.title,
         type: typeof solutionData.title,
-        length: titleString.length
+        length: titleString.length,
+        isLiteralCopy,
+        startsWithForbiddenVerb,
+        endsWithIncompleteWord
       });
       
-      // Criar título profissional simples baseado apenas na primeira frase da ideia
-      const firstSentence = idea.split(/[.!?]/)[0].trim();
-      const cleanedIdea = firstSentence
-        .substring(0, 80)
-        .replace(/^(eu\s+quero|quero|preciso|gostaria)\s+/gi, '')
-        .trim();
+      // 🧠 FALLBACK INTELIGENTE: Extrair palavras-chave e sintetizar
       
-      // Capitalizar primeira letra
-      const fallbackTitle = cleanedIdea.charAt(0).toUpperCase() + cleanedIdea.slice(1);
+      // Remover palavras comuns (stopwords)
+      const stopwords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 
+                         'para', 'com', 'por', 'que', 'e', 'um', 'uma', 'eu', 'meu', 'minha',
+                         'quero', 'preciso', 'gostaria', 'criar', 'fazer', 'implementar', 'desenvolver'];
       
-      // Truncar se necessário
+      // Extrair palavras significativas (substantivos, tecnologias)
+      const words = idea
+        .toLowerCase()
+        .replace(/[^\w\sáéíóúâêôãõç]/g, ' ') // Remove pontuação
+        .split(/\s+/)
+        .filter(w => w.length > 3 && !stopwords.includes(w));
+      
+      // Identificar tecnologias/palavras-chave importantes
+      const techKeywords = ['whatsapp', 'crm', 'email', 'chatbot', 'dashboard', 'ia', 'inteligencia', 'artificial',
+                           'automatico', 'automacao', 'sistema', 'relatorio', 'notificacao', 'analise', 'dados',
+                           'lead', 'cliente', 'atendimento', 'vendas', 'estoque', 'pedido'];
+      
+      const foundTech = words.filter(w => techKeywords.some(tk => w.includes(tk) || tk.includes(w)));
+      const mainWords = foundTech.length > 0 ? foundTech.slice(0, 3) : words.slice(0, 3);
+      
+      // Construir título profissional
+      let fallbackTitle = '';
+      
+      if (mainWords.length >= 2) {
+        // Capitalizar palavras
+        const capitalizedWords = mainWords.map(w => 
+          w.charAt(0).toUpperCase() + w.slice(1)
+        );
+        
+        // Formato: "Sistema de [palavra1] + [palavra2]"
+        fallbackTitle = `Sistema de ${capitalizedWords[0]}`;
+        if (capitalizedWords[1]) {
+          fallbackTitle += ` + ${capitalizedWords[1]}`;
+        }
+      } else {
+        // Fallback genérico mas profissional
+        const shortId = crypto.randomUUID().substring(0, 6).toUpperCase();
+        fallbackTitle = `Solução de Automação ${shortId}`;
+      }
+      
+      // Limitar a 80 caracteres
       solutionData.title = fallbackTitle.length > 80 
         ? fallbackTitle.substring(0, 77) + '...'
         : fallbackTitle;
       
-      console.log(`[BUILDER] 🔧 Título fallback profissional: "${solutionData.title}"`);
+      console.log(`[BUILDER] 🔧 Título fallback inteligente: "${solutionData.title}"`);
+      console.log(`[BUILDER] 📝 Palavras-chave extraídas: ${mainWords.join(', ')}`);
     } else {
       // Garantir que título não exceda 80 caracteres
       if (titleString.length > 80) {

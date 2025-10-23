@@ -115,14 +115,35 @@ export const useBuilderAI = () => {
 
       // Validar qualidade do título
       const titleString = data.solution.title ? String(data.solution.title).trim() : '';
+      const ideaLower = idea.toLowerCase().trim();
+      const ideaStart = ideaLower.substring(0, 50);
+      const titleLower = titleString.toLowerCase();
+      
+      // Detectar cópia literal da ideia
+      const isLiteralCopy = titleLower.startsWith(ideaStart.substring(0, 30));
+      
+      // Detectar verbos proibidos
+      const startsWithForbiddenVerb = /^(implementar|criar|fazer|quero|preciso|gostaria|desenvolver)/i.test(titleString);
+      
+      // Detectar truncamento no meio de palavra
+      const endsWithIncompleteWord = titleString.length > 40 && !titleString.match(/[\s\-][\w]{3,}$/);
+      
       const titleHasIssues = 
         !titleString || 
         titleString === 'undefined' || 
         titleString.length < 10 ||
-        /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,2}\.$/.test(titleString);
+        /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,2}\.$/.test(titleString) ||
+        isLiteralCopy ||
+        startsWithForbiddenVerb ||
+        endsWithIncompleteWord;
       
       if (titleHasIssues) {
-        console.warn('[BUILDER-HOOK] ⚠️ Título com problema:', titleString);
+        console.warn('[BUILDER-HOOK] ⚠️ Título com problema:', {
+          title: titleString,
+          isLiteralCopy,
+          startsWithForbiddenVerb,
+          endsWithIncompleteWord
+        });
         toast.warning('Solução gerada mas o título pode estar incompleto', {
           description: 'Você pode editar manualmente na página da solução'
         });
