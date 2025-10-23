@@ -26,8 +26,23 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
 
       try {
         console.log(`[Mermaid][${flowId}] 🎨 Renderizando...`);
+        
+        // Sanitizar código Mermaid removendo metadados inválidos
+        let cleanedCode = mermaidCode.trim();
+        // Remove linhas com metadados incorretos (id: e title: no final)
+        const lines = cleanedCode.split('\n');
+        const lastLine = lines[lines.length - 1];
+        if (lastLine.includes(' id:') || lastLine.includes(' title:')) {
+          // Remove tudo após o último ] antes dos metadados
+          const match = lastLine.match(/^(.+?\])/);
+          if (match) {
+            lines[lines.length - 1] = match[1];
+            cleanedCode = lines.join('\n');
+          }
+        }
+        
         const uniqueId = `mermaid-${flowId}-${Date.now()}`;
-        const { svg } = await mermaid.render(uniqueId, mermaidCode);
+        const { svg } = await mermaid.render(uniqueId, cleanedCode);
         
         // Aguardar um tick para garantir que o DOM está pronto
         await new Promise(resolve => setTimeout(resolve, 0));
@@ -43,7 +58,13 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
         }
       } catch (err: any) {
         console.error(`[Mermaid][${flowId}] ❌ Erro:`, err.message || err);
-        setError('Erro ao renderizar fluxo visual');
+        
+        // Mensagem de erro mais específica
+        const errorMsg = err.message?.includes('Parse error') 
+          ? 'Erro na sintaxe do diagrama. Por favor, regenere esta seção.'
+          : 'Erro ao renderizar diagrama. Tente recarregar a página.';
+        
+        setError(errorMsg);
         setIsRendering(false);
       }
     };
