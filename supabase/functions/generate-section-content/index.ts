@@ -31,6 +31,32 @@ serve(async (req) => {
   console.log(`[SECTION-GEN][${requestId}] === GERAÇÃO DE SEÇÃO INICIADA ===`);
 
   try {
+    // Verificar autenticação
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação necessário' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error(`[SECTION-GEN][${requestId}] ❌ Token inválido:`, authError);
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação inválido ou expirado' }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[SECTION-GEN][${requestId}] 🔐 Usuário autenticado: ${user.id}`);
+
     const body = await req.json();
     const validationResult = GenerateSectionSchema.safeParse(body);
     
@@ -46,10 +72,6 @@ serve(async (req) => {
     
     console.log(`[SECTION-GEN][${requestId}] 🎯 Seção: ${sectionType}`);
     console.log(`[SECTION-GEN][${requestId}] 📄 Solução ID: ${solutionId.substring(0, 8)}***`);
-
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Buscar solução existente
     const { data: solution, error: solutionError } = await supabase

@@ -8718,7 +8718,21 @@ export type Database = {
       }
       validate_invite_token_enhanced: {
         Args: { p_token: string }
-        Returns: Json
+        Returns: {
+          created_at: string
+          created_by: string
+          email: string
+          expires_at: string
+          id: string
+          last_sent_at: string
+          notes: string
+          preferred_channel: string
+          role_id: string
+          send_attempts: number
+          token: string
+          used_at: string
+          whatsapp_number: string
+        }[]
       }
       validate_invite_token_safe: { Args: { p_token: string }; Returns: Json }
       validate_invite_token_secure: {

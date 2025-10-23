@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,29 @@ serve(async (req) => {
         }
       );
     }
+
+    // Validar token JWT
+    const token = authHeader.replace('Bearer ', '');
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!
+    );
+
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      console.error('[IMAGE-UPLOAD] Token inválido:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Token de autenticação inválido ou expirado' }),
+        { 
+          status: 401, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        }
+      );
+    }
+
+    console.log(`[IMAGE-UPLOAD] Usuário autenticado: ${user.id}`);
+
 
     // Obter chave segura do environment
     const imgbbApiKey = Deno.env.get('IMGBB_API_KEY');
