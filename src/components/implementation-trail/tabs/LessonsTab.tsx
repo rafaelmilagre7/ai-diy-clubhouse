@@ -156,10 +156,10 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Fundamentos', color: 'bg-aurora-primary', textColor: 'text-black' };
-      case 2: return { label: 'Intermediário', color: 'bg-operational', textColor: 'text-black' };
-      case 3: return { label: 'Avançado', color: 'bg-strategy', textColor: 'text-white' };
-      default: return { label: 'Recomendada', color: 'bg-muted', textColor: 'text-muted-foreground' };
+      case 1: return { label: 'Fundamentos', gradient: 'bg-gradient-aurora', textColor: 'text-primary-foreground' };
+      case 2: return { label: 'Intermediário', gradient: 'bg-gradient-operational', textColor: 'text-primary-foreground' };
+      case 3: return { label: 'Avançado', gradient: 'bg-gradient-strategy', textColor: 'text-primary-foreground' };
+      default: return { label: 'Recomendada', gradient: 'bg-muted', textColor: 'text-muted-foreground' };
     }
   };
 
@@ -178,20 +178,23 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
     if (!lesson) {
       return (
-        <Card className="group relative overflow-hidden border border-border bg-card hover:shadow-md transition-all duration-300 flex h-32">
-          <div className="w-20 bg-muted animate-pulse rounded-l-lg"></div>
+        <Card className="group relative overflow-hidden border border-border/50 bg-card/60 backdrop-blur-sm hover:shadow-lg transition-all duration-300 flex h-32 animate-pulse">
+          <div className="w-20 bg-muted/50 rounded-l-lg"></div>
           <div className="flex-1 p-4 space-y-2">
-            <div className="h-4 bg-muted/70 rounded w-3/4 animate-pulse"></div>
-            <div className="h-3 bg-muted/50 rounded w-1/2 animate-pulse"></div>
+            <div className="h-4 bg-muted/60 rounded w-3/4"></div>
+            <div className="h-3 bg-muted/40 rounded w-1/2"></div>
           </div>
         </Card>
       );
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border bg-card hover:border-primary/30 hover:shadow-md transition-all duration-300 cursor-pointer flex h-32">
+      <Card className="group relative overflow-hidden border border-border/50 bg-card/80 backdrop-blur-md hover:border-aurora-primary/50 hover:shadow-xl hover:shadow-aurora-primary/5 transition-all duration-300 cursor-pointer flex h-32 hover:scale-[1.01]">
+        {/* Animated glow effect */}
+        <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+        
         {/* Lesson Cover - 9:16 format */}
-        <div className="relative w-20 flex-shrink-0 overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10">
+        <div className="relative w-20 flex-shrink-0 overflow-hidden bg-gradient-aurora-subtle z-10">
           <div className="aspect-[9/16] w-full h-full">
             {lesson.cover_image_url ? (
               <div className="relative w-full h-full">
@@ -210,13 +213,13 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                   }}
                 />
                 
-                <div className="fallback-content absolute inset-0 hidden items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                  <GraduationCap className="h-4 w-4 text-primary" />
+                <div className="fallback-content absolute inset-0 hidden items-center justify-center bg-gradient-aurora-subtle">
+                  <GraduationCap className="h-4 w-4 text-aurora-primary" />
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-secondary/20">
-                <GraduationCap className="h-4 w-4 text-primary transition-transform duration-300 group-hover:scale-110" />
+              <div className="w-full h-full flex items-center justify-center bg-gradient-aurora-subtle">
+                <GraduationCap className="h-4 w-4 text-aurora-primary transition-transform duration-300 group-hover:scale-110" />
               </div>
             )}
             
@@ -229,16 +232,16 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             </div>
             
             {/* Play overlay on hover */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="bg-white rounded-full p-1">
-                <Play className="h-2.5 w-2.5 text-primary fill-primary" />
+            <div className="absolute inset-0 flex items-center justify-center bg-card/80 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="bg-gradient-aurora rounded-full p-1 shadow-lg">
+                <Play className="h-2.5 w-2.5 text-primary-foreground fill-primary-foreground" />
               </div>
             </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 p-4 flex flex-col justify-between min-w-0" onClick={() => {
+        <div className="flex-1 p-4 flex flex-col justify-between min-w-0 relative z-10" onClick={() => {
           if (!hasFeatureAccess('learning')) {
             showUpgradeModal('learning', lesson.title);
             return;
@@ -248,10 +251,10 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
           <div className="space-y-2">
             {/* Header with title and priority badge */}
             <div className="flex items-start justify-between gap-2">
-              <h3 className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors duration-200 line-clamp-2 leading-tight flex-1">
+              <h3 className="font-semibold text-sm text-foreground group-hover:text-aurora-primary transition-colors duration-200 line-clamp-2 leading-tight flex-1">
                 {lesson.title}
               </h3>
-              <Badge variant="secondary" className="text-xs px-2 py-0.5 flex-shrink-0 bg-primary/10 text-primary border-primary/20">
+              <Badge className={`text-xs px-2 py-0.5 flex-shrink-0 ${priorityInfo.gradient} ${priorityInfo.textColor} border-0 shadow-sm`}>
                 {priorityInfo.label}
               </Badge>
             </div>
@@ -270,10 +273,10 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             </div>
 
             {/* AI Justification */}
-            <div className="p-2.5 rounded-md bg-primary/5 border border-primary/10">
+            <div className="p-2.5 rounded-md bg-aurora-primary/5 border border-aurora-primary/20 backdrop-blur-sm">
               <div className="flex items-start gap-2">
-                <Brain className="h-3 w-3 text-primary flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+                <Brain className="h-3 w-3 text-aurora-primary flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-foreground leading-relaxed line-clamp-2">
                   {item.justification}
                 </p>
               </div>
@@ -290,7 +293,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
             <Button 
               variant="ghost" 
               size="sm"
-              className="h-7 px-3 text-xs hover:bg-primary hover:text-primary-foreground transition-all duration-200"
+              className="h-7 px-3 text-xs hover:bg-gradient-aurora hover:text-primary-foreground transition-all duration-200 group/btn"
               onClick={(e) => {
                 e.stopPropagation();
                 if (!hasFeatureAccess('learning')) {
@@ -300,7 +303,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                 navigate(`/learning/lesson/${lesson.id}`);
               }}
             >
-              <Play className="w-3 h-3 mr-1" />
+              <Play className="w-3 h-3 mr-1 group-hover/btn:scale-110 transition-transform duration-200" />
               Iniciar
             </Button>
           </div>
@@ -313,12 +316,15 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
 
   if (recommendedLessons.length === 0) {
     return (
-      <div className="text-center py-12 space-y-4">
-        <div className="w-16 h-16 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto">
-          <BookOpen className="w-8 h-8 text-primary" />
+      <div className="text-center py-12 space-y-4 animate-fade-in">
+        <div className="relative w-16 h-16 mx-auto">
+          <div className="absolute inset-0 bg-gradient-aurora-subtle rounded-full blur-xl animate-pulse" />
+          <div className="relative w-16 h-16 bg-card/80 backdrop-blur-xl border-2 border-aurora-primary/40 rounded-full flex items-center justify-center shadow-xl">
+            <BookOpen className="w-8 h-8 text-aurora-primary" />
+          </div>
         </div>
         <div className="space-y-2">
-          <h3 className="text-lg font-semibold">Aulas em preparação</h3>
+          <h3 className="text-lg font-semibold text-foreground">Aulas em preparação</h3>
           <p className="text-muted-foreground max-w-md mx-auto">
             As recomendações de aulas personalizadas estão sendo preparadas para complementar suas soluções prioritárias.
           </p>
@@ -359,20 +365,23 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
   }, {} as Record<number, RecommendedLesson[]>);
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       {/* Header */}
-      <div className="text-center space-y-4">
-        <div className="flex items-center justify-center gap-3">
-          <div className="p-2 bg-primary/10 rounded-lg">
-            <GraduationCap className="h-6 w-6 text-primary" />
+      <div className="relative overflow-hidden text-center space-y-4 p-8 bg-card/60 backdrop-blur-xl rounded-2xl border border-border/50 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-20" />
+        <div className="relative flex flex-col items-center justify-center gap-4">
+          <div className="p-3 bg-gradient-aurora rounded-xl shadow-md">
+            <GraduationCap className="h-7 w-7 text-primary-foreground" />
           </div>
-          <h2 className="text-2xl font-bold text-foreground">
-            Aulas Recomendadas por IA
-          </h2>
+          <div>
+            <h2 className="text-2xl font-bold bg-gradient-aurora bg-clip-text text-transparent mb-2">
+              Aulas Recomendadas por IA
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              Jornada de aprendizado personalizada para acelerar sua implementação de IA
+            </p>
+          </div>
         </div>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Jornada de aprendizado personalizada para acelerar sua implementação de IA
-        </p>
       </div>
 
       {/* Lessons by Priority */}
@@ -385,9 +394,10 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
           return (
             <section key={priority} className="space-y-4">
               {/* Priority Header */}
-              <div className="flex items-center justify-between p-4 bg-card border rounded-lg shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-sm">
+              <div className="relative overflow-hidden flex items-center justify-between p-5 bg-card/80 backdrop-blur-md border border-border/50 rounded-2xl shadow-md hover:shadow-lg transition-all duration-300">
+                <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-10" />
+                <div className="relative flex items-center gap-3">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-xl ${priorityInfo.gradient} ${priorityInfo.textColor} font-bold text-sm shadow-md`}>
                     {priority}
                   </div>
                   <div>
@@ -401,7 +411,7 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
                     </p>
                   </div>
                 </div>
-                <Badge variant="secondary" className="bg-primary/10 text-primary">
+                <Badge className={`relative ${priorityInfo.gradient} ${priorityInfo.textColor} border-0 shadow-sm px-3 py-1`}>
                   {priorityCount} {priorityCount === 1 ? 'aula' : 'aulas'}
                 </Badge>
               </div>
@@ -423,8 +433,9 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
         })}
 
       {/* Summary Card */}
-      <div className="bg-gradient-to-r from-primary/5 to-secondary/5 border border-primary/20 rounded-lg p-6">
-        <div className="flex items-center justify-between">
+      <div className="relative overflow-hidden bg-card/60 backdrop-blur-xl border border-aurora-primary/30 rounded-2xl p-6 shadow-lg">
+        <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-20" />
+        <div className="relative flex flex-wrap items-center justify-between gap-4">
           <div className="space-y-2">
             <h3 className="text-lg font-semibold text-foreground">
               Sua Trilha de Aprendizado
@@ -435,27 +446,27 @@ export const LessonsTab = ({ trail }: LessonsTabProps) => {
           </div>
           <div className="flex items-center gap-4">
             <div className="text-right">
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-2xl font-bold bg-gradient-aurora bg-clip-text text-transparent">
                 {recommendedLessons.reduce((total, lesson) => {
                   const lessonData = lessons[lesson.lessonId];
                   return total + (lessonData?.estimated_time_minutes || 30);
                 }, 0)}min
               </div>
-              <div className="text-sm text-muted-foreground">tempo estimado</div>
+              <div className="text-sm text-muted-foreground font-medium">tempo estimado</div>
             </div>
-            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center">
-              <Target className="h-6 w-6 text-primary" />
+            <div className="w-12 h-12 bg-gradient-aurora rounded-full flex items-center justify-center shadow-md">
+              <Target className="h-6 w-6 text-primary-foreground" />
             </div>
           </div>
         </div>
         
         {/* Progress Bar */}
-        <div className="mt-4">
+        <div className="relative mt-4">
           <div className="flex items-center justify-between text-sm text-muted-foreground mb-2">
-            <span>Progresso da trilha</span>
-            <span>0 de {recommendedLessons.length} aulas concluídas</span>
+            <span className="font-medium">Progresso da trilha</span>
+            <span className="font-semibold">0 de {recommendedLessons.length} aulas concluídas</span>
           </div>
-          <Progress value={0} className="h-2" />
+          <Progress value={0} className="h-2 bg-muted/30" />
         </div>
       </div>
     </div>
