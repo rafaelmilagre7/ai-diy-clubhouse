@@ -213,8 +213,6 @@ INSTRUÇÕES ESPECIAIS:
 - Siga EXATAMENTE a estrutura do system prompt
 - Use emojis para organização visual
 - Especifique módulos Make com nomes reais de serviços quando aplicável`
-- Transforme o checklist em fases organizadas por semanas
-- Expanda os KPIs com metas numéricas quando possível`
           }
         ],
         temperature: 0.7,
