@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Bell, Check, X } from 'lucide-react';
+import { Bell, Check, CheckCheck, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -8,7 +8,6 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/auth';
@@ -154,45 +153,51 @@ export function NotificationsPopover() {
       </PopoverTrigger>
 
       <PopoverContent 
-        className="w-[380px] p-0 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl" 
+        className="w-96 p-0 backdrop-blur-xl bg-background/95 border-border/50" 
         align="end"
-        sideOffset={8}
       >
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-border/50">
-          <div>
-            <h3 className="font-semibold text-base">Notificações</h3>
+        {/* Header com gradiente sutil */}
+        <div className="relative p-4 border-b border-border/50 bg-gradient-to-b from-accent/10 to-transparent">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Bell className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Notificações</h3>
+                {unreadCount > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    {unreadCount} {unreadCount === 1 ? 'nova' : 'novas'}
+                  </p>
+                )}
+              </div>
+            </div>
             {unreadCount > 0 && (
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {unreadCount} {unreadCount === 1 ? 'nova' : 'novas'}
-              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => markAllAsRead.mutate()}
+                disabled={markAllAsRead.isPending}
+                className="text-xs h-7 hover:bg-accent/50"
+              >
+                <CheckCheck className="h-3 w-3 mr-1" />
+                Todas
+              </Button>
             )}
           </div>
-
-          {unreadCount > 0 && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => markAllAsRead.mutate()}
-              disabled={markAllAsRead.isPending}
-              className="text-xs h-8"
-            >
-              <Check className="h-3 w-3 mr-1" />
-              Marcar todas
-            </Button>
-          )}
         </div>
 
-        {/* Lista de notificações */}
         <ScrollArea className="h-[400px]">
           {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-[200px] text-center p-4">
-              <Bell className="h-12 w-12 text-muted-foreground/50 mb-3" />
-              <p className="text-sm text-muted-foreground font-medium">
+            <div className="flex flex-col items-center justify-center py-16 px-6">
+              <div className="h-16 w-16 rounded-2xl bg-accent/30 flex items-center justify-center mb-4">
+                <Bell className="h-8 w-8 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-foreground mb-1">
                 Nenhuma notificação
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Você está em dia! 🎉
+              <p className="text-xs text-muted-foreground text-center">
+                Quando você receber notificações, elas aparecerão aqui
               </p>
             </div>
           ) : (
@@ -201,8 +206,8 @@ export function NotificationsPopover() {
                 <div
                   key={notification.id}
                   className={cn(
-                    'p-4 hover:bg-accent/50 transition-colors cursor-pointer relative',
-                    notification.status === 'unread' && 'bg-primary/5'
+                    'group relative p-4 hover:bg-accent/30 cursor-pointer transition-all duration-200',
+                    notification.status === 'read' && 'opacity-60'
                   )}
                   onClick={() => {
                     if (notification.status === 'unread') {
@@ -210,47 +215,42 @@ export function NotificationsPopover() {
                     }
                   }}
                 >
-                  {/* Indicador de não lida */}
-                  {notification.status === 'unread' && (
-                    <div className="absolute left-2 top-1/2 -translate-y-1/2 w-2 h-2 bg-primary rounded-full" />
-                  )}
-
-                  <div className="flex gap-3 pl-2">
-                    {/* Ícone */}
-                    <div className="flex-shrink-0 text-2xl">
-                      {getNotificationIcon(notification.type)}
-                    </div>
-
-                    {/* Conteúdo */}
+                  <div className="flex items-start gap-3">
+                    {notification.status === 'unread' && (
+                      <div className="h-2 w-2 rounded-full bg-primary mt-2 animate-pulse" />
+                    )}
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm mb-1 line-clamp-1">
+                      <p className="text-sm font-medium line-clamp-2 text-foreground group-hover:text-primary transition-colors">
                         {notification.title}
                       </p>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mb-2">
-                        {notification.message}
-                      </p>
-                      <p className="text-xs text-muted-foreground/70">
+                      {notification.message && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
+                          {notification.message}
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground/70 mt-2">
                         {formatDistanceToNow(new Date(notification.created_at), {
                           addSuffix: true,
                           locale: ptBR,
                         })}
                       </p>
                     </div>
-
-                    {/* Botão fechar */}
-                    {notification.status === 'unread' && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="flex-shrink-0 h-6 w-6"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          markAsRead.mutate(notification.id);
-                        }}
-                      >
-                        <X className="h-3 w-3" />
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {notification.status === 'unread' && (
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-7 w-7 hover:bg-accent"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            markAsRead.mutate(notification.id);
+                          }}
+                        >
+                          <Check className="h-3 w-3" />
+                        </Button>
+                      )}
+                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                    </div>
                   </div>
                 </div>
               ))}
@@ -258,23 +258,21 @@ export function NotificationsPopover() {
           )}
         </ScrollArea>
 
-        {/* Footer */}
         {notifications.length > 0 && (
-          <>
-            <Separator />
-            <div className="p-2">
-              <Button
-                variant="ghost"
-                className="w-full text-sm"
-                onClick={() => {
-                  setOpen(false);
-                  navigate('/notifications');
-                }}
-              >
-                Ver todas as notificações
-              </Button>
-            </div>
-          </>
+          <div className="p-3 border-t border-border/50 bg-accent/5">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="w-full hover:bg-accent/50 text-sm font-medium group"
+              onClick={() => {
+                setOpen(false);
+                navigate('/notifications');
+              }}
+            >
+              Ver todas as notificações
+              <ChevronRight className="h-4 w-4 ml-1 group-hover:translate-x-0.5 transition-transform" />
+            </Button>
+          </div>
         )}
       </PopoverContent>
     </Popover>
