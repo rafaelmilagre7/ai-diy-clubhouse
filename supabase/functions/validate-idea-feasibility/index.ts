@@ -27,55 +27,12 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY não configurada');
     }
 
-    const systemPrompt = `Você é um especialista em avaliar viabilidade de projetos de IA e desenvolvimento web.
+    const systemPrompt = `Você é um especialista em avaliar viabilidade de ideias.
 
-Analise a ideia fornecida e determine se ela pode ser implementada usando a plataforma Lovable, que oferece:
+Retorne APENAS um objeto JSON válido sem nenhum texto adicional:
+{"viable": true/false, "reason": "explicação breve", "confidence": "high/medium/low"}
 
-**Capacidades da Plataforma:**
-- Frontend completo em React + TypeScript + Tailwind CSS
-- Backend Supabase (banco de dados, autenticação, storage, edge functions)
-- Integrações com APIs externas e serviços de IA (OpenAI, Anthropic, Google, etc.)
-- Automações e workflows complexos
-- Interfaces ricas e interativas
-- Processamento de imagens, textos, áudio via IA
-- Webhooks e integrações de terceiros
-
-**Critérios de Viabilidade:**
-
-✅ **VIÁVEL** se:
-- Aplicação web (dashboard, SaaS, e-commerce, portal)
-- Sistema de gerenciamento (CRM, ERP, gestão de projetos)
-- Ferramentas de IA (chatbots, análise de dados, geração de conteúdo, assistentes virtuais)
-- Plataformas de conteúdo (blog, marketplace, rede social)
-- Integrações com APIs externas (pagamento, email, CRM, automação)
-- Processamento de mídia via IA (análise de imagem, transcrição, síntese de voz)
-
-❌ **NÃO VIÁVEL** se exigir:
-- **Hardware físico/robótica**: Robôs, braços mecânicos, drones, dispositivos móveis físicos
-- **Sensores IoT físicos**: Temperatura, pressão, movimento (exceto câmera/microfone web)
-- **Atuadores físicos**: Motores, servos, relés, válvulas
-- **Apps mobile nativos**: iOS/Android nativo (web app mobile é OK)
-- **Tecnologias fora do stack**: Python standalone, Java, .NET, Ruby (apenas como API externa é OK)
-- **Frameworks não suportados**: Angular, Vue, Next.js, Svelte
-
-**❌ EXEMPLOS DE IDEIAS NÃO VIÁVEIS:**
-- Robô físico para pegar café e levar no quarto (hardware + robótica)
-- Drone de entrega autônomo (hardware + regulação)
-- App que controla ar-condicionado via infravermelho (hardware IoT)
-- Sistema que mede temperatura corporal com sensor (IoT físico)
-- Braço robótico para montagem industrial (hardware)
-
-**Seja otimista mas realista:** Se pode ser feito via web app + IA + integrações de software, é viável.
-
-CRÍTICO: Retorne APENAS o objeto JSON puro, sem markdown, sem code blocks, sem explicações adicionais.
-
-Formato correto:
-{"viable": true, "reason": "Explicação de 2-3 frases", "confidence": "high"}
-
-NÃO retorne com markdown:
-\`\`\`json
-{"viable": true, ...}
-\`\`\``;
+IMPORTANTE: Apenas o JSON puro, sem markdown, sem code blocks, sem explicações extras.`;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando Lovable AI...');
 
@@ -89,10 +46,10 @@ NÃO retorne com markdown:
         model: 'google/gemini-2.5-pro',
         messages: [
           { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Analise a viabilidade desta ideia com OTIMISMO e CRIATIVIDADE. Pense em como PODE ser feito:\n\n"${idea}"\n\nLembre-se: se envolve software, web, IA ou automações, provavelmente é VIÁVEL. Seja generoso na análise.` }
+          { role: 'user', content: `Avalie: "${idea}"` }
         ],
-        temperature: 0.4,
-        max_tokens: 300
+        temperature: 0.3,
+        max_tokens: 500
       }),
     });
 
@@ -124,24 +81,41 @@ NÃO retorne com markdown:
       throw new Error('Resposta vazia da IA');
     }
 
-    console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content);
+    console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content.slice(0, 100));
 
-    // Extrair JSON da resposta - sem fallbacks, deve funcionar sempre
-    let cleanContent = content.trim();
-    cleanContent = cleanContent.replace(/```json\s*/g, '');
-    cleanContent = cleanContent.replace(/```\s*/g, '');
-    cleanContent = cleanContent.trim();
+    // Limpeza agressiva de markdown e code blocks
+    let cleanContent = content
+      .replace(/```json\s*/gi, '')
+      .replace(/```javascript\s*/gi, '')
+      .replace(/```\s*/gi, '')
+      .replace(/`{1,3}/g, '')
+      .trim();
 
-    // Extrair JSON do conteúdo limpo
-    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+    console.log('[VALIDATE-FEASIBILITY] 🧹 Depois de limpar:', cleanContent.slice(0, 100));
+
+    // Extrair JSON com regex mais robusto para pegar objeto completo
+    const jsonMatch = cleanContent.match(/\{[\s\S]*?"viable"[\s\S]*?"reason"[\s\S]*?"confidence"[\s\S]*?\}/);
+    
     if (!jsonMatch) {
-      console.error('[VALIDATE-FEASIBILITY] ❌ JSON não encontrado:', content);
-      throw new Error('Formato de resposta inválido da IA');
+      console.error('[VALIDATE-FEASIBILITY] ❌ JSON não encontrado na resposta');
+      throw new Error('Resposta inválida do modelo de IA');
     }
 
-    const validationResult = JSON.parse(jsonMatch[0]);
+    const jsonStr = jsonMatch[0];
+    console.log('[VALIDATE-FEASIBILITY] 📦 JSON extraído:', jsonStr);
 
-    console.log('[VALIDATE-FEASIBILITY] ✅ Resultado:', validationResult);
+    // Parse e validação rigorosa
+    const validationResult = JSON.parse(jsonStr);
+    
+    // Validar campos obrigatórios
+    if (typeof validationResult.viable !== 'boolean' ||
+        typeof validationResult.reason !== 'string' ||
+        !validationResult.reason.trim() ||
+        !['high', 'medium', 'low'].includes(validationResult.confidence)) {
+      throw new Error('JSON com campos inválidos ou incompletos');
+    }
+
+    console.log('[VALIDATE-FEASIBILITY] ✅ Resultado validado:', validationResult);
 
     return new Response(
       JSON.stringify(validationResult),
@@ -150,10 +124,19 @@ NÃO retorne com markdown:
 
   } catch (error: any) {
     console.error('[VALIDATE-FEASIBILITY] ❌ Erro:', error);
+    
+    const errorMessage = error.message || 'Erro desconhecido';
+    
+    // Mensagem amigável sem expor detalhes técnicos ao usuário
+    const userMessage = errorMessage.includes('Resposta inválida') || 
+                       errorMessage.includes('campos inválidos')
+      ? 'Não conseguimos analisar sua ideia no momento. Tente descrever de forma mais detalhada.'
+      : errorMessage;
+    
     return new Response(
       JSON.stringify({ 
-        error: 'Erro ao validar viabilidade',
-        details: error.message 
+        error: userMessage,
+        viable: false
       }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
