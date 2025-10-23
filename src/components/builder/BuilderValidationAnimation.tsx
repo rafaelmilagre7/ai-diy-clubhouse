@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle, XCircle, Brain } from 'lucide-react';
+import { CheckCircle, XCircle } from 'lucide-react';
 
 interface BuilderValidationAnimationProps {
   status: 'validating' | 'success' | 'error';
@@ -19,21 +19,31 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
         exit={{ scale: 0.8, opacity: 0 }}
         className="flex flex-col items-center gap-6 px-8 py-12 max-w-md"
       >
-        {/* Ícone animado */}
+        {/* Animação geométrica elegante */}
         {status === 'validating' && (
-          <motion.div
-            animate={{ 
-              rotate: [0, 360],
-              scale: [1, 1.1, 1]
-            }}
-            transition={{ 
-              rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-              scale: { duration: 1, repeat: Infinity, ease: "easeInOut" }
-            }}
-            className="p-8 rounded-full bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/5 border-2 border-aurora-primary/30"
-          >
-            <Brain className="h-16 w-16 text-aurora-primary" />
-          </motion.div>
+          <div className="relative w-32 h-32">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="absolute inset-0 rounded-full border-2"
+                style={{
+                  borderColor: 'transparent',
+                  borderTopColor: 'hsl(var(--aurora-primary))',
+                  borderRightColor: 'hsl(var(--aurora-primary) / 0.5)',
+                }}
+                animate={{
+                  rotate: 360,
+                  scale: [1, 1.1, 1],
+                  opacity: [0.3, 0.7, 0.3]
+                }}
+                transition={{
+                  rotate: { duration: 3 + i, repeat: Infinity, ease: "linear" },
+                  scale: { duration: 2 + i * 0.5, repeat: Infinity },
+                  opacity: { duration: 2 + i * 0.5, repeat: Infinity }
+                }}
+              />
+            ))}
+          </div>
         )}
 
         {status === 'success' && (
@@ -79,7 +89,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 transition={{ delay: 0.2 }}
                 className="text-2xl font-bold text-green-500 mb-2"
               >
-                Ideia validada com sucesso! ✨
+                Ideia validada com sucesso
               </motion.h3>
               <motion.p
                 initial={{ y: 10, opacity: 0 }}

@@ -181,7 +181,7 @@ export default function Builder() {
       setValidationStatus('success');
       setValidationMessage(reason || 'Sua ideia é viável e pode ser implementada!');
 
-      // Aguardar 2s para mostrar sucesso e então seguir para perguntas
+      // Aguardar 0.8s para mostrar sucesso e então seguir para perguntas
       setTimeout(async () => {
         setValidationStatus('idle');
         
@@ -190,7 +190,7 @@ export default function Builder() {
         if (generatedQuestions && generatedQuestions.length > 0) {
           setShowWizard(true);
         }
-      }, 2000);
+      }, 800); // 0.8s para ler a validação
 
     } catch (error) {
       console.error('[BUILDER] Erro na validação:', error);

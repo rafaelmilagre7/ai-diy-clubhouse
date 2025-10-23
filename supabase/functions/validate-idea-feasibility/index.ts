@@ -27,113 +27,55 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY não configurada');
     }
 
-    const systemPrompt = `Você é um especialista em viabilidade de projetos com IA, automações e desenvolvimento no-code/low-code usando a plataforma Lovable.
+    const systemPrompt = `Você é um especialista em avaliar viabilidade de projetos de IA e desenvolvimento web.
 
-## SEU PAPEL
-Avaliar se uma ideia pode ser implementada com as tecnologias atuais de IA, APIs e automações. Seja OTIMISTA e CRIATIVO - quase tudo que envolve software, web e automação é VIÁVEL hoje.
+Analise a ideia fornecida e determine se ela pode ser implementada usando a plataforma Lovable, que oferece:
 
-## O QUE O LOVABLE PODE FAZER (CAPACIDADES REAIS)
+**Capacidades da Plataforma:**
+- Frontend completo em React + TypeScript + Tailwind CSS
+- Backend Supabase (banco de dados, autenticação, storage, edge functions)
+- Integrações com APIs externas e serviços de IA (OpenAI, Anthropic, Google, etc.)
+- Automações e workflows complexos
+- Interfaces ricas e interativas
+- Processamento de imagens, textos, áudio via IA
+- Webhooks e integrações de terceiros
 
-### 🚀 FRONTEND & INTERFACES
-- Apps web completos responsivos (React, TypeScript, Tailwind)
-- Dashboards interativos e painéis de controle
-- Sistemas CRUD completos (criar, ler, atualizar, deletar)
-- Formulários inteligentes com validação
-- Chat interfaces e messaging
-- Visualização de dados (gráficos, tabelas, mapas)
-- Landing pages e sites institucionais
-- Sistemas de login e autenticação
+**Critérios de Viabilidade:**
 
-### 🤖 INTELIGÊNCIA ARTIFICIAL
-- Processamento de linguagem natural (NLP)
-- Chatbots e assistentes virtuais
-- Análise de sentimento e classificação de texto
-- Geração de conteúdo (textos, emails, descrições)
-- Sumarização e extração de informações
-- Tradução e multilíngue
-- OCR e extração de dados de documentos/imagens
-- Análise de imagens e visão computacional básica
-- Sistemas de recomendação
-- Agentes autônomos e workflows de IA
+✅ **VIÁVEL** se:
+- Aplicação web (dashboard, SaaS, e-commerce, portal)
+- Sistema de gerenciamento (CRM, ERP, gestão de projetos)
+- Ferramentas de IA (chatbots, análise de dados, geração de conteúdo, assistentes virtuais)
+- Plataformas de conteúdo (blog, marketplace, rede social)
+- Integrações com APIs externas (pagamento, email, CRM, automação)
+- Processamento de mídia via IA (análise de imagem, transcrição, síntese de voz)
 
-### 🔗 INTEGRAÇÕES & APIs
-- WhatsApp Business API
-- Google (Calendar, Sheets, Drive, Gmail)
-- Slack, Discord, Telegram
-- CRMs (HubSpot, Pipedrive, RD Station, etc)
-- ERPs e sistemas empresariais
-- APIs de pagamento (Stripe, Mercado Pago)
-- Redes sociais (Instagram, Facebook, LinkedIn)
-- Webhooks e automações (Make, Zapier, n8n)
-- APIs REST e GraphQL customizadas
-- Banco de dados (PostgreSQL via Supabase)
-- Storage de arquivos (upload/download)
+❌ **NÃO VIÁVEL** se exigir:
+- **Hardware físico/robótica**: Robôs, braços mecânicos, drones, dispositivos móveis físicos
+- **Sensores IoT físicos**: Temperatura, pressão, movimento (exceto câmera/microfone web)
+- **Atuadores físicos**: Motores, servos, relés, válvulas
+- **Apps mobile nativos**: iOS/Android nativo (web app mobile é OK)
+- **Tecnologias fora do stack**: Python standalone, Java, .NET, Ruby (apenas como API externa é OK)
+- **Frameworks não suportados**: Angular, Vue, Next.js, Svelte
 
-### ⚡ AUTOMAÇÕES & BACKEND
-- Edge Functions (JavaScript/TypeScript serverless)
-- Cron jobs e agendamentos
-- Processamento de filas e eventos
-- Envio de emails automáticos
-- Notificações push e webhooks
-- Processamento de arquivos (PDF, CSV, Excel, imagens)
-- Geração de relatórios
-- Integração com múltiplos sistemas
+**❌ EXEMPLOS DE IDEIAS NÃO VIÁVEIS:**
+- Robô físico para pegar café e levar no quarto (hardware + robótica)
+- Drone de entrega autônomo (hardware + regulação)
+- App que controla ar-condicionado via infravermelho (hardware IoT)
+- Sistema que mede temperatura corporal com sensor (IoT físico)
+- Braço robótico para montagem industrial (hardware)
 
-## ❌ O QUE NÃO É VIÁVEL (SEJA CRITERIOSO)
+**Seja otimista mas realista:** Se pode ser feito via web app + IA + integrações de software, é viável.
 
-APENAS rejeite ideias que envolvem:
-- **Hardware físico**: Robôs, drones, dispositivos IoT complexos com sensores físicos
-- **Apps nativos mobile**: Projetos que EXIGEM funcionalidades nativas de iOS/Android (câmera em tempo real, GPS contínuo, hardware do celular)
-  - ⚠️ PORÉM: Apps mobile básicos via PWA (Progressive Web App) SÃO VIÁVEIS
-- **Sistemas embarcados**: Firmware, microcontroladores, sistemas operacionais
-- **Processamento extremo**: Edição de vídeo profissional em tempo real, rendering 3D pesado, machine learning treinamento de modelos grandes
-- **Blockchain/Crypto**: Mining, smart contracts complexos (consultas básicas de preços são OK)
-- **Jogos 3D complexos**: Engines de jogo pesadas (jogos 2D simples são OK)
-- **Projetos puramente offline**: Sistemas sem nenhuma interface web
+CRÍTICO: Retorne APENAS o objeto JSON puro, sem markdown, sem code blocks, sem explicações adicionais.
 
-## 🎯 DIRETRIZES DE VALIDAÇÃO
+Formato correto:
+{"viable": true, "reason": "Explicação de 2-3 frases", "confidence": "high"}
 
-1. **Seja GENEROSO**: Se há uma forma de implementar com IA/automação/web, é VIÁVEL
-2. **Pense em SOLUÇÕES**: "Como isso PODE ser feito?" antes de rejeitar
-3. **Considere INTEGRAÇÕES**: Muitas limitações são resolvidas conectando APIs
-4. **PWAs são válidos**: Apps web progressivos funcionam como mobile apps
-5. **IA resolve muito**: LLMs modernos podem processar texto, imagens, documentos, código
-6. **Automação é poderosa**: Quase qualquer fluxo repetitivo pode ser automatizado
-
-## 📋 EXEMPLOS DE IDEIAS VIÁVEIS
-
-✅ Sistema de atendimento com IA no WhatsApp
-✅ Dashboard para análise de vendas com gráficos
-✅ Automação de agendamento com Google Calendar
-✅ Extração de dados de notas fiscais (OCR)
-✅ Chatbot que consulta base de conhecimento
-✅ Sistema de gestão de leads integrado com CRM
-✅ Gerador de conteúdo para redes sociais
-✅ Análise de sentimento de reviews de clientes
-✅ Sistema de recomendação de produtos
-✅ Automação de envio de emails personalizados
-✅ Portal de cursos online com vídeos
-✅ Sistema de tickets e suporte
-✅ App de gestão financeira pessoal (web)
-✅ Marketplace simples com catálogo
-
-## 📋 FORMATO DE RESPOSTA
-
-Retorne APENAS um JSON válido:
-{
-  "viable": true,  // quase sempre true!
-  "reason": "Pode ser implementado com [tecnologia X] + [integração Y]",
-  "confidence": "high"
-}
-
-OU (raramente):
-{
-  "viable": false,
-  "reason": "Requer hardware físico / apps nativos complexos que não são suportados",
-  "confidence": "high"
-}
-
-**IMPORTANTE**: Seja técnico mas encorajador. Se é viável (99% dos casos), explique COMO pode ser feito.`;
+NÃO retorne com markdown:
+\`\`\`json
+{"viable": true, ...}
+\`\`\``;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando Lovable AI...');
 
@@ -184,11 +126,17 @@ OU (raramente):
 
     console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content);
 
-    // Extrair JSON da resposta
+    // Extrair JSON da resposta com parsing robusto
     let validationResult;
     try {
-      // Tentar encontrar JSON na resposta
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      // Remover markdown code blocks primeiro
+      let cleanContent = content.trim();
+      cleanContent = cleanContent.replace(/```json\s*/g, '');
+      cleanContent = cleanContent.replace(/```\s*/g, '');
+      cleanContent = cleanContent.trim();
+
+      // Extrair JSON do conteúdo limpo
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         validationResult = JSON.parse(jsonMatch[0]);
       } else {
@@ -196,16 +144,30 @@ OU (raramente):
       }
     } catch (parseError) {
       console.error('[VALIDATE-FEASIBILITY] ❌ Erro ao parsear JSON:', parseError);
-      // Fallback: tentar interpretar a resposta
-      const isPositive = content.toLowerCase().includes('viável') || 
-                        content.toLowerCase().includes('possível') ||
-                        content.toLowerCase().includes('viable');
       
-      validationResult = {
-        viable: isPositive,
-        reason: content.substring(0, 200),
-        confidence: 'medium'
-      };
+      // Fallback mais criterioso: verificar indicadores explícitos
+      const hasViableTrue = 
+        content.toLowerCase().includes('"viable": true') || 
+        content.toLowerCase().includes('"viable":true');
+      
+      const hasViableFalse = 
+        content.toLowerCase().includes('"viable": false') || 
+        content.toLowerCase().includes('"viable":false');
+
+      if (hasViableTrue && !hasViableFalse) {
+        validationResult = {
+          viable: true,
+          reason: content.substring(0, 200),
+          confidence: 'low'
+        };
+      } else {
+        // Por segurança, assumir não viável se não conseguimos confirmar
+        validationResult = {
+          viable: false,
+          reason: 'Não foi possível validar automaticamente. Por favor, reformule sua ideia de forma mais clara.',
+          confidence: 'low'
+        };
+      }
     }
 
     console.log('[VALIDATE-FEASIBILITY] ✅ Resultado:', validationResult);
