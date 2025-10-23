@@ -197,15 +197,16 @@ export function useSimplePresence() {
     return !!onlineUsers[userId];
   }, [onlineUsers]);
 
-  // Obter lista de usuários online
+  // Obter lista de usuários online (excluindo o próprio usuário)
   const getOnlineUsersList = useCallback(() => {
-    return Object.values(onlineUsers);
-  }, [onlineUsers]);
+    return Object.values(onlineUsers).filter(u => u.userId !== user?.id);
+  }, [onlineUsers, user?.id]);
 
-  // Obter contagem de usuários online
+  // Obter contagem de usuários online (excluindo o próprio usuário)
   const getOnlineCount = useCallback(() => {
-    return Object.keys(onlineUsers).length;
-  }, [onlineUsers]);
+    // Filtrar o próprio usuário
+    return Object.keys(onlineUsers).filter(userId => userId !== user?.id).length;
+  }, [onlineUsers, user?.id]);
 
   return {
     onlineUsers,
