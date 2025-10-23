@@ -29,6 +29,15 @@ interface AIArchitectureDecisionTreeProps {
 }
 
 export const AIArchitectureDecisionTree = ({ data }: AIArchitectureDecisionTreeProps) => {
+  // Validação de dados para evitar erro quando decision_nodes é undefined
+  if (!data || !data.decision_nodes || !Array.isArray(data.decision_nodes)) {
+    return (
+      <div className="text-center py-8 text-muted-foreground">
+        <p>Dados de arquitetura não disponíveis</p>
+      </div>
+    );
+  }
+
   const { decision_nodes, estimated_monthly_cost } = data;
 
   const getNodeIcon = (type: string) => {
