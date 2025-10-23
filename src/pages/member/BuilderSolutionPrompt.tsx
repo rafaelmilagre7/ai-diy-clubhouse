@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -8,7 +8,8 @@ import {
   CheckCircle2, 
   Download,
   ExternalLink,
-  Lightbulb
+  Lightbulb,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,18 +19,20 @@ import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import LoadingScreen from '@/components/common/LoadingScreen';
 
 export default function BuilderSolutionPrompt() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isCopied, setIsCopied] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
 
-  const { data: solution, isLoading } = useQuery({
+  const { data: solution, isLoading, refetch } = useQuery({
     queryKey: ['builder-solution-prompt', id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('ai_generated_solutions')
-        .select('id, title, lovable_prompt, original_idea')
+        .select('id, title, lovable_prompt, original_idea, user_id')
         .eq('id', id)
         .single();
 
@@ -37,6 +40,47 @@ export default function BuilderSolutionPrompt() {
       return data;
     },
   });
+
+  // Auto-geração se lovable_prompt não existir
+  useEffect(() => {
+    const generateIfNeeded = async () => {
+      if (!solution || solution.lovable_prompt || isGenerating) return;
+
+      console.log('[PROMPT] Lovable Prompt não existe, gerando automaticamente...');
+      setIsGenerating(true);
+
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-section-content', {
+          body: {
+            solutionId: solution.id,
+            sectionType: 'lovable',
+            userId: solution.user_id
+          }
+        });
+
+        if (error) throw error;
+
+        if (data?.success) {
+          console.log('[PROMPT] ✅ Lovable Prompt gerado!');
+          toast.success('Prompt Lovable gerado com sucesso! 🎉');
+          await refetch();
+        }
+      } catch (err: any) {
+        console.error('[PROMPT] Erro:', err);
+        toast.error('Erro ao gerar prompt', {
+          description: 'Tente recarregar a página.',
+          action: {
+            label: 'Voltar',
+            onClick: () => navigate(`/ferramentas/builder/solution/${id}`)
+          }
+        });
+      } finally {
+        setIsGenerating(false);
+      }
+    };
+
+    generateIfNeeded();
+  }, [solution, isGenerating]);
 
   const handleCopy = async () => {
     if (!solution?.lovable_prompt) return;
@@ -82,38 +126,17 @@ export default function BuilderSolutionPrompt() {
   };
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingScreen message="Carregando prompt..." />;
+  }
+
+  if (isGenerating || !solution?.lovable_prompt) {
+    return <LoadingScreen message="Gerando Prompt Lovable completo..." />;
   }
 
   if (!solution) {
     return (
       <div className="container mx-auto px-4 py-8">
         <p className="text-center text-muted-foreground">Solução não encontrada</p>
-      </div>
-    );
-  }
-
-  if (!solution.lovable_prompt) {
-    return (
-      <div className="container mx-auto px-4 py-8 space-y-4">
-        <Button
-          variant="ghost"
-          onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Voltar
-        </Button>
-        <LiquidGlassCard className="p-8 text-center">
-          <FileCode className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-          <h2 className="text-2xl font-bold mb-2">Prompt não disponível</h2>
-          <p className="text-muted-foreground">
-            Esta solução foi criada antes da implementação do Prompt Lovable.
-          </p>
-        </LiquidGlassCard>
       </div>
     );
   }
