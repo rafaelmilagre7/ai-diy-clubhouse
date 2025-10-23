@@ -172,7 +172,7 @@ RESULTADO: Cliente recebe mensagem instantânea
 - Lovable = app principal (frontend + backend)
 - Make/N8N = apenas automações externas
 - Seja específico em SQL, edge functions, componentes React
-- Workflows Make: apenas quando integrar com sistemas externos
+- Workflows Make: apenas quando integrar com sistemas externos`;
 
     const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
     
