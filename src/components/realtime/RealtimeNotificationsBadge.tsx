@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { useRealtimeNotifications } from '@/hooks/realtime/useRealtimeNotifications';
+import { useSimpleNotifications } from '@/hooks/realtime/useSimpleNotifications';
 
 interface RealtimeNotificationsBadgeProps {
   onClick?: () => void;
@@ -38,9 +38,10 @@ export function RealtimeNotificationsBadge({
   });
 
   // Conectar ao realtime para atualizar contagem automaticamente
-  const { isConnected } = useRealtimeNotifications({
+  const { isConnected } = useSimpleNotifications({
     enableSound: true,
     enableDesktopNotifications: true,
+    enableToast: true,
   });
 
   return (

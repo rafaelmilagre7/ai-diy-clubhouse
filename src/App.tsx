@@ -32,12 +32,6 @@ function App() {
           <AuthProvider>
             <SecurityProvider>
               {/* Realtime temporariamente desabilitado para diagnóstico */}
-              {/* <RealtimeProvider
-                enableNotifications={true}
-                enablePresence={true}
-                enableSound={true}
-                enableDesktopNotifications={true}
-              > */}
                 <LoggingProvider>
                   <BrowserRouter>
                     <div className="min-h-screen bg-background font-sans antialiased">
@@ -49,7 +43,7 @@ function App() {
                     </div>
                   </BrowserRouter>
                 </LoggingProvider>
-              {/* </RealtimeProvider> */}
+              
             </SecurityProvider>
           </AuthProvider>
         </TooltipProvider>
