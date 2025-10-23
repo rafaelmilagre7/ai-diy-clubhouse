@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Zap, Brain, CheckSquare, Network, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { AutomationJourneyFlow } from '@/components/builder/flows/AutomationJourneyFlow';
-import { AIArchitectureDecisionTree } from '@/components/builder/flows/AIArchitectureDecisionTree';
-import { DeployChecklistAccordion } from '@/components/builder/flows/DeployChecklistAccordion';
-import { APIIntegrationGraph } from '@/components/builder/flows/APIIntegrationGraph';
+import { FlowCard } from '@/components/builder/flows/FlowCard';
 import { toast } from 'sonner';
 
 export default function BuilderImplementationGuide() {
@@ -18,9 +14,8 @@ export default function BuilderImplementationGuide() {
   const navigate = useNavigate();
   
   const [solutionData, setSolutionData] = useState<any>(null);
-  const [generatingFlows, setGeneratingFlows] = useState<Set<string>>(new Set());
-  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState<Set<string>>(new Set());
-  const [activeTab, setActiveTab] = useState('automation');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [hasAttemptedGeneration, setHasAttemptedGeneration] = useState(false);
 
   const { data: solution, isLoading, isError, error } = useQuery({
     queryKey: ['builder-solution-implementation', id],
@@ -51,116 +46,64 @@ export default function BuilderImplementationGuide() {
     }
   }, [solution]);
 
-  // Função para gerar fluxo sob demanda com timeout e retry
-  const generateFlowIfNeeded = async (flowType: string) => {
-    const fieldMapping: Record<string, string> = {
-      'automation': 'automation_journey_flow',
-      'ai_arch': 'ai_architecture_tree',
-      'checklist': 'deploy_checklist_structured',
-      'api_map': 'api_integration_map'
-    };
-
-    const flowLabels: Record<string, string> = {
-      'automation': 'Jornada de Automação',
-      'ai_arch': 'Arquitetura IA',
-      'checklist': 'Checklist Deploy',
-      'api_map': 'Mapa de APIs'
-    };
-
-    const field = fieldMapping[flowType];
-    
-    // Se já tem conteúdo OU já tentou gerar, não faz nada
-    if (!solutionData || solutionData[field] || hasAttemptedGeneration.has(flowType) || generatingFlows.has(flowType)) {
+  // Função para gerar todos os fluxos de uma vez
+  const generateFlows = async () => {
+    if (!solutionData || solutionData.implementation_flows || hasAttemptedGeneration || isGenerating) {
       return;
     }
 
-    console.log(`🔍 [DEBUG-IMPL] Gerando flow: ${flowType}`);
-
-    // Marcar como "tentando gerar"
-    setHasAttemptedGeneration(prev => new Set([...prev, flowType]));
-    setGeneratingFlows(prev => new Set([...prev, flowType]));
-
-    const flowTypeMapping: Record<string, string> = {
-      'automation': 'automation_journey',
-      'ai_arch': 'ai_architecture',
-      'checklist': 'deploy_checklist',
-      'api_map': 'api_integration'
-    };
+    console.log('🔍 [DEBUG-IMPL] Gerando fluxos de implementação');
+    setHasAttemptedGeneration(true);
+    setIsGenerating(true);
 
     try {
-      // ✅ FASE 3: Adicionar timeout de 40 segundos
-      const invokePromise = supabase.functions.invoke('generate-implementation-flows', {
+      const { data, error } = await supabase.functions.invoke('generate-section-content', {
         body: {
           solutionId: solutionData.id,
-          flowType: flowTypeMapping[flowType],
+          sectionType: 'architecture',
           userId: solutionData.user_id
         }
       });
 
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Timeout após 40s')), 40000)
-      );
-
-      const { data, error } = await Promise.race([
-        invokePromise,
-        timeoutPromise
-      ]) as any;
-
       if (error) throw error;
 
       if (data?.success) {
-        console.log(`✅ [DEBUG-IMPL] Flow ${flowType} gerado com sucesso`);
+        console.log('✅ [DEBUG-IMPL] Fluxos gerados com sucesso');
         setSolutionData((prev: any) => ({
           ...prev,
-          [field]: data.content
+          implementation_flows: data.content
         }));
-        toast.success(`Fluxo "${flowLabels[flowType]}" gerado! 🎉`);
+        toast.success('Guia de implementação gerado! 🎉');
       } else {
         throw new Error('Resposta sem sucesso');
       }
     } catch (err: any) {
-      console.error(`❌ [DEBUG-IMPL] Erro ao gerar ${flowType}:`, err);
+      console.error('❌ [DEBUG-IMPL] Erro ao gerar fluxos:', err);
       
-      // ✅ FASE 3: Mensagem de erro amigável com retry
-      toast.error('Erro ao gerar fluxo', {
-        description: err.message?.includes('Timeout') 
-          ? 'A geração está demorando mais que o esperado. Tente novamente.'
-          : 'Ocorreu um erro. Tente novamente em instantes.',
+      toast.error('Erro ao gerar guia', {
+        description: 'Ocorreu um erro. Tente novamente em instantes.',
         action: {
           label: 'Tentar novamente',
           onClick: () => {
-            setHasAttemptedGeneration(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(flowType);
-              return newSet;
-            });
-            generateFlowIfNeeded(flowType);
+            setHasAttemptedGeneration(false);
+            generateFlows();
           }
         },
         duration: 10000
       });
       
-      // Remover da lista de tentativas para permitir retry manual
-      setHasAttemptedGeneration(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(flowType);
-        return newSet;
-      });
+      setHasAttemptedGeneration(false);
     } finally {
-      setGeneratingFlows(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(flowType);
-        return newSet;
-      });
+      setIsGenerating(false);
     }
   };
 
-  // Gerar automaticamente ao trocar de aba
+  // Gerar automaticamente ao carregar
   useEffect(() => {
-    if (activeTab && solutionData) {
-      generateFlowIfNeeded(activeTab);
+    if (solutionData && !solutionData.implementation_flows && !hasAttemptedGeneration) {
+      generateFlows();
     }
-  }, [activeTab, solutionData]);
+  }, [solutionData]);
 
   // ✅ FASE 2: Renderização explícita de erro
   if (isError) {
@@ -194,38 +137,10 @@ export default function BuilderImplementationGuide() {
     );
   }
 
-  const renderFlowContent = (flowType: string, field: string, Component: any) => {
-    const isGenerating = generatingFlows.has(flowType);
-    const flowData = solutionData[field];
-
-    if (isGenerating) {
-      return (
-        <div className="text-center py-16 space-y-4">
-          <Loader2 className="h-16 w-16 mx-auto animate-spin text-primary" />
-          <div className="space-y-2">
-            <p className="font-semibold text-xl">Gerando fluxo...</p>
-            <p className="text-muted-foreground">Isso pode levar até 30 segundos</p>
-          </div>
-        </div>
-      );
-    }
-
-    if (!flowData) {
-      return (
-        <div className="text-center py-16 space-y-4">
-          <div className="space-y-2">
-            <p className="font-semibold text-xl">Fluxo não disponível</p>
-            <p className="text-muted-foreground">Este fluxo ainda não foi gerado para esta solução</p>
-          </div>
-          <Button onClick={() => generateFlowIfNeeded(flowType)}>
-            Gerar agora
-          </Button>
-        </div>
-      );
-    }
-
-    return <Component data={flowData} solutionId={solutionData.id} />;
-  };
+  // Extrair os fluxos da solução
+  const flows = solutionData?.implementation_flows?.flows || [];
+  const prerequisites = solutionData?.implementation_flows?.prerequisites || '';
+  const totalTime = solutionData?.implementation_flows?.total_estimated_time || '';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
@@ -250,52 +165,48 @@ export default function BuilderImplementationGuide() {
                 Guia de Implementação Prática
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Fluxos acionáveis e práticos para implementar sua solução no-code com IA
+                Fluxos visuais detalhados para implementar sua solução passo a passo
               </p>
+              
+              {totalTime && (
+                <div className="mt-4 text-sm text-muted-foreground">
+                  <strong>Tempo total estimado:</strong> {totalTime}
+                </div>
+              )}
+              
+              {prerequisites && (
+                <div className="mt-2 p-4 bg-primary/5 rounded-lg border border-primary/10">
+                  <strong className="text-sm">Pré-requisitos:</strong>
+                  <p className="text-sm text-muted-foreground mt-1">{prerequisites}</p>
+                </div>
+              )}
             </div>
 
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-2 lg:grid-cols-4 w-full">
-                <TabsTrigger value="automation" className="flex items-center gap-2">
-                  <Zap className="h-4 w-4" />
-                  <span className="hidden sm:inline">Jornada de Automação</span>
-                  <span className="sm:hidden">Automação</span>
-                </TabsTrigger>
-                <TabsTrigger value="ai_arch" className="flex items-center gap-2">
-                  <Brain className="h-4 w-4" />
-                  <span className="hidden sm:inline">Arquitetura IA</span>
-                  <span className="sm:hidden">IA</span>
-                </TabsTrigger>
-                <TabsTrigger value="checklist" className="flex items-center gap-2">
-                  <CheckSquare className="h-4 w-4" />
-                  <span className="hidden sm:inline">Checklist Deploy</span>
-                  <span className="sm:hidden">Deploy</span>
-                </TabsTrigger>
-                <TabsTrigger value="api_map" className="flex items-center gap-2">
-                  <Network className="h-4 w-4" />
-                  <span className="hidden sm:inline">Mapa de APIs</span>
-                  <span className="sm:hidden">APIs</span>
-                </TabsTrigger>
-              </TabsList>
-
-              <div className="mt-6">
-                <TabsContent value="automation">
-                  {renderFlowContent('automation', 'automation_journey_flow', AutomationJourneyFlow)}
-                </TabsContent>
-
-                <TabsContent value="ai_arch">
-                  {renderFlowContent('ai_arch', 'ai_architecture_tree', AIArchitectureDecisionTree)}
-                </TabsContent>
-
-                <TabsContent value="checklist">
-                  {renderFlowContent('checklist', 'deploy_checklist_structured', DeployChecklistAccordion)}
-                </TabsContent>
-
-                <TabsContent value="api_map">
-                  {renderFlowContent('api_map', 'api_integration_map', APIIntegrationGraph)}
-                </TabsContent>
+            {isGenerating ? (
+              <div className="text-center py-16 space-y-4">
+                <Loader2 className="h-16 w-16 mx-auto animate-spin text-primary" />
+                <div className="space-y-2">
+                  <p className="font-semibold text-xl">Gerando guia de implementação...</p>
+                  <p className="text-muted-foreground">Isso pode levar até 30 segundos</p>
+                </div>
               </div>
-            </Tabs>
+            ) : flows.length === 0 ? (
+              <div className="text-center py-16 space-y-4">
+                <div className="space-y-2">
+                  <p className="font-semibold text-xl">Guia não disponível</p>
+                  <p className="text-muted-foreground">O guia de implementação ainda não foi gerado</p>
+                </div>
+                <Button onClick={generateFlows}>
+                  Gerar agora
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {flows.map((flow: any, index: number) => (
+                  <FlowCard key={flow.id || index} flow={flow} />
+                ))}
+              </div>
+            )}
           </LiquidGlassCard>
         </motion.div>
       </div>

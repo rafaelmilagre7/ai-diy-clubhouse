@@ -48,7 +48,7 @@ serve(async (req) => {
       framework: ["framework_mapping", "mind_map"],
       tools: ["required_tools"],
       checklist: ["implementation_checklist"],
-      architecture: ["automation_journey_flow", "ai_architecture_tree", "deploy_checklist_structured", "api_integration_map"],
+      architecture: ["implementation_flows"],
       lovable: ["lovable_prompt"]
     };
 
@@ -170,57 +170,70 @@ Retorne APENAS um array JSON:
   ]
 }`,
       
-      architecture: `Analise esta solução e gere os 4 fluxos práticos de implementação no formato JSON:
+      architecture: `Analise esta solução e gere 1-3 fluxos visuais de implementação usando CÓDIGO MERMAID.
 
 IDEIA: "${solution.original_idea}"
 TÍTULO: "${solution.title}"
 DESCRIÇÃO: "${solution.short_description}"
 
-Retorne APENAS um objeto JSON puro:
+INSTRUÇÕES:
+- Gere entre 1 a 3 fluxos dependendo da complexidade da solução
+- Use diferentes tipos de diagramas Mermaid (flowchart, sequence, journey, stateDiagram)
+- Cada fluxo deve ter MÁXIMO 15-20 nós/etapas para manter legibilidade
+- Use português brasileiro nos labels
+- Seja específico e prático, não genérico
+
+TIPOS DE DIAGRAMAS SUGERIDOS:
+1. **Fluxo de Implementação Principal** (graph TD)
+   - Etapas principais do início ao deploy
+   - Decisões críticas
+   - Integrações necessárias
+
+2. **Fluxo de Dados/APIs** (sequenceDiagram ou graph LR)
+   - Como dados fluem entre sistemas
+   - Integrações de APIs
+   - Automações
+
+3. **Jornada do Usuário** (journey)
+   - Como usuário interage com a solução
+   - Pontos de contato
+   - Experiência fim-a-fim
+
+EXEMPLO DE FORMATO:
 {
-  "automation_journey_flow": {
-    "title": "Jornada de Automação",
-    "steps": [
+  "implementation_flows": {
+    "flows": [
       {
-        "phase": "Trigger",
-        "description": "...",
-        "tools": ["..."],
-        "estimated_time": "..."
-      }
-    ]
-  },
-  "ai_architecture_tree": {
-    "title": "Árvore de Decisão IA",
-    "nodes": [
+        "id": "main_implementation",
+        "title": "Fluxo Principal de Implementação",
+        "description": "Passo a passo completo desde configuração até deploy",
+        "mermaid_code": "graph TD\\n    Start[Início] --> Config[Configurar Ambiente]\\n    Config --> DB[Setup Database]\\n    DB --> API[Integrar APIs]\\n    API --> Test[Testar]\\n    Test --> Deploy[Deploy]",
+        "estimated_time": "8-12 horas",
+        "complexity": "medium"
+      },
       {
-        "id": "input",
-        "label": "...",
-        "type": "input/decision/action",
-        "children": ["..."]
+        "id": "data_flow",
+        "title": "Fluxo de Dados e Integrações",
+        "description": "Como os dados circulam entre os sistemas",
+        "mermaid_code": "sequenceDiagram\\n    User->>App: Envia dados\\n    App->>API: Processa\\n    API->>DB: Armazena\\n    DB-->>User: Resposta",
+        "estimated_time": "3-5 horas",
+        "complexity": "low"
       }
-    ]
-  },
-  "deploy_checklist_structured": {
-    "title": "Checklist de Deploy",
-    "categories": [
-      {
-        "name": "Infraestrutura",
-        "items": ["...", "..."]
-      }
-    ]
-  },
-  "api_integration_map": {
-    "title": "Mapa de Integrações",
-    "integrations": [
-      {
-        "name": "...",
-        "type": "REST/GraphQL/Webhook",
-        "endpoints": ["..."],
-        "auth": "..."
-      }
-    ]
+    ],
+    "total_estimated_time": "11-17 horas",
+    "prerequisites": "Conta no Make/Zapier, conhecimento básico de APIs, acesso ao Airtable/Notion"
   }
-}`,
+}
+
+REGRAS DO CÓDIGO MERMAID:
+- Use \\n para quebras de linha
+- IDs sem espaços (use underscores)
+- Labels entre colchetes []
+- Para flowchart: use --> para conexões
+- Para sequence: use ->> para mensagens
+- Mantenha SIMPLES e LEGÍVEL
+
+Retorne APENAS o JSON acima.`,
       
       lovable: `Gere um prompt Lovable completo e profissional para esta solução:
 
@@ -293,10 +306,7 @@ Retorne APENAS um objeto JSON:
     } else if (sectionType === "checklist") {
       updateData.implementation_checklist = parsedContent.implementation_checklist;
     } else if (sectionType === "architecture") {
-      updateData.automation_journey_flow = parsedContent.automation_journey_flow;
-      updateData.ai_architecture_tree = parsedContent.ai_architecture_tree;
-      updateData.deploy_checklist_structured = parsedContent.deploy_checklist_structured;
-      updateData.api_integration_map = parsedContent.api_integration_map;
+      updateData.implementation_flows = parsedContent.implementation_flows;
     } else if (sectionType === "lovable") {
       updateData.lovable_prompt = parsedContent.lovable_prompt;
     }
