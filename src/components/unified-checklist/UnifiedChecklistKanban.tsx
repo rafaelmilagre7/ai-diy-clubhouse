@@ -101,66 +101,46 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     const sourceColumn = source.droppableId as ColumnType;
     const destColumn = destination.droppableId as ColumnType;
 
-    // Encontrar o item que foi movido
-    const sourceItems = itemsByColumn[sourceColumn];
-    const movedItem = sourceItems[source.index];
+    // Clonar os arrays de cada coluna
+    const newItemsByColumn = {
+      todo: [...itemsByColumn.todo],
+      in_progress: [...itemsByColumn.in_progress],
+      done: [...itemsByColumn.done]
+    };
 
-    // Criar lista completa atualizada
-    const updatedItems = normalizedItems.map(item => {
-      // O item que foi movido
-      if (item.id === movedItem.id) {
-        return {
+    // Remover o item da coluna de origem
+    const [movedItem] = newItemsByColumn[sourceColumn].splice(source.index, 1);
+
+    // Atualizar o item movido com nova coluna e status
+    const updatedMovedItem = {
+      ...movedItem,
+      column: destColumn,
+      completed: destColumn === 'done',
+      completedAt: destColumn === 'done' ? new Date().toISOString() : movedItem.completedAt
+    };
+
+    // Inserir o item na coluna de destino
+    newItemsByColumn[destColumn].splice(destination.index, 0, updatedMovedItem);
+
+    // Recalcular orders sequenciais para todas as colunas
+    const finalItems: UnifiedChecklistItem[] = [];
+    
+    (Object.keys(newItemsByColumn) as ColumnType[]).forEach(columnKey => {
+      newItemsByColumn[columnKey].forEach((item, index) => {
+        finalItems.push({
           ...item,
-          column: destColumn,
-          completed: destColumn === 'done',
-          order: destination.index,
-          completedAt: destColumn === 'done' ? new Date().toISOString() : undefined
-        };
-      }
-      
-      // Itens que ficaram na coluna de origem (após remoção)
-      if (item.column === sourceColumn && sourceColumn !== destColumn) {
-        const itemIndexInSource = sourceItems.findIndex(i => i.id === item.id);
-        if (itemIndexInSource > source.index) {
-          return { ...item, order: itemIndexInSource - 1 };
-        }
-      }
-      
-      // Itens na coluna de destino (após inserção)
-      if (item.column === destColumn && item.id !== movedItem.id) {
-        const destItems = itemsByColumn[destColumn];
-        const itemIndexInDest = destItems.findIndex(i => i.id === item.id);
-        
-        if (sourceColumn === destColumn) {
-          // Mover dentro da mesma coluna
-          if (source.index < destination.index) {
-            // Movendo para baixo
-            if (itemIndexInDest > source.index && itemIndexInDest <= destination.index) {
-              return { ...item, order: itemIndexInDest - 1 };
-            }
-          } else {
-            // Movendo para cima
-            if (itemIndexInDest >= destination.index && itemIndexInDest < source.index) {
-              return { ...item, order: itemIndexInDest + 1 };
-            }
-          }
-        } else {
-          // Mover entre colunas diferentes
-          if (itemIndexInDest >= destination.index) {
-            return { ...item, order: itemIndexInDest + 1 };
-          }
-        }
-      }
-      
-      return item;
+          order: index,
+          column: columnKey
+        });
+      });
     });
 
-    // Salvar no banco
+    // Salvar no banco de dados
     updateMutation.mutate({
       checklistData: {
         ...checklistData,
         checklist_data: {
-          items: updatedItems,
+          items: finalItems,
           lastUpdated: new Date().toISOString()
         }
       },
