@@ -132,6 +132,7 @@ export type Database = {
           prompt_tokens: number | null
           required_tools: Json | null
           short_description: string | null
+          tags: string[] | null
           technical_stack_diagram: Json | null
           title: string | null
           updated_at: string | null
@@ -159,6 +160,7 @@ export type Database = {
           prompt_tokens?: number | null
           required_tools?: Json | null
           short_description?: string | null
+          tags?: string[] | null
           technical_stack_diagram?: Json | null
           title?: string | null
           updated_at?: string | null
@@ -186,6 +188,7 @@ export type Database = {
           prompt_tokens?: number | null
           required_tools?: Json | null
           short_description?: string | null
+          tags?: string[] | null
           technical_stack_diagram?: Json | null
           title?: string | null
           updated_at?: string | null

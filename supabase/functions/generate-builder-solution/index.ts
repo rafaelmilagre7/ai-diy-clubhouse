@@ -935,8 +935,28 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     savedSolution = insertedSolution;
 
     if (saveError) {
-      console.error("[BUILDER] ❌ Erro ao salvar:", saveError);
-      throw new Error("Erro ao salvar solução");
+      console.error("[BUILDER] ❌ Erro ao salvar solução no banco:");
+      console.error("[BUILDER] 📋 Detalhes do erro:", JSON.stringify(saveError, null, 2));
+      console.error("[BUILDER] 📊 Dados tentados:", {
+        user_id: userId,
+        title: solutionData.title,
+        hasFramework: !!solutionData.framework_quadrants,
+        hasMindMap: !!solutionData.mind_map,
+        hasTools: !!solutionData.required_tools
+      });
+      
+      return new Response(
+        JSON.stringify({ 
+          error: "Falha ao salvar solução no banco de dados",
+          code: "SAVE_ERROR",
+          details: saveError.message || "Erro desconhecido",
+          suggestion: "Verifique se todas as colunas necessárias existem na tabela"
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, "Content-Type": "application/json" } 
+        }
+      );
     }
 
     // Incrementar contador
