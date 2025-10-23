@@ -113,10 +113,18 @@ export const useBuilderAI = () => {
         return null;
       }
 
-      // Se title está undefined, avisar mas continuar
-      if (!data.solution.title || data.solution.title === 'undefined') {
-        toast.warning('Solução gerada com alguns campos incompletos', {
-          description: 'Você pode editar o título manualmente'
+      // Validar qualidade do título
+      const titleString = data.solution.title ? String(data.solution.title).trim() : '';
+      const titleHasIssues = 
+        !titleString || 
+        titleString === 'undefined' || 
+        titleString.length < 10 ||
+        /^[A-Z][a-z]*(\s[A-Z][a-z]*){0,2}\.$/.test(titleString);
+      
+      if (titleHasIssues) {
+        console.warn('[BUILDER-HOOK] ⚠️ Título com problema:', titleString);
+        toast.warning('Solução gerada mas o título pode estar incompleto', {
+          description: 'Você pode editar manualmente na página da solução'
         });
       }
 

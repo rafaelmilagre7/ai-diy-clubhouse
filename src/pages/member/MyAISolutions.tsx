@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAISolutionHistory } from '@/hooks/builder/useAISolutionHistory';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { Button } from '@/components/ui/button';
@@ -18,11 +18,24 @@ import {
 import { motion } from 'framer-motion';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { autoRecoverOnLoad } from '@/utils/recoverBrokenTitles';
+import { supabase } from '@/lib/supabase';
 
 const MyAISolutions = () => {
   const { solutions, isLoading } = useAISolutionHistory();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'not_started' | 'in_progress' | 'completed'>('all');
+
+  // Auto-recuperação de títulos quebrados ao carregar
+  useEffect(() => {
+    const runAutoRecovery = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        await autoRecoverOnLoad(user.id);
+      }
+    };
+    runAutoRecovery();
+  }, []);
 
   const filteredSolutions = solutions.filter(solution => {
     const matchesSearch = solution.original_idea.toLowerCase().includes(searchQuery.toLowerCase()) ||
