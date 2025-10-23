@@ -378,22 +378,30 @@ ${toolsContext}
 ${contextFromAnswers}
 
 ⚠️ INSTRUÇÕES CRÍTICAS PARA O TÍTULO (OBRIGATÓRIO):
-- VOCÊ DEVE gerar um título ULTRA compacto (máximo 40 caracteres)
-- Formato: [Verbo] + [Tech/Área]. Exemplos: "Chatbot WhatsApp IA", "CRM Automático Leads", "Dashboard Analytics"
-- Use a principal tecnologia ou benefício no título
-- Evite termos genéricos como "Solução Builder"
+- Analise a DOR CENTRAL e o OBJETIVO do usuário
+- Crie um título ESPECÍFICO que mencione a principal tecnologia/benefício
+- Máximo 50 caracteres, mínimo 15 caracteres
+- FORMATO: [Ação/Resultado] + [Como/Com que] 
+- Use palavras da IDEIA ORIGINAL do usuário quando possível
 
-EXEMPLOS DE TÍTULOS BONS:
-✅ "Plataforma de Resumos Bíblicos com IA"
-✅ "Chatbot WhatsApp + CRM Automático"
-✅ "Sistema de Qualificação de Leads com GPT-4"
+EXEMPLOS DE TÍTULOS EXCELENTES:
+✅ "Resumos Bíblicos com IA para Pregadores" (baseado em: quero criar resumos de trechos bíblicos)
+✅ "Qualificação de Leads via WhatsApp + GPT" (baseado em: automatizar qualificação no whatsapp)
+✅ "Dashboard Analytics para E-commerce" (baseado em: dashboard para acompanhar vendas)
+✅ "Chatbot Atendimento 24h com IA" (baseado em: atendimento automático)
+✅ "CRM Automático com Integração Make" (baseado em: crm que se atualiza sozinho)
 
-EXEMPLOS DE TÍTULOS RUINS:
-❌ "Solução de IA"
-❌ "Projeto Builder"
+EXEMPLOS DE TÍTULOS RUINS (NÃO FAZER):
+❌ "Solução de IA" (genérico demais)
+❌ "Projeto Builder" (sem contexto)
+❌ "Sistema Inteligente" (vago)
 ❌ "" (vazio)
 
-🔴 O TÍTULO É OBRIGATÓRIO. Não deixe em branco ou undefined.
+🔴 REGRAS:
+1. SEMPRE extraia palavras-chave da ideia original
+2. Seja ESPECÍFICO sobre o que a solução FAZ
+3. Mencione a TECNOLOGIA principal se relevante (IA, WhatsApp, CRM, etc)
+4. O título deve fazer sentido SEM ler a descrição
 
 Crie um plano completo seguindo o formato JSON especificado.`;
 
@@ -413,7 +421,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         parameters: {
           type: "object",
           properties: {
-            title: { type: "string", description: "Título criativo e técnico da solução (máx 60 caracteres, específico e claro)" },
+            title: { type: "string", description: "Título ESPECÍFICO extraído da ideia original, mencionando tecnologia/benefício principal (15-50 chars)" },
             short_description: { type: "string", description: "Descrição em 3-5 frases" },
             technical_overview: {
               type: "object",
@@ -547,7 +555,9 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       }
     };
 
-    // Call Lovable AI (Gemini 2.5 Flash com JSON mode)
+    // Call Lovable AI com modo QUICK (apenas essencial)
+    const isQuickMode = true; // Primeira geração é sempre rápida
+    
     const aiResponse = await fetch(lovableAIUrl, {
       method: "POST",
       headers: {
@@ -557,14 +567,14 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: systemPrompt + '\n\nIMPORTANTE: Sua resposta DEVE ser um JSON válido e completo seguindo exatamente o schema fornecido. Não deixe campos vazios ou incompletos.' },
+          { role: "system", content: systemPrompt + '\n\n🚀 MODO RÁPIDO ATIVADO: Gere APENAS title, short_description e framework_quadrants. Ignore diagramas, ferramentas e checklist por enquanto. Foque em qualidade e contexto nesses 3 campos essenciais.' },
           { role: "user", content: userPrompt },
         ],
         temperature: 0.7,
-        max_tokens: 128000,
+        max_tokens: 32000, // Reduzido para geração rápida
         response_format: { type: 'json_object' }
       }),
-      signal: AbortSignal.timeout(180000),
+      signal: AbortSignal.timeout(90000), // 90s para geração rápida
     });
 
     if (!aiResponse.ok) {
@@ -814,7 +824,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       console.log('[BUILDER] ✓ Lovable já está na lista de ferramentas');
     }
 
-    // Salvar no banco (sem lovable_prompt ainda)
+    // Salvar no banco (MODO RÁPIDO - apenas essencial)
     const generationTime = Date.now() - startTime;
 
     const { data: insertedSolution, error: saveError } = await supabase
@@ -824,16 +834,17 @@ Crie um plano completo seguindo o formato JSON especificado.`;
         original_idea: idea,
         title: solutionData.title,
         short_description: solutionData.short_description,
-        mind_map: solutionData.mind_map,
-        required_tools: solutionData.required_tools,
         framework_mapping: solutionData.framework_quadrants,
-        implementation_checklist: solutionData.implementation_checklist,
-        architecture_flowchart: solutionData.architecture_flowchart || null,
-        data_flow_diagram: solutionData.data_flow_diagram || null,
-        user_journey_map: solutionData.user_journey_map || null,
-        technical_stack_diagram: solutionData.technical_stack_diagram || null,
+        mind_map: null, // Será completado depois
+        required_tools: null, // Será completado depois
+        implementation_checklist: null, // Será completado depois
+        architecture_flowchart: null, // Será completado depois
+        data_flow_diagram: null, // Será completado depois
+        user_journey_map: null, // Será completado depois
+        technical_stack_diagram: null, // Será completado depois
         generation_model: "google/gemini-2.5-flash",
         generation_time_ms: generationTime,
+        is_complete: false, // Flag para indicar que precisa ser completado
       })
     .select()
     .single();
@@ -842,26 +853,29 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     savedSolution = insertedSolution;
 
     if (saveError) {
-    console.error("[BUILDER] ❌ Erro ao salvar:", saveError);
-    throw new Error("Erro ao salvar solução");
-  }
-
-      // VALIDAR se architecture_flowchart foi gerado
-      if (!savedSolution.architecture_flowchart || !savedSolution.architecture_flowchart.mermaid_code) {
-        console.warn("[BUILDER] ⚠️ WARNING: architecture_flowchart não foi gerado pela IA!");
-      } else {
-        console.log("[BUILDER] ✅ architecture_flowchart gerado com sucesso");
-      }
+      console.error("[BUILDER] ❌ Erro ao salvar:", saveError);
+      throw new Error("Erro ao salvar solução");
+    }
 
     // Incrementar contador
     await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });
 
-    console.log(`[BUILDER] ✅ === GERAÇÃO CONCLUÍDA ===`);
+    console.log(`[BUILDER] ✅ === GERAÇÃO RÁPIDA CONCLUÍDA ===`);
     console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
     console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
+    console.log(`[BUILDER] 🚀 Modo rápido ativado - detalhes serão completados on-demand`);
 
-    // ============= FASE 4: GERAR PROMPT LOVABLE COM LOVABLE AI (GEMINI 2.5 PRO) =============
-    console.log(`[BUILDER][${requestId}] 🎨 === INICIANDO GERAÇÃO DE PROMPT LOVABLE ===`);
+    // Retornar imediatamente sem gerar prompt Lovable
+    return new Response(
+      JSON.stringify({
+        success: true,
+        solution: savedSolution,
+        generation_time_ms: generationTime,
+        tokens_used: aiData.usage?.total_tokens,
+        is_complete: false, // Indica que precisa ser completado
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
     
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {

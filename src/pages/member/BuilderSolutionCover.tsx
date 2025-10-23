@@ -23,6 +23,34 @@ export default function BuilderSolutionCover() {
         .single();
 
       if (error) throw error;
+
+      // Se a solução não está completa, completar automaticamente
+      if (!data.is_complete) {
+        console.log('[BUILDER-COVER] 🔄 Solução incompleta, completando detalhes...');
+        
+        try {
+          const { data: completionData, error: completionError } = await supabase.functions.invoke(
+            'complete-builder-solution',
+            { body: { solutionId: id } }
+          );
+
+          if (completionError) {
+            console.error('[BUILDER-COVER] ❌ Erro ao completar:', completionError);
+            toast.error('Erro ao carregar detalhes completos');
+            return data; // Retorna parcial mesmo assim
+          }
+
+          if (completionData?.solution) {
+            toast.success('Detalhes carregados com sucesso!');
+            return completionData.solution;
+          }
+        } catch (err) {
+          console.error('[BUILDER-COVER] ❌ Erro ao completar:', err);
+          toast.error('Erro ao carregar detalhes');
+          return data; // Retorna parcial
+        }
+      }
+
       return data;
     },
   });

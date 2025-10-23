@@ -2,14 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LOADING_MESSAGES = [
-  "Extraindo conhecimento do cérebro do Rafael...",
-  "Analisando padrões de automação com IA...",
-  "Consultando milhares de soluções implementadas...",
-  "Mapeando ferramentas e integrações ideais...",
-  "Criando seu plano personalizado de implementação...",
-  "Conectando os pontos entre IA e seu negócio...",
-  "Estruturando fluxos de trabalho automatizados...",
-  "Otimizando a arquitetura da sua solução..."
+  "🧠 Hackeando o cérebro do Rafael Milagre...",
+  "⚡ Turbinando a IA com café e automação...",
+  "🔥 Vasculhando 10.000 soluções já implementadas...",
+  "🚀 Misturando Claude, GPT e um toque de magia...",
+  "🎯 Conectando ferramentas como nunca antes...",
+  "💎 Lapidando sua ideia até brilhar...",
+  "🤯 Processando mais rápido que você pisca...",
+  "🎪 Fazendo malabarismo com APIs e integrações...",
+  "🧙‍♂️ Invocando o poder da inteligência conectiva...",
+  "🌪️ Criando um furacão de produtividade...",
+  "🎨 Desenhando sua arquitetura com pixels de luz...",
+  "🔮 Prevendo problemas antes de existirem...",
+  "⚙️ Calibrando engrenagens de automação...",
+  "🌟 Transformando complexidade em simplicidade...",
+  "💥 Detonando limites do impossível...",
+  "🎭 Orquestrando uma sinfonia de dados...",
+  "🏗️ Construindo pontes entre IA e realidade...",
+  "🔬 Destilando essência pura de inovação...",
+  "🎯 Acertando no alvo da sua necessidade...",
+  "🌈 Pintando o futuro do seu negócio..."
 ];
 
 export const BuilderProcessingExperience = () => {
@@ -64,12 +76,12 @@ export const BuilderProcessingExperience = () => {
           className="absolute inset-6 rounded-full border-4 border-aurora-primary/10 border-b-aurora-primary/50"
         />
         
-        {/* Logo central fixo */}
+        {/* Logo central fixo - MUITO MAIOR */}
         <div className="absolute inset-0 flex items-center justify-center">
           <img 
             src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png" 
             alt="Viver de IA" 
-            className="h-20 w-20 object-contain"
+            className="h-32 w-32 object-contain"
           />
         </div>
       </motion.div>

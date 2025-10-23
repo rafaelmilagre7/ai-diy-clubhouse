@@ -123,6 +123,7 @@ export type Database = {
           id: string
           implementation_checklist: Json | null
           implementation_status: string | null
+          is_complete: boolean | null
           is_favorited: boolean | null
           last_accessed_at: string | null
           lovable_prompt: string | null
@@ -149,6 +150,7 @@ export type Database = {
           id?: string
           implementation_checklist?: Json | null
           implementation_status?: string | null
+          is_complete?: boolean | null
           is_favorited?: boolean | null
           last_accessed_at?: string | null
           lovable_prompt?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           id?: string
           implementation_checklist?: Json | null
           implementation_status?: string | null
+          is_complete?: boolean | null
           is_favorited?: boolean | null
           last_accessed_at?: string | null
           lovable_prompt?: string | null

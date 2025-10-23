@@ -256,6 +256,9 @@ verify_jwt = false
 [functions.generate-builder-solution]
 verify_jwt = false
 
+[functions.complete-builder-solution]
+verify_jwt = false
+
 [functions.generate-ai-solution]
 verify_jwt = false
 
