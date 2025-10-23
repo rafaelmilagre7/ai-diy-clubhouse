@@ -33,7 +33,7 @@ import SolutionHistory from '@/pages/member/SolutionHistory';
 import BuilderSolutionCover from '@/pages/member/BuilderSolutionCover';
 import BuilderSolutionResult from '@/pages/member/BuilderSolutionResult';
 import BuilderSolutionFramework from '@/pages/member/BuilderSolutionFramework';
-import BuilderSolutionArchitecture from '@/pages/member/BuilderSolutionArchitecture';
+import BuilderImplementationGuide from '@/pages/member/BuilderImplementationGuide';
 import BuilderSolutionTools from '@/pages/member/BuilderSolutionTools';
 import BuilderSolutionChecklist from '@/pages/member/BuilderSolutionChecklist';
 import BuilderSolutionPrompt from '@/pages/member/BuilderSolutionPrompt';
@@ -88,7 +88,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/ferramentas/builder/resultado/:id", BuilderSolutionResult),
   createProtectedRoute("/ferramentas/builder/solution/:id", BuilderSolutionCover),
   createProtectedRoute("/ferramentas/builder/solution/:id/framework", BuilderSolutionFramework),
-  createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderSolutionArchitecture),
+  createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderImplementationGuide),
   createProtectedRoute("/ferramentas/builder/solution/:id/ferramentas", BuilderSolutionTools),
   createProtectedRoute("/ferramentas/builder/solution/:id/checklist", BuilderSolutionChecklist),
   createProtectedRoute("/ferramentas/builder/solution/:id/prompt", BuilderSolutionPrompt),

@@ -112,11 +112,15 @@ export type Database = {
       }
       ai_generated_solutions: {
         Row: {
+          ai_architecture_tree: Json | null
+          api_integration_map: Json | null
           architecture_flowchart: Json | null
+          automation_journey_flow: Json | null
           completion_percentage: number | null
           completion_tokens: number | null
           created_at: string | null
           data_flow_diagram: Json | null
+          deploy_checklist_structured: Json | null
           framework_mapping: Json | null
           generation_model: string | null
           generation_status: string | null
@@ -141,11 +145,15 @@ export type Database = {
           user_journey_map: Json | null
         }
         Insert: {
+          ai_architecture_tree?: Json | null
+          api_integration_map?: Json | null
           architecture_flowchart?: Json | null
+          automation_journey_flow?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
           data_flow_diagram?: Json | null
+          deploy_checklist_structured?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
           generation_status?: string | null
@@ -170,11 +178,15 @@ export type Database = {
           user_journey_map?: Json | null
         }
         Update: {
+          ai_architecture_tree?: Json | null
+          api_integration_map?: Json | null
           architecture_flowchart?: Json | null
+          automation_journey_flow?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
           data_flow_diagram?: Json | null
+          deploy_checklist_structured?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
           generation_status?: string | null
