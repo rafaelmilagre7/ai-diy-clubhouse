@@ -2,26 +2,26 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const LOADING_MESSAGES = [
-  "🧠 Hackeando o cérebro do Rafael Milagre...",
-  "⚡ Turbinando a IA com café e automação...",
-  "🔥 Vasculhando 10.000 soluções já implementadas...",
-  "🚀 Misturando Claude, GPT e um toque de magia...",
-  "🎯 Conectando ferramentas como nunca antes...",
-  "💎 Lapidando sua ideia até brilhar...",
-  "🤯 Processando mais rápido que você pisca...",
-  "🎪 Fazendo malabarismo com APIs e integrações...",
-  "🧙‍♂️ Invocando o poder da inteligência conectiva...",
-  "🌪️ Criando um furacão de produtividade...",
-  "🎨 Desenhando sua arquitetura com pixels de luz...",
-  "🔮 Prevendo problemas antes de existirem...",
-  "⚙️ Calibrando engrenagens de automação...",
-  "🌟 Transformando complexidade em simplicidade...",
-  "💥 Detonando limites do impossível...",
-  "🎭 Orquestrando uma sinfonia de dados...",
-  "🏗️ Construindo pontes entre IA e realidade...",
-  "🔬 Destilando essência pura de inovação...",
-  "🎯 Acertando no alvo da sua necessidade...",
-  "🌈 Pintando o futuro do seu negócio..."
+  "Analisando arquitetura de automação avançada...",
+  "Mapeando fluxos de integração entre plataformas...",
+  "Processando 10.000+ soluções implementadas...",
+  "Combinando Claude, GPT-4 e frameworks especializados...",
+  "Estruturando conectividade entre ferramentas...",
+  "Refinando estratégia de implementação...",
+  "Otimizando arquitetura para escalabilidade...",
+  "Sincronizando APIs e microsserviços...",
+  "Aplicando inteligência conectiva ao seu desafio...",
+  "Projetando automações de alto impacto...",
+  "Desenhando arquitetura técnica personalizada...",
+  "Identificando pontos críticos de otimização...",
+  "Calibrando sistemas de automação empresarial...",
+  "Simplificando complexidade operacional...",
+  "Superando limitações técnicas convencionais...",
+  "Orquestrando integração de dados estratégicos...",
+  "Construindo ponte entre IA e processos reais...",
+  "Extraindo insights de casos de sucesso...",
+  "Alinhando solução com objetivos de negócio...",
+  "Projetando sua infraestrutura de automação..."
 ];
 
 export const BuilderProcessingExperience = () => {
