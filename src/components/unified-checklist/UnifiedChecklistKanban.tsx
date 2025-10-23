@@ -3,11 +3,10 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, Loader, Lightbulb, Sparkles, TrendingUp } from "lucide-react";
+import { Clock, CheckCircle, Lightbulb, Sparkles, TrendingUp, Info } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChecklistCardModal } from './ChecklistCardModal';
-import { useClickDragDetection } from '@/hooks/useClickDragDetection';
 import { 
   useUpdateUnifiedChecklist,
   type UnifiedChecklistItem,
@@ -228,7 +227,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                       <Sparkles className="h-4 w-4 text-primary" />
                     </div>
                     <span className="text-muted-foreground leading-relaxed">
-                      <strong>Clique e segure</strong> um card para arrastá-lo entre as colunas
+                      <strong>Arraste os cards</strong> entre as colunas para organizar suas tarefas
                     </span>
                   </li>
                   <li className="flex items-start gap-3 group">
@@ -435,40 +434,42 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                           </motion.div>
                         )}
 
-                        {items.map((item, index) => {
-                          // Hook de detecção de clique vs arrasto para cada card
-                          const CardWithDetection = () => {
-                            const clickDragHandlers = useClickDragDetection({
-                              onQuickClick: () => handleCardClick(item),
-                              clickThreshold: 200,
-                              moveThreshold: 5
-                            });
+                        {items.map((item, index) => (
+                          <Draggable key={item.id} draggableId={item.id} index={index}>
+                            {(provided, snapshot) => (
+                              <div
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                {...provided.dragHandleProps}
+                                className={cn(
+                                  "mb-4 last:mb-0 dnd-smooth-drop",
+                                  snapshot.isDragging ? "z-50 cursor-grabbing" : "cursor-grab",
+                                  "transition-all duration-200"
+                                )}
+                                style={{
+                                  ...provided.draggableProps.style,
+                                  userSelect: 'none',
+                                }}
+                              >
+                                <Card 
+                                  className={cn(
+                                    "group relative transition-all duration-300 glass-card-hover select-none",
+                                    !snapshot.isDragging && "hover:shadow-aurora hover:border-primary/40 hover:scale-[1.02]",
+                                    snapshot.isDragging && "rotate-3 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary"
+                                  )}
+                                >
 
-                            return (
-                              <Draggable key={item.id} draggableId={item.id} index={index}>
-                                {(provided, snapshot) => (
-                                  <div
-                                    ref={provided.innerRef}
-                                    {...provided.draggableProps}
-                                    {...provided.dragHandleProps}
-                                    {...(!snapshot.isDragging && clickDragHandlers)}
-                                    className={cn(
-                                      "mb-4 last:mb-0 dnd-smooth-drop",
-                                      snapshot.isDragging ? "z-50 cursor-grabbing" : "cursor-grab",
-                                      "transition-all duration-200"
-                                    )}
-                                    style={{
-                                      ...provided.draggableProps.style,
-                                      userSelect: snapshot.isDragging ? 'none' : 'auto',
+                                  {/* Botão Info para abrir modal */}
+                                  <button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      handleCardClick(item);
                                     }}
+                                    className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:shadow-glow-sm z-10"
+                                    title="Ver detalhes"
                                   >
-                                    <Card 
-                                      className={cn(
-                                        "group relative transition-all duration-300 glass-card-hover select-none",
-                                        !snapshot.isDragging && "hover:shadow-aurora hover:border-primary/40 hover:scale-[1.02]",
-                                        snapshot.isDragging && "rotate-3 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary"
-                                      )}
-                                    >
+                                    <Info className="h-4 w-4 text-primary" />
+                                  </button>
 
                                   <div className="p-5 space-y-4">
                                     <div className="pr-10">
@@ -519,15 +520,11 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                       </div>
                                     )}
                                   </div>
-                                    </Card>
-                                  </div>
-                                )}
-                              </Draggable>
-                            );
-                          };
-
-                          return <CardWithDetection key={item.id} />;
-                        })}
+                                </Card>
+                              </div>
+                            )}
+                          </Draggable>
+                        ))}
                       </AnimatePresence>
                       {provided.placeholder}
                     </div>
