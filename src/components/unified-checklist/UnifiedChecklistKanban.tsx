@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Clock, CheckCircle, Lightbulb, Sparkles, TrendingUp, Info } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { ChecklistCardModal } from './ChecklistCardModal';
 import { 
@@ -433,29 +433,23 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                             )
                       )}
                     >
-                      <AnimatePresence mode="popLayout">
-                        {items.length === 0 && !snapshot.isDraggingOver && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.9 }}
-                            className="flex flex-col items-center justify-center h-48 text-center p-6"
-                          >
-                            <div className="p-4 rounded-full bg-muted/50 mb-3">
-                              <Icon className="h-8 w-8 text-muted-foreground" />
-                            </div>
-                            <p className="text-sm font-medium text-muted-foreground mb-1">
-                              Nenhum item aqui
-                            </p>
-                            <p className="text-xs text-muted-foreground/70">
-                              Arraste cards para esta coluna
-                            </p>
-                          </motion.div>
-                        )}
+                      {items.length === 0 && !snapshot.isDraggingOver && (
+                        <div className="flex flex-col items-center justify-center h-48 text-center p-6">
+                          <div className="p-4 rounded-full bg-muted/50 mb-3">
+                            <Icon className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <p className="text-sm font-medium text-muted-foreground mb-1">
+                            Nenhum item aqui
+                          </p>
+                          <p className="text-xs text-muted-foreground/70">
+                            Arraste cards para esta coluna
+                          </p>
+                        </div>
+                      )}
 
-                        {items.map((item, index) => (
-                          <Draggable key={item.id} draggableId={item.id} index={index}>
-                            {(provided, snapshot) => (
+                      {items.map((item, index) => (
+                        <Draggable key={item.id} draggableId={item.id} index={index}>
+                          {(provided, snapshot) => (
                               <div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
@@ -541,8 +535,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                             )}
                           </Draggable>
                         ))}
-                      </AnimatePresence>
-                      {provided.placeholder}
+                        {provided.placeholder}
                     </div>
                   )}
                 </Droppable>
