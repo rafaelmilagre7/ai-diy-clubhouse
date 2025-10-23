@@ -127,6 +127,7 @@ export type Database = {
           generation_time_ms: number | null
           id: string
           implementation_checklist: Json | null
+          implementation_flows: Json | null
           implementation_status: string | null
           is_complete: boolean | null
           is_favorited: boolean | null
@@ -160,6 +161,7 @@ export type Database = {
           generation_time_ms?: number | null
           id?: string
           implementation_checklist?: Json | null
+          implementation_flows?: Json | null
           implementation_status?: string | null
           is_complete?: boolean | null
           is_favorited?: boolean | null
@@ -193,6 +195,7 @@ export type Database = {
           generation_time_ms?: number | null
           id?: string
           implementation_checklist?: Json | null
+          implementation_flows?: Json | null
           implementation_status?: string | null
           is_complete?: boolean | null
           is_favorited?: boolean | null
