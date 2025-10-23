@@ -687,7 +687,7 @@ REGRAS RAFAEL MILAGRE:
 ✓ SEMPRE mencione: módulos Make, flows N8N, bots ManyChat, colunas Sheets
 ✓ Evite "programar", "desenvolver", "codificar" → use "configurar", "conectar", "integrar"
 ✓ Lovable APENAS se precisa dashboard - e mesmo assim, backend em Make
-✓ SEMPRE gere os 4 diagramas Mermaid mostrando FERRAMENTAS, não código
+✓ SEMPRE gere os 4 diagramas Mermaid mostrando FERRAMENTAS, não código`;
 
     const userPrompt = `IDEIA INICIAL:
 "${idea}"
