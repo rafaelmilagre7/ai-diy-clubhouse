@@ -11,6 +11,7 @@ export default function BuilderSolutionResult() {
   const navigate = useNavigate();
   const [solution, setSolution] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [lovablePromptReady, setLovablePromptReady] = useState(false);
 
   useEffect(() => {
     const loadSolution = async () => {
@@ -36,6 +37,11 @@ export default function BuilderSolutionResult() {
         }
 
         setSolution(data);
+        
+        // Verificar se o Lovable Prompt já está pronto
+        if (data.lovable_prompt) {
+          setLovablePromptReady(true);
+        }
       } catch (error) {
         console.error('Erro ao carregar solução:', error);
         toast.error('Erro ao carregar solução');
@@ -47,6 +53,39 @@ export default function BuilderSolutionResult() {
 
     loadSolution();
   }, [id, navigate]);
+
+  // Verificar periodicamente se o Lovable Prompt foi gerado
+  useEffect(() => {
+    if (lovablePromptReady || !id) return;
+
+    const checkLovablePrompt = async () => {
+      try {
+        const { data } = await supabase
+          .from('ai_generated_solutions')
+          .select('lovable_prompt')
+          .eq('id', id)
+          .single();
+        
+        if (data?.lovable_prompt) {
+          setLovablePromptReady(true);
+          setSolution((prev: any) => ({
+            ...prev,
+            lovable_prompt: data.lovable_prompt
+          }));
+        } else {
+          // Verificar novamente em 10s
+          setTimeout(checkLovablePrompt, 10000);
+        }
+      } catch (error) {
+        console.error('Erro ao verificar prompt:', error);
+      }
+    };
+    
+    // Iniciar verificação após 5s (dar tempo para o prompt começar a ser gerado)
+    const timer = setTimeout(checkLovablePrompt, 5000);
+    
+    return () => clearTimeout(timer);
+  }, [id, lovablePromptReady]);
 
   const handleNewIdea = () => {
     navigate('/ferramentas/builder');
@@ -78,6 +117,15 @@ export default function BuilderSolutionResult() {
         <ArrowLeft className="h-4 w-4 mr-2" />
         Voltar ao Histórico
       </Button>
+
+      {!lovablePromptReady && (
+        <div className="mb-4 p-3 bg-muted/50 border border-border rounded-lg flex items-center gap-3">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">
+            Gerando prompt Lovable em background... Isso pode levar até 1 minuto.
+          </p>
+        </div>
+      )}
 
       <SolutionResult
         solution={solution}

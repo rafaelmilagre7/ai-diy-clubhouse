@@ -36,6 +36,286 @@ const GenerateRequestSchema = z.object({
   mode: z.enum(["quick", "complete"]).optional().default("quick") // Modo de geração
 });
 
+// 🚀 FUNÇÃO ASSÍNCRONA PARA GERAR LOVABLE PROMPT EM BACKGROUND
+async function generateLovablePromptAsync(
+  solutionId: string,
+  solutionData: any,
+  idea: string,
+  answers: any[],
+  requestId: string,
+  supabase: any,
+  lovableApiKey: string
+) {
+  try {
+    const lovablePromptStart = Date.now();
+    console.log(`[BUILDER-ASYNC][${requestId}] 📝 Gerando prompt com Lovable AI (Gemini 2.5 Pro)...`);
+    
+    const lovablePromptSystemPrompt = `Você é um especialista em engenharia de prompts para Lovable.dev.
+
+IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional antes ou depois.
+
+Estrutura OBRIGATÓRIA:
+{
+  "prompt": "string com o prompt Lovable completo e profissional",
+  "complexity": "low|medium|high",
+  "estimated_time": "tempo estimado de implementação"
+}
+
+NÃO adicione explicações, comentários ou markdown. APENAS o JSON puro.
+
+IMPORTANTE PARA DIAGRAMAS MERMAID: 
+Se você incluir código Mermaid no prompt, cada conexão (-->) DEVE estar COMPLETA na mesma linha.
+❌ ERRADO: A[Node] -->|label|
+            B[Node]
+✅ CORRETO: A[Node] -->|label| B[Node]
+
+Sua missão: transformar a solução Builder gerada em um PROMPT LOVABLE COMPLETO, PROFISSIONAL e PRONTO PARA COPIAR dentro do campo "prompt" do JSON.
+
+ESTRUTURA OBRIGATÓRIA (seguir The Lovable Prompting Bible 2025):
+
+# 🎯 CONTEXTO DO PROJETO
+[2-3 parágrafos explicando o problema de negócio e a solução de forma clara e envolvente]
+
+# 📋 ESPECIFICAÇÃO TÉCNICA
+
+## Stack Tecnológica
+- Frontend: [detalhar framework, bibliotecas e componentes]
+- Backend: [detalhar APIs, edge functions, serverless]
+- Database: [detalhar Supabase, estrutura de dados]
+- Autenticação: [detalhar método e providers]
+- APIs/Integrações: [detalhar todas as integrações necessárias]
+
+## Funcionalidades Core
+1. **[Feature principal 1]**: descrição técnica detalhada com fluxo completo
+2. **[Feature principal 2]**: descrição técnica detalhada com fluxo completo
+3. **[Feature principal 3]**: descrição técnica detalhada com fluxo completo
+[adicionar todas as features principais]
+
+# 🔄 WORKFLOWS DE AUTOMAÇÃO
+
+## Workflow 1: [Nome específico - ex: Qualificação de Leads]
+\`\`\`
+TRIGGER: [evento específico - ex: Novo lead via WhatsApp]
+↓
+AÇÃO 1: [webhook, API call, transformação]
+  └─ Configuração: [detalhes exatos]
+↓
+AÇÃO 2: [ação da IA ou processamento]
+  └─ Modelo: [modelo específico, parâmetros]
+↓
+AÇÃO 3: [salvamento ou notificação]
+  └─ Destino: [CRM, email, webhook]
+↓
+RESULTADO: [métrica observável]
+\`\`\`
+
+[repetir para 3-5 workflows principais]
+
+# 🎨 DESIGN SYSTEM & UI/UX
+
+## Paleta de Cores
+- Primary: [cor + uso]
+- Secondary: [cor + uso]
+- Accent: [cor + uso]
+
+## Componentes Principais
+- [Componente 1]: [descrição e variantes]
+- [Componente 2]: [descrição e variantes]
+
+## Jornada do Usuário
+1. [Passo 1]: [tela, ação esperada, feedback]
+2. [Passo 2]: [tela, ação esperada, feedback]
+[continuar fluxo completo]
+
+# 🏗️ ARQUITETURA & DADOS
+
+## Estrutura Supabase
+\`\`\`sql
+-- Tabela 1
+CREATE TABLE [nome] (
+  [campos com tipos, constraints, indexes]
+);
+
+-- RLS Policies
+[políticas de segurança detalhadas]
+\`\`\`
+
+## Edge Functions
+- **[nome-funcao-1]**: [propósito, inputs, outputs, erros]
+- **[nome-funcao-2]**: [propósito, inputs, outputs, erros]
+
+# 📊 KPIs & MÉTRICAS
+
+## Objetivos Mensuráveis
+- [Métrica 1]: baseline → meta (prazo)
+- [Métrica 2]: baseline → meta (prazo)
+- [Métrica 3]: baseline → meta (prazo)
+
+# 🗓️ ROADMAP DE IMPLEMENTAÇÃO
+
+## Semana 1: Fundação
+- [ ] Setup Lovable project + Supabase
+- [ ] Database schema + RLS policies
+- [ ] Autenticação configurada
+- [ ] [tarefas específicas]
+
+## Semana 2: Features Core
+- [ ] [Feature 1]: [subtarefas]
+- [ ] [Feature 2]: [subtarefas]
+- [ ] [testes]
+
+## Semana 3: Integrações
+- [ ] [Integração 1]: [passos específicos]
+- [ ] [Integração 2]: [passos específicos]
+- [ ] [workflows Make/N8N]
+
+## Semana 4: Polimento & Deploy
+- [ ] UI refinements
+- [ ] Testes end-to-end
+- [ ] Deploy produção
+- [ ] Monitoramento + alertas
+
+---
+
+**REGRAS CRÍTICAS:**
+- Seja ULTRA-ESPECÍFICO (URLs, comandos exatos, configurações reais)
+- Inclua snippets SQL, código real, configurações exatas
+- Workflows Make/N8N com módulos reais e configurações
+- Roadmap em semanas com checkboxes e tarefas acionáveis
+- KPIs com números reais e prazos realistas
+- SEMPRE mencione segurança (RLS, validação, sanitização)
+- Tom: técnico, direto, sem filler words`;
+
+    const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
+    
+    const lovableAIResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${lovableApiKey}`
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-pro",
+        messages: [
+          {
+            role: "system",
+            content: lovablePromptSystemPrompt
+          },
+          {
+            role: "user",
+            content: `Gere um prompt Lovable COMPLETO e PROFISSIONAL baseado nesta solução:
+
+SOLUÇÃO GERADA:
+${JSON.stringify(solutionData, null, 2)}
+
+IDEIA ORIGINAL:
+${idea}
+
+CONTEXTO ADICIONAL DAS RESPOSTAS:
+${contextFromAnswers || 'Nenhum contexto adicional fornecido'}
+
+INSTRUÇÕES ESPECIAIS:
+- Seja EXTREMAMENTE detalhado (não há limite de tamanho, pode ser longo)
+- Use markdown para formatação profissional
+- Inclua TODOS os detalhes técnicos da solução
+- Adicione 4-5 workflows Make/N8N práticos e específicos para esta solução
+- Siga EXATAMENTE a estrutura do system prompt
+- O prompt deve ser copiável direto para o Lovable.dev
+- Mantenha tom profissional mas acessível
+- Use emojis para organização visual (como no template)
+- Seja extremamente específico nos workflows Make/N8N (nomes de serviços, configurações reais)
+- Transforme o checklist em fases organizadas por semanas
+- Expanda os KPIs com metas numéricas quando possível`
+          }
+        ],
+        temperature: 0.7,
+        max_completion_tokens: 16000
+      }),
+      signal: AbortSignal.timeout(240000) // 4 minutos
+    });
+
+    if (!lovableAIResponse.ok) {
+      const errorText = await lovableAIResponse.text();
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro Lovable AI: ${lovableAIResponse.status}`, errorText);
+      
+      if (lovableAIResponse.status === 429) {
+        throw new Error(`Rate limit Lovable AI atingido`);
+      } else if (lovableAIResponse.status === 402) {
+        throw new Error(`Créditos insuficientes no Lovable AI`);
+      }
+      
+      throw new Error(`Lovable AI error: ${lovableAIResponse.status}`);
+    }
+
+    const lovableAIData = await lovableAIResponse.json();
+    const lovablePromptTime = Date.now() - lovablePromptStart;
+    
+    const rawContent = lovableAIData.choices[0].message.content;
+    
+    // Extração robusta de JSON
+    const cleanJsonResponse = (text: string): string => {
+      let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
+      const firstBrace = cleaned.indexOf('{');
+      const lastBrace = cleaned.lastIndexOf('}');
+      
+      if (firstBrace === -1 || lastBrace === -1) {
+        throw new Error('JSON não encontrado na resposta');
+      }
+      
+      return cleaned.substring(firstBrace, lastBrace + 1);
+    };
+    
+    let lovablePrompt: string;
+    
+    try {
+      const cleanedJson = cleanJsonResponse(rawContent);
+      const parsed = JSON.parse(cleanedJson);
+      
+      if (parsed.prompt && typeof parsed.prompt === 'string') {
+        lovablePrompt = parsed.prompt;
+        console.log(`[BUILDER-ASYNC][${requestId}] ✅ JSON parseado com sucesso`);
+        console.log(`[BUILDER-ASYNC][${requestId}] 📊 Complexidade: ${parsed.complexity || 'N/A'}`);
+        console.log(`[BUILDER-ASYNC][${requestId}] ⏱️  Tempo estimado: ${parsed.estimated_time || 'N/A'}`);
+      } else {
+        throw new Error('Campo "prompt" não encontrado no JSON');
+      }
+    } catch (parseError) {
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao parsear JSON:`, parseError);
+      lovablePrompt = rawContent;
+      console.warn(`[BUILDER-ASYNC][${requestId}] ⚠️  Usando resposta raw como fallback`);
+    }
+    
+    console.log(`[BUILDER-ASYNC][${requestId}] ✅ Prompt Lovable gerado em ${(lovablePromptTime / 1000).toFixed(1)}s`);
+    console.log(`[BUILDER-ASYNC][${requestId}] 📏 Tamanho: ${lovablePrompt.length} caracteres`);
+    
+    // Atualizar solução no banco
+    const { error: updateError } = await supabase
+      .from("ai_generated_solutions")
+      .update({ lovable_prompt: lovablePrompt })
+      .eq("id", solutionId);
+    
+    if (updateError) {
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao salvar prompt:`, updateError);
+    } else {
+      console.log(`[BUILDER-ASYNC][${requestId}] ✅ Prompt Lovable salvo no banco com sucesso`);
+    }
+  } catch (error) {
+    console.error(`[BUILDER-ASYNC][${requestId}] ❌ ERRO:`, {
+      message: error?.message || 'Erro desconhecido',
+      name: error?.name || 'Unknown',
+      solutionId
+    });
+    
+    if (error?.message?.includes('timeout')) {
+      console.error(`[BUILDER-ASYNC][${requestId}]   → Timeout ao chamar Lovable AI`);
+    } else if (error?.message?.includes('429')) {
+      console.error(`[BUILDER-ASYNC][${requestId}]   → Rate limit atingido`);
+    } else if (error?.message?.includes('402')) {
+      console.error(`[BUILDER-ASYNC][${requestId}]   → Créditos insuficientes`);
+    }
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -961,297 +1241,6 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] 💾 Solution ID: ${savedSolution.id}`);
     console.log(`[BUILDER] 📊 Tags: ${solutionData.tags?.join(', ') || 'IA Generativa'}`);
     
-    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
-    if (!lovableApiKey) {
-      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando prompt Lovable`);
-    } else if (savedSolution?.id) {
-      try {
-        const lovablePromptStart = Date.now();
-        
-        const lovablePromptSystemPrompt = `Você é um especialista em engenharia de prompts para Lovable.dev.
-
-IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional antes ou depois.
-
-Estrutura OBRIGATÓRIA:
-{
-  "prompt": "string com o prompt Lovable completo e profissional",
-  "complexity": "low|medium|high",
-  "estimated_time": "tempo estimado de implementação"
-}
-
-NÃO adicione explicações, comentários ou markdown. APENAS o JSON puro.
-
-IMPORTANTE PARA DIAGRAMAS MERMAID: 
-Se você incluir código Mermaid no prompt, cada conexão (-->) DEVE estar COMPLETA na mesma linha.
-❌ ERRADO: A[Node] -->|label|
-            B[Node]
-✅ CORRETO: A[Node] -->|label| B[Node]
-
-Sua missão: transformar a solução Builder gerada em um PROMPT LOVABLE COMPLETO, PROFISSIONAL e PRONTO PARA COPIAR dentro do campo "prompt" do JSON.
-
-ESTRUTURA OBRIGATÓRIA (seguir The Lovable Prompting Bible 2025):
-
-# 🎯 CONTEXTO DO PROJETO
-[2-3 parágrafos explicando o problema de negócio e a solução de forma clara e envolvente]
-
-# 📋 ESPECIFICAÇÃO TÉCNICA
-
-## Stack Tecnológica
-- Frontend: [detalhar framework, bibliotecas e componentes]
-- Backend: [detalhar APIs, edge functions, serverless]
-- Database: [detalhar Supabase, estrutura de dados]
-- Autenticação: [detalhar método e providers]
-- APIs/Integrações: [detalhar todas as integrações necessárias]
-
-## Funcionalidades Core
-1. **[Feature principal 1]**: descrição técnica detalhada com fluxo completo
-2. **[Feature principal 2]**: descrição técnica detalhada com fluxo completo
-3. **[Feature principal 3]**: descrição técnica detalhada com fluxo completo
-[adicionar todas as features principais]
-
-# 🔄 WORKFLOWS DE AUTOMAÇÃO
-
-## Workflow 1: [Nome específico - ex: Qualificação de Leads]
-\`\`\`
-TRIGGER: [evento específico - ex: Novo lead via WhatsApp]
-↓
-AÇÃO 1: [webhook, API call, transformação]
-  └─ Configuração: [detalhes exatos]
-↓
-AÇÃO 2: [ação da IA ou processamento]
-  └─ Modelo: [modelo específico, parâmetros]
-↓
-AÇÃO 3: [salvamento ou notificação]
-  └─ Destino: [CRM, email, webhook]
-↓
-RESULTADO: [métrica observável]
-\`\`\`
-
-[repetir para 3-5 workflows principais]
-
-# 🎨 DESIGN SYSTEM & UI/UX
-
-## Paleta de Cores
-- Primary: [cor + uso]
-- Secondary: [cor + uso]
-- Accent: [cor + uso]
-
-## Componentes Principais
-- [Componente 1]: [descrição e variantes]
-- [Componente 2]: [descrição e variantes]
-
-## Jornada do Usuário
-1. [Passo 1]: [tela, ação esperada, feedback]
-2. [Passo 2]: [tela, ação esperada, feedback]
-[continuar fluxo completo]
-
-# 🏗️ ARQUITETURA & DADOS
-
-## Estrutura Supabase
-\`\`\`sql
--- Tabela 1
-CREATE TABLE [nome] (
-  [campos com tipos, constraints, indexes]
-);
-
--- RLS Policies
-[políticas de segurança detalhadas]
-\`\`\`
-
-## Edge Functions
-- **[nome-funcao-1]**: [propósito, inputs, outputs, erros]
-- **[nome-funcao-2]**: [propósito, inputs, outputs, erros]
-
-# 📊 KPIs & MÉTRICAS
-
-## Objetivos Mensuráveis
-- [Métrica 1]: baseline → meta (prazo)
-- [Métrica 2]: baseline → meta (prazo)
-- [Métrica 3]: baseline → meta (prazo)
-
-# 🗓️ ROADMAP DE IMPLEMENTAÇÃO
-
-## Semana 1: Fundação
-- [ ] Setup Lovable project + Supabase
-- [ ] Database schema + RLS policies
-- [ ] Autenticação configurada
-- [ ] [tarefas específicas]
-
-## Semana 2: Features Core
-- [ ] [Feature 1]: [subtarefas]
-- [ ] [Feature 2]: [subtarefas]
-- [ ] [testes]
-
-## Semana 3: Integrações
-- [ ] [Integração 1]: [passos específicos]
-- [ ] [Integração 2]: [passos específicos]
-- [ ] [workflows Make/N8N]
-
-## Semana 4: Polimento & Deploy
-- [ ] UI refinements
-- [ ] Testes end-to-end
-- [ ] Deploy produção
-- [ ] Monitoramento + alertas
-
----
-
-**REGRAS CRÍTICAS:**
-- Seja ULTRA-ESPECÍFICO (URLs, comandos exatos, configurações reais)
-- Inclua snippets SQL, código real, configurações exatas
-- Workflows Make/N8N com módulos reais e configurações
-- Roadmap em semanas com checkboxes e tarefas acionáveis
-- KPIs com números reais e prazos realistas
-- SEMPRE mencione segurança (RLS, validação, sanitização)
-- Tom: técnico, direto, sem filler words`;
-
-        const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
-
-        console.log(`[BUILDER][${requestId}] 📝 Gerando prompt com Lovable AI (Gemini 2.5 Pro)...`);
-        
-        const lovableAIResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${lovableApiKey}`
-          },
-          body: JSON.stringify({
-            model: "google/gemini-2.5-pro",
-            messages: [
-              {
-                role: "system",
-                content: lovablePromptSystemPrompt
-              },
-              {
-                role: "user",
-                content: `Gere um prompt Lovable COMPLETO e PROFISSIONAL baseado nesta solução:
-
-SOLUÇÃO GERADA:
-${JSON.stringify(solutionData, null, 2)}
-
-IDEIA ORIGINAL:
-${idea}
-
-CONTEXTO ADICIONAL DAS RESPOSTAS:
-${contextFromAnswers || 'Nenhum contexto adicional fornecido'}
-
-INSTRUÇÕES ESPECIAIS:
-- Seja EXTREMAMENTE detalhado (não há limite de tamanho, pode ser longo)
-- Use markdown para formatação profissional
-- Inclua TODOS os detalhes técnicos da solução
-- Adicione 4-5 workflows Make/N8N práticos e específicos para esta solução
-- Siga EXATAMENTE a estrutura do system prompt
-- O prompt deve ser copiável direto para o Lovable.dev
-- Mantenha tom profissional mas acessível
-- Use emojis para organização visual (como no template)
-- Seja extremamente específico nos workflows Make/N8N (nomes de serviços, configurações reais)
-- Transforme o checklist em fases organizadas por semanas
-- Expanda os KPIs com metas numéricas quando possível`
-              }
-            ],
-            temperature: 0.7,
-            max_completion_tokens: 16000
-          }),
-          signal: AbortSignal.timeout(240000) // 4 minutos (Gemini Pro pode ser mais lento)
-        });
-
-        if (!lovableAIResponse.ok) {
-          const errorText = await lovableAIResponse.text();
-          console.error(`[BUILDER][${requestId}] ❌ Erro Lovable AI: ${lovableAIResponse.status}`, errorText);
-          
-          if (lovableAIResponse.status === 429) {
-            throw new Error(`Rate limit Lovable AI atingido`);
-          } else if (lovableAIResponse.status === 402) {
-            throw new Error(`Créditos insuficientes no Lovable AI`);
-          }
-          
-          throw new Error(`Lovable AI error: ${lovableAIResponse.status}`);
-        }
-
-        const lovableAIData = await lovableAIResponse.json();
-        const lovablePromptTime = Date.now() - lovablePromptStart;
-        
-        const rawContent = lovableAIData.choices[0].message.content;
-        
-        // 🔧 FASE 1: Extração robusta de JSON
-        const cleanJsonResponse = (text: string): string => {
-          // Remover markdown code blocks
-          let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-          
-          // Procurar pelo primeiro { até o último }
-          const firstBrace = cleaned.indexOf('{');
-          const lastBrace = cleaned.lastIndexOf('}');
-          
-          if (firstBrace === -1 || lastBrace === -1) {
-            throw new Error('JSON não encontrado na resposta');
-          }
-          
-          return cleaned.substring(firstBrace, lastBrace + 1);
-        };
-        
-        let lovablePrompt: string;
-        
-        try {
-          const cleanedJson = cleanJsonResponse(rawContent);
-          const parsed = JSON.parse(cleanedJson);
-          
-          // Extrair o campo "prompt" do JSON
-          if (parsed.prompt && typeof parsed.prompt === 'string') {
-            lovablePrompt = parsed.prompt;
-            console.log(`[BUILDER][${requestId}] ✅ JSON parseado com sucesso`);
-            console.log(`[BUILDER][${requestId}] 📊 Complexidade: ${parsed.complexity || 'N/A'}`);
-            console.log(`[BUILDER][${requestId}] ⏱️  Tempo estimado: ${parsed.estimated_time || 'N/A'}`);
-          } else {
-            throw new Error('Campo "prompt" não encontrado no JSON');
-          }
-        } catch (parseError) {
-          console.error(`[BUILDER][${requestId}] ❌ Erro ao parsear JSON do Lovable AI:`, parseError);
-          console.error(`[BUILDER][${requestId}] 📄 Resposta raw (primeiros 500 chars):`, rawContent.substring(0, 500));
-          
-          // Fallback: usar resposta raw como prompt (melhor que nada)
-          lovablePrompt = rawContent;
-          console.warn(`[BUILDER][${requestId}] ⚠️  Usando resposta raw como fallback`);
-        }
-        
-        console.log(`[BUILDER][${requestId}] ✅ Prompt Lovable gerado em ${(lovablePromptTime / 1000).toFixed(1)}s`);
-        console.log(`[BUILDER][${requestId}] 📏 Tamanho: ${lovablePrompt.length} caracteres (~${Math.floor(lovablePrompt.length / 4)} tokens)`);
-        console.log(`[BUILDER][${requestId}] 💰 Tokens Gemini Pro: ${lovableAIData.usage?.total_tokens || 'N/A'}`);
-        
-        // Atualizar solução no banco com o prompt
-        const { error: updateError } = await supabase
-          .from("ai_generated_solutions")
-          .update({ lovable_prompt: lovablePrompt })
-          .eq("id", savedSolution.id);
-        
-        if (updateError) {
-          console.error(`[BUILDER][${requestId}] ❌ Erro ao salvar prompt no banco:`, updateError);
-        } else {
-          console.log(`[BUILDER][${requestId}] ✅ Prompt Lovable salvo no banco com sucesso`);
-        }
-      } catch (lovableError) {
-        console.error(`[BUILDER][${requestId}] ❌ ERRO ao gerar prompt Lovable:`, {
-          message: lovableError?.message || 'Erro desconhecido',
-          name: lovableError?.name || 'Unknown',
-          stack: lovableError?.stack,
-          lovableApiKeyExists: !!Deno.env.get("LOVABLE_API_KEY"),
-          solutionId: savedSolution?.id
-        });
-        
-        if (lovableError?.message?.includes('timeout')) {
-          console.error(`[BUILDER][${requestId}]   → Timeout (>180s ao chamar Lovable AI Gemini Pro)`);
-        } else if (lovableError?.message?.includes('401')) {
-          console.error(`[BUILDER][${requestId}]   → LOVABLE_API_KEY não configurada ou inválida`);
-        } else if (lovableError?.message?.includes('429')) {
-          console.error(`[BUILDER][${requestId}]   → Rate limit Lovable AI atingido`);
-        } else if (lovableError?.message?.includes('402')) {
-          console.error(`[BUILDER][${requestId}]   → Créditos insuficientes no Lovable AI`);
-        } else if (lovableError?.message?.includes('fetch')) {
-          console.error(`[BUILDER][${requestId}]   → Erro de rede ao conectar com ai.gateway.lovable.dev`);
-        }
-        
-        console.warn(`[BUILDER][${requestId}] ⚠️ Continuando sem Lovable Prompt - solução será retornada com outros dados`);
-      }
-    }
-    
     // ==========================================
     // FINAL CHECK: GARANTIR QUE SOLUTION EXISTE
     // ==========================================
@@ -1262,6 +1251,27 @@ INSTRUÇÕES ESPECIAIS:
     console.log(`[BUILDER] 🎉 === PROCESSO COMPLETO FINALIZADO ===`);
     console.log(`[BUILDER] 💾 Retornando solution.id: ${savedSolution.id}`);
     console.log(`[BUILDER] ⏱️  Tempo total: ${generationTime}ms`);
+    
+    // 🚀 GERAR LOVABLE PROMPT EM BACKGROUND (NÃO BLOQUEIA RESPOSTA)
+    const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
+    if (!lovableApiKey) {
+      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando prompt Lovable`);
+    } else if (savedSolution?.id) {
+      console.log(`[BUILDER][${requestId}] 🚀 Iniciando geração de Lovable Prompt em BACKGROUND`);
+      
+      // Chamar função assíncrona SEM AWAIT (executa em background)
+      generateLovablePromptAsync(
+        savedSolution.id,
+        solutionData,
+        idea,
+        answers,
+        requestId,
+        supabase,
+        lovableApiKey
+      ).catch(err => {
+        console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Lovable Prompt:`, err);
+      });
+    }
 
     return new Response(
       JSON.stringify({
