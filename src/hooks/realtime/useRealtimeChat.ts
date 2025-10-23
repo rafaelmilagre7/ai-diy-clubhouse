@@ -187,7 +187,8 @@ export function useRealtimeChat(options: UseRealtimeChatOptions) {
         },
         handleTypingUpdate
       );
-  }, [channel, user, conversationId, handleNewMessage, handleUpdateMessage, handleDeleteMessage, handleTypingUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel, conversationId]); // Apenas quando canal ou conversação mudar
 
   // Notificar callback de typing
   useEffect(() => {
@@ -294,9 +295,18 @@ export function useRealtimeChat(options: UseRealtimeChatOptions) {
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current);
       }
-      stopTyping();
+      // Limpar status de digitando ao desmontar
+      if (user && conversationId) {
+        supabase
+          .from('conversation_participants')
+          .update({ is_typing: false, typing_at: null })
+          .eq('conversation_id', conversationId)
+          .eq('user_id', user.id)
+          .then(() => console.log('🧹 [CHAT] Typing status limpo ao desmontar'));
+      }
     };
-  }, [stopTyping]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Apenas ao montar/desmontar
 
   return {
     isConnected,

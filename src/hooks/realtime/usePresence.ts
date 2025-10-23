@@ -24,7 +24,10 @@ export function usePresence() {
   const { channel, status } = useRealtimeConnection({
     channelName: 'presence:global',
     onConnect: () => {
-      console.log('✅ [PRESENCE] Canal de presença conectado');
+      console.log('✅ [PRESENCE] Conectado ao canal de presença');
+    },
+    onDisconnect: () => {
+      console.warn('⚠️ [PRESENCE] Desconectado do canal de presença');
     },
   });
 
@@ -80,23 +83,30 @@ export function usePresence() {
         return newState;
       });
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel]); // Apenas quando o canal mudar
 
-    // Atualizar presença quando conectar
-    if (status.isConnected && user) {
+  // Atualizar presença quando conectar
+  useEffect(() => {
+    if (status.isConnected && user && channel) {
       updatePresence();
     }
-  }, [channel, status.isConnected, user, updatePresence]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status.isConnected]); // Apenas quando conectar/desconectar
 
   // Atualizar presença periodicamente (a cada 30 segundos)
   useEffect(() => {
-    if (!status.isConnected) return;
+    if (!status.isConnected || !user || !channel) return;
 
     const interval = setInterval(() => {
-      updatePresence();
+      if (channel && user) {
+        updatePresence();
+      }
     }, 30000);
 
     return () => clearInterval(interval);
-  }, [status.isConnected, updatePresence]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status.isConnected]); // Apenas quando conectar/desconectar
 
   // Cleanup ao desmontar
   useEffect(() => {

@@ -142,9 +142,11 @@ export function useRealtimeNotifications(options: UseRealtimeNotificationsOption
     queryClient.invalidateQueries({ queryKey: ['unread-count'] });
   }, [queryClient]);
 
-  // Configurar conexão realtime
+  // Configurar conexão realtime - apenas quando user mudar
+  const channelName = user?.id ? `notifications:${user.id}` : 'notifications:anonymous';
+  
   const { channel, status } = useRealtimeConnection({
-    channelName: `notifications:${user?.id}`,
+    channelName,
     onConnect: () => {
       console.log('✅ [REALTIME] Canal de notificações conectado');
     },
@@ -198,7 +200,8 @@ export function useRealtimeNotifications(options: UseRealtimeNotificationsOption
     return () => {
       // Cleanup é feito pelo useRealtimeConnection
     };
-  }, [channel, user, handleNewNotification, handleUpdateNotification, handleDeleteNotification]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel]); // Apenas quando o canal mudar (user é estável)
 
   return {
     isConnected: status.isConnected,

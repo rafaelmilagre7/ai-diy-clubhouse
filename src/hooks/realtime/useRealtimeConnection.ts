@@ -200,7 +200,8 @@ export function useRealtimeConnection(options: UseRealtimeConnectionOptions) {
     return () => {
       disconnect();
     };
-  }, [connect, disconnect]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channelName]); // Apenas reconectar quando o canal mudar
 
   return {
     channel: channelRef.current,

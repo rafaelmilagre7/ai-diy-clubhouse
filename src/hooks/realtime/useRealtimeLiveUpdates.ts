@@ -100,7 +100,8 @@ export function useRealtimeLiveUpdates(options: UseRealtimeLiveUpdatesOptions) {
         handleUpdate(table.name, table.queryKeys, 'DELETE')
       );
     });
-  }, [channel, tables, handleUpdate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [channel]); // Apenas quando o canal mudar (tables é estável)
 
   return {
     isConnected: status.isConnected,
