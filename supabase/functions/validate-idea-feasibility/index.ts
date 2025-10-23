@@ -126,49 +126,20 @@ NÃO retorne com markdown:
 
     console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content);
 
-    // Extrair JSON da resposta com parsing robusto
-    let validationResult;
-    try {
-      // Remover markdown code blocks primeiro
-      let cleanContent = content.trim();
-      cleanContent = cleanContent.replace(/```json\s*/g, '');
-      cleanContent = cleanContent.replace(/```\s*/g, '');
-      cleanContent = cleanContent.trim();
+    // Extrair JSON da resposta - sem fallbacks, deve funcionar sempre
+    let cleanContent = content.trim();
+    cleanContent = cleanContent.replace(/```json\s*/g, '');
+    cleanContent = cleanContent.replace(/```\s*/g, '');
+    cleanContent = cleanContent.trim();
 
-      // Extrair JSON do conteúdo limpo
-      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        validationResult = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error('JSON não encontrado na resposta');
-      }
-    } catch (parseError) {
-      console.error('[VALIDATE-FEASIBILITY] ❌ Erro ao parsear JSON:', parseError);
-      
-      // Fallback mais criterioso: verificar indicadores explícitos
-      const hasViableTrue = 
-        content.toLowerCase().includes('"viable": true') || 
-        content.toLowerCase().includes('"viable":true');
-      
-      const hasViableFalse = 
-        content.toLowerCase().includes('"viable": false') || 
-        content.toLowerCase().includes('"viable":false');
-
-      if (hasViableTrue && !hasViableFalse) {
-        validationResult = {
-          viable: true,
-          reason: content.substring(0, 200),
-          confidence: 'low'
-        };
-      } else {
-        // Por segurança, assumir não viável se não conseguimos confirmar
-        validationResult = {
-          viable: false,
-          reason: 'Não foi possível validar automaticamente. Por favor, reformule sua ideia de forma mais clara.',
-          confidence: 'low'
-        };
-      }
+    // Extrair JSON do conteúdo limpo
+    const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.error('[VALIDATE-FEASIBILITY] ❌ JSON não encontrado:', content);
+      throw new Error('Formato de resposta inválido da IA');
     }
+
+    const validationResult = JSON.parse(jsonMatch[0]);
 
     console.log('[VALIDATE-FEASIBILITY] ✅ Resultado:', validationResult);
 

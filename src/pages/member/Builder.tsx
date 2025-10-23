@@ -38,7 +38,7 @@ export default function Builder() {
   const [currentIdea, setCurrentIdea] = useState<string>('');
   const [showWizard, setShowWizard] = useState(false);
   const [clickedExample, setClickedExample] = useState<number | null>(null);
-  const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
+  const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error' | 'loading-questions'>('idle');
   const [validationMessage, setValidationMessage] = useState<string>('');
   const { 
     hasAccess, 
@@ -181,16 +181,19 @@ export default function Builder() {
       setValidationStatus('success');
       setValidationMessage(reason || 'Sua ideia é viável e pode ser implementada!');
 
-      // Aguardar 0.8s para mostrar sucesso e então seguir para perguntas
+      // Aguardar 1s para mostrar sucesso e então carregar perguntas
       setTimeout(async () => {
-        setValidationStatus('idle');
+        setValidationStatus('loading-questions');
         
         const generatedQuestions = await analyzeIdea(idea);
         
         if (generatedQuestions && generatedQuestions.length > 0) {
+          setValidationStatus('idle');
           setShowWizard(true);
+        } else {
+          setValidationStatus('idle');
         }
-      }, 800); // 0.8s para ler a validação
+      }, 1000);
 
     } catch (error) {
       console.error('[BUILDER] Erro na validação:', error);
@@ -307,7 +310,7 @@ export default function Builder() {
         {validationStatus !== 'idle' ? (
           <BuilderValidationAnimation 
             key="validation"
-            status={validationStatus as 'validating' | 'success' | 'error'}
+            status={validationStatus as 'validating' | 'success' | 'error' | 'loading-questions'}
             message={validationMessage}
           />
         ) : isGenerating ? (

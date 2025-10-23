@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { CheckCircle, XCircle } from 'lucide-react';
 
 interface BuilderValidationAnimationProps {
-  status: 'validating' | 'success' | 'error';
+  status: 'validating' | 'success' | 'error' | 'loading-questions';
   message?: string;
 }
 
@@ -20,7 +20,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
         className="flex flex-col items-center gap-6 px-8 py-12 max-w-md"
       >
         {/* Animação geométrica elegante */}
-        {status === 'validating' && (
+        {(status === 'validating' || status === 'loading-questions') && (
           <div className="relative w-32 h-32">
             {[0, 1, 2].map((i) => (
               <motion.div
@@ -28,8 +28,12 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 className="absolute inset-0 rounded-full border-2"
                 style={{
                   borderColor: 'transparent',
-                  borderTopColor: 'hsl(var(--aurora-primary))',
-                  borderRightColor: 'hsl(var(--aurora-primary) / 0.5)',
+                  borderTopColor: status === 'loading-questions' 
+                    ? 'hsl(142 76% 36%)' 
+                    : 'hsl(var(--aurora-primary))',
+                  borderRightColor: status === 'loading-questions'
+                    ? 'hsl(142 76% 36% / 0.5)'
+                    : 'hsl(var(--aurora-primary) / 0.5)',
                 }}
                 animate={{
                   rotate: 360,
@@ -37,9 +41,9 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                   opacity: [0.3, 0.7, 0.3]
                 }}
                 transition={{
-                  rotate: { duration: 3 + i, repeat: Infinity, ease: "linear" },
-                  scale: { duration: 2 + i * 0.5, repeat: Infinity },
-                  opacity: { duration: 2 + i * 0.5, repeat: Infinity }
+                  rotate: { duration: status === 'loading-questions' ? 2 + i : 3 + i, repeat: Infinity, ease: "linear" },
+                  scale: { duration: status === 'loading-questions' ? 1.5 + i * 0.5 : 2 + i * 0.5, repeat: Infinity },
+                  opacity: { duration: status === 'loading-questions' ? 1.5 + i * 0.5 : 2 + i * 0.5, repeat: Infinity }
                 }}
               />
             ))}
@@ -78,6 +82,26 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
               <p className="text-muted-foreground text-sm">
                 Verificando se sua ideia pode ser executada com IA
               </p>
+            </>
+          )}
+
+          {status === 'loading-questions' && (
+            <>
+              <motion.h3
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                className="text-2xl font-bold text-foreground mb-2"
+              >
+                Gerando perguntas de qualificação
+              </motion.h3>
+              <motion.p
+                initial={{ y: 10, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.1 }}
+                className="text-muted-foreground text-sm"
+              >
+                Preparando as perguntas certas para sua solução
+              </motion.p>
             </>
           )}
 
@@ -124,8 +148,8 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
           )}
         </div>
 
-        {/* Barra de progresso para validating */}
-        {status === 'validating' && (
+        {/* Barra de progresso para validating e loading-questions */}
+        {(status === 'validating' || status === 'loading-questions') && (
           <motion.div 
             className="w-full h-1 bg-surface-elevated rounded-full overflow-hidden"
             initial={{ opacity: 0 }}
