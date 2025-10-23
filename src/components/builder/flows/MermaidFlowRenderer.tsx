@@ -15,21 +15,41 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
   const isInitialized = useMermaidInit();
 
   useEffect(() => {
-    if (!isInitialized || !containerRef.current || !mermaidCode) return;
+    if (!isInitialized || !containerRef.current || !mermaidCode) {
+      console.log('[MermaidFlowRenderer] Aguardando condições:', {
+        isInitialized,
+        hasContainer: !!containerRef.current,
+        hasMermaidCode: !!mermaidCode,
+        flowId
+      });
+      return;
+    }
 
     const renderDiagram = async () => {
       setIsRendering(true);
       setError(null);
 
+      // Timeout de segurança
+      const timeoutId = setTimeout(() => {
+        console.error('[MermaidFlowRenderer] ⏱️ Timeout ao renderizar:', flowId);
+        setError('Timeout ao renderizar fluxo');
+        setIsRendering(false);
+      }, 10000); // 10 segundos
+
       try {
+        console.log('[MermaidFlowRenderer] 🎨 Iniciando renderização:', flowId);
         const uniqueId = `mermaid-${flowId}-${Date.now()}`;
         const { svg } = await mermaid.render(uniqueId, mermaidCode);
         
+        clearTimeout(timeoutId);
+        
         if (containerRef.current) {
           containerRef.current.innerHTML = svg;
+          console.log('[MermaidFlowRenderer] ✅ Renderizado com sucesso:', flowId);
         }
       } catch (err: any) {
-        console.error('[MermaidFlowRenderer] Erro ao renderizar:', err);
+        clearTimeout(timeoutId);
+        console.error('[MermaidFlowRenderer] ❌ Erro ao renderizar:', flowId, err);
         setError('Erro ao renderizar fluxo visual');
       } finally {
         setIsRendering(false);
