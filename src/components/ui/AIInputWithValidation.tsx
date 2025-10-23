@@ -1,5 +1,5 @@
 import { CornerRightUp, AlertCircle } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { useAutoResizeTextarea } from "@/hooks/useAutoResizeTextarea";
@@ -44,6 +44,12 @@ export function AIInputWithValidation({
 
   const inputValue = externalValue !== undefined ? externalValue : internalValue;
   const setInputValue = externalOnChange || setInternalValue;
+
+  useEffect(() => {
+    if (externalValue !== undefined) {
+      adjustHeight();
+    }
+  }, [externalValue, adjustHeight]);
 
   const charCount = inputValue.length;
   const isNearLimit = charCount > maxChars * 0.9;
@@ -112,8 +118,8 @@ export function AIInputWithValidation({
   };
 
   return (
-    <div className={cn("w-full py-4", className)}>
-      <div className="relative max-w-xl w-full mx-auto flex items-start flex-col gap-2">
+    <div className={cn("w-full py-2", className)}>
+      <div className="relative max-w-xl w-full mx-auto flex items-start flex-col gap-1">
         <div className="relative max-w-xl w-full mx-auto">
           <Textarea
             id={id}
@@ -174,7 +180,7 @@ export function AIInputWithValidation({
         </div>
 
         {/* Feedback e contador */}
-        <div className="flex items-center justify-between w-full px-4 h-5">
+        <div className="flex items-center justify-between w-full px-4 h-4">
           <div className="flex items-center gap-2">
             {error && (
               <div className="flex items-center gap-1.5 text-destructive animate-in fade-in slide-in-from-left-2">

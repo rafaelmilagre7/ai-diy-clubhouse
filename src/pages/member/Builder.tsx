@@ -253,7 +253,7 @@ export default function Builder() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
+    <div className="min-h-screen h-screen overflow-hidden bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <AnimatePresence mode="wait">
         {isGenerating ? (
           <BuilderProcessingExperience key="loader" />
@@ -270,10 +270,10 @@ export default function Builder() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center min-h-screen px-4 py-8"
+            className="flex flex-col items-center justify-center h-screen px-4 py-6"
           >
             {/* Header com contador discreto - AJUSTADO para não sobrepor header */}
-            <div className="absolute top-24 right-4 z-10">
+            <div className="absolute top-20 right-4 z-10">
               <div className="text-xs text-muted-foreground bg-surface-elevated/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/50">
                 {generationsUsed} de {monthlyLimit === 999999 ? '∞' : monthlyLimit} gerações
               </div>
@@ -283,17 +283,17 @@ export default function Builder() {
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              className="text-center mb-12"
+              className="text-center mb-6"
             >
-              <div className="flex items-center justify-center gap-3 mb-4">
+              <div className="flex items-center justify-center gap-3 mb-3">
                 <div className="p-3 rounded-2xl bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/5 border border-aurora-primary/20">
-                  <Layout className="h-8 w-8 text-aurora-primary" />
+                  <Layout className="h-7 w-7 text-aurora-primary" />
                 </div>
               </div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              <h1 className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
                 Builder
               </h1>
-              <p className="text-muted-foreground text-base max-w-2xl mx-auto leading-tight">
+              <p className="text-muted-foreground text-sm max-w-2xl mx-auto leading-tight">
                 Transforme ideias em soluções executáveis de IA
               </p>
             </motion.div>
@@ -303,9 +303,9 @@ export default function Builder() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.1 }}
-              className="w-full max-w-2xl mb-8"
+              className="w-full max-w-2xl mb-6"
             >
-              <div className="flex flex-col items-center gap-4">
+              <div className="flex flex-col items-center gap-3">
                 <AIInputWithValidation
                   placeholder="Ex: Quero automatizar atendimento no WhatsApp e integrar com meu CRM..."
                   onSubmit={handleGenerateSolution}
@@ -329,12 +329,12 @@ export default function Builder() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
-              className="w-full max-w-2xl mt-8"
+              className="w-full max-w-2xl mb-6"
             >
-              <p className="text-sm text-muted-foreground text-center mb-4">
+              <p className="text-xs text-muted-foreground text-center mb-3">
                 Ou escolha um exemplo:
               </p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {exampleIdeas.map((example, index) => {
                   const IconComponent = example.icon;
                   const isClicked = clickedExample === index;
@@ -345,7 +345,7 @@ export default function Builder() {
                       onClick={() => handleExampleClick(example, index)}
                       disabled={isClicked || isAnalyzing || isGenerating}
                       className={`
-                        group relative p-4 rounded-2xl border transition-all duration-200 text-left overflow-hidden
+                        group relative p-3 rounded-2xl border transition-all duration-200 text-left overflow-hidden
                         bg-gradient-to-br ${example.color}
                         ${example.borderColor} hover:border-primary/50
                         ${isClicked ? 'border-primary ring-2 ring-primary/20' : ''}
@@ -365,7 +365,7 @@ export default function Builder() {
                       <div className="relative">
                         <div className="flex items-start justify-between mb-2">
                           <div className="p-2 rounded-lg bg-background/50">
-                            <IconComponent className={`h-5 w-5 ${isClicked ? 'text-primary' : 'text-primary'}`} />
+                            <IconComponent className={`h-4 w-4 ${isClicked ? 'text-primary' : 'text-primary'}`} />
                           </div>
                           {isClicked ? (
                             <motion.div
@@ -381,10 +381,10 @@ export default function Builder() {
                             <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors opacity-0 group-hover:opacity-100" />
                           )}
                         </div>
-                        <h3 className={`font-semibold mb-1 transition-colors ${isClicked ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
+                        <h3 className={`font-semibold mb-1 text-sm transition-colors ${isClicked ? 'text-primary' : 'text-foreground group-hover:text-primary'}`}>
                           {example.title}
                         </h3>
-                        <p className="text-sm text-muted-foreground line-clamp-2">
+                        <p className="text-xs text-muted-foreground line-clamp-2">
                           {example.description}
                         </p>
                       </div>
@@ -399,7 +399,7 @@ export default function Builder() {
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.3 }}
-              className="w-full max-w-2xl text-center mt-12"
+              className="w-full max-w-2xl text-center"
             >
               <Button
                 variant="outline"

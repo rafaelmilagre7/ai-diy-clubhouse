@@ -13,8 +13,12 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
+  const [audioLevels, setAudioLevels] = useState<number[]>(new Array(32).fill(0));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number>();
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | undefined;
@@ -37,12 +41,54 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
       }
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
     };
   }, []);
+
+  const visualizeAudio = () => {
+    if (!analyserRef.current) return;
+
+    const analyser = analyserRef.current;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    
+    const animate = () => {
+      if (!isRecording) return;
+      
+      analyser.getByteFrequencyData(dataArray);
+      
+      // Pegar 32 valores distribuídos ao longo do espectro
+      const step = Math.floor(bufferLength / 32);
+      const levels = Array.from({ length: 32 }, (_, i) => {
+        const index = i * step;
+        const value = dataArray[index] || 0;
+        // Normalizar para 0-1 e ajustar sensibilidade
+        return Math.min(1, (value / 255) * 1.5);
+      });
+      
+      setAudioLevels(levels);
+      animationFrameRef.current = requestAnimationFrame(animate);
+    };
+    
+    animate();
+  };
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Configurar Web Audio API para análise
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      analyserRef.current.smoothingTimeConstant = 0.8;
+      source.connect(analyserRef.current);
       
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
@@ -63,10 +109,19 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
         
         stream.getTracks().forEach(track => track.stop());
         setRecordingTime(0);
+        setAudioLevels(new Array(32).fill(0));
+        
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+        }
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+        }
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      visualizeAudio();
 
       toast.success('Gravação iniciada', {
         description: 'Fale sua ideia claramente'
@@ -91,7 +146,6 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
     setIsTranscribing(true);
 
     try {
-      // Converter blob para base64
       const reader = new FileReader();
       
       const base64Promise = new Promise<string>((resolve, reject) => {
@@ -105,7 +159,6 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       reader.readAsDataURL(audioBlob);
       const base64Audio = await base64Promise;
 
-      // Chamar edge function
       const { data, error } = await supabase.functions.invoke('transcribe-audio', {
         body: { audio: base64Audio }
       });
@@ -154,11 +207,11 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   };
 
   return (
-    <div className="w-full py-2">
+    <div className="w-full py-1">
       <div className="relative max-w-xl w-full mx-auto flex items-center flex-col gap-2">
         <button
           className={cn(
-            "group w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200",
+            "group w-11 h-11 rounded-xl flex items-center justify-center transition-all duration-200",
             isRecording || isTranscribing
               ? "bg-surface-elevated/50"
               : "bg-surface-elevated/50 hover:bg-surface-elevated border border-border hover:border-primary/50",
@@ -170,16 +223,14 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
           title={getStatusText()}
         >
           {isRecording ? (
-            <div
-              className="w-5 h-5 rounded-sm bg-primary animate-pulse"
-            />
+            <div className="w-4 h-4 rounded-sm bg-primary animate-pulse" />
           ) : isTranscribing ? (
             <div
-              className="w-5 h-5 rounded-sm animate-spin bg-primary/50"
+              className="w-4 h-4 rounded-sm animate-spin bg-primary/50"
               style={{ animationDuration: "1s" }}
             />
           ) : (
-            <Mic className="w-5 h-5 text-foreground/70 group-hover:text-primary transition-colors" />
+            <Mic className="w-4 h-4 text-foreground/70 group-hover:text-primary transition-colors" />
           )}
         </button>
 
@@ -191,16 +242,18 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
 
             {isRecording && (
               <div className="h-3 w-48 flex items-center justify-center gap-0.5">
-                {[...Array(32)].map((_, i) => (
-                  <div
-                    key={i}
-                    className="w-0.5 rounded-full bg-primary/50"
-                    style={{
-                      animation: `wave 0.8s ease-in-out infinite`,
-                      animationDelay: `${i * 0.03}s`,
-                    }}
-                  />
-                ))}
+                {audioLevels.map((level, i) => {
+                  const height = Math.max(20, level * 100);
+                  return (
+                    <div
+                      key={i}
+                      className="w-0.5 rounded-full bg-primary/50 transition-all duration-75"
+                      style={{
+                        height: `${height}%`,
+                      }}
+                    />
+                  );
+                })}
               </div>
             )}
 
