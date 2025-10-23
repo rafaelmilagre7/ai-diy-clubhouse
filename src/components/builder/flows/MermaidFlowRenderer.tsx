@@ -12,52 +12,72 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
   const isInitialized = useMermaidInit();
+  const maxRetries = 5;
 
   useEffect(() => {
-    if (!isInitialized || !containerRef.current || !mermaidCode) {
-      console.log('[MermaidFlowRenderer] Aguardando condições:', {
-        isInitialized,
-        hasContainer: !!containerRef.current,
-        hasMermaidCode: !!mermaidCode,
-        flowId
+    // Verificação básica - sem containerRef aqui para evitar race condition
+    if (!isInitialized || !mermaidCode) {
+      console.log(`[Mermaid][${flowId}] Aguardando inicialização:`, {
+        initialized: isInitialized,
+        hasCode: !!mermaidCode
       });
       return;
     }
+
+    // Delay progressivo para garantir que o DOM está pronto
+    const delayMs = 100 * (retryCount + 1);
+    const timeoutId = setTimeout(() => {
+      if (!containerRef.current) {
+        if (retryCount < maxRetries) {
+          console.log(`[Mermaid][${flowId}] Tentativa ${retryCount + 1}/${maxRetries} - Aguardando DOM...`);
+          setRetryCount(prev => prev + 1);
+        } else {
+          console.error(`[Mermaid][${flowId}] ❌ Max retries atingido`);
+          setError('Não foi possível renderizar o diagrama');
+          setIsRendering(false);
+        }
+        return;
+      }
+
+      // DOM pronto, renderizar
+      renderDiagram();
+    }, delayMs);
 
     const renderDiagram = async () => {
       setIsRendering(true);
       setError(null);
 
       // Timeout de segurança
-      const timeoutId = setTimeout(() => {
-        console.error('[MermaidFlowRenderer] ⏱️ Timeout ao renderizar:', flowId);
+      const renderTimeoutId = setTimeout(() => {
+        console.error(`[Mermaid][${flowId}] ⏱️ Timeout ao renderizar`);
         setError('Timeout ao renderizar fluxo');
         setIsRendering(false);
-      }, 10000); // 10 segundos
+      }, 10000);
 
       try {
-        console.log('[MermaidFlowRenderer] 🎨 Iniciando renderização:', flowId);
+        console.log(`[Mermaid][${flowId}] 🎨 Iniciando renderização (tentativa ${retryCount + 1})`);
         const uniqueId = `mermaid-${flowId}-${Date.now()}`;
         const { svg } = await mermaid.render(uniqueId, mermaidCode);
         
-        clearTimeout(timeoutId);
+        clearTimeout(renderTimeoutId);
         
         if (containerRef.current) {
           containerRef.current.innerHTML = svg;
-          console.log('[MermaidFlowRenderer] ✅ Renderizado com sucesso:', flowId);
+          console.log(`[Mermaid][${flowId}] ✅ Renderizado com sucesso!`);
         }
       } catch (err: any) {
-        clearTimeout(timeoutId);
-        console.error('[MermaidFlowRenderer] ❌ Erro ao renderizar:', flowId, err);
+        clearTimeout(renderTimeoutId);
+        console.error(`[Mermaid][${flowId}] ❌ Erro:`, err.message || err);
         setError('Erro ao renderizar fluxo visual');
       } finally {
         setIsRendering(false);
       }
     };
 
-    renderDiagram();
-  }, [mermaidCode, flowId, isInitialized]);
+    return () => clearTimeout(timeoutId);
+  }, [mermaidCode, flowId, isInitialized, retryCount, maxRetries]);
 
   if (isRendering) {
     return (
