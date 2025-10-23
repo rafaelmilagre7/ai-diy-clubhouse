@@ -1,9 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
-import { Mic, Square, Loader2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { AIVoiceInput } from '@/components/ui/ai-voice-input';
 
 interface VoiceInputProps {
   onTranscription: (text: string) => void;
@@ -146,42 +144,13 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   };
 
   return (
-    <div className="flex items-center gap-2">
-      <Button
-        type="button"
-        variant={isRecording ? "destructive" : "outline"}
-        size="icon"
-        onClick={isRecording ? stopRecording : startRecording}
-        disabled={disabled || isTranscribing}
-        className={cn(
-          "relative",
-          isRecording && "animate-pulse"
-        )}
-        title={isRecording ? "Parar gravação" : "Gravar áudio"}
-      >
-        {isTranscribing ? (
-          <Loader2 className="h-4 w-4 animate-spin" />
-        ) : isRecording ? (
-          <Square className="h-4 w-4 fill-current" />
-        ) : (
-          <Mic className="h-4 w-4" />
-        )}
-      </Button>
-
-      {isRecording && (
-        <div className="flex items-center gap-2 text-sm">
-          <div className="h-2 w-2 rounded-full bg-destructive animate-pulse" />
-          <span className="font-mono text-muted-foreground">
-            {formatTime(recordingTime)}
-          </span>
-        </div>
-      )}
-
-      {isTranscribing && (
-        <span className="text-sm text-muted-foreground animate-pulse">
-          Transcrevendo...
-        </span>
-      )}
-    </div>
+    <AIVoiceInput
+      onStart={startRecording}
+      onStop={stopRecording}
+      isRecording={isRecording}
+      isTranscribing={isTranscribing}
+      disabled={disabled}
+      visualizerBars={48}
+    />
   );
 }
