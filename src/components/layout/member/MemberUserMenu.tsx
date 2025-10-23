@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/contexts/auth";
-import { LogOut, Settings, User, Bell, ChevronRight } from "lucide-react";
+import { LogOut, User, Bell, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
@@ -105,25 +105,6 @@ export const MemberUserMenu = () => {
                   <Bell className="h-4 w-4 text-blue-500" />
                 </div>
                 <span className="font-medium text-sm">Notificações</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-            </Link>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem asChild>
-            <Link 
-              to="/settings" 
-              className={cn(
-                "flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer",
-                "hover:bg-accent/80 transition-colors duration-200",
-                "focus:bg-accent/80 focus:outline-none"
-              )}
-            >
-              <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-purple-500/10">
-                  <Settings className="h-4 w-4 text-purple-500" />
-                </div>
-                <span className="font-medium text-sm">Configurações</span>
               </div>
               <ChevronRight className="h-4 w-4 text-muted-foreground" />
             </Link>
