@@ -92,7 +92,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   }, [normalizedItems]);
 
   const handleDragEnd = (result: DropResult) => {
-    const { source, destination, draggableId } = result;
+    const { source, destination } = result;
 
     if (!destination) return;
     if (source.droppableId === destination.droppableId && source.index === destination.index) return;
@@ -100,23 +100,19 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     const sourceColumn = source.droppableId as ColumnType;
     const destColumn = destination.droppableId as ColumnType;
 
-    // Criar cópia dos itens
-    const newItemsByColumn = { ...itemsByColumn };
-    const sourceItems = [...newItemsByColumn[sourceColumn]];
-    const destItems = sourceColumn === destColumn ? sourceItems : [...newItemsByColumn[destColumn]];
+    // Criar cópias dos arrays
+    const sourceItems = [...itemsByColumn[sourceColumn]];
+    const destItems = sourceColumn === destColumn ? sourceItems : [...itemsByColumn[destColumn]];
 
     // Remover do source
     const [movedItem] = sourceItems.splice(source.index, 1);
 
     // Adicionar ao destination
-    destItems.splice(destination.index, 0, {
-      ...movedItem,
-      column: destColumn,
-      completed: destColumn === 'done'
-    });
+    destItems.splice(destination.index, 0, movedItem);
 
-    // Atualizar orders
+    // Reordenar: atribuir orders sequenciais para garantir ordem correta
     const updatedItems = normalizedItems.map(item => {
+      // Se é o item movido, atualizar coluna, completed e order
       if (item.id === movedItem.id) {
         return {
           ...item,
@@ -127,16 +123,16 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         };
       }
 
-      // Reordenar itens da coluna de origem
-      if (item.column === sourceColumn) {
+      // Reordenar itens da coluna de origem (se mudou de coluna)
+      if (sourceColumn !== destColumn && item.column === sourceColumn) {
         const newIndex = sourceItems.findIndex(i => i.id === item.id);
-        return { ...item, order: newIndex >= 0 ? newIndex : item.order };
+        return { ...item, order: newIndex };
       }
 
       // Reordenar itens da coluna de destino
-      if (item.column === destColumn) {
+      if (item.column === destColumn && item.id !== movedItem.id) {
         const newIndex = destItems.findIndex(i => i.id === item.id);
-        return { ...item, order: newIndex >= 0 ? newIndex : item.order };
+        return { ...item, order: newIndex };
       }
 
       return item;
@@ -442,34 +438,36 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                 {...provided.draggableProps}
                                 {...provided.dragHandleProps}
                                 className={cn(
-                                  "mb-4 last:mb-0 dnd-smooth-drop",
-                                  snapshot.isDragging ? "z-50 cursor-grabbing" : "cursor-grab",
-                                  "transition-all duration-200"
+                                  "mb-4 last:mb-0",
+                                  snapshot.isDragging ? "z-50 cursor-grabbing" : "cursor-grab"
                                 )}
                                 style={{
                                   ...provided.draggableProps.style,
                                   userSelect: 'none',
+                                  transition: snapshot.isDragging ? 'none' : 'transform 0.2s ease',
                                 }}
                               >
                                 <Card 
                                   className={cn(
-                                    "group relative transition-all duration-300 glass-card-hover select-none",
-                                    !snapshot.isDragging && "hover:shadow-aurora hover:border-primary/40 hover:scale-[1.02]",
-                                    snapshot.isDragging && "rotate-3 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary"
+                                    "group relative glass-card-hover select-none",
+                                    !snapshot.isDragging && "transition-all duration-200 hover:shadow-aurora hover:border-primary/40",
+                                    snapshot.isDragging && "rotate-2 shadow-aurora-strong scale-105 ring-4 ring-primary/30 border-primary transition-none"
                                   )}
                                 >
 
-                                  {/* Botão Info para abrir modal */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleCardClick(item);
-                                    }}
-                                    className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:shadow-glow-sm z-10"
-                                    title="Ver detalhes"
-                                  >
-                                    <Info className="h-4 w-4 text-primary" />
-                                  </button>
+                                   {/* Botão Info para abrir modal - só aparece quando NÃO está arrastando */}
+                                   {!snapshot.isDragging && (
+                                     <button
+                                       onClick={(e) => {
+                                         e.stopPropagation();
+                                         handleCardClick(item);
+                                       }}
+                                       className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-all hover:bg-primary/10 hover:shadow-glow-sm z-10"
+                                       title="Ver detalhes"
+                                     >
+                                       <Info className="h-4 w-4 text-primary" />
+                                     </button>
+                                   )}
 
                                   <div className="p-5 space-y-4">
                                     <div className="pr-10">
