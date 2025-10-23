@@ -358,7 +358,7 @@ export default function Builder() {
                 Builder
               </h1>
               <p className="text-muted-foreground text-sm max-w-2xl mx-auto leading-tight">
-                Metodologia Rafael Milagre para extrair conhecimento e criar soluções de IA
+                Extraia o cérebro do Rafael Milagre e transforme suas ideias em soluções executáveis de IA
               </p>
             </motion.div>
 
