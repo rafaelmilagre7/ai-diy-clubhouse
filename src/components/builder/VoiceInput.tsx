@@ -13,12 +13,8 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
-  const [audioLevels, setAudioLevels] = useState<number[]>(new Array(40).fill(0.2));
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const animationFrameRef = useRef<number>();
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
@@ -42,56 +38,11 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
         mediaRecorderRef.current.stop();
       }
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-      }
-      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.close();
-      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
     };
   }, []);
-
-  const visualizeAudio = () => {
-    if (!analyserRef.current || !isRecording) return;
-
-    const analyser = analyserRef.current;
-    const bufferLength = analyser.fftSize;
-    const dataArray = new Uint8Array(bufferLength);
-    
-    const animate = () => {
-      if (!isRecording) return;
-      
-      // Usar time domain data para visualização mais responsiva
-      analyser.getByteTimeDomainData(dataArray);
-      
-      // Calcular 40 níveis de áudio
-      const barCount = 40;
-      const samplesPerBar = Math.floor(bufferLength / barCount);
-      const levels: number[] = [];
-      
-      for (let i = 0; i < barCount; i++) {
-        let sum = 0;
-        for (let j = 0; j < samplesPerBar; j++) {
-          const index = i * samplesPerBar + j;
-          // Converter de 0-255 para variação em torno de 128
-          const value = Math.abs(dataArray[index] - 128);
-          sum += value;
-        }
-        // Média e normalização (0 a 1)
-        const average = sum / samplesPerBar;
-        const normalized = Math.min(1, (average / 128) * 2.5); // Amplificar para melhor visualização
-        levels.push(Math.max(0.1, normalized)); // Mínimo de 0.1 para sempre ter barras visíveis
-      }
-      
-      setAudioLevels(levels);
-      animationFrameRef.current = requestAnimationFrame(animate);
-    };
-    
-    animate();
-  };
 
   const startRecording = async () => {
     try {
@@ -104,17 +55,6 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       });
       
       streamRef.current = stream;
-      
-      // Configurar Web Audio API para análise
-      audioContextRef.current = new AudioContext();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      
-      // Configurações otimizadas para visualização responsiva
-      analyserRef.current.fftSize = 1024; // Aumentar para mais precisão
-      analyserRef.current.smoothingTimeConstant = 0.3; // Menos suavização = mais responsivo
-      
-      source.connect(analyserRef.current);
       
       const mediaRecorder = new MediaRecorder(stream, {
         mimeType: 'audio/webm'
@@ -132,29 +72,17 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       mediaRecorder.onstop = async () => {
         const audioBlob = new Blob(chunksRef.current, { type: 'audio/webm' });
         
-        // Limpar recursos
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
           streamRef.current = null;
         }
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current);
-        }
-        if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-          audioContextRef.current.close();
-        }
         
         setRecordingTime(0);
-        setAudioLevels(new Array(40).fill(0.2));
-        
         await transcribeAudio(audioBlob);
       };
 
       mediaRecorder.start();
       setIsRecording(true);
-      
-      // Iniciar visualização
-      visualizeAudio();
 
       toast.success('Gravando áudio', {
         description: 'Fale claramente no microfone'
@@ -278,18 +206,16 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
             </span>
 
             <div className="h-12 w-64 flex items-center justify-center gap-[2px] bg-surface-elevated/30 rounded-lg px-2 border border-primary/20">
-              {audioLevels.map((level, i) => {
-                const height = Math.max(8, level * 100);
-                return (
-                  <div
-                    key={i}
-                    className="w-[4px] rounded-full bg-gradient-to-t from-primary to-primary/40 transition-all duration-100 ease-out"
-                    style={{
-                      height: `${height}%`,
-                    }}
-                  />
-                );
-              })}
+              {[...Array(40)].map((_, i) => (
+                <div
+                  key={i}
+                  className="w-[4px] rounded-full bg-gradient-to-t from-primary to-primary/40"
+                  style={{
+                    animation: 'wave 0.8s ease-in-out infinite',
+                    animationDelay: `${i * 0.03}s`,
+                  }}
+                />
+              ))}
             </div>
 
             <p className="text-xs text-primary font-medium">

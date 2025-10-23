@@ -272,11 +272,20 @@ export default function Builder() {
             exit={{ opacity: 0 }}
             className="flex flex-col items-center justify-center h-screen px-4 py-6"
           >
-            {/* Header com contador discreto - AJUSTADO para não sobrepor header */}
-            <div className="absolute top-20 right-4 z-10">
+            {/* Header com contador e botão de soluções */}
+            <div className="absolute top-20 right-4 z-10 flex items-center gap-3">
               <div className="text-xs text-muted-foreground bg-surface-elevated/50 backdrop-blur-sm px-3 py-1.5 rounded-full border border-border/50">
                 {generationsUsed} de {monthlyLimit === 999999 ? '∞' : monthlyLimit} gerações
               </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => navigate('/ferramentas/builder/historico')}
+                className="gap-2 shadow-lg"
+              >
+                <History className="h-4 w-4" />
+                Minhas Soluções
+              </Button>
             </div>
 
             {/* Logo/Título centralizado */}
@@ -394,23 +403,7 @@ export default function Builder() {
               </div>
             </motion.div>
 
-            {/* Botão Ver Histórico - melhorado */}
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="w-full max-w-2xl text-center"
-            >
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/ferramentas/builder/historico')}
-                className="gap-2"
-              >
-                <History className="h-4 w-4" />
-                Ver histórico de soluções
-              </Button>
-            </motion.div>
+            {/* Botão removido daqui - agora está no header */}
           </motion.div>
         )}
       </AnimatePresence>
