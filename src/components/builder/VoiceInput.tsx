@@ -15,18 +15,30 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
   const [recordingTime, setRecordingTime] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timerRef = useRef<NodeJS.Timeout>();
+
+  useEffect(() => {
+    let intervalId: NodeJS.Timeout | undefined;
+    
+    if (isRecording) {
+      intervalId = setInterval(() => {
+        setRecordingTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setRecordingTime(0);
+    }
+    
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isRecording]);
 
   useEffect(() => {
     return () => {
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
       if (mediaRecorderRef.current && isRecording) {
         mediaRecorderRef.current.stop();
       }
     };
-  }, [isRecording]);
+  }, []);
 
   const startRecording = async () => {
     try {
@@ -56,11 +68,6 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       mediaRecorder.start();
       setIsRecording(true);
 
-      // Timer
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prev => prev + 1);
-      }, 1000);
-
       toast.success('Gravação iniciada', {
         description: 'Fale sua ideia claramente'
       });
@@ -77,10 +84,6 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
-      
-      if (timerRef.current) {
-        clearInterval(timerRef.current);
-      }
     }
   };
 
@@ -191,10 +194,10 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
                 {[...Array(32)].map((_, i) => (
                   <div
                     key={i}
-                    className="w-0.5 rounded-full transition-all duration-300 bg-primary/40 animate-pulse"
+                    className="w-0.5 rounded-full bg-primary/50"
                     style={{
-                      height: `${20 + Math.random() * 80}%`,
-                      animationDelay: `${i * 0.05}s`,
+                      animation: `wave 0.8s ease-in-out infinite`,
+                      animationDelay: `${i * 0.03}s`,
                     }}
                   />
                 ))}

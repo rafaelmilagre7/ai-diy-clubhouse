@@ -226,7 +226,12 @@ export default function Builder() {
   };
 
   const handleVoiceTranscription = (text: string) => {
-    setCurrentIdea(text);
+    setCurrentIdea((prev) => {
+      if (prev.trim()) {
+        return prev + ' ' + text;
+      }
+      return text;
+    });
   };
 
   if (accessLoading) {
