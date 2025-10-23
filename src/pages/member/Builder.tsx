@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/auth';
 import { useBuilderAI } from '@/hooks/builder/useBuilderAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
 import { BuilderProcessingExperience } from '@/components/builder/BuilderProcessingExperience';
+import { BuilderValidationAnimation } from '@/components/builder/BuilderValidationAnimation';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { AIInputWithValidation } from '@/components/ui/AIInputWithValidation';
 import { VoiceInput } from '@/components/builder/VoiceInput';
@@ -37,6 +38,8 @@ export default function Builder() {
   const [currentIdea, setCurrentIdea] = useState<string>('');
   const [showWizard, setShowWizard] = useState(false);
   const [clickedExample, setClickedExample] = useState<number | null>(null);
+  const [validationStatus, setValidationStatus] = useState<'idle' | 'validating' | 'success' | 'error'>('idle');
+  const [validationMessage, setValidationMessage] = useState<string>('');
   const { 
     hasAccess, 
     generationsUsed, 
@@ -142,12 +145,58 @@ export default function Builder() {
       return;
     }
 
-    // Salvar ideia e iniciar análise
     setCurrentIdea(idea);
-    const generatedQuestions = await analyzeIdea(idea);
-    
-    if (generatedQuestions && generatedQuestions.length > 0) {
-      setShowWizard(true);
+
+    // NOVA ETAPA: Validar viabilidade primeiro
+    try {
+      setValidationStatus('validating');
+
+      const { data, error } = await supabase.functions.invoke('validate-idea-feasibility', {
+        body: { idea }
+      });
+
+      if (error) {
+        console.error('[BUILDER] Erro na validação:', error);
+        setValidationStatus('error');
+        setValidationMessage('Erro ao validar ideia. Tente novamente.');
+        setTimeout(() => setValidationStatus('idle'), 3000);
+        return;
+      }
+
+      const { viable, reason } = data;
+
+      if (!viable) {
+        // Não é viável
+        setValidationStatus('error');
+        setValidationMessage(reason || 'Ideia não é viável para desenvolvimento com IA');
+        
+        setTimeout(() => {
+          setValidationStatus('idle');
+          setCurrentIdea('');
+        }, 4000);
+        return;
+      }
+
+      // É viável! Mostrar sucesso e continuar
+      setValidationStatus('success');
+      setValidationMessage(reason || 'Sua ideia é viável e pode ser implementada!');
+
+      // Aguardar 2s para mostrar sucesso e então seguir para perguntas
+      setTimeout(async () => {
+        setValidationStatus('idle');
+        
+        const generatedQuestions = await analyzeIdea(idea);
+        
+        if (generatedQuestions && generatedQuestions.length > 0) {
+          setShowWizard(true);
+        }
+      }, 2000);
+
+    } catch (error) {
+      console.error('[BUILDER] Erro na validação:', error);
+      setValidationStatus('error');
+      setValidationMessage('Erro inesperado ao validar ideia');
+      setTimeout(() => setValidationStatus('idle'), 3000);
     }
   };
 
@@ -255,7 +304,13 @@ export default function Builder() {
   return (
     <div className="min-h-screen h-screen overflow-hidden bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <AnimatePresence mode="wait">
-        {isGenerating ? (
+        {validationStatus !== 'idle' ? (
+          <BuilderValidationAnimation 
+            key="validation"
+            status={validationStatus as 'validating' | 'success' | 'error'}
+            message={validationMessage}
+          />
+        ) : isGenerating ? (
           <BuilderProcessingExperience key="loader" />
         ) : showWizard && questions ? (
           <QuestionWizard
@@ -303,7 +358,7 @@ export default function Builder() {
                 Builder
               </h1>
               <p className="text-muted-foreground text-sm max-w-2xl mx-auto leading-tight">
-                Transforme ideias em soluções executáveis de IA
+                Metodologia Rafael Milagre para extrair conhecimento e criar soluções de IA
               </p>
             </motion.div>
 
