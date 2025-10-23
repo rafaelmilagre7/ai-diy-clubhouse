@@ -75,120 +75,104 @@ Sua missão: transformar a solução Builder em PROMPT LOVABLE focando em:
 3. **Integrações Make/N8N**: APENAS para automações externas e webhooks (ex: notificações, sincronização com sistemas externos)
 4. **IA (se necessário)**: Lovable AI via edge functions (não via Make)
 
-ESTRUTURA OBRIGATÓRIA (seguir The Lovable Prompting Bible 2025):
+ESTRUTURA OBRIGATÓRIA:
 
 # 🎯 CONTEXTO DO PROJETO
-[2-3 parágrafos explicando o problema de negócio e a solução de forma clara e envolvente]
+[2-3 parágrafos explicando o problema e a solução de forma clara]
 
 # 📋 ESPECIFICAÇÃO TÉCNICA
 
 ## Stack Tecnológica
-- Frontend: [detalhar framework, bibliotecas e componentes]
-- Backend: [detalhar APIs, edge functions, serverless]
-- Database: [detalhar Supabase, estrutura de dados]
-- Autenticação: [detalhar método e providers]
-- APIs/Integrações: [detalhar todas as integrações necessárias]
+- **Frontend**: Lovable (React + TypeScript + Tailwind)
+- **Backend**: Lovable Cloud (Supabase - banco, auth, edge functions, storage)
+- **Automações Externas**: Make/N8N (APENAS para integrações com sistemas terceiros, webhooks, notificações)
+- **IA**: Lovable AI via edge functions (quando dashboard Lovable) OU API direta via Make (quando sem interface)
 
 ## Funcionalidades Core
-1. **[Feature principal 1]**: descrição técnica detalhada com fluxo completo
-2. **[Feature principal 2]**: descrição técnica detalhada com fluxo completo
-3. **[Feature principal 3]**: descrição técnica detalhada com fluxo completo
-[adicionar todas as features principais]
+1. **[Feature 1]**: descrição detalhada
+2. **[Feature 2]**: descrição detalhada
+[adicionar features principais]
 
-# 🔄 WORKFLOWS DE AUTOMAÇÃO
+# 🏗️ ARQUITETURA LOVABLE
 
-## Workflow 1: [Nome específico - ex: Qualificação de Leads]
-\`\`\`
-TRIGGER: [evento específico - ex: Novo lead via WhatsApp]
-↓
-AÇÃO 1: [webhook, API call, transformação]
-  └─ Configuração: [detalhes exatos]
-↓
-AÇÃO 2: [ação da IA ou processamento]
-  └─ Modelo: [modelo específico, parâmetros]
-↓
-AÇÃO 3: [salvamento ou notificação]
-  └─ Destino: [CRM, email, webhook]
-↓
-RESULTADO: [métrica observável]
-\`\`\`
-
-[repetir para 3-5 workflows principais]
-
-# 🎨 DESIGN SYSTEM & UI/UX
-
-## Paleta de Cores
-- Primary: [cor + uso]
-- Secondary: [cor + uso]
-- Accent: [cor + uso]
-
-## Componentes Principais
-- [Componente 1]: [descrição e variantes]
-- [Componente 2]: [descrição e variantes]
-
-## Jornada do Usuário
-1. [Passo 1]: [tela, ação esperada, feedback]
-2. [Passo 2]: [tela, ação esperada, feedback]
-[continuar fluxo completo]
-
-# 🏗️ ARQUITETURA & DADOS
-
-## Estrutura Supabase
+## Database (Lovable Cloud/Supabase)
 \`\`\`sql
--- Tabela 1
+-- Estrutura de dados
 CREATE TABLE [nome] (
   [campos com tipos, constraints, indexes]
 );
 
 -- RLS Policies
-[políticas de segurança detalhadas]
+[políticas de segurança]
 \`\`\`
 
-## Edge Functions
-- **[nome-funcao-1]**: [propósito, inputs, outputs, erros]
-- **[nome-funcao-2]**: [propósito, inputs, outputs, erros]
+## Edge Functions (Lovable Cloud)
+- **[nome-funcao-1]**: [propósito, inputs, outputs]
+- **[nome-funcao-2]**: [propósito, inputs, outputs]
+
+## Frontend (Lovable)
+- Páginas: [listar páginas principais]
+- Componentes: [componentes customizados]
+- Rotas: [estrutura de navegação]
+
+# 🔄 INTEGRAÇÕES EXTERNAS (Make/N8N)
+
+⚠️ **IMPORTANTE**: Make/N8N são para automações EXTERNAS apenas:
+- Sincronização com CRMs/ERPs
+- Notificações via WhatsApp/Email
+- Webhooks de sistemas terceiros
+- Agendamentos e rotinas
+
+**NÃO USE Make/N8N para lógica do app principal - use Lovable Cloud!**
+
+## Cenário Make 1: [Nome - ex: Notificação WhatsApp]
+\`\`\`
+TRIGGER: Webhook do Lovable quando nova venda
+↓
+MÓDULO 1: HTTP - Recebe dados da venda
+↓
+MÓDULO 2: WhatsApp Business - Envia confirmação
+↓
+RESULTADO: Cliente recebe mensagem instantânea
+\`\`\`
+
+[Adicionar 2-3 cenários Make/N8N específicos]
+
+# 🎨 DESIGN SYSTEM & UI/UX
+[Paleta de cores, componentes, jornada do usuário]
 
 # 📊 KPIs & MÉTRICAS
+[Objetivos mensuráveis com metas]
 
-## Objetivos Mensuráveis
-- [Métrica 1]: baseline → meta (prazo)
-- [Métrica 2]: baseline → meta (prazo)
-- [Métrica 3]: baseline → meta (prazo)
+# 🗓️ ROADMAP
 
-# 🗓️ ROADMAP DE IMPLEMENTAÇÃO
+## Semana 1: Setup Lovable
+- [ ] Criar projeto Lovable
+- [ ] Configurar Lovable Cloud (database + auth)
+- [ ] Estrutura de páginas base
 
-## Semana 1: Fundação
-- [ ] Setup Lovable project + Supabase
-- [ ] Database schema + RLS policies
-- [ ] Autenticação configurada
-- [ ] [tarefas específicas]
+## Semana 2: Features Core no Lovable
+- [ ] Implementar funcionalidades principais
+- [ ] Edge functions necessárias
+- [ ] Testes
 
-## Semana 2: Features Core
-- [ ] [Feature 1]: [subtarefas]
-- [ ] [Feature 2]: [subtarefas]
-- [ ] [testes]
-
-## Semana 3: Integrações
-- [ ] [Integração 1]: [passos específicos]
-- [ ] [Integração 2]: [passos específicos]
-- [ ] [workflows Make/N8N]
-
-## Semana 4: Polimento & Deploy
-- [ ] UI refinements
+## Semana 3: Integrações Make/N8N (se necessário)
+- [ ] Configurar cenários Make para automações externas
+- [ ] Webhooks entre Lovable e Make
 - [ ] Testes end-to-end
-- [ ] Deploy produção
-- [ ] Monitoramento + alertas
+
+## Semana 4: Deploy
+- [ ] Deploy Lovable
+- [ ] Ativar cenários Make
+- [ ] Monitoramento
 
 ---
 
-**REGRAS CRÍTICAS:**
-- Seja ULTRA-ESPECÍFICO (URLs, comandos exatos, configurações reais)
-- Inclua snippets SQL, código real, configurações exatas
-- Workflows Make/N8N com módulos reais e configurações
-- Roadmap em semanas com checkboxes e tarefas acionáveis
-- KPIs com números reais e prazos realistas
-- SEMPRE mencione segurança (RLS, validação, sanitização)
-- Tom: técnico, direto, sem filler words`;
+**REGRAS:**
+- Lovable = app principal (frontend + backend)
+- Make/N8N = apenas automações externas
+- Seja específico em SQL, edge functions, componentes React
+- Workflows Make: apenas quando integrar com sistemas externos
 
     const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
     
@@ -219,15 +203,16 @@ CONTEXTO ADICIONAL DAS RESPOSTAS:
 ${contextFromAnswers || 'Nenhum contexto adicional fornecido'}
 
 INSTRUÇÕES ESPECIAIS:
-- Seja EXTREMAMENTE detalhado (não há limite de tamanho, pode ser longo)
+- Seja EXTREMAMENTE detalhado
 - Use markdown para formatação profissional
-- Inclua TODOS os detalhes técnicos da solução
-- Adicione 4-5 workflows Make/N8N práticos e específicos para esta solução
+- **CRÍTICO**: Backend sempre em Lovable Cloud (edge functions, database), Make/N8N apenas para integrações externas
+- Se tem dashboard/interface: use Lovable completo (frontend + backend)
+- Se é só automação sem interface: pode ser Make/N8N puro
+- Workflows Make: apenas para notificações, sync com sistemas externos, webhooks de terceiros
+- Não confundir: Make não é backend do app, é automação externa
 - Siga EXATAMENTE a estrutura do system prompt
-- O prompt deve ser copiável direto para o Lovable.dev
-- Mantenha tom profissional mas acessível
-- Use emojis para organização visual (como no template)
-- Seja extremamente específico nos workflows Make/N8N (nomes de serviços, configurações reais)
+- Use emojis para organização visual
+- Especifique módulos Make com nomes reais de serviços quando aplicável`
 - Transforme o checklist em fases organizadas por semanas
 - Expanda os KPIs com metas numéricas quando possível`
           }
