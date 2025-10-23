@@ -92,83 +92,80 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   }, [normalizedItems]);
 
   const handleDragEnd = (result: DropResult) => {
-    console.log('🎯 handleDragEnd iniciado:', result);
+    console.log('🎯 DRAG END CHAMADO:', result);
     
-    const { source, destination } = result;
-
-    // Validações básicas
-    if (!destination) {
-      console.log('❌ Sem destination, abortando');
+    if (!result.destination) {
+      console.log('❌ Sem destination - drop cancelado ou fora da área');
       return;
     }
+
+    const { source, destination } = result;
     
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
-      console.log('❌ Mesma posição, abortando');
+      console.log('ℹ️ Mesma posição, nada a fazer');
       return;
     }
 
-    const sourceColumn = source.droppableId as ColumnType;
-    const destColumn = destination.droppableId as ColumnType;
+    const sourceCol = source.droppableId as ColumnType;
+    const destCol = destination.droppableId as ColumnType;
     
-    console.log('📍 Movendo de', sourceColumn, 'índice', source.index, 'para', destColumn, 'índice', destination.index);
+    console.log(`📦 Movendo: ${sourceCol}[${source.index}] → ${destCol}[${destination.index}]`);
 
-    // Criar cópia completa de todos os itens
-    const allItems = [...normalizedItems];
-    
-    // Encontrar o item sendo movido
-    const movedItem = allItems.find(item => 
-      item.column === sourceColumn && 
-      itemsByColumn[sourceColumn].findIndex(i => i.id === item.id) === source.index
-    );
-    
-    if (!movedItem) {
-      console.log('❌ Item não encontrado');
-      return;
-    }
-    
-    console.log('📦 Item sendo movido:', movedItem.title);
+    // 1. Criar cópia das colunas
+    const newColumns = {
+      todo: [...itemsByColumn.todo],
+      in_progress: [...itemsByColumn.in_progress],
+      done: [...itemsByColumn.done]
+    };
 
-    // Atualizar todos os itens
-    const updatedItems = allItems.map(item => {
-      // O item que está sendo movido
-      if (item.id === movedItem.id) {
-        console.log('✏️ Atualizando item movido para coluna:', destColumn);
-        return {
-          ...item,
-          column: destColumn,
-          completed: destColumn === 'done',
-          order: destination.index,
-          completedAt: destColumn === 'done' ? new Date().toISOString() : item.completedAt
-        };
-      }
-      
-      // Itens que permaneceram na coluna de origem (ajustar order)
-      if (item.column === sourceColumn && sourceColumn !== destColumn) {
-        const currentIndex = itemsByColumn[sourceColumn].findIndex(i => i.id === item.id);
-        if (currentIndex > source.index) {
-          return { ...item, order: currentIndex - 1 };
-        }
-      }
-      
-      // Itens na coluna de destino (ajustar order)
-      if (item.column === destColumn && item.id !== movedItem.id) {
-        const currentIndex = itemsByColumn[destColumn].findIndex(i => i.id === item.id);
-        if (currentIndex >= destination.index) {
-          return { ...item, order: currentIndex + 1 };
-        }
-      }
-      
-      return item;
+    console.log('📊 Estado inicial das colunas:', {
+      todo: newColumns.todo.length,
+      in_progress: newColumns.in_progress.length,
+      done: newColumns.done.length
     });
 
-    console.log('💾 Salvando items atualizados:', updatedItems);
+    // 2. Remover da coluna de origem
+    const [movedItem] = newColumns[sourceCol].splice(source.index, 1);
+    console.log('✂️ Item removido:', movedItem.title);
 
-    // Salvar no banco de dados
+    // 3. Atualizar propriedades do item
+    movedItem.column = destCol;
+    movedItem.completed = destCol === 'done';
+    if (destCol === 'done') {
+      movedItem.completedAt = new Date().toISOString();
+    }
+    console.log('✏️ Item atualizado:', { column: destCol, completed: movedItem.completed });
+
+    // 4. Inserir na coluna de destino
+    newColumns[destCol].splice(destination.index, 0, movedItem);
+    console.log('➕ Item inserido na posição:', destination.index);
+
+    // 5. Recalcular orders sequencialmente para TODAS as colunas
+    const allItems: UnifiedChecklistItem[] = [];
+    (['todo', 'in_progress', 'done'] as ColumnType[]).forEach(col => {
+      newColumns[col].forEach((item, idx) => {
+        allItems.push({
+          ...item,
+          order: idx,
+          column: col
+        });
+      });
+    });
+
+    console.log('💾 Salvando no banco:', {
+      totalItems: allItems.length,
+      todo: newColumns.todo.length,
+      in_progress: newColumns.in_progress.length,
+      done: newColumns.done.length,
+      items: allItems.map(i => ({ id: i.id.slice(0, 8), title: i.title, column: i.column, order: i.order }))
+    });
+
+    // 6. Salvar no banco
     updateMutation.mutate({
       checklistData: {
         ...checklistData,
         checklist_data: {
-          items: updatedItems,
+          items: allItems,
           lastUpdated: new Date().toISOString()
         }
       },
@@ -450,86 +447,91 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                       {items.map((item, index) => (
                         <Draggable key={item.id} draggableId={item.id} index={index}>
                           {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className="mb-4 last:mb-0"
-                                style={provided.draggableProps.style}
-                              >
-                                <Card 
-                                  className={cn(
-                                    "group relative select-none p-5 transition-shadow",
-                                    snapshot.isDragging ? "shadow-lg ring-2 ring-primary cursor-grabbing" : "cursor-grab hover:shadow-md"
-                                  )}
+                            <Card 
+                              ref={provided.innerRef}
+                              {...provided.draggableProps}
+                              {...provided.dragHandleProps}
+                              style={provided.draggableProps.style}
+                              className={cn(
+                                "group relative select-none p-5 mb-4 last:mb-0 transition-all duration-200",
+                                snapshot.isDragging 
+                                  ? "shadow-aurora ring-4 ring-primary/30 scale-105 rotate-2 cursor-grabbing z-50" 
+                                  : "cursor-grab hover:shadow-md hover:scale-[1.02]"
+                              )}
+                            >
+                              {/* Botão Info - desabilitado durante drag */}
+                              {!snapshot.isDragging && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    handleCardClick(item);
+                                  }}
+                                  onMouseDown={(e) => {
+                                    // Previne que o mouse down no botão inicie o drag
+                                    e.stopPropagation();
+                                  }}
+                                  className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 z-20"
+                                  title="Ver detalhes"
+                                  style={{ pointerEvents: 'auto' }}
                                 >
-                                  {/* Botão Info para abrir modal */}
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      e.preventDefault();
-                                      handleCardClick(item);
-                                    }}
-                                    className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 z-10"
-                                    title="Ver detalhes"
-                                  >
-                                    <Info className="h-4 w-4 text-primary" />
-                                  </button>
+                                  <Info className="h-4 w-4 text-primary" />
+                                </button>
+                              )}
 
-                                  <div className="space-y-4">
-                                    <div className="pr-10">
-                                      <h4 className="font-semibold text-base leading-tight mb-2">
-                                        {item.title}
-                                      </h4>
-                                      
-                                      {item.description && (
-                                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                          {item.description}
-                                        </p>
-                                      )}
-                                    </div>
+                              <div className="space-y-4">
+                                <div className="pr-10">
+                                  <h4 className="font-semibold text-base leading-tight mb-2">
+                                    {item.title}
+                                  </h4>
+                                  
+                                  {item.description && (
+                                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                                      {item.description}
+                                    </p>
+                                  )}
+                                </div>
 
-                                    {/* Badges */}
-                                    <div className="flex flex-wrap gap-2">
-                                      {item.metadata?.estimated_time && (
-                                        <Badge variant="outline" className="text-xs gap-1.5">
-                                          <Clock className="h-3.5 w-3.5" />
-                                          {item.metadata.estimated_time}
-                                        </Badge>
+                                {/* Badges */}
+                                <div className="flex flex-wrap gap-2">
+                                  {item.metadata?.estimated_time && (
+                                    <Badge variant="outline" className="text-xs gap-1.5">
+                                      <Clock className="h-3.5 w-3.5" />
+                                      {item.metadata.estimated_time}
+                                    </Badge>
+                                  )}
+                                  
+                                  {item.metadata?.difficulty && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className={cn(
+                                        "text-xs font-semibold",
+                                        item.metadata.difficulty === 'easy' && "border-difficulty-beginner/40 text-difficulty-beginner bg-difficulty-beginner/10",
+                                        item.metadata.difficulty === 'medium' && "border-difficulty-intermediate/40 text-difficulty-intermediate bg-difficulty-intermediate/10",
+                                        item.metadata.difficulty === 'hard' && "border-difficulty-advanced/40 text-difficulty-advanced bg-difficulty-advanced/10"
                                       )}
-                                      
-                                      {item.metadata?.difficulty && (
-                                        <Badge 
-                                          variant="outline" 
-                                          className={cn(
-                                            "text-xs font-semibold",
-                                            item.metadata.difficulty === 'easy' && "border-difficulty-beginner/40 text-difficulty-beginner bg-difficulty-beginner/10",
-                                            item.metadata.difficulty === 'medium' && "border-difficulty-intermediate/40 text-difficulty-intermediate bg-difficulty-intermediate/10",
-                                            item.metadata.difficulty === 'hard' && "border-difficulty-advanced/40 text-difficulty-advanced bg-difficulty-advanced/10"
-                                          )}
-                                        >
-                                          {item.metadata.difficulty === 'easy' && '⚡ Fácil'}
-                                          {item.metadata.difficulty === 'medium' && '⚠️ Médio'}
-                                          {item.metadata.difficulty === 'hard' && '🔥 Difícil'}
-                                        </Badge>
-                                      )}
-                                    </div>
+                                    >
+                                      {item.metadata.difficulty === 'easy' && '⚡ Fácil'}
+                                      {item.metadata.difficulty === 'medium' && '⚠️ Médio'}
+                                      {item.metadata.difficulty === 'hard' && '🔥 Difícil'}
+                                    </Badge>
+                                  )}
+                                </div>
 
-                                    {/* Footer com indicador de notas */}
-                                    {item.notes && (
-                                      <div className="pt-3 border-t border-border/50">
-                                        <p className="text-xs text-muted-foreground italic flex items-center gap-1.5">
-                                          <span className="text-base">✏️</span>
-                                          <span>Tem notas pessoais</span>
-                                        </p>
-                                      </div>
-                                    )}
+                                {/* Footer com indicador de notas */}
+                                {item.notes && (
+                                  <div className="pt-3 border-t border-border/50">
+                                    <p className="text-xs text-muted-foreground italic flex items-center gap-1.5">
+                                      <span className="text-base">✏️</span>
+                                      <span>Tem notas pessoais</span>
+                                    </p>
                                   </div>
-                                </Card>
+                                )}
                               </div>
-                            )}
-                          </Draggable>
-                        ))}
+                            </Card>
+                          )}
+                        </Draggable>
+                      ))}
                         {provided.placeholder}
                     </div>
                   )}
