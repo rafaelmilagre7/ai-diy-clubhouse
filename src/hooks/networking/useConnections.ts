@@ -107,11 +107,26 @@ export const useConnections = () => {
           }
         });
 
+      // Criar conversa automaticamente entre os dois usuários
+      const { error: conversationError } = await supabase
+        .from('conversations')
+        .insert({
+          participant_1_id: connection.requester_id,
+          participant_2_id: connection.recipient_id,
+          last_message_at: new Date().toISOString()
+        });
+
+      if (conversationError) {
+        console.error('Erro ao criar conversa:', conversationError);
+        // Não lançar erro para não bloquear a aceitação da conexão
+      }
+
       return connection;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['active-connections'] });
       queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['conversations'] });
       toast.success('Conexão aceita com sucesso!');
     },
     onError: (error) => {
