@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertCircle, LayoutList, LayoutGrid } from "lucide-react";
+import { CheckCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,19 +30,9 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   checklistType = 'implementation', 
   onComplete 
 }) => {
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
-  const [showSaveButtons, setShowSaveButtons] = useState<Record<string, boolean>>({});
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>(() => {
-    const saved = localStorage.getItem(`checklist-view-${solutionId}`);
-    return (saved as 'list' | 'kanban') || 'kanban'; // Padrão: Kanban
-  });
-
-  const handleViewModeChange = (mode: 'list' | 'kanban') => {
-    setViewMode(mode);
-    localStorage.setItem(`checklist-view-${solutionId}`, mode);
-  };
-
-  // Buscar template e progresso do usuário
+  const [selectedItem, setSelectedItem] = useState<UnifiedChecklistItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(solutionId, checklistType);
   const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(solutionId, checklistType);
   
@@ -335,180 +325,28 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-2xl font-bold">{getChecklistTitle()}</h2>
-          <p className="text-muted-foreground text-sm">
-            Confirme cada etapa conforme você progride na solução
-          </p>
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleViewModeChange('list')}
-          >
-            <LayoutList className="h-4 w-4 mr-2" />
-            Lista
-          </Button>
-          <Button
-            variant={viewMode === 'kanban' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => handleViewModeChange('kanban')}
-          >
-            <LayoutGrid className="h-4 w-4 mr-2" />
-            Kanban
-          </Button>
-        </div>
-      </div>
-
-      <AnimatePresence mode="wait">
-        {viewMode === 'kanban' ? (
-          <motion.div
-            key="kanban"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <UnifiedChecklistKanban
-              checklistItems={normalizeChecklistItems(checklistItems)}
-              checklistData={{
-                id: userProgress?.id,
-                user_id: userProgress?.user_id || '',
-                solution_id: solutionId,
-                template_id: (template || solutionChecklist)?.id,
-                checklist_type: checklistType,
-                checklist_data: {
-                  items: checklistItems,
-                  lastUpdated: new Date().toISOString()
-                },
-                completed_items: completedItems.length,
-                total_items: checklistItems.length,
-                progress_percentage: progressPercentage,
-                is_completed: allCompleted,
-                is_template: false
-              }}
-              solutionId={solutionId}
-              checklistType={checklistType}
-              templateId={(template || solutionChecklist)?.id}
-            />
-          </motion.div>
-        ) : (
-          <motion.div
-            key="list"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: 20 }}
-            transition={{ duration: 0.3 }}
-          >
-            <Card className="p-4">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold">Progresso Geral</h3>
-                <span className="text-sm text-muted-foreground">
-                  {completedItems.length} de {checklistItems.length} itens
-                </span>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2 mb-2">
-                <div 
-                  className="bg-gradient-to-r from-primary to-primary-glow h-2 rounded-full transition-all duration-500"
-                  style={{ width: `${progressPercentage}%` }}
-                />
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {progressPercentage}% concluído
-              </p>
-            </Card>
-
-            <div className="space-y-4 mt-6">
-              {checklistItems.map((item) => {
-                const currentNotes = itemNotes[item.id] || '';
-                const showNotesSave = showSaveButtons[item.id] || false;
-
-                const handleNotesLocalChange = (value: string) => {
-                  setItemNotes(prev => ({ ...prev, [item.id]: value }));
-                  setShowSaveButtons(prev => ({ ...prev, [item.id]: value !== (item.notes || '') }));
-                };
-
-                const saveNotes = () => {
-                  handleNotesChange(item.id, currentNotes);
-                  setShowSaveButtons(prev => ({ ...prev, [item.id]: false }));
-                };
-                
-                return (
-                  <Card key={item.id} className={cn(
-                    "p-4 transition-all duration-300 border-2",
-                    item.completed ? "border-primary/40 bg-primary/5" : "border-border"
-                  )}>
-                    <div className="space-y-3">
-                      <div className="flex items-start gap-3">
-                        <Checkbox
-                          checked={item.completed}
-                          onCheckedChange={(checked) => 
-                            handleItemToggle(item.id, checked as boolean)
-                          }
-                          className="mt-1"
-                          disabled={updateMutation.isPending}
-                        />
-                        
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-medium">{item.title}</h4>
-                            {item.completed && (
-                              <Badge className="bg-primary/20 text-primary text-xs">
-                                Concluído
-                              </Badge>
-                            )}
-                          </div>
-                          
-                          {item.description && (
-                            <p className="text-sm text-muted-foreground">
-                              {item.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="ml-7 space-y-2">
-                      <Textarea
-                        placeholder="Adicione suas notas sobre esta etapa..."
-                        value={currentNotes}
-                        onChange={(e) => handleNotesLocalChange(e.target.value)}
-                        className="min-h-20"
-                        disabled={updateMutation.isPending}
-                      />
-                        {showNotesSave && (
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={saveNotes}
-                            disabled={updateMutation.isPending}
-                          >
-                            {updateMutation.isPending ? 'Salvando...' : 'Salvar notas'}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-
-            {completedItems.length === checklistItems.length && (
-              <Card className="p-4 bg-primary/10 border-primary/20 mt-6">
-                <div className="flex items-center gap-2 text-primary">
-                  <CheckCircle className="w-5 h-5" />
-                  <span className="font-medium">
-                    Parabéns! Todos os itens foram concluídos! 
-                    {onComplete && " Você pode avançar para a próxima etapa."}
-                  </span>
-                </div>
-              </Card>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <UnifiedChecklistKanban
+        checklistItems={normalizeChecklistItems(checklistItems)}
+        checklistData={{
+          id: userProgress?.id,
+          user_id: userProgress?.user_id || '',
+          solution_id: solutionId,
+          template_id: (template || solutionChecklist)?.id,
+          checklist_type: checklistType,
+          checklist_data: {
+            items: checklistItems,
+            lastUpdated: new Date().toISOString()
+          },
+          completed_items: completedItems.length,
+          total_items: checklistItems.length,
+          progress_percentage: progressPercentage,
+          is_completed: allCompleted,
+          is_template: false
+        }}
+        solutionId={solutionId}
+        checklistType={checklistType}
+        templateId={(template || solutionChecklist)?.id}
+      />
     </div>
   );
 };

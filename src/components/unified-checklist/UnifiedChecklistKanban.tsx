@@ -2,11 +2,10 @@ import React, { useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, Loader, Lightbulb } from "lucide-react";
+import { Clock, CheckCircle, Loader, Lightbulb, Sparkles, TrendingUp, GripVertical } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { ChecklistCardModal } from './ChecklistCardModal';
 import { 
   useUpdateUnifiedChecklist,
   type UnifiedChecklistItem,
@@ -23,24 +22,30 @@ interface UnifiedChecklistKanbanProps {
 
 type ColumnType = 'todo' | 'in_progress' | 'done';
 
-const COLUMNS: { id: ColumnType; title: string; icon: any; color: string }[] = [
+const COLUMNS: { id: ColumnType; title: string; icon: any; bgGradient: string; borderColor: string; headerBg: string }[] = [
   { 
     id: 'todo', 
     title: 'A Fazer', 
-    icon: Clock, 
-    color: 'text-muted-foreground border-border bg-muted/20' 
+    icon: Clock,
+    bgGradient: 'from-slate-50 to-slate-100 dark:from-slate-900/50 dark:to-slate-800/50',
+    borderColor: 'border-slate-200 dark:border-slate-700',
+    headerBg: 'bg-slate-100 dark:bg-slate-800'
   },
   { 
     id: 'in_progress', 
     title: 'Em Progresso', 
-    icon: Loader, 
-    color: 'text-status-warning border-status-warning/30 bg-status-warning/10' 
+    icon: TrendingUp,
+    bgGradient: 'from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30',
+    borderColor: 'border-amber-200 dark:border-amber-800',
+    headerBg: 'bg-gradient-to-r from-amber-100 to-orange-100 dark:from-amber-900/50 dark:to-orange-900/50'
   },
   { 
     id: 'done', 
     title: 'Concluído', 
-    icon: CheckCircle, 
-    color: 'text-success border-success/30 bg-success/10' 
+    icon: Sparkles,
+    bgGradient: 'from-emerald-50 to-green-50 dark:from-emerald-950/30 dark:to-green-950/30',
+    borderColor: 'border-emerald-200 dark:border-emerald-800',
+    headerBg: 'bg-gradient-to-r from-emerald-100 to-green-100 dark:from-emerald-900/50 dark:to-green-900/50'
   },
 ];
 
@@ -51,8 +56,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   checklistType,
   templateId
 }) => {
-  const [itemNotes, setItemNotes] = useState<Record<string, string>>({});
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+  const [selectedItem, setSelectedItem] = useState<UnifiedChecklistItem | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [showKanbanTip, setShowKanbanTip] = useState(() => {
     return !localStorage.getItem(`kanban-tip-seen-${solutionId}`);
   });
@@ -156,19 +161,12 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
   };
 
-  const toggleExpanded = (itemId: string) => {
-    setExpandedItems(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(itemId)) {
-        newSet.delete(itemId);
-      } else {
-        newSet.add(itemId);
-      }
-      return newSet;
-    });
+  const handleCardClick = (item: UnifiedChecklistItem) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
   };
 
-  const saveNotes = (itemId: string, notes: string) => {
+  const handleNotesChange = (itemId: string, notes: string) => {
     const updatedItems = normalizedItems.map(item =>
       item.id === itemId ? { ...item, notes } : item
     );
@@ -202,58 +200,105 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Tooltip Educativo */}
+      {/* Tooltip Educativo com Design Rico */}
       {showKanbanTip && (
-        <Card className="p-4 bg-primary/5 border-primary/20">
-          <div className="flex items-start gap-3">
-            <Lightbulb className="h-5 w-5 text-primary mt-0.5 flex-shrink-0" />
-            <div className="flex-1">
-              <h4 className="font-semibold mb-1">Dica: Como usar o Kanban</h4>
-              <p className="text-sm text-muted-foreground mb-3">
-                Arraste os cards entre as colunas para organizar suas tarefas. 
-                Ao mover para "Concluído", o item será automaticamente marcado como completo.
-              </p>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setShowKanbanTip(false);
-                  localStorage.setItem(`kanban-tip-seen-${solutionId}`, 'true');
-                }}
-              >
-                Entendi
-              </Button>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <Card className="p-5 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border-2 border-primary/30 shadow-lg">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl bg-primary/20 border border-primary/30">
+                <Lightbulb className="h-6 w-6 text-primary" />
+              </div>
+              <div className="flex-1">
+                <h4 className="font-bold text-lg mb-2 flex items-center gap-2">
+                  Como usar o Kanban
+                  <Badge variant="secondary" className="text-xs">Dica</Badge>
+                </h4>
+                <ul className="space-y-2 text-sm text-muted-foreground mb-4">
+                  <li className="flex items-start gap-2">
+                    <GripVertical className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                    <span>Arraste os cards entre as colunas para organizar suas tarefas</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <CheckCircle className="h-4 w-4 mt-0.5 flex-shrink-0 text-success" />
+                    <span>Ao mover para "Concluído", o item será automaticamente marcado como completo</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Sparkles className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
+                    <span>Clique em um card para ver todos os detalhes e adicionar notas</span>
+                  </li>
+                </ul>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    setShowKanbanTip(false);
+                    localStorage.setItem(`kanban-tip-seen-${solutionId}`, 'true');
+                  }}
+                  className="w-full sm:w-auto"
+                >
+                  Entendi, vamos lá! 🚀
+                </Button>
+              </div>
             </div>
-          </div>
-        </Card>
+          </Card>
+        </motion.div>
       )}
 
-      {/* Header com Estatísticas */}
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold">Progresso Kanban</h3>
-          <Badge variant="outline">
-            {stats.done}/{stats.total} concluídos
+      {/* Header com Estatísticas Ricas */}
+      <Card className="p-6 bg-gradient-to-br from-card to-card/50 border-2 shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+          <div>
+            <h3 className="text-xl font-bold flex items-center gap-2">
+              Seu Progresso
+              {stats.percentage === 100 && <Sparkles className="h-5 w-5 text-success animate-pulse" />}
+            </h3>
+            <p className="text-sm text-muted-foreground mt-1">
+              Acompanhe sua jornada de implementação
+            </p>
+          </div>
+          <Badge variant="secondary" className="text-base px-4 py-2 font-bold">
+            {stats.done}/{stats.total}
           </Badge>
         </div>
-        <div className="w-full bg-muted rounded-full h-2 mb-3">
-          <div 
-            className="bg-gradient-to-r from-primary to-success h-2 rounded-full transition-all duration-500"
-            style={{ width: `${stats.percentage}%` }}
-          />
+        
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-sm">
+            <span className="font-medium">Conclusão</span>
+            <span className="font-bold text-primary">{stats.percentage}%</span>
+          </div>
+          <div className="relative w-full h-3 bg-muted rounded-full overflow-hidden">
+            <motion.div 
+              className="absolute inset-y-0 left-0 bg-gradient-to-r from-primary via-primary-glow to-success rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${stats.percentage}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          </div>
         </div>
-        <div className="flex gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-muted" />
-            <span className="text-muted-foreground">{stats.todo} A Fazer</span>
+
+        <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700">
+            <div className="flex items-center gap-2 mb-1">
+              <Clock className="h-4 w-4 text-slate-600 dark:text-slate-400" />
+              <span className="text-xs font-medium text-slate-600 dark:text-slate-400">A Fazer</span>
+            </div>
+            <p className="text-2xl font-bold">{stats.todo}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-status-warning" />
-            <span className="text-muted-foreground">{stats.in_progress} Em Progresso</span>
+          <div className="p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+            <div className="flex items-center gap-2 mb-1">
+              <TrendingUp className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-xs font-medium text-amber-600 dark:text-amber-400">Em Progresso</span>
+            </div>
+            <p className="text-2xl font-bold text-amber-700 dark:text-amber-300">{stats.in_progress}</p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="w-3 h-3 rounded-full bg-success" />
-            <span className="text-muted-foreground">{stats.done} Concluídos</span>
+          <div className="p-3 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">Concluídos</span>
+            </div>
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{stats.done}</p>
           </div>
         </div>
       </Card>
@@ -267,18 +312,27 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
             return (
               <div key={column.id} className="space-y-3">
-                {/* Column Header */}
-                <Card className={cn("p-3 border-2", column.color)}>
+                {/* Column Header - Design Rico */}
+                <div className={cn(
+                  "p-4 rounded-xl border-2 shadow-sm",
+                  column.headerBg,
+                  column.borderColor
+                )}>
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Icon className="h-4 w-4" />
-                      <h3 className="font-semibold text-sm">{column.title}</h3>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 rounded-lg bg-white/50 dark:bg-black/20">
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <h3 className="font-bold">{column.title}</h3>
                     </div>
-                    <Badge variant="secondary" className="text-xs">
+                    <Badge 
+                      variant="secondary" 
+                      className="font-bold px-3 py-1 text-sm"
+                    >
                       {items.length}
                     </Badge>
                   </div>
-                </Card>
+                </div>
 
                 {/* Droppable Area */}
                 <Droppable droppableId={column.id}>
@@ -287,89 +341,119 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                       ref={provided.innerRef}
                       {...provided.droppableProps}
                       className={cn(
-                        "min-h-[200px] rounded-lg border-2 border-dashed p-3 transition-colors",
+                        "min-h-[300px] rounded-xl border-2 p-4 transition-all duration-300",
+                        "bg-gradient-to-br",
+                        column.bgGradient,
                         snapshot.isDraggingOver 
-                          ? "border-primary bg-primary/5" 
-                          : "border-border bg-muted/20"
+                          ? "border-primary shadow-lg ring-4 ring-primary/20 scale-[1.02]" 
+                          : cn("border-dashed", column.borderColor)
                       )}
                     >
                       <AnimatePresence mode="popLayout">
                         {items.length === 0 && !snapshot.isDraggingOver && (
                           <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="flex items-center justify-center h-32 text-sm text-muted-foreground"
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            className="flex flex-col items-center justify-center h-48 text-center p-6"
                           >
-                            Arraste itens para cá
+                            <div className="p-4 rounded-full bg-muted/50 mb-3">
+                              <Icon className="h-8 w-8 text-muted-foreground" />
+                            </div>
+                            <p className="text-sm font-medium text-muted-foreground mb-1">
+                              Nenhum item aqui
+                            </p>
+                            <p className="text-xs text-muted-foreground/70">
+                              Arraste cards para esta coluna
+                            </p>
                           </motion.div>
                         )}
 
                         {items.map((item, index) => (
                           <Draggable key={item.id} draggableId={item.id} index={index}>
                             {(provided, snapshot) => (
-                              <div
+                              <motion.div
                                 ref={provided.innerRef}
                                 {...provided.draggableProps}
-                                {...provided.dragHandleProps}
                                 className={cn(
-                                  "mb-3 last:mb-0 transition-transform",
-                                  snapshot.isDragging && "rotate-3 shadow-2xl scale-105"
+                                  "mb-3 last:mb-0",
+                                  snapshot.isDragging && "z-50"
                                 )}
+                                layout
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                whileHover={{ scale: 1.02 }}
+                                transition={{ duration: 0.2 }}
                               >
                                 <Card 
                                   className={cn(
-                                    "p-3 cursor-grab active:cursor-grabbing transition-all",
-                                    snapshot.isDragging && "ring-2 ring-primary"
+                                    "group relative cursor-pointer transition-all duration-200",
+                                    "hover:shadow-lg hover:border-primary/50",
+                                    snapshot.isDragging && "rotate-2 shadow-2xl scale-105 ring-4 ring-primary/30 border-primary"
                                   )}
+                                  onClick={() => handleCardClick(item)}
                                 >
-                                  <div className="space-y-2">
-                                    <h4 className="font-medium text-sm leading-tight">
-                                      {item.title}
-                                    </h4>
-                                    
-                                    {item.description && (
-                                      <p className="text-xs text-muted-foreground line-clamp-2">
-                                        {item.description}
-                                      </p>
-                                    )}
+                                  {/* Drag Handle */}
+                                  <div 
+                                    {...provided.dragHandleProps}
+                                    className="absolute top-2 right-2 p-1.5 rounded opacity-0 group-hover:opacity-100 transition-opacity cursor-grab active:cursor-grabbing hover:bg-muted"
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <GripVertical className="h-4 w-4 text-muted-foreground" />
+                                  </div>
 
-                                    {expandedItems.has(item.id) && (
-                                      <div className="space-y-2 pt-2 border-t">
-                                        <Textarea
-                                          placeholder="Suas notas..."
-                                          value={itemNotes[item.id] || item.notes || ''}
-                                          onChange={(e) => setItemNotes(prev => ({ 
-                                            ...prev, 
-                                            [item.id]: e.target.value 
-                                          }))}
-                                          className="min-h-16 text-xs"
-                                        />
-                                        {(itemNotes[item.id] !== undefined && itemNotes[item.id] !== item.notes) && (
-                                          <Button
-                                            size="sm"
-                                            variant="outline"
-                                            onClick={() => saveNotes(item.id, itemNotes[item.id])}
-                                            disabled={updateMutation.isPending}
-                                            className="text-xs h-7"
-                                          >
-                                            Salvar notas
-                                          </Button>
-                                        )}
+                                  <div className="p-4 space-y-3">
+                                    <div className="pr-8">
+                                      <h4 className="font-semibold leading-tight mb-2">
+                                        {item.title}
+                                      </h4>
+                                      
+                                      {item.description && (
+                                        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
+                                          {item.description}
+                                        </p>
+                                      )}
+                                    </div>
+
+                                    {/* Badges */}
+                                    <div className="flex flex-wrap gap-2">
+                                      {item.metadata?.estimated_time && (
+                                        <Badge variant="outline" className="text-xs gap-1">
+                                          <Clock className="h-3 w-3" />
+                                          {item.metadata.estimated_time}
+                                        </Badge>
+                                      )}
+                                      
+                                      {item.metadata?.difficulty && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className={cn(
+                                            "text-xs",
+                                            item.metadata.difficulty === 'easy' && "border-green-500/30 text-green-600",
+                                            item.metadata.difficulty === 'medium' && "border-yellow-500/30 text-yellow-600",
+                                            item.metadata.difficulty === 'hard' && "border-red-500/30 text-red-600"
+                                          )}
+                                        >
+                                          {item.metadata.difficulty === 'easy' && '⚡ Fácil'}
+                                          {item.metadata.difficulty === 'medium' && '⚠️ Médio'}
+                                          {item.metadata.difficulty === 'hard' && '🔥 Difícil'}
+                                        </Badge>
+                                      )}
+                                    </div>
+
+                                    {/* Footer com indicador de notas */}
+                                    {item.notes && (
+                                      <div className="pt-2 border-t border-border/50">
+                                        <p className="text-xs text-muted-foreground italic flex items-center gap-1">
+                                          <span>✏️</span>
+                                          Tem notas pessoais
+                                        </p>
                                       </div>
                                     )}
-
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => toggleExpanded(item.id)}
-                                      className="w-full text-xs h-6"
-                                    >
-                                      {expandedItems.has(item.id) ? 'Ocultar' : 'Ver mais'}
-                                    </Button>
                                   </div>
                                 </Card>
-                              </div>
+                              </motion.div>
                             )}
                           </Draggable>
                         ))}
@@ -384,19 +468,42 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         </div>
       </DragDropContext>
 
-      {/* Completion Message */}
+      {/* Completion Message - Design Rico */}
       {stats.percentage === 100 && (
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="p-4 rounded-lg bg-success/10 border border-success/30 text-center"
+          initial={{ opacity: 0, y: 20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-success/20 via-success/10 to-transparent border-2 border-success/30 p-8 text-center shadow-lg"
         >
-          <CheckCircle className="h-8 w-8 text-success mx-auto mb-2" />
-          <p className="font-semibold text-success">
-            Parabéns! Todos os itens foram concluídos! 🎉
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(34,197,94,0.1),transparent_70%)]" />
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.2, type: "spring" }}
+          >
+            <Sparkles className="h-16 w-16 text-success mx-auto mb-4 animate-pulse" />
+          </motion.div>
+          <h3 className="text-2xl font-bold mb-2 bg-gradient-to-r from-success to-emerald-600 bg-clip-text text-transparent">
+            Parabéns! Missão Cumprida! 🎉
+          </h3>
+          <p className="text-muted-foreground mb-4">
+            Você completou todos os itens do plano de ação. Continue assim!
           </p>
+          <div className="flex items-center justify-center gap-2 text-sm text-success">
+            <CheckCircle className="h-4 w-4" />
+            <span className="font-semibold">{stats.total} de {stats.total} tarefas concluídas</span>
+          </div>
         </motion.div>
       )}
+
+      {/* Modal de Detalhes */}
+      <ChecklistCardModal
+        item={selectedItem}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onNotesChange={handleNotesChange}
+        isUpdating={updateMutation.isPending}
+      />
     </div>
   );
 };
