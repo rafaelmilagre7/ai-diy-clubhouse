@@ -67,12 +67,12 @@ const ImplementationTrail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden">
-      {/* Aurora background effects */}
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-aurora-primary/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-operational/10 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-        <div className="absolute top-1/2 right-1/3 w-64 h-64 bg-strategy/10 rounded-full blur-3xl animate-pulse animation-delay-4000" />
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated relative overflow-hidden">
+      {/* Aurora background effects - usando cores do design system */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-1/4 w-blob-lg h-blob-lg bg-gradient-aurora-subtle rounded-full blur-3xl animate-pulse opacity-60" />
+        <div className="absolute bottom-1/4 right-1/4 w-blob-md h-blob-md bg-gradient-operational-subtle rounded-full blur-3xl animate-pulse animation-delay-2000 opacity-50" />
+        <div className="absolute top-1/2 right-1/3 w-blob-sm h-blob-sm bg-gradient-strategy-subtle rounded-full blur-3xl animate-pulse animation-delay-4000 opacity-40" />
       </div>
       
       {/* Content */}

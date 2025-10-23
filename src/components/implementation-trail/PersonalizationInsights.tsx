@@ -82,11 +82,12 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Solutions */}
-        <Card className="aurora-glass border-aurora-primary/30 aurora-hover-scale">
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-aurora-primary/30 hover:border-aurora-primary/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-20" />
+          <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Soluções Selecionadas</p>
+                <p className="text-sm text-muted-foreground font-medium">Soluções Selecionadas</p>
                 <p className="text-2xl font-bold text-foreground">{totalSolutions}</p>
               </div>
               <Target className="w-8 h-8 text-aurora-primary" />
@@ -95,49 +96,52 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
         </Card>
 
         {/* Complexity Level */}
-        <Card className="aurora-glass border-aurora-primary/30 aurora-hover-scale">
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-operational/30 hover:border-operational/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-operational-subtle opacity-20" />
+          <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Nível de Complexidade</p>
+                <p className="text-sm text-muted-foreground font-medium">Nível de Complexidade</p>
                 <p className="text-2xl font-bold text-foreground">{complexity.level}</p>
               </div>
-              <complexity.icon className="w-8 h-8 text-aurora-primary" />
+              <complexity.icon className="w-8 h-8 text-operational" />
             </div>
           </CardContent>
         </Card>
 
         {/* Estimated Time */}
-        <Card className="aurora-glass border-aurora-primary/30 aurora-hover-scale">
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-strategy/30 hover:border-strategy/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-strategy-subtle opacity-20" />
+          <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Tempo Estimado</p>
+                <p className="text-sm text-muted-foreground font-medium">Tempo Estimado</p>
                 <p className="text-2xl font-bold text-foreground">{totalHours}h</p>
               </div>
-              <Clock className="w-8 h-8 text-aurora-primary" />
+              <Clock className="w-8 h-8 text-strategy" />
             </div>
           </CardContent>
         </Card>
 
         {/* Lessons Count */}
-        <Card className="aurora-glass border-aurora-primary/30 aurora-hover-scale">
-          <CardContent className="p-6">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-revenue/30 hover:border-revenue/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-revenue-subtle opacity-20" />
+          <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Aulas Recomendadas</p>
+                <p className="text-sm text-muted-foreground font-medium">Aulas Recomendadas</p>
                 <p className="text-2xl font-bold text-foreground">{trail.recommended_lessons?.length || 0}</p>
               </div>
-              <Award className="w-8 h-8 text-aurora-primary" />
+              <Award className="w-8 h-8 text-revenue" />
             </div>
           </CardContent>
         </Card>
       </div>
 
       {/* Generation Info */}
-      <Card className="aurora-glass border-muted/20">
+      <Card className="bg-card/60 backdrop-blur-md border border-border/50 shadow-md">
         <CardContent className="p-4">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
               <span>Trilha personalizada gerada por IA</span>

@@ -47,10 +47,10 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
   const getPriorityLabel = (priority: number) => {
     switch (priority) {
-      case 1: return { label: 'Alta Prioridade', color: 'bg-aurora-primary', textColor: 'text-black' };
-      case 2: return { label: 'Média Prioridade', color: 'bg-vivercyan', textColor: 'text-black' };
-      case 3: return { label: 'Baixa Prioridade', color: 'bg-viverpetrol', textColor: 'text-white' };
-      default: return { label: 'Prioridade', color: 'bg-muted', textColor: 'text-muted-foreground' };
+      case 1: return { label: 'Alta Prioridade', gradient: 'bg-gradient-aurora', textColor: 'text-primary-foreground' };
+      case 2: return { label: 'Média Prioridade', gradient: 'bg-gradient-operational', textColor: 'text-primary-foreground' };
+      case 3: return { label: 'Baixa Prioridade', gradient: 'bg-gradient-strategy', textColor: 'text-primary-foreground' };
+      default: return { label: 'Prioridade', gradient: 'bg-muted', textColor: 'text-muted-foreground' };
     }
   };
 
@@ -73,16 +73,16 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     }
 
     return (
-      <Card className="group relative overflow-hidden border border-border/50 hover:border-aurora-primary/50 bg-gradient-to-br from-card/95 to-muted/30 backdrop-blur-sm transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-aurora-primary/5 cursor-pointer">
+      <Card className="group relative overflow-hidden border border-border/50 hover:border-aurora-primary/50 bg-card/80 backdrop-blur-md transition-all duration-500 hover:scale-[1.01] hover:shadow-xl hover:shadow-aurora-primary/10 cursor-pointer">
         {/* Animated glow effect */}
-        <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 via-transparent to-aurora-primary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
+        <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
         <div className="flex h-solution-card relative z-10" onClick={() => {
           console.log('🔗 [SOLUTION-CARD-OPT] Navegando para solução:', item.solutionId);
           navigate(`/solution/${item.solutionId}`);
         }}>
           {/* Solution Cover */}
-          <div className="w-card-sidebar relative overflow-hidden bg-gradient-to-br from-aurora-primary/20 to-aurora-primary/10 rounded-l-xl">
+          <div className="w-card-sidebar relative overflow-hidden bg-gradient-aurora-subtle rounded-l-xl">
             {solutionData.thumbnail_url ? (
               <img 
                 src={solutionData.thumbnail_url} 
@@ -106,7 +106,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
             
             {/* Priority badge */}
             <div className="absolute top-3 left-3">
-              <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} text-xs shadow-lg backdrop-blur-md group-hover:scale-105 transition-transform duration-300 border border-white/20`}>
+              <Badge className={`${priorityInfo.gradient} ${priorityInfo.textColor} text-xs shadow-md backdrop-blur-sm group-hover:scale-105 transition-transform duration-300 border border-border/30`}>
                 {priorityInfo.label}
               </Badge>
             </div>
@@ -114,9 +114,9 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
             {/* AI Score badge */}
             {item.aiScore && (
               <div className="absolute bottom-3 right-3">
-                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-black/70 backdrop-blur-md rounded-lg border border-white/20 group-hover:bg-aurora-primary/90 transition-colors duration-300">
-                  <Brain className="h-3 w-3 text-white" />
-                  <span className="text-xs text-white font-semibold">{Math.round(item.aiScore)}%</span>
+                <div className="flex items-center gap-1.5 px-2.5 py-1.5 bg-card/90 backdrop-blur-md rounded-lg border border-border/50 group-hover:bg-aurora-primary/90 group-hover:border-aurora-primary/50 transition-colors duration-300">
+                  <Brain className="h-3 w-3 text-foreground group-hover:text-primary-foreground" />
+                  <span className="text-xs text-foreground group-hover:text-primary-foreground font-semibold">{Math.round(item.aiScore)}%</span>
                 </div>
               </div>
             )}
@@ -159,8 +159,8 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
 
             {/* AI Justification */}
             <div className="space-y-3">
-              <div className="relative overflow-hidden rounded-lg bg-gradient-to-br from-aurora-primary/5 to-aurora-primary/3 border border-aurora-primary/10 p-3">
-                <div className="absolute inset-0 bg-gradient-to-r from-aurora-primary/5 to-transparent opacity-50" />
+              <div className="relative overflow-hidden rounded-lg bg-aurora-primary/5 border border-aurora-primary/20 p-3 backdrop-blur-sm">
+                <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-30" />
                 
                 <div className="flex items-start gap-2 relative z-10">
                   <div className="p-1.5 bg-aurora-primary/10 rounded-md flex-shrink-0">
@@ -182,7 +182,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
                   </div>
                   <div className="relative h-1.5 bg-muted/30 rounded-full overflow-hidden">
                     <div 
-                      className="absolute left-0 top-0 h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-dark rounded-full transition-all duration-1000"
+                      className="absolute left-0 top-0 h-full bg-gradient-aurora rounded-full transition-all duration-1000"
                       style={{width: `${item.aiScore}%`}}
                     />
                   </div>
@@ -193,7 +193,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
               <Button 
                 size="sm"
                 variant="outline"
-                className="w-full group-hover:bg-aurora-primary group-hover:text-white group-hover:border-aurora-primary transition-all duration-300 text-xs"
+                className="w-full border-aurora-primary/30 hover:bg-gradient-aurora hover:text-primary-foreground hover:border-aurora-primary transition-all duration-300 text-xs group/btn"
                 onClick={(e) => {
                   e.stopPropagation();
                   console.log('🔗 [SOLUTION-BTN] Navegando para solução:', item.solutionId);
@@ -201,7 +201,7 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
                 }}
               >
                 <span>Ver Solução</span>
-                <ArrowRight className="w-3 h-3 ml-1.5 group-hover:translate-x-0.5 transition-transform duration-300" />
+                <ArrowRight className="w-3 h-3 ml-1.5 group-hover/btn:translate-x-0.5 transition-transform duration-300" />
               </Button>
             </div>
           </div>
@@ -218,10 +218,10 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     return (
       <div className="space-y-4">
         <div className="flex items-center gap-3">
-          <Badge className={`${priorityInfo.color} ${priorityInfo.textColor} px-3 py-1`}>
+          <Badge className={`${priorityInfo.gradient} ${priorityInfo.textColor} px-4 py-1.5 shadow-md`}>
             {title}
           </Badge>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-sm text-muted-foreground font-medium">
             {items.length} soluç{items.length !== 1 ? 'ões' : 'ão'}
           </span>
         </div>
@@ -239,27 +239,30 @@ export const SolutionsTabOptimized: React.FC<SolutionsTabOptimizedProps> = ({ tr
     <div className="space-y-8 animate-fade-in">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Card className="aurora-glass border-aurora-primary/30">
-          <CardContent className="p-4 text-center">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-aurora-primary/30 hover:border-aurora-primary/50 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-20" />
+          <CardContent className="relative p-6 text-center">
             <Target className="h-8 w-8 mx-auto mb-2 text-aurora-primary" />
             <div className="text-2xl font-bold text-foreground">{trail.priority1?.length || 0}</div>
-            <div className="text-sm text-muted-foreground">Alta Prioridade</div>
+            <div className="text-sm text-muted-foreground font-medium">Alta Prioridade</div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-glass border-vivercyan/30">
-          <CardContent className="p-4 text-center">
-            <Clock className="h-8 w-8 mx-auto mb-2 text-vivercyan" />
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-operational/30 hover:border-operational/50 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-operational-subtle opacity-20" />
+          <CardContent className="relative p-6 text-center">
+            <Clock className="h-8 w-8 mx-auto mb-2 text-operational" />
             <div className="text-2xl font-bold text-foreground">{trail.priority2?.length || 0}</div>
-            <div className="text-sm text-muted-foreground">Média Prioridade</div>
+            <div className="text-sm text-muted-foreground font-medium">Média Prioridade</div>
           </CardContent>
         </Card>
         
-        <Card className="aurora-glass border-viverpetrol/30">
-          <CardContent className="p-4 text-center">
-            <Brain className="h-8 w-8 mx-auto mb-2 text-viverpetrol" />
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-strategy/30 hover:border-strategy/50 transition-all duration-300 shadow-md hover:shadow-lg">
+          <div className="absolute inset-0 bg-gradient-strategy-subtle opacity-20" />
+          <CardContent className="relative p-6 text-center">
+            <Brain className="h-8 w-8 mx-auto mb-2 text-strategy" />
             <div className="text-2xl font-bold text-foreground">{trail.priority3?.length || 0}</div>
-            <div className="text-sm text-muted-foreground">Baixa Prioridade</div>
+            <div className="text-sm text-muted-foreground font-medium">Baixa Prioridade</div>
           </CardContent>
         </Card>
       </div>

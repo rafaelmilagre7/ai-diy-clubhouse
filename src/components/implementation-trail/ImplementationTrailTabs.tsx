@@ -31,37 +31,37 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
   return (
     <div className="space-y-6 animate-fade-in">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 aurora-glass border-aurora-primary/20">
+        <TabsList className="grid w-full grid-cols-3 h-auto p-2 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg">
           <TabsTrigger 
             value="overview" 
-            className="flex items-center gap-2 data-[state=active]:bg-aurora-primary data-[state=active]:text-white"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
           >
             <Eye className="h-4 w-4" />
-            <span className="hidden sm:inline">Visão Geral</span>
-            <span className="sm:hidden">Geral</span>
+            <span className="hidden sm:inline font-medium">Visão Geral</span>
+            <span className="sm:hidden font-medium">Geral</span>
           </TabsTrigger>
           <TabsTrigger 
             value="solutions" 
-            className="flex items-center gap-2 data-[state=active]:bg-aurora-primary data-[state=active]:text-white"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
           >
             <Target className="h-4 w-4" />
-            <span className="hidden sm:inline">Soluções</span>
-            <span className="sm:hidden">Soluções</span>
+            <span className="hidden sm:inline font-medium">Soluções</span>
+            <span className="sm:hidden font-medium">Soluções</span>
             {totalSolutions > 0 && (
-              <span className="bg-aurora-primary text-white text-xs px-2 py-0.5 rounded-full ml-1">
+              <span className="bg-aurora-primary/20 text-aurora-primary data-[state=active]:bg-primary-foreground/20 data-[state=active]:text-primary-foreground text-xs px-2 py-0.5 rounded-full ml-1 font-semibold">
                 {totalSolutions}
               </span>
             )}
           </TabsTrigger>
           <TabsTrigger 
             value="lessons" 
-            className="flex items-center gap-2 data-[state=active]:bg-aurora-primary data-[state=active]:text-white"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
           >
             <GraduationCap className="h-4 w-4" />
-            <span className="hidden sm:inline">Aulas</span>
-            <span className="sm:hidden">Aulas</span>
+            <span className="hidden sm:inline font-medium">Aulas</span>
+            <span className="sm:hidden font-medium">Aulas</span>
             {totalLessons > 0 && (
-              <span className="bg-operational text-white text-xs px-2 py-0.5 rounded-full ml-1">
+              <span className="bg-operational/20 text-operational data-[state=active]:bg-primary-foreground/20 data-[state=active]:text-primary-foreground text-xs px-2 py-0.5 rounded-full ml-1 font-semibold">
                 {totalLessons}
               </span>
             )}
