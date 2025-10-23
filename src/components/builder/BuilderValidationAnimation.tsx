@@ -113,28 +113,16 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 transition={{ delay: 0.2 }}
                 className="text-2xl font-bold text-green-500 mb-2"
               >
-                Ideia validada com sucesso
+                Sua ideia é viável!
               </motion.h3>
-              <motion.div
+              <motion.p
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-muted-foreground text-sm max-w-lg text-left space-y-2"
+                className="text-muted-foreground text-sm"
               >
-                <p className="leading-relaxed">
-                  {message ? message.split('\n\nFerramentas sugeridas:')[0] : 'Sua ideia é viável e pode ser implementada com IA'}
-                </p>
-                {message && message.includes('Ferramentas sugeridas:') && (
-                  <div className="pt-2 border-t border-border/50">
-                    <p className="text-xs font-semibold text-green-500 mb-1">
-                      Ferramentas sugeridas:
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      {message.split('Ferramentas sugeridas:')[1]?.trim()}
-                    </p>
-                  </div>
-                )}
-              </motion.div>
+                Vamos começar a qualificação da sua solução
+              </motion.p>
             </>
           )}
 
