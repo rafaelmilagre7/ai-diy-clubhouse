@@ -14,11 +14,23 @@ const cleanMermaidCode = (code: string): string => {
     console.log('[MERMAID] 🔧 Código original:', code);
   }
   
-  const cleaned = code
+  let cleaned = code
     .trim()
     .replace(/\n{3,}/g, '\n\n')
     .split('\n')
-    .map(line => line.trim())
+    .map(line => {
+      let processedLine = line.trim();
+      
+      // Detectar e escapar caracteres especiais dentro de labels [...] e (...)
+      processedLine = processedLine.replace(/(\[[^\]]*\]|\([^)]*\))/g, (match) => {
+        return match
+          .replace(/\(/g, '#40;')  // Escapar (
+          .replace(/\)/g, '#41;')  // Escapar )
+          .replace(/,/g, '#44;');  // Escapar ,
+      });
+      
+      return processedLine;
+    })
     .filter(line => line.length > 0)
     .join('\n')
     .replace(/\s+-->\s+/g, ' --> ')
@@ -26,7 +38,7 @@ const cleanMermaidCode = (code: string): string => {
     .replace(/\s*\|/g, '|');
   
   if (import.meta.env.DEV) {
-    console.log('[MERMAID] ✅ Código limpo:', cleaned);
+    console.log('[MERMAID] ✅ Código sanitizado:', cleaned);
   }
   return cleaned;
 };

@@ -53,6 +53,12 @@ REGRAS MERMAID (CRÍTICAS - SIGA EXATAMENTE):
 8. NUNCA use: underscores, hífens, espaços ou números em IDs
 9. NUNCA quebre uma definição de nó em múltiplas linhas
 10. Cada linha deve ter EXATAMENTE: ID[Texto] --> ID2[Texto] ou ID{Decisão?}
+11. 🚨 CRÍTICO - PARÊNTESES E VÍRGULAS: NUNCA use parênteses ( ) ou vírgulas , dentro dos labels [ ]
+    - ❌ ERRADO: [Criar Contas (Make, ManyChat)]
+    - ✅ CORRETO: [Criar Contas - Make e ManyChat]
+    - ❌ ERRADO: [Configurar (WhatsApp, Email)]
+    - ✅ CORRETO: [Configurar WhatsApp e Email]
+    - Use "e" ou "-" para separar itens, NUNCA vírgulas ou parênteses
 
 LINGUAGEM (CRÍTICO):
 ❌ NUNCA use termos técnicos: "Deploy", "API", "Endpoint", "Código", "Development", "Fine-tuning", "Backend", "Frontend", "Database"
@@ -242,6 +248,43 @@ VALIDAÇÃO FINAL:
     
     if (nodeCount < 8 || nodeCount > 12) {
       console.warn(`[FLOW-GEN] ⚠️ Número de nós fora do ideal (8-12): ${nodeCount}`);
+    }
+
+    // 🔧 CAMADA 3: SANITIZAÇÃO MERMAID - Remover parênteses e vírgulas problemáticos
+    const sanitizeMermaidCode = (code: string): string => {
+      console.log('[FLOW-GEN] 🔧 Sanitizando código Mermaid...');
+      
+      // Processar linha por linha
+      const sanitized = code
+        .split('\n')
+        .map(line => {
+          // Detectar labels [...] e substituir parênteses e vírgulas
+          return line.replace(/\[([^\]]+)\]/g, (match, content) => {
+            const sanitizedContent = content
+              .replace(/\(/g, '-')     // ( vira -
+              .replace(/\)/g, '')      // ) vira vazio
+              .replace(/,/g, ' e');    // , vira " e"
+            
+            if (content !== sanitizedContent) {
+              console.log(`[FLOW-GEN] 🔧 Sanitizado: "${content}" → "${sanitizedContent}"`);
+            }
+            
+            return `[${sanitizedContent}]`;
+          });
+        })
+        .join('\n');
+      
+      console.log('[FLOW-GEN] ✅ Código Mermaid sanitizado');
+      return sanitized;
+    };
+
+    // Aplicar sanitização antes de salvar
+    const originalCode = flowData.mermaid_code;
+    flowData.mermaid_code = sanitizeMermaidCode(originalCode);
+    
+    // Log da sanitização
+    if (originalCode !== flowData.mermaid_code) {
+      console.log('[FLOW-GEN] 🔧 Código foi modificado pela sanitização');
     }
 
     // Salvar no banco
