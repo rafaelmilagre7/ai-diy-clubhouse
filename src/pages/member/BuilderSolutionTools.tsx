@@ -100,7 +100,7 @@ export default function BuilderSolutionTools() {
               category: platformTool?.category || jsonTool.category || 'Outros',
               reason: jsonTool.reason || 'Ferramenta essencial para a implementação',
               setup_complexity: jsonTool.setup_complexity,
-              cost_estimate: jsonTool.cost_estimate
+              cost_estimate: jsonTool.estimated_cost
             };
           });
 
@@ -113,7 +113,7 @@ export default function BuilderSolutionTools() {
               category: platformTool?.category || jsonTool.category || 'Outros',
               reason: jsonTool.reason || 'Ferramenta opcional recomendada',
               setup_complexity: jsonTool.setup_complexity,
-              cost_estimate: jsonTool.cost_estimate
+              cost_estimate: jsonTool.estimated_cost
             };
           });
 
