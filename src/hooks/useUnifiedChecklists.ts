@@ -84,7 +84,8 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
       console.log('🔍 Buscando template de checklist:', { solutionId, checklistType });
 
-      const { data, error } = await supabase
+      // 1️⃣ PRIMEIRO: Tentar buscar template oficial
+      const { data: templateData, error: templateError } = await supabase
         .from('unified_checklists')
         .select('*')
         .eq('solution_id', solutionId)
@@ -92,19 +93,38 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         .eq('is_template', true)
         .maybeSingle();
 
-      if (error) {
-        console.error('❌ Erro ao buscar template:', error);
+      if (templateError) {
+        console.error('❌ Erro ao buscar template:', templateError);
+      }
+
+      if (templateData) {
+        console.log('✅ Template oficial encontrado:', templateData.id);
+        return templateData as UnifiedChecklistData;
+      }
+
+      // 2️⃣ FALLBACK: Se não há template, buscar qualquer checklist da solução
+      console.log('⚠️ Template não encontrado, buscando checklist gerado...');
+      
+      const { data: anyChecklist, error: anyError } = await supabase
+        .from('unified_checklists')
+        .select('*')
+        .eq('solution_id', solutionId)
+        .eq('checklist_type', checklistType)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (anyError) {
+        console.error('❌ Erro ao buscar checklist alternativo:', anyError);
         return null;
       }
 
-      console.log('🎯 Query resultado para template:', data);
-      console.log('✅ Template encontrado:', !!data);
-      
-      if (data) {
-        console.log('📋 Template items:', data.checklist_data?.items?.length || 0);
+      if (anyChecklist) {
+        console.log('🔄 Usando checklist gerado como template:', anyChecklist.id);
+        console.log('📋 Items encontrados:', anyChecklist.checklist_data?.items?.length || 0);
       }
-      
-      return data as UnifiedChecklistData;
+
+      return anyChecklist as UnifiedChecklistData;
     },
     enabled: !!solutionId
   });

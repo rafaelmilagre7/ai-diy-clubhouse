@@ -307,19 +307,53 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
         }
       }));
       
-      // Inserir em unified_checklists
-      const { error: unifiedError } = await supabase
+      // Verificar se já existe um checklist para esta solução
+      const { data: existing } = await supabase
         .from('unified_checklists')
-        .insert({
-          user_id: userId,
-          solution_id: solutionId,
-          checklist_type: 'implementation',
-          is_template: false,
-          checklist_data: {
-            items: unifiedItems,
-            lastUpdated: new Date().toISOString()
-          }
-        });
+        .select('id')
+        .eq('solution_id', solutionId)
+        .eq('checklist_type', 'implementation')
+        .maybeSingle();
+
+      let unifiedError = null;
+
+      if (existing) {
+        // Atualizar checklist existente e marcar como template
+        const { error } = await supabase
+          .from('unified_checklists')
+          .update({
+            is_template: true,
+            checklist_data: {
+              items: unifiedItems,
+              lastUpdated: new Date().toISOString()
+            },
+            total_items: unifiedItems.length,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+        
+        unifiedError = error;
+        if (!error) {
+          console.log('[SECTION-GEN] 🔄 Checklist existente atualizado e marcado como template');
+        }
+      } else {
+        // Inserir novo checklist como template
+        const { error } = await supabase
+          .from('unified_checklists')
+          .insert({
+            user_id: userId,
+            solution_id: solutionId,
+            checklist_type: 'implementation',
+            is_template: true,
+            checklist_data: {
+              items: unifiedItems,
+              lastUpdated: new Date().toISOString()
+            },
+            total_items: unifiedItems.length
+          });
+        
+        unifiedError = error;
+      }
       
       if (unifiedError) {
         console.error('[SECTION-GEN] ❌ ERRO CRÍTICO ao salvar unified_checklists:', {

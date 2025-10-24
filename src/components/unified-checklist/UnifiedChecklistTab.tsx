@@ -40,6 +40,9 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     solutionId,
     checklistType,
     hasTemplate: !!template,
+    templateId: template?.id,
+    templateIsTemplate: template?.is_template,
+    templateItems: template?.checklist_data?.items?.length || 0,
     hasUserProgress: !!userProgress,
     isLoadingTemplate,
     isLoadingProgress
