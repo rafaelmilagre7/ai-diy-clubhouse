@@ -83,7 +83,7 @@ class MermaidManager {
         primaryColor: primaryColor,
         primaryTextColor: primaryForeground,
         primaryBorderColor: primaryColor,
-        lineColor: borderColor,
+        lineColor: primaryColor,
         secondaryColor: secondaryColor,
         tertiaryColor: accentColor,
         background: backgroundColor,
