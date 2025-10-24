@@ -91,6 +91,7 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/ferramentas/builder/solution/:id", BuilderSolutionCover),
   createProtectedRoute("/ferramentas/builder/solution/:id/framework", BuilderSolutionFramework),
   createProtectedRoute("/ferramentas/builder/solution/:id/fluxo", BuilderFlowView),
+  createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderFlowView),
   createProtectedRoute("/ferramentas/builder/solution/:id/ferramentas", BuilderSolutionTools),
   createProtectedRoute("/ferramentas/builder/solution/:id/checklist", BuilderSolutionChecklist),
   createProtectedRoute("/ferramentas/builder/solution/:id/prompt", BuilderSolutionPrompt),

@@ -32,7 +32,7 @@ export default function BuilderSolutionCover() {
   // Mapear cards para campos do banco e tipos de seção
   const sectionMapping: Record<string, { field: string; type: string; label: string }> = {
     'framework': { field: 'framework_mapping', type: 'framework', label: 'Framework de Implementação' },
-    'arquitetura': { field: 'automation_journey_flow', type: 'architecture', label: 'Arquitetura e Fluxos' },
+    'arquitetura': { field: 'implementation_flow', type: 'flow', label: 'Arquitetura e Fluxos' },
     'ferramentas': { field: 'required_tools', type: 'tools', label: 'Ferramentas Necessárias' },
     'checklist': { field: 'implementation_checklist', type: 'checklist', label: 'Plano de Ação' },
     'prompt': { field: 'lovable_prompt', type: 'lovable', label: 'Prompt Lovable' }
@@ -44,49 +44,85 @@ export default function BuilderSolutionCover() {
     
     if (!sectionInfo || !solution) return;
     
+    console.log('[COVER] 📍 Navegando para:', cardPath);
+    console.log('[COVER] 📊 Seção:', sectionInfo);
+    console.log('[COVER] 📦 Campo no banco:', sectionInfo.field, '=', solution[sectionInfo.field]);
+    
     const hasContent = solution[sectionInfo.field] !== null && solution[sectionInfo.field] !== undefined;
     
     // Se já tem conteúdo, navega direto
     if (hasContent) {
+      console.log('[COVER] ✅ Conteúdo já existe, navegando...');
       navigate(cardPath);
       return;
     }
+    
+    console.log('[COVER] 🔄 Conteúdo não existe, gerando...');
     
     // Caso contrário, gera sob demanda
     setGeneratingSection(sectionInfo.label);
     
     try {
-      console.log(`[COVER] Gerando ${sectionInfo.type} para solução ${solution.id}`);
-      
-      const { data, error } = await supabase.functions.invoke('generate-section-content', {
-        body: {
-          solutionId: solution.id,
-          sectionType: sectionInfo.type,
-          userId: solution.user_id
+      // Para arquitetura/fluxo, usar função dedicada
+      if (sectionKey === 'arquitetura') {
+        console.log('[COVER] 🌊 Chamando generate-implementation-flow');
+        
+        const { data, error } = await supabase.functions.invoke('generate-implementation-flow', {
+          body: {
+            solutionId: solution.id,
+            userId: solution.user_id
+          }
+        });
+        
+        if (error) {
+          console.error('[COVER] ❌ Erro ao gerar fluxo:', error);
+          throw error;
         }
-      });
-      
-      if (error) {
-        console.error('[COVER] Erro ao gerar:', error);
-        throw error;
-      }
-      
-      if (data?.success) {
-        console.log(`[COVER] ✅ ${sectionInfo.label} gerado!`);
-        toast.success(`${sectionInfo.label} gerado com sucesso! 🎉`);
         
-        // Invalidar cache para recarregar dados
-        await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
-        
-        // Navegar para a página
-        navigate(cardPath);
+        if (data?.success) {
+          console.log('[COVER] ✅ Fluxo gerado com sucesso!');
+          toast.success('Fluxo de implementação gerado! 🎉');
+          
+          // Invalidar cache e navegar
+          await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+          navigate(cardPath);
+        } else {
+          throw new Error(data?.error || 'Falha ao gerar fluxo');
+        }
       } else {
-        throw new Error('Resposta sem sucesso');
+        // Para outras seções, usar generate-section-content
+        console.log(`[COVER] 📝 Gerando ${sectionInfo.type} via generate-section-content`);
+        
+        const { data, error } = await supabase.functions.invoke('generate-section-content', {
+          body: {
+            solutionId: solution.id,
+            sectionType: sectionInfo.type,
+            userId: solution.user_id
+          }
+        });
+        
+        if (error) {
+          console.error('[COVER] ❌ Erro ao gerar:', error);
+          throw error;
+        }
+        
+        if (data?.success) {
+          console.log(`[COVER] ✅ ${sectionInfo.label} gerado!`);
+          toast.success(`${sectionInfo.label} gerado com sucesso! 🎉`);
+          
+          // Invalidar cache para recarregar dados
+          await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+          
+          // Navegar para a página
+          navigate(cardPath);
+        } else {
+          throw new Error('Resposta sem sucesso');
+        }
       }
     } catch (err: any) {
-      console.error('[COVER] Erro:', err);
+      console.error('[COVER] ❌ Erro completo:', err);
       toast.error('Erro ao gerar conteúdo', {
-        description: 'Tente novamente em instantes.',
+        description: err.message || 'Tente novamente em instantes.',
         action: {
           label: 'Tentar novamente',
           onClick: () => handleCardClick(cardPath)

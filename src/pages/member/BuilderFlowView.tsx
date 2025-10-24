@@ -28,8 +28,21 @@ export default function BuilderFlowView() {
   const [isMarking, setIsMarking] = useState(false);
 
   useEffect(() => {
+    // Validar rota
+    const currentPath = window.location.pathname;
+    console.log('[FLOW-VIEW] 📍 Rota atual:', currentPath);
+    
+    if (!currentPath.includes('/fluxo') && !currentPath.includes('/arquitetura')) {
+      console.error('[FLOW-VIEW] ❌ Rota inválida detectada:', currentPath);
+      toast.error('Página não encontrada', {
+        description: 'Redirecionando...'
+      });
+      navigate(`/ferramentas/builder/solution/${id}`);
+      return;
+    }
+    
     loadSolution();
-  }, [id]);
+  }, [id, navigate]);
 
   const loadSolution = async () => {
     if (!id) return;
