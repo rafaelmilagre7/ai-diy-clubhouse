@@ -10,25 +10,24 @@ interface SimpleMermaidRendererProps {
 }
 
 const cleanMermaidCode = (code: string): string => {
-  console.log('[MERMAID] 🔧 Código original:', code);
+  if (import.meta.env.DEV) {
+    console.log('[MERMAID] 🔧 Código original:', code);
+  }
   
   const cleaned = code
     .trim()
-    // Remove múltiplas quebras de linha (mais de 2)
     .replace(/\n{3,}/g, '\n\n')
-    // Processa cada linha individualmente
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0)
-    // MANTÉM as quebras de linha entre statements
     .join('\n')
-    // Normaliza espaços ao redor de setas (mas mantém quebras de linha)
     .replace(/\s+-->\s+/g, ' --> ')
-    // Normaliza labels nas setas
     .replace(/-->\s*\|\s*/g, ' -->|')
     .replace(/\s*\|/g, '|');
   
-  console.log('[MERMAID] ✅ Código limpo:', cleaned);
+  if (import.meta.env.DEV) {
+    console.log('[MERMAID] ✅ Código limpo:', cleaned);
+  }
   return cleaned;
 };
 
@@ -60,57 +59,83 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     const renderDiagram = async () => {
       // Verificações de pré-requisitos
       if (!containerRef.current) {
-        console.log('[SimpleMermaid] ⏳ Container não disponível ainda');
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] ⏳ Container não disponível ainda');
+        }
         setIsRendering(false);
         return;
       }
 
       const mermaidReady = isInitialized || isMermaidInitialized();
       if (!mermaidReady) {
-        console.log('[SimpleMermaid] ⏳ Aguardando Mermaid...');
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] ⏳ Aguardando Mermaid...');
+        }
         return;
       }
 
       if (!code) {
-        console.log('[SimpleMermaid] ⏳ Sem código para renderizar');
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] ⏳ Sem código para renderizar');
+        }
         setIsRendering(false);
         return;
       }
 
       setIsRendering(true);
       setError(null);
-      console.log('[SimpleMermaid] 🎨 Iniciando renderização ID:', currentRenderId);
+      
+      if (import.meta.env.DEV) {
+        console.log('[SimpleMermaid] 🎨 Iniciando renderização ID:', currentRenderId);
+      }
 
       try {
         const cleanedCode = cleanMermaidCode(code);
-        console.log('[SimpleMermaid] 🎨 Renderizando código completo:', cleanedCode);
-
-        console.log('[SimpleMermaid] 📦 Importando Mermaid...');
+        
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] 🎨 Renderizando código completo:', cleanedCode);
+          console.log('[SimpleMermaid] 📦 Importando Mermaid...');
+        }
+        
         const { default: mermaid } = await import('mermaid');
-        console.log('[SimpleMermaid] ✅ Mermaid importado');
+        
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] ✅ Mermaid importado');
+        }
         
         const uniqueId = `mermaid-${currentRenderId}-${Date.now()}`;
-        console.log('[SimpleMermaid] 🆔 Unique ID:', uniqueId);
         
-        console.log('[SimpleMermaid] 🎨 Chamando mermaid.render...');
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] 🆔 Unique ID:', uniqueId);
+          console.log('[SimpleMermaid] 🎨 Chamando mermaid.render...');
+        }
+        
         const { svg } = await mermaid.render(uniqueId, cleanedCode);
-        console.log('[SimpleMermaid] ✅ SVG gerado, tamanho:', svg.length);
         
-        // Verificar se ainda é a renderização ativa
+        if (import.meta.env.DEV) {
+          console.log('[SimpleMermaid] ✅ SVG gerado, tamanho:', svg.length);
+        }
+        
         if (isActive && containerRef.current && renderIdRef.current === currentRenderId) {
           containerRef.current.innerHTML = svg;
-          console.log('[SimpleMermaid] ✅ Renderizado com sucesso ID:', currentRenderId);
+          if (import.meta.env.DEV) {
+            console.log('[SimpleMermaid] ✅ Renderizado com sucesso ID:', currentRenderId);
+          }
           setIsRendering(false);
         } else {
-          console.warn('[SimpleMermaid] ⚠️ Renderização cancelada:', {
-            isActive,
-            hasContainer: !!containerRef.current,
-            renderIdMatch: renderIdRef.current === currentRenderId
-          });
+          if (import.meta.env.DEV) {
+            console.warn('[SimpleMermaid] ⚠️ Renderização cancelada:', {
+              isActive,
+              hasContainer: !!containerRef.current,
+              renderIdMatch: renderIdRef.current === currentRenderId
+            });
+          }
         }
       } catch (err: any) {
         console.error('[SimpleMermaid] ❌ Erro completo:', err);
-        console.error('[SimpleMermaid] ❌ Stack:', err.stack);
+        if (import.meta.env.DEV) {
+          console.error('[SimpleMermaid] ❌ Stack:', err.stack);
+        }
         if (isActive) {
           setError(err.message || 'Erro ao renderizar diagrama');
           setIsRendering(false);
@@ -120,10 +145,11 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
 
     renderDiagram();
 
-    // Cleanup para evitar memory leak
     return () => {
       isActive = false;
-      console.log('[SimpleMermaid] 🧹 Cleanup ID:', currentRenderId);
+      if (import.meta.env.DEV) {
+        console.log('[SimpleMermaid] 🧹 Cleanup ID:', currentRenderId);
+      }
     };
   }, [isInitialized, code]);
 

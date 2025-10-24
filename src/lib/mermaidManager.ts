@@ -60,7 +60,9 @@ class MermaidManager {
   }
 
   private async performInitialization(): Promise<void> {
-    console.log('[MermaidManager] Inicializando Mermaid (singleton)...');
+    if (import.meta.env.DEV) {
+      console.log('[MermaidManager] Inicializando Mermaid (singleton)...');
+    }
     
     const primaryColor = getCSSVar('--primary');
     const primaryForeground = getCSSVar('--primary-foreground');
@@ -103,7 +105,9 @@ class MermaidManager {
       },
     });
 
-    console.log('[MermaidManager] ✅ Mermaid inicializado com sucesso!');
+    if (import.meta.env.DEV) {
+      console.log('[MermaidManager] ✅ Mermaid inicializado com sucesso!');
+    }
   }
 
   isInitialized(): boolean {

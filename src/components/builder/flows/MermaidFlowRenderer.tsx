@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useLayoutEffect, useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import { useMermaidInit } from '@/hooks/useMermaidInit';
 import { Loader2 } from 'lucide-react';
@@ -27,18 +27,26 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 
     }
   }, [externalZoom, isRendering]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!isInitialized || !mermaidCode) {
-      console.log(`[Mermaid][${flowId}] Aguardando inicialização`);
+      if (import.meta.env.DEV) {
+        console.log(`[Mermaid][${flowId}] Aguardando inicialização`);
+      }
       return;
     }
 
+    let isActive = true;
+
     const renderDiagram = async () => {
+      if (!isActive) return;
+      
       setIsRendering(true);
       setError(null);
 
       try {
-        console.log(`[Mermaid][${flowId}] 🎨 Renderizando...`);
+        if (import.meta.env.DEV) {
+          console.log(`[Mermaid][${flowId}] 🎨 Renderizando...`);
+        }
         
         // Sanitizar código Mermaid de forma ultra-robusta
         let cleanedCode = mermaidCode.trim();
@@ -47,20 +55,14 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 
         cleanedCode = cleanedCode
           .split('\n')
           .map(line => {
-            // Remove espaços extras no final das linhas
             line = line.trimEnd();
-            
-            // Corrige parênteses e colchetes com espaços extras
             line = line.replace(/\]\s+\(/g, '](');
             line = line.replace(/\)\s+\[/g, ')[');
             
-            // Remove metadados inválidos após fechamento de nós
             if (line.includes(']')) {
-              // Remove id:, title:, class: após ]
               line = line.replace(/\]\s*(id|title|class):[^\s\]\-\>]*/g, ']');
             }
             
-            // Corrige espaços extras em arrows
             line = line.replace(/\s*-->\s*/g, ' --> ');
             line = line.replace(/\s*---\s*/g, ' --- ');
             line = line.replace(/\s*-\.->\s*/g, ' -.-> ');
@@ -69,17 +71,21 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 
           })
           .filter(line => line.trim().length > 0)
           .join('\n');
-        console.log(`[Mermaid][${flowId}] Código sanitizado:`, cleanedCode.substring(0, 100) + '...');
+        
+        if (import.meta.env.DEV) {
+          console.log(`[Mermaid][${flowId}] Código sanitizado:`, cleanedCode.substring(0, 100) + '...');
+        }
         
         const uniqueId = `mermaid-${flowId}-${Date.now()}`;
         const { svg } = await mermaid.render(uniqueId, cleanedCode);
         
-        // Aguardar um tick para garantir que o DOM está pronto
-        await new Promise(resolve => setTimeout(resolve, 0));
+        if (!isActive) return;
         
         if (containerRef.current) {
           containerRef.current.innerHTML = svg;
-          console.log(`[Mermaid][${flowId}] ✅ Renderizado!`);
+          if (import.meta.env.DEV) {
+            console.log(`[Mermaid][${flowId}] ✅ Renderizado!`);
+          }
           setIsRendering(false);
         } else {
           console.error(`[Mermaid][${flowId}] ❌ Container não encontrado`);
@@ -87,9 +93,9 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 
           setIsRendering(false);
         }
       } catch (err: any) {
+        if (!isActive) return;
         console.error(`[Mermaid][${flowId}] ❌ Erro:`, err.message || err);
         
-        // Mensagem de erro mais específica
         const errorMsg = err.message?.includes('Parse error') 
           ? 'Erro na sintaxe do diagrama. Por favor, regenere esta seção.'
           : 'Erro ao renderizar diagrama. Tente recarregar a página.';
@@ -100,33 +106,41 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 
     };
 
     renderDiagram();
+
+    return () => {
+      isActive = false;
+    };
   }, [mermaidCode, flowId, isInitialized]);
 
   return (
-    <div className="relative group">
-      {error ? (
-        <div className="text-center py-8 space-y-3">
-          <p className="text-destructive text-sm">{error}</p>
-          <p className="text-xs text-muted-foreground">
-            Este diagrama precisa ser regenerado pela IA devido a um erro de sintaxe.
-          </p>
+    <div className="relative min-h-[400px]">
+      {/* Loader como overlay */}
+      {isRendering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
-      ) : (
-        <>
-          {isRendering && (
-            <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-          )}
-          <div 
-            ref={containerRef} 
-            className="mermaid-container w-full overflow-auto py-4 transition-all duration-200 flex items-center justify-center"
-            style={{ 
-              transformOrigin: 'center',
-              minHeight: '400px'
-            }}
-          />
-        </>
+      )}
+
+      {/* Container sempre presente no DOM */}
+      <div 
+        ref={containerRef} 
+        className="mermaid-container w-full overflow-auto py-4 transition-all duration-200 flex items-center justify-center"
+        style={{ 
+          transformOrigin: 'center',
+          minHeight: '400px'
+        }}
+      />
+
+      {/* Mensagem de erro como overlay */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <div className="text-center py-8 space-y-3 bg-background/90 backdrop-blur-sm rounded-lg p-6 border border-destructive/50">
+            <p className="text-destructive text-sm">{error}</p>
+            <p className="text-xs text-muted-foreground">
+              Este diagrama precisa ser regenerado pela IA devido a um erro de sintaxe.
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

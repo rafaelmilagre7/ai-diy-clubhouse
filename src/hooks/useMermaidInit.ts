@@ -9,16 +9,19 @@ export const useMermaidInit = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    // Verificar se já foi inicializado anteriormente (singleton)
     if (isMermaidInitialized()) {
-      console.log('[useMermaidInit] ⚡ Já estava inicializado');
+      if (import.meta.env.DEV) {
+        console.log('[useMermaidInit] ⚡ Já estava inicializado');
+      }
       setIsInitialized(true);
       return;
     }
 
     initializeMermaid()
       .then(() => {
-        console.log('[useMermaidInit] ✅ Hook confirmou inicialização');
+        if (import.meta.env.DEV) {
+          console.log('[useMermaidInit] ✅ Hook confirmou inicialização');
+        }
         setIsInitialized(true);
       })
       .catch((error) => {
@@ -26,11 +29,12 @@ export const useMermaidInit = () => {
       });
   }, []);
 
-  // Timeout de segurança: se após 3s ainda não inicializou, forçar
   useEffect(() => {
     const timeout = setTimeout(() => {
       if (!isInitialized && isMermaidInitialized()) {
-        console.warn('[useMermaidInit] ⚠️ Forçando state após timeout');
+        if (import.meta.env.DEV) {
+          console.warn('[useMermaidInit] ⚠️ Forçando state após timeout');
+        }
         setIsInitialized(true);
       }
     }, 3000);
