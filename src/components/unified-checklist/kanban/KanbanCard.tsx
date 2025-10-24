@@ -1,5 +1,4 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Clock, FileText, Link2, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -37,13 +36,12 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {...provided.dragHandleProps}
       style={{
         ...provided.draggableProps.style,
-        marginBottom: '12px'
+        marginBottom: '12px',
+        pointerEvents: snapshot.isDragging ? 'none' : 'auto'
       }}
       className={cn(
-        "group relative p-4 bg-card border border-border rounded-lg",
-        snapshot.isDragging 
-          ? "shadow-2xl opacity-90 cursor-grabbing" 
-          : "shadow-sm hover:shadow-md cursor-grab"
+        "kanban-draggable-card group relative p-4",
+        snapshot.isDragging && "is-dragging"
       )}
     >
       {/* Header com Título e Quick Actions */}

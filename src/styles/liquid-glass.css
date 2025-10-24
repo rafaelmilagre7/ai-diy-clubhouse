@@ -51,6 +51,25 @@
   border-color: hsl(var(--glass-white-base) / 0.3);
 }
 
+/* Kanban Draggable Card - ZERO transform para compatibilidade total */
+.kanban-draggable-card {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  border-radius: var(--radius-lg);
+  transition: box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+/* Hover SEM transform! */
+.kanban-draggable-card:not(.is-dragging):hover {
+  box-shadow: 0 4px 12px 0 hsl(var(--foreground) / 0.08);
+}
+
+/* Estado de drag */
+.kanban-draggable-card.is-dragging {
+  box-shadow: 0 20px 40px 0 hsl(var(--foreground) / 0.15);
+  opacity: 0.9;
+  cursor: grabbing !important;
+}
 
 .liquid-glass-card-premium {
   background: linear-gradient(135deg, hsl(var(--glass-white-base) / 0.1) 0%, hsl(var(--glass-white-base) / 0.05) 100%);
