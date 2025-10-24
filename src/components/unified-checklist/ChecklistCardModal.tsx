@@ -54,7 +54,7 @@ export const ChecklistCardModal: React.FC<ChecklistCardModalProps> = ({
   };
 
   const difficulty = item.metadata?.difficulty || 'medium';
-  const difficultyInfo = difficultyConfig[difficulty];
+  const difficultyInfo = difficultyConfig[difficulty] || difficultyConfig.medium;
   const DifficultyIcon = difficultyInfo.icon;
 
   const hasChanges = localNotes !== item.notes;
