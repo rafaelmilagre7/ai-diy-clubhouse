@@ -127,59 +127,54 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     };
   }, [isInitialized, code]);
 
-  // FASE 2: Fallback de retry automático após 3s
-  useEffect(() => {
-    if (isRendering && loadingTime > 3 && containerRef.current) {
-      console.warn('[SimpleMermaid] ⚠️ Forçando re-render após 3s');
-      renderIdRef.current++;
-    }
-  }, [loadingTime, isRendering]);
-
-  // FASE 3: Feedback visual melhorado com debug info
-  if (isRendering) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-sm text-muted-foreground">
-            Renderizando fluxo... ({loadingTime}s)
-          </p>
-          {import.meta.env.DEV && (
-            <p className="text-xs text-muted-foreground/60">
-              Render ID: {renderIdRef.current} | Mermaid: {isInitialized ? '✅' : '⏳'}
-            </p>
-          )}
-          {loadingTime > 5 && (
-            <Button 
-              variant="outline" 
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="mt-2"
-            >
-              Recarregar página
-            </Button>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro ao renderizar</AlertTitle>
-        <AlertDescription>
-          <p className="text-sm">{error}</p>
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
+  // Renderização simultânea: container sempre presente + loader como overlay
   return (
-    <div 
-      ref={containerRef} 
-      className="mermaid-container flex justify-center items-center p-6 bg-surface-elevated/30 rounded-lg border border-border/50 overflow-auto min-h-[400px]"
-    />
+    <div className="relative min-h-[400px]">
+      {/* Loader como overlay - só aparece quando isRendering = true */}
+      {isRendering && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm z-10 rounded-lg">
+          <div className="text-center space-y-3">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
+            <p className="text-sm text-muted-foreground">
+              Renderizando fluxo... ({loadingTime}s)
+            </p>
+            {import.meta.env.DEV && (
+              <p className="text-xs text-muted-foreground/60">
+                Render ID: {renderIdRef.current} | Mermaid: {isInitialized ? '✅' : '⏳'}
+              </p>
+            )}
+            {loadingTime > 5 && (
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => window.location.reload()}
+                className="mt-2"
+              >
+                Recarregar página
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Container SEMPRE presente no DOM */}
+      <div 
+        ref={containerRef} 
+        className="mermaid-container flex justify-center items-center p-6 bg-surface-elevated/30 rounded-lg border border-border/50 overflow-auto min-h-[400px]"
+      />
+
+      {/* Mensagem de erro como overlay */}
+      {error && (
+        <div className="absolute inset-0 flex items-center justify-center p-4">
+          <Alert variant="destructive" className="max-w-md">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Erro ao renderizar</AlertTitle>
+            <AlertDescription>
+              <p className="text-sm">{error}</p>
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+    </div>
   );
 };
