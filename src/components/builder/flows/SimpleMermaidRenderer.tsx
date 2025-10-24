@@ -41,7 +41,16 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingTime, setLoadingTime] = useState(0);
+  const [containerReady, setContainerReady] = useState(false);
   const isInitialized = useMermaidInit();
+
+  // Verificar quando container está pronto
+  useEffect(() => {
+    if (containerRef.current && !containerReady) {
+      console.log('[SimpleMermaid] 📦 Container pronto!');
+      setContainerReady(true);
+    }
+  }, [containerRef.current]);
 
   // Contador de tempo de loading
   useEffect(() => {
@@ -59,12 +68,12 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     // Tentar renderizar mesmo se hook não confirmou (mas singleton confirma)
     const canRender = isInitialized || isMermaidInitialized();
     
-    if (!canRender || !code || !containerRef.current) {
+    if (!canRender || !code || !containerReady) {
       console.log('[SimpleMermaid] Aguardando:', { 
         isInitialized, 
         isMermaidReady: isMermaidInitialized(),
         hasCode: !!code, 
-        hasContainer: !!containerRef.current 
+        containerReady 
       });
       return;
     }
@@ -95,7 +104,7 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     };
 
     renderDiagram();
-  }, [isInitialized, code]);
+  }, [isInitialized, code, containerReady]);
 
   if (isRendering) {
     return (
