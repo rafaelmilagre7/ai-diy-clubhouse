@@ -74,7 +74,11 @@ export default function BuilderSolutionTools() {
 
           if (solutionError) throw solutionError;
 
+          console.log('🔍 DEBUG - aiSolution:', aiSolution);
+          console.log('🔍 DEBUG - required_tools:', aiSolution?.required_tools);
+
           if (!aiSolution?.required_tools) {
+            console.log('❌ Nenhum required_tools encontrado');
             return { essential: [], optional: [] };
           }
 
@@ -115,6 +119,12 @@ export default function BuilderSolutionTools() {
               setup_complexity: jsonTool.setup_complexity,
               cost_estimate: jsonTool.estimated_cost
             };
+          });
+
+          console.log('✅ Ferramentas transformadas:', {
+            essential: essentialTools.length,
+            optional: optionalTools.length,
+            essentialSample: essentialTools[0]
           });
 
           return {
@@ -198,7 +208,14 @@ export default function BuilderSolutionTools() {
     );
   }
 
+  console.log('🎯 DEBUG - tools recebido:', tools);
+  
   if (!tools || (!tools.essential?.length && !tools.optional?.length)) {
+    console.log('❌ Entrando no "nenhuma ferramenta"', {
+      tools,
+      hasEssential: tools?.essential?.length,
+      hasOptional: tools?.optional?.length
+    });
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
         <div className="container mx-auto px-4 py-8">
