@@ -307,6 +307,7 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       const { error: unifiedError } = await supabase
         .from('unified_checklists')
         .insert({
+          user_id: userId,
           solution_id: solutionId,
           checklist_type: 'implementation',
           is_template: false,
@@ -317,10 +318,15 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
         });
       
       if (unifiedError) {
-        console.error('[SECTION-GEN] ⚠️ Erro ao salvar em unified_checklists:', unifiedError);
+        console.error('[SECTION-GEN] ❌ ERRO CRÍTICO ao salvar unified_checklists:', {
+          error: unifiedError,
+          solutionId,
+          userId,
+          itemsCount: unifiedItems.length
+        });
         // Não falhar a requisição por isso, apenas logar
       } else {
-        console.log('[SECTION-GEN] ✅ Checklist salvo também em unified_checklists');
+        console.log('[SECTION-GEN] ✅ Checklist salvo em unified_checklists com sucesso!');
       }
     } else if (sectionType === "architecture") {
       updateData.implementation_flows = parsedContent.implementation_flows;
