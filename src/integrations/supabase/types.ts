@@ -115,12 +115,14 @@ export type Database = {
           ai_architecture_tree: Json | null
           api_integration_map: Json | null
           architecture_flowchart: Json | null
+          architecture_insights: Json | null
           automation_journey_flow: Json | null
           completion_percentage: number | null
           completion_tokens: number | null
           created_at: string | null
           data_flow_diagram: Json | null
           deploy_checklist_structured: Json | null
+          flow_progress: Json | null
           framework_mapping: Json | null
           generation_model: string | null
           generation_status: string | null
@@ -144,17 +146,20 @@ export type Database = {
           updated_at: string | null
           user_id: string
           user_journey_map: Json | null
+          user_notes: Json | null
         }
         Insert: {
           ai_architecture_tree?: Json | null
           api_integration_map?: Json | null
           architecture_flowchart?: Json | null
+          architecture_insights?: Json | null
           automation_journey_flow?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
           data_flow_diagram?: Json | null
           deploy_checklist_structured?: Json | null
+          flow_progress?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
           generation_status?: string | null
@@ -178,17 +183,20 @@ export type Database = {
           updated_at?: string | null
           user_id: string
           user_journey_map?: Json | null
+          user_notes?: Json | null
         }
         Update: {
           ai_architecture_tree?: Json | null
           api_integration_map?: Json | null
           architecture_flowchart?: Json | null
+          architecture_insights?: Json | null
           automation_journey_flow?: Json | null
           completion_percentage?: number | null
           completion_tokens?: number | null
           created_at?: string | null
           data_flow_diagram?: Json | null
           deploy_checklist_structured?: Json | null
+          flow_progress?: Json | null
           framework_mapping?: Json | null
           generation_model?: string | null
           generation_status?: string | null
@@ -212,6 +220,7 @@ export type Database = {
           updated_at?: string | null
           user_id?: string
           user_journey_map?: Json | null
+          user_notes?: Json | null
         }
         Relationships: []
       }
