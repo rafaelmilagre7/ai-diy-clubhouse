@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import { ExternalLink } from 'lucide-react';
 
 interface ToolCardBuilderProps {
   tool: {
@@ -10,10 +11,22 @@ interface ToolCardBuilderProps {
     reason: string;
     setup_complexity?: string;
     cost_estimate?: string;
+    tool_id?: string;
   };
   isEssential: boolean;
   index: number;
 }
+
+// Traduzir complexidade de setup para PT-BR
+const translateComplexity = (complexity?: string): string => {
+  if (!complexity) return '';
+  const translations: Record<string, string> = {
+    'easy': 'Fácil',
+    'medium': 'Médio',
+    'hard': 'Difícil'
+  };
+  return translations[complexity.toLowerCase()] || complexity;
+};
 
 export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssential, index }) => {
   return (
@@ -87,12 +100,27 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
           {tool.reason}
         </p>
 
+        {/* Link para ferramenta na plataforma */}
+        {tool.tool_id && (
+          <div className="mb-4">
+            <a 
+              href={`/ferramentas/${tool.tool_id}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/10 transition-colors gap-2"
+            >
+              Ver na plataforma
+              <ExternalLink className="h-4 w-4" />
+            </a>
+          </div>
+        )}
+
         {/* Metadata Footer */}
         {(tool.setup_complexity || tool.cost_estimate) && (
           <div className="flex flex-wrap gap-2 justify-center pt-4 mt-auto border-t border-border/30">
             {tool.setup_complexity && (
               <Badge variant="outline" className="text-xs">
-                Setup: {tool.setup_complexity}
+                Setup: {translateComplexity(tool.setup_complexity)}
               </Badge>
             )}
             {tool.cost_estimate && (

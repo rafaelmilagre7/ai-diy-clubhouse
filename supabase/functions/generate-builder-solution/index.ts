@@ -748,6 +748,9 @@ ESTRUTURA DA RESPOSTA:
   },
   
   ⚠️ IMPORTANTE SOBRE FERRAMENTAS:
+  - 🚫 NUNCA SUGERIR APIs de IA como ferramentas (OpenAI API, Claude API, Gemini API, Anthropic API, etc) - elas são usadas INTERNAMENTE no processamento, não são ferramentas que o usuário precisa configurar
+  - ✅ PODE mencionar Make/N8N que JÁ TÊM módulos de IA integrados (ex: "Make com módulo OpenAI integrado")
+  - ✅ PODE mencionar ChatGPT, Claude.ai, Manus (interfaces prontas para uso direto do time)
   - SEMPRE priorize Make/N8N antes de mencionar "desenvolver API" ou "criar edge function"
   - ManyChat para WhatsApp/Instagram antes de "programar chatbot"
   - Google Sheets para dados antes de "criar banco SQL"

@@ -100,7 +100,8 @@ export default function BuilderSolutionTools() {
               category: platformTool?.category || jsonTool.category || 'Outros',
               reason: platformTool?.description || (jsonTool.reason?.substring(0, 150) + '...') || 'Ferramenta essencial para a implementação',
               setup_complexity: jsonTool.setup_complexity,
-              cost_estimate: jsonTool.estimated_cost
+              cost_estimate: jsonTool.estimated_cost,
+              tool_id: platformTool?.id
             };
           });
 
@@ -113,7 +114,8 @@ export default function BuilderSolutionTools() {
               category: platformTool?.category || jsonTool.category || 'Outros',
               reason: platformTool?.description || (jsonTool.reason?.substring(0, 150) + '...') || 'Ferramenta opcional recomendada',
               setup_complexity: jsonTool.setup_complexity,
-              cost_estimate: jsonTool.estimated_cost
+              cost_estimate: jsonTool.estimated_cost,
+              tool_id: platformTool?.id
             };
           });
 
