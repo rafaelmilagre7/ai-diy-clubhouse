@@ -758,6 +758,16 @@ ESTRUTURA DA RESPOSTA:
   - Razão para incluir Make: "Plataforma de automação visual que conecta APIs sem código - essencial para lógica de negócio"
   - Razão para incluir Lovable: "Apenas se precisar dashboard web para visualizar dados - não para processar lógica"
   
+  📦 FERRAMENTAS DISPONÍVEIS NA PLATAFORMA (USE APENAS ESTAS):
+  ${toolsContext}
+  
+  🔴 REGRA OBRIGATÓRIA:
+  - Você DEVE recomendar APENAS ferramentas da lista acima que estão cadastradas na plataforma
+  - Se não encontrar uma ferramenta específica na lista, escolha a mais próxima disponível
+  - NÃO invente ou sugira ferramentas que não estão na lista acima
+  - Priorize ferramentas no-code da lista: Make, N8N, ManyChat, Google Sheets, Airtable
+  - Use o nome EXATO da ferramenta como aparece na lista
+  
   "implementation_checklist": [
     {
       "step_number": 1,

@@ -2,6 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { ExternalLink } from 'lucide-react';
+import { APP_CONFIG } from '@/config/app';
 
 interface ToolCardBuilderProps {
   tool: {
@@ -104,7 +105,7 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
         {tool.tool_id && (
           <div className="mb-4">
             <a 
-              href={`/ferramentas/${tool.tool_id}`}
+              href={APP_CONFIG.getAppUrl(`/ferramentas/${tool.tool_id}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/10 transition-colors gap-2"

@@ -90,34 +90,50 @@ export default function BuilderSolutionTools() {
 
           setLoadingStep('Organizando dados...');
 
-          // ✅ FASE 4: Transformar para o formato do RequiredToolsGrid
-          const essentialTools = (aiSolution.required_tools.essential || []).map((jsonTool: any) => {
-            const platformTool = findToolByName(jsonTool.name, platformTools);
-            
-            return {
-              name: jsonTool.name,
-              logo_url: platformTool?.logo_url || jsonTool.logo_url,
-              category: platformTool?.category || jsonTool.category || 'Outros',
-              reason: platformTool?.description || (jsonTool.reason?.substring(0, 150) + '...') || 'Ferramenta essencial para a implementação',
-              setup_complexity: jsonTool.setup_complexity,
-              cost_estimate: jsonTool.estimated_cost,
-              tool_id: platformTool?.id
-            };
-          });
+          // ✅ FASE 4: Transformar para o formato do RequiredToolsGrid (APENAS ferramentas cadastradas)
+          const essentialTools = (aiSolution.required_tools.essential || [])
+            .map((jsonTool: any) => {
+              const platformTool = findToolByName(jsonTool.name, platformTools);
+              
+              // ✅ Só incluir se existir na plataforma
+              if (!platformTool) {
+                console.warn(`⚠️ Ferramenta essencial "${jsonTool.name}" não encontrada na plataforma - ignorada`);
+                return null;
+              }
+              
+              return {
+                name: platformTool.name,
+                logo_url: platformTool.logo_url,
+                category: platformTool.category || 'Outros',
+                reason: platformTool.description || 'Ferramenta essencial para a implementação',
+                setup_complexity: jsonTool.setup_complexity,
+                cost_estimate: jsonTool.estimated_cost,
+                tool_id: platformTool.id
+              };
+            })
+            .filter(Boolean); // Remove nulls
 
-          const optionalTools = (aiSolution.required_tools.optional || []).map((jsonTool: any) => {
-            const platformTool = findToolByName(jsonTool.name, platformTools);
-            
-            return {
-              name: jsonTool.name,
-              logo_url: platformTool?.logo_url || jsonTool.logo_url,
-              category: platformTool?.category || jsonTool.category || 'Outros',
-              reason: platformTool?.description || (jsonTool.reason?.substring(0, 150) + '...') || 'Ferramenta opcional recomendada',
-              setup_complexity: jsonTool.setup_complexity,
-              cost_estimate: jsonTool.estimated_cost,
-              tool_id: platformTool?.id
-            };
-          });
+          const optionalTools = (aiSolution.required_tools.optional || [])
+            .map((jsonTool: any) => {
+              const platformTool = findToolByName(jsonTool.name, platformTools);
+              
+              // ✅ Só incluir se existir na plataforma
+              if (!platformTool) {
+                console.warn(`⚠️ Ferramenta opcional "${jsonTool.name}" não encontrada na plataforma - ignorada`);
+                return null;
+              }
+              
+              return {
+                name: platformTool.name,
+                logo_url: platformTool.logo_url,
+                category: platformTool.category || 'Outros',
+                reason: platformTool.description || 'Ferramenta opcional recomendada',
+                setup_complexity: jsonTool.setup_complexity,
+                cost_estimate: jsonTool.estimated_cost,
+                tool_id: platformTool.id
+              };
+            })
+            .filter(Boolean); // Remove nulls
 
           return {
             essential: essentialTools,
