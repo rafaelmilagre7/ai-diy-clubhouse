@@ -4,12 +4,12 @@ import { Link } from "react-router-dom";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useToolImage } from "@/hooks/useToolImage";
 
 interface ToolItemProps {
   toolName: string;
   toolUrl?: string;
   toolId?: string;
+  logoUrl?: string;
   isRequired?: boolean;
   hasBenefit?: boolean;
   benefitType?: "discount" | "free" | "special";
@@ -19,11 +19,11 @@ export const ToolItem = ({
   toolName,
   toolUrl,
   toolId,
+  logoUrl,
   isRequired = false,
   hasBenefit = false,
   benefitType,
 }: ToolItemProps) => {
-  const { logoUrl, loading, error } = useToolImage({ toolName });
   
   const formatName = (name: string) => {
     return name.charAt(0).toUpperCase() + name.slice(1);
@@ -33,8 +33,8 @@ export const ToolItem = ({
   const getToolAvatar = (name: string) => {
     const firstLetter = name.charAt(0).toUpperCase();
     
-    // Se temos uma URL de logo e não estamos carregando nem temos erros
-    if (logoUrl && !loading && !error) {
+    // Se temos uma URL de logo válida
+    if (logoUrl) {
       return (
         <div className="bg-white h-10 w-10 rounded-md flex items-center justify-center overflow-hidden">
           <img 

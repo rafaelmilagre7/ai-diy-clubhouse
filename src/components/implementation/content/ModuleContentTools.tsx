@@ -21,59 +21,48 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', module.solution_id],
     queryFn: async () => {
-      log("Buscando ferramentas da solução", { solution_id: module.solution_id });
+      const startTime = performance.now();
+      log("Buscando ferramentas da solução (otimizado)", { solution_id: module.solution_id });
       
-      // Buscar as ferramentas associadas à solução
+      // Query otimizada com JOIN para buscar tudo de uma vez
       const { data: solutionTools, error: toolsError } = await supabase
         .from("solution_tools")
-        .select("*")
-        .eq("solution_id", module.solution_id);
+        .select(`
+          *,
+          tool_details:tools!inner(
+            id,
+            name,
+            logo_url,
+            has_member_benefit,
+            benefit_type,
+            official_url
+          )
+        `)
+        .eq("solution_id", module.solution_id)
+        .order("order_index");
       
       if (toolsError) {
         logError("Erro ao buscar ferramentas da solução", toolsError);
         throw toolsError;
       }
       
-      // Para cada ferramenta da solução, buscar informações detalhadas
-      const toolsWithDetails = await Promise.all(
-        (solutionTools || []).map(async (solutionTool) => {
-          try {
-            // Buscar informações detalhadas da ferramenta pelo nome
-            const { data: toolDetails, error: detailsError } = await supabase
-              .from("tools")
-              .select("*")
-              .ilike("name", solutionTool.tool_name)
-              .maybeSingle();
-            
-            if (detailsError) {
-              logError("Erro ao buscar detalhes da ferramenta", {
-                error: detailsError,
-                tool_name: solutionTool.tool_name
-              });
-            }
-            
-            return {
-              ...solutionTool,
-              details: toolDetails || null
-            };
-          } catch (error) {
-            logError("Erro ao processar detalhes da ferramenta", {
-              error,
-              tool_name: solutionTool.tool_name
-            });
-            return solutionTool;
-          }
-        })
-      );
-      
-      log("Ferramentas da solução recuperadas", { 
-        count: toolsWithDetails?.length || 0, 
-        tools: toolsWithDetails?.map(t => t.tool_name) 
+      const endTime = performance.now();
+      log("Ferramentas recuperadas com sucesso", { 
+        count: solutionTools?.length || 0,
+        queryTime: `${(endTime - startTime).toFixed(0)}ms`,
+        tools: solutionTools?.map(t => t.tool_name) 
       });
       
-      return toolsWithDetails;
+      return solutionTools?.map(tool => ({
+        ...tool,
+        details: Array.isArray(tool.tool_details) ? tool.tool_details[0] : tool.tool_details
+      })) || [];
     },
-    enabled: !toolsDataLoading // Só executa a query depois que os dados estiverem prontos
+    staleTime: 5 * 60 * 1000, // Cache por 5 minutos
+    gcTime: 10 * 60 * 1000, // Manter em cache por 10 minutos
+    retry: 2,
+    retryDelay: 1000,
+    enabled: !toolsDataLoading
   });
 
   if (error) {
@@ -121,6 +110,7 @@ export const ModuleContentTools = ({ module }: ModuleContentToolsProps) => {
                 toolName={tool.tool_name}
                 toolUrl={tool.tool_url || ""}
                 toolId={tool.details?.id}
+                logoUrl={tool.details?.logo_url}
                 isRequired={tool.is_required} 
                 hasBenefit={tool.details?.has_member_benefit}
                 benefitType={tool.details?.benefit_type as any}
