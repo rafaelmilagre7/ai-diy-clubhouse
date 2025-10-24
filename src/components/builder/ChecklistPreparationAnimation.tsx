@@ -14,8 +14,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 
 interface ChecklistPreparationAnimationProps {
-  stage: number; // 0-8
-  elapsedTime?: number;
+  // Sem props necessárias - animação infinita
 }
 
 const STAGES = [
@@ -30,23 +29,26 @@ const STAGES = [
   { icon: Rocket, label: 'Preparando para lançamento...', color: 'text-orange-400' },
 ];
 
-export default function ChecklistPreparationAnimation({ 
-  stage, 
-  elapsedTime = 0 
-}: ChecklistPreparationAnimationProps) {
-  const currentStage = STAGES[Math.min(stage, STAGES.length - 1)];
-  const IconComponent = currentStage.icon;
-  const progressPercentage = ((stage + 1) / STAGES.length) * 100;
+export default function ChecklistPreparationAnimation({}: ChecklistPreparationAnimationProps = {}) {
+  const [currentStageIndex, setCurrentStageIndex] = React.useState(0);
   
-  // Estimativa de tempo restante (120s total)
-  const estimatedTotal = 120;
-  const timeRemaining = Math.max(0, estimatedTotal - elapsedTime);
+  // Ciclo infinito pelos estágios
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStageIndex((prev) => (prev + 1) % STAGES.length);
+    }, 3000); // Troca de estágio a cada 3s
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  const currentStage = STAGES[currentStageIndex];
+  const IconComponent = currentStage.icon;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[500px] space-y-8 px-4">
       {/* Ícone animado */}
       <motion.div
-        key={stage}
+        key={currentStageIndex}
         initial={{ scale: 0, rotate: -180, opacity: 0 }}
         animate={{ scale: 1, rotate: 0, opacity: 1 }}
         exit={{ scale: 0, rotate: 180, opacity: 0 }}
@@ -80,7 +82,7 @@ export default function ChecklistPreparationAnimation({
       {/* Texto do estágio */}
       <AnimatePresence mode="wait">
         <motion.div
-          key={stage}
+          key={currentStageIndex}
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -20 }}
@@ -91,24 +93,24 @@ export default function ChecklistPreparationAnimation({
             {currentStage.label}
           </h3>
           <p className="text-muted-foreground text-sm">
-            Etapa {stage + 1} de {STAGES.length}
+            Processando sua solução...
           </p>
         </motion.div>
       </AnimatePresence>
 
-      {/* Barra de progresso Aurora */}
+      {/* Barra de progresso pulsante (sem porcentagem) */}
       <div className="w-full max-w-md space-y-3">
         <div className="relative h-3 bg-surface-elevated rounded-full overflow-hidden border border-border/50">
-          {/* Aurora gradient animado */}
+          {/* Aurora gradient animado - movimento contínuo */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500"
-            initial={{ x: '-100%' }}
             animate={{ 
-              x: `${progressPercentage - 100}%`,
+              x: ['-100%', '200%'],
             }}
             transition={{ 
-              duration: 0.8, 
-              ease: 'easeOut' 
+              duration: 2, 
+              repeat: Infinity,
+              ease: 'linear' 
             }}
           />
           
@@ -119,32 +121,26 @@ export default function ChecklistPreparationAnimation({
               x: ['-100%', '200%']
             }}
             transition={{
-              duration: 2,
+              duration: 1.5,
               repeat: Infinity,
               ease: 'linear'
             }}
           />
         </div>
-
-        {/* Info de progresso */}
-        <div className="flex justify-between text-xs text-muted-foreground">
-          <span>{Math.round(progressPercentage)}% completo</span>
-          <span>~{Math.ceil(timeRemaining)}s restantes</span>
-        </div>
       </div>
 
-      {/* Indicadores dos próximos passos */}
+      {/* Indicadores pulsantes */}
       <div className="flex gap-2 mt-4">
         {STAGES.map((s, idx) => (
           <motion.div
             key={idx}
-            initial={{ scale: 0.8, opacity: 0.3 }}
             animate={{
-              scale: idx === stage ? 1.2 : 0.8,
-              opacity: idx <= stage ? 1 : 0.3,
+              scale: idx === currentStageIndex ? 1.2 : 0.8,
+              opacity: idx === currentStageIndex ? 1 : 0.3,
             }}
+            transition={{ duration: 0.3 }}
             className={`h-2 w-2 rounded-full ${
-              idx <= stage 
+              idx === currentStageIndex
                 ? 'bg-gradient-to-r from-primary to-primary/60' 
                 : 'bg-border'
             }`}

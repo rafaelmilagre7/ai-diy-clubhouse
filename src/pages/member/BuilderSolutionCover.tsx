@@ -97,6 +97,11 @@ export default function BuilderSolutionCover() {
     if (sectionKey === 'checklist') {
       console.log('[COVER] 📋 Gerando checklist de forma assíncrona...');
       
+      // Feedback imediato ao usuário
+      toast.loading('Gerando seu plano de ação personalizado...', {
+        duration: 3000,
+      });
+      
       // Navegar imediatamente para a tela de preparação
       navigate(cardPath);
       

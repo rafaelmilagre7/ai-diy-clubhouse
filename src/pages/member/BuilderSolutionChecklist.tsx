@@ -13,8 +13,7 @@ import { toast } from 'sonner';
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [stage, setStage] = useState(0);
+  const [hasTimeout, setHasTimeout] = useState(false);
 
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
@@ -30,7 +29,7 @@ export default function BuilderSolutionChecklist() {
     },
   });
 
-  // Verificar se já existe checklist com polling (refetch a cada 3s)
+  // Verificar se já existe checklist com polling agressivo (refetch a cada 1s)
   const { data: existingChecklist } = useQuery({
     queryKey: ['unified-checklist-exists', id],
     queryFn: async () => {
@@ -45,33 +44,29 @@ export default function BuilderSolutionChecklist() {
       if (error) throw error;
       return data;
     },
-    enabled: !!id,
+    enabled: !!id && !hasTimeout,
+    staleTime: 0, // Forçar re-fetch imediato
     refetchInterval: (query) => {
       // Parar de fazer polling quando encontrar o checklist
-      return query.state.data ? false : 3000;
+      return query.state.data ? false : 1000; // 1s em vez de 3s
     },
   });
 
-  // Timer para animação de progresso
+  // Timeout de 3 minutos para detectar falhas
   useEffect(() => {
-    if (existingChecklist) {
-      setElapsedTime(0);
-      setStage(0);
-      return;
-    }
+    if (existingChecklist || hasTimeout) return;
 
-    const startTime = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - startTime) / 1000);
-      setElapsedTime(elapsed);
-      
-      // Atualizar estágio baseado no tempo (120s total / 9 estágios = ~13s por estágio)
-      const newStage = Math.min(8, Math.floor(elapsed / 13));
-      setStage(newStage);
-    }, 1000);
+    const timeout = setTimeout(() => {
+      console.error('[CHECKLIST] ⏱️ Timeout de 3 minutos atingido');
+      setHasTimeout(true);
+      toast.error('A geração está demorando mais que o esperado', {
+        description: 'Por favor, tente novamente ou entre em contato com o suporte.',
+        duration: 10000,
+      });
+    }, 180000); // 3 minutos
 
-    return () => clearInterval(interval);
-  }, [existingChecklist]);
+    return () => clearTimeout(timeout);
+  }, [existingChecklist, hasTimeout]);
 
   if (isLoading) {
     return (
@@ -123,10 +118,38 @@ export default function BuilderSolutionChecklist() {
             </div>
 
             {showPreparation ? (
-              <ChecklistPreparationAnimation 
-                stage={stage} 
-                elapsedTime={elapsedTime} 
-              />
+              hasTimeout ? (
+                <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6">
+                  <div className="text-center space-y-4 max-w-md">
+                    <div className="text-6xl">⏱️</div>
+                    <h3 className="text-2xl font-bold">Tempo limite excedido</h3>
+                    <p className="text-muted-foreground">
+                      A geração do plano está demorando mais que o esperado. 
+                      Isso pode indicar um problema temporário.
+                    </p>
+                    <div className="flex gap-3 justify-center pt-4">
+                      <Button
+                        onClick={() => {
+                          setHasTimeout(false);
+                          window.location.reload();
+                        }}
+                        size="lg"
+                      >
+                        Tentar novamente
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
+                        size="lg"
+                      >
+                        Voltar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <ChecklistPreparationAnimation />
+              )
             ) : (
               <UnifiedChecklistTab
                 solutionId={id || ''}
