@@ -44,7 +44,7 @@ export default function BuilderSolutionCover() {
     
     // Verificar se framework, arquitetura e ferramentas estão gerados
     const hasFramework = solution?.framework_mapping !== null && solution?.framework_mapping !== undefined;
-    const hasArchitecture = solution?.implementation_flows !== null && solution?.implementation_flows !== undefined;
+    const hasArchitecture = solution?.implementation_flow !== null && solution?.implementation_flow !== undefined;
     const hasTools = solution?.required_tools !== null && solution?.required_tools !== undefined;
     
     if (!hasFramework || !hasArchitecture || !hasTools) {
