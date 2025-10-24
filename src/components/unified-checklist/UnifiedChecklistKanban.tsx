@@ -68,13 +68,34 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
   const updateMutation = useUpdateUnifiedChecklist();
 
-  // Normalizar itens (adicionar coluna se não existir)
+  // Normalizar itens (adicionar coluna se não existir) - VALIDAÇÃO ROBUSTA
   const normalizedItems = useMemo(() => {
-    const normalized = checklistItems.map((item, index) => ({
-      ...item,
-      column: item.column || (item.completed ? 'done' : 'todo'),
-      order: item.order !== undefined ? item.order : index
-    }));
+    const normalized = checklistItems.map((item, index) => {
+      // Validar se a coluna é válida, se não for, usar fallback baseado em completed
+      const validColumns: ColumnType[] = ['todo', 'in_progress', 'done'];
+      let itemColumn = item.column as ColumnType;
+      
+      // Se coluna inválida ou não existe, determinar pela flag completed
+      if (!itemColumn || !validColumns.includes(itemColumn)) {
+        itemColumn = item.completed ? 'done' : 'todo';
+        console.warn(`Item "${item.title}" tinha coluna inválida: "${item.column}". Corrigido para: "${itemColumn}"`);
+      }
+      
+      return {
+        ...item,
+        column: itemColumn,
+        order: item.order !== undefined ? item.order : index
+      };
+    });
+    
+    // Log para debug
+    console.log('📦 Itens normalizados:', {
+      total: normalized.length,
+      todo: normalized.filter(i => i.column === 'todo').length,
+      in_progress: normalized.filter(i => i.column === 'in_progress').length,
+      done: normalized.filter(i => i.column === 'done').length,
+    });
+    
     // Atualizar filteredItems quando normalizedItems mudar
     setFilteredItems(normalized);
     return normalized;
@@ -170,19 +191,30 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       items: allItems.map(i => ({ id: i.id.slice(0, 8), title: i.title, column: i.column, order: i.order }))
     });
 
-    // 6. Salvar no banco
-    updateMutation.mutate({
-      checklistData: {
-        ...checklistData,
-        checklist_data: {
-          items: allItems,
-          lastUpdated: new Date().toISOString()
-        }
+    // 6. Salvar no banco com callbacks de sucesso/erro
+    updateMutation.mutate(
+      {
+        checklistData: {
+          ...checklistData,
+          checklist_data: {
+            items: allItems,
+            lastUpdated: new Date().toISOString()
+          }
+        },
+        solutionId,
+        checklistType,
+        templateId
       },
-      solutionId,
-      checklistType,
-      templateId
-    });
+      {
+        onSuccess: (data) => {
+          console.log('✅ Drag salvo com sucesso no banco:', data);
+        },
+        onError: (error) => {
+          console.error('❌ ERRO ao salvar drag:', error);
+          toast.error('Erro ao mover card. Por favor, recarregue a página.');
+        }
+      }
+    );
 
     // 7. Toast de confirmação
     const columnNames = {

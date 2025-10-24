@@ -7,7 +7,7 @@ import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
 import { EditableCardTitle } from "./EditableCardTitle";
 import { QuickActionsMenu } from "./QuickActionsMenu";
 import { Label } from "./LabelManager";
-import { motion } from "framer-motion";
+import { getDraggableStyle } from "@/utils/kanban/dragStyles";
 
 interface KanbanCardProps {
   item: UnifiedChecklistItem;
@@ -37,12 +37,12 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      style={provided.draggableProps.style}
+      style={getDraggableStyle(provided.draggableProps.style, snapshot.isDragging)}
       className={cn(
-        "group relative select-none p-4 mb-3 last:mb-0 transition-all duration-200",
+        "group relative select-none p-4 mb-3 last:mb-0",
         snapshot.isDragging 
-          ? "shadow-2xl ring-4 ring-primary/50 scale-110 rotate-3 cursor-grabbing z-50 opacity-90" 
-          : "cursor-grab hover:shadow-lg hover:scale-[1.03] hover:ring-2 hover:ring-primary/10"
+          ? "kanban-card-dragging shadow-2xl opacity-90" 
+          : "cursor-grab transition-shadow duration-200 hover:shadow-lg"
       )}
     >
       {/* Header com Título Editável e Quick Actions */}
