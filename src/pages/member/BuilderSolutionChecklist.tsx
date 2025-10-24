@@ -150,7 +150,7 @@ export default function BuilderSolutionChecklist() {
         <div 
           className="animate-fade-in"
         >
-          <LiquidGlassCard className="p-6 liquid-glass-kanban-container">
+          <LiquidGlassCard className="p-6 liquid-glass-kanban-container" hoverable={false}>
             <Button
               variant="ghost"
               size="sm"

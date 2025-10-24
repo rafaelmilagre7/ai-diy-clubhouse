@@ -616,7 +616,6 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                         {...provided.droppableProps}
                         style={{ 
                           minHeight: '600px',
-                          position: 'relative',
                           backgroundColor: snapshot.isDraggingOver 
                             ? 'hsl(var(--primary) / 0.05)' 
                             : 'transparent'
