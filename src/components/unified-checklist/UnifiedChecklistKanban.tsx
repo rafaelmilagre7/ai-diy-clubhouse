@@ -499,18 +499,16 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
             <span className="font-bold text-lg aurora-gradient-text">{stats.percentage}%</span>
           </div>
           <div className="relative w-full h-4 bg-muted rounded-full overflow-hidden shadow-inner">
-            <motion.div 
-              className="absolute inset-y-0 left-0 aurora-progress rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${stats.percentage}%` }}
-              transition={{ duration: 1, ease: "easeOut" }}
+            <div 
+              className="absolute inset-y-0 left-0 aurora-progress rounded-full transition-all duration-1000 ease-out"
+              style={{ width: `${stats.percentage}%` }}
             />
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-8">
           <div 
-            className="glass-card p-4 rounded-xl hover:shadow-md transition-all hover:-translate-y-0.5"
+            className="glass-card p-4 rounded-xl hover:shadow-lg transition-shadow"
           >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-5 w-5 text-status-neutral" />
@@ -520,7 +518,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
           </div>
           
           <div 
-            className="glass-card p-4 rounded-xl border-2 border-status-warning/20 hover:shadow-glow-sm transition-all hover:-translate-y-0.5"
+            className="glass-card p-4 rounded-xl border-2 border-status-warning/20 hover:shadow-glow-sm transition-shadow"
           >
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5 text-status-warning" />
@@ -530,7 +528,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
           </div>
           
           <div 
-            className="glass-card p-4 rounded-xl border-2 border-status-success/20 hover:shadow-glow-sm transition-all hover:-translate-y-0.5"
+            className="glass-card p-4 rounded-xl border-2 border-status-success/20 hover:shadow-glow-sm transition-shadow"
           >
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-5 w-5 text-status-success" />
@@ -562,7 +560,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                     <div className="flex items-center gap-3">
                       <div 
                         className={cn(
-                          "p-2.5 rounded-xl shadow-sm transition-transform hover:scale-105",
+                          "p-2.5 rounded-xl shadow-sm transition-shadow hover:shadow-md",
                           column.id === 'done' && "bg-gradient-success",
                           column.id === 'in_progress' && "bg-gradient-warning",
                           column.id === 'todo' && "bg-muted"
