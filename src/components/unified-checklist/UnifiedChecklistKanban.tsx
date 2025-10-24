@@ -3,10 +3,15 @@ import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, CheckCircle, Lightbulb, Sparkles, TrendingUp, Info } from "lucide-react";
+import { Clock, CheckCircle, Lightbulb, Sparkles, TrendingUp, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { ChecklistCardModal } from './ChecklistCardModal';
+import { KanbanCard } from './kanban/KanbanCard';
+import { KanbanFilters } from './kanban/KanbanFilters';
+import { LabelManager, Label } from './kanban/LabelManager';
+import { useKeyboardShortcuts } from '@/hooks/kanban/useKeyboardShortcuts';
 import { 
   useUpdateUnifiedChecklist,
   type UnifiedChecklistItem,
@@ -59,18 +64,23 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const [showKanbanTip, setShowKanbanTip] = useState(() => {
     return !localStorage.getItem(`kanban-tip-seen-${solutionId}`);
   });
+  const [filteredItems, setFilteredItems] = useState<UnifiedChecklistItem[]>(checklistItems);
+  const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
   const updateMutation = useUpdateUnifiedChecklist();
 
   // Normalizar itens (adicionar coluna se não existir)
   const normalizedItems = useMemo(() => {
-    return checklistItems.map((item, index) => ({
+    const normalized = checklistItems.map((item, index) => ({
       ...item,
       column: item.column || (item.completed ? 'done' : 'todo'),
       order: item.order !== undefined ? item.order : index
     }));
+    // Atualizar filteredItems quando normalizedItems mudar
+    setFilteredItems(normalized);
+    return normalized;
   }, [checklistItems]);
 
-  // Agrupar itens por coluna
+  // Agrupar itens por coluna (usar filteredItems ao invés de normalizedItems)
   const itemsByColumn = useMemo(() => {
     const grouped: Record<ColumnType, UnifiedChecklistItem[]> = {
       todo: [],
@@ -78,7 +88,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       done: []
     };
 
-    normalizedItems.forEach(item => {
+    filteredItems.forEach(item => {
       const column = item.column as ColumnType;
       grouped[column].push(item);
     });
@@ -89,7 +99,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
 
     return grouped;
-  }, [normalizedItems]);
+  }, [filteredItems]);
 
   const handleDragEnd = (result: DropResult) => {
     console.log('🎯 DRAG END CHAMADO:', result);
@@ -173,6 +183,14 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       checklistType,
       templateId
     });
+
+    // 7. Toast de confirmação
+    const columnNames = {
+      'done': 'Concluído',
+      'in_progress': 'Em Progresso',
+      'todo': 'A Fazer'
+    };
+    toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}! 🎉`);
   };
 
   const handleCardClick = (item: UnifiedChecklistItem) => {
@@ -201,6 +219,124 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
   };
 
+  // Handler para atualizar título do card
+  const handleTitleUpdate = async (itemId: string, newTitle: string) => {
+    const updatedItems = normalizedItems.map(item =>
+      item.id === itemId ? { ...item, title: newTitle } : item
+    );
+
+    const updatedChecklistData: UnifiedChecklistData = {
+      ...checklistData,
+      checklist_data: {
+        items: updatedItems,
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+    await updateMutation.mutateAsync({
+      checklistData: updatedChecklistData,
+      solutionId,
+      checklistType,
+      templateId
+    });
+  };
+
+  // Handler para duplicar card
+  const handleDuplicateCard = (item: UnifiedChecklistItem) => {
+    const newItem: UnifiedChecklistItem = {
+      ...item,
+      id: `item-${Date.now()}`,
+      title: `${item.title} (cópia)`,
+      completed: false,
+      completedAt: undefined,
+      column: 'todo',
+      order: normalizedItems.length
+    };
+
+    const updatedItems = [...normalizedItems, newItem];
+    
+    const updatedChecklistData: UnifiedChecklistData = {
+      ...checklistData,
+      checklist_data: {
+        items: updatedItems,
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+    updateMutation.mutate({
+      checklistData: updatedChecklistData,
+      solutionId,
+      checklistType,
+      templateId
+    });
+
+    toast.success('Card duplicado! 📋');
+  };
+
+  // Handler para deletar card
+  const handleDeleteCard = (itemId: string) => {
+    const item = normalizedItems.find(i => i.id === itemId);
+    if (!item) return;
+
+    if (!confirm(`Tem certeza que deseja deletar "${item.title}"?`)) return;
+
+    const updatedItems = normalizedItems.filter(i => i.id !== itemId);
+    
+    const updatedChecklistData: UnifiedChecklistData = {
+      ...checklistData,
+      checklist_data: {
+        items: updatedItems,
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+    updateMutation.mutate({
+      checklistData: updatedChecklistData,
+      solutionId,
+      checklistType,
+      templateId
+    });
+
+    toast.success('Card deletado! 🗑️');
+  };
+
+  // Handler para atualizar labels
+  const handleLabelsUpdate = async (itemId: string, labels: Label[]) => {
+    const updatedItems = normalizedItems.map(item =>
+      item.id === itemId 
+        ? { ...item, metadata: { ...item.metadata, labels } } 
+        : item
+    );
+
+    const updatedChecklistData: UnifiedChecklistData = {
+      ...checklistData,
+      checklist_data: {
+        items: updatedItems,
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+    await updateMutation.mutateAsync({
+      checklistData: updatedChecklistData,
+      solutionId,
+      checklistType,
+      templateId
+    });
+  };
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    onFocusSearch: () => {
+      const searchInput = document.querySelector('input[placeholder*="Buscar"]') as HTMLInputElement;
+      searchInput?.focus();
+    },
+    onCloseModal: () => {
+      if (isModalOpen) {
+        setIsModalOpen(false);
+      }
+    }
+  }, true);
+
   // Calcular estatísticas
   const stats = {
     todo: itemsByColumn.todo.length,
@@ -214,6 +350,12 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
   return (
     <div className="space-y-6">
+      {/* Filtros de Busca */}
+      <KanbanFilters 
+        items={normalizedItems} 
+        onFilterChange={setFilteredItems}
+      />
+
       {/* Tooltip Educativo - Design System Completo */}
       {showKanbanTip && (
         <motion.div
@@ -444,91 +586,31 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                         </div>
                       )}
 
+                      {/* Placeholder de drop animado */}
+                      {items.length === 0 && snapshot.isDraggingOver && (
+                        <motion.div 
+                          initial={{ scale: 0.9, opacity: 0 }}
+                          animate={{ scale: 1, opacity: 1 }}
+                          className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-primary rounded-xl bg-primary/5"
+                        >
+                          <div className="text-primary font-semibold">Solte aqui</div>
+                          <div className="text-xs text-muted-foreground">O card será movido para esta coluna</div>
+                        </motion.div>
+                      )}
+
                       {items.map((item, index) => (
                         <Draggable key={item.id} draggableId={item.id} index={index}>
                           {(provided, snapshot) => (
-                            <Card 
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              style={provided.draggableProps.style}
-                              className={cn(
-                                "group relative select-none p-5 mb-4 last:mb-0 transition-all duration-200",
-                                snapshot.isDragging 
-                                  ? "shadow-aurora ring-4 ring-primary/30 scale-105 rotate-2 cursor-grabbing z-50" 
-                                  : "cursor-grab hover:shadow-md hover:scale-[1.02]"
-                              )}
-                            >
-                              {/* Botão Info - desabilitado durante drag */}
-                              {!snapshot.isDragging && (
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    e.preventDefault();
-                                    handleCardClick(item);
-                                  }}
-                                  onMouseDown={(e) => {
-                                    // Previne que o mouse down no botão inicie o drag
-                                    e.stopPropagation();
-                                  }}
-                                  className="absolute top-3 right-3 p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity hover:bg-primary/10 z-20"
-                                  title="Ver detalhes"
-                                  style={{ pointerEvents: 'auto' }}
-                                >
-                                  <Info className="h-4 w-4 text-primary" />
-                                </button>
-                              )}
-
-                              <div className="space-y-4">
-                                <div className="pr-10">
-                                  <h4 className="font-semibold text-base leading-tight mb-2">
-                                    {item.title}
-                                  </h4>
-                                  
-                                  {item.description && (
-                                    <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed">
-                                      {item.description}
-                                    </p>
-                                  )}
-                                </div>
-
-                                {/* Badges */}
-                                <div className="flex flex-wrap gap-2">
-                                  {item.metadata?.estimated_time && (
-                                    <Badge variant="outline" className="text-xs gap-1.5">
-                                      <Clock className="h-3.5 w-3.5" />
-                                      {item.metadata.estimated_time}
-                                    </Badge>
-                                  )}
-                                  
-                                  {item.metadata?.difficulty && (
-                                    <Badge 
-                                      variant="outline" 
-                                      className={cn(
-                                        "text-xs font-semibold",
-                                        item.metadata.difficulty === 'easy' && "border-difficulty-beginner/40 text-difficulty-beginner bg-difficulty-beginner/10",
-                                        item.metadata.difficulty === 'medium' && "border-difficulty-intermediate/40 text-difficulty-intermediate bg-difficulty-intermediate/10",
-                                        item.metadata.difficulty === 'hard' && "border-difficulty-advanced/40 text-difficulty-advanced bg-difficulty-advanced/10"
-                                      )}
-                                    >
-                                      {item.metadata.difficulty === 'easy' && '⚡ Fácil'}
-                                      {item.metadata.difficulty === 'medium' && '⚠️ Médio'}
-                                      {item.metadata.difficulty === 'hard' && '🔥 Difícil'}
-                                    </Badge>
-                                  )}
-                                </div>
-
-                                {/* Footer com indicador de notas */}
-                                {item.notes && (
-                                  <div className="pt-3 border-t border-border/50">
-                                    <p className="text-xs text-muted-foreground italic flex items-center gap-1.5">
-                                      <span className="text-base">✏️</span>
-                                      <span>Tem notas pessoais</span>
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </Card>
+                            <KanbanCard
+                              item={item}
+                              provided={provided}
+                              snapshot={snapshot}
+                              onTitleUpdate={handleTitleUpdate}
+                              onEdit={() => handleCardClick(item)}
+                              onDuplicate={() => handleDuplicateCard(item)}
+                              onDelete={() => handleDeleteCard(item.id)}
+                              onAddLabel={() => setSelectedLabelItem(item)}
+                            />
                           )}
                         </Draggable>
                       ))}
@@ -599,6 +681,15 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         onNotesChange={handleNotesChange}
         isUpdating={updateMutation.isPending}
       />
+
+      {/* Label Manager Modal */}
+      {selectedLabelItem && (
+        <LabelManager
+          item={selectedLabelItem}
+          onLabelsUpdate={handleLabelsUpdate}
+          trigger={<div style={{ display: 'none' }} />}
+        />
+      )}
     </div>
   );
 };

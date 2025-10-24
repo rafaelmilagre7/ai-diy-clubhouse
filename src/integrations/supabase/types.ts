@@ -6285,6 +6285,8 @@ export type Database = {
           id: string
           is_completed: boolean | null
           is_template: boolean | null
+          labels: Json | null
+          members: Json | null
           metadata: Json | null
           progress_percentage: number | null
           solution_id: string
@@ -6302,6 +6304,8 @@ export type Database = {
           id?: string
           is_completed?: boolean | null
           is_template?: boolean | null
+          labels?: Json | null
+          members?: Json | null
           metadata?: Json | null
           progress_percentage?: number | null
           solution_id: string
@@ -6319,6 +6323,8 @@ export type Database = {
           id?: string
           is_completed?: boolean | null
           is_template?: boolean | null
+          labels?: Json | null
+          members?: Json | null
           metadata?: Json | null
           progress_percentage?: number | null
           solution_id?: string
