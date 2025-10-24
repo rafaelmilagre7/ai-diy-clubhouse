@@ -20,25 +20,64 @@ const findToolByName = (name: string, tools: Tool[] | null) => {
   if (!tools) return null;
   const normalized = normalizeName(name);
   
-  return tools.find(t => {
+  // 🎯 PRIORIDADE 1: Match exato completo
+  const exactMatch = tools.find(t => 
+    normalizeName(t.name) === normalized
+  );
+  if (exactMatch) {
+    console.log(`✅ Match exato: "${name}" → "${exactMatch.name}"`);
+    return exactMatch;
+  }
+  
+  // 🎯 PRIORIDADE 2: Match exato de todas as palavras principais
+  const nameWords = normalized.split(/[\s.]+/).filter(w => w.length > 3);
+  
+  const fullWordMatch = tools.find(t => {
     const toolNormalized = normalizeName(t.name);
+    const toolWords = toolNormalized.split(/[\s.]+/).filter(w => w.length > 3);
     
-    // Match exato
-    if (toolNormalized === normalized) return true;
-    
-    // Match parcial (ex: "Make" encontra "Make.com" ou vice-versa)
-    if (toolNormalized.includes(normalized) || normalized.includes(toolNormalized)) {
-      return true;
-    }
-    
-    // Match por palavras-chave (ex: "OpenAI" encontra "API da OpenAI")
-    const toolWords = toolNormalized.split(/[\s.]+/).filter(w => w.length > 2);
-    const nameWords = normalized.split(/[\s.]+/).filter(w => w.length > 2);
-    
-    return toolWords.some(tw => nameWords.some(nw => 
-      tw === nw || tw.includes(nw) || nw.includes(tw)
-    ));
+    // Todas as palavras do nome devem estar presentes E mesmo número de palavras
+    return nameWords.every(nw => 
+      toolWords.some(tw => tw === nw || tw.includes(nw) || nw.includes(tw))
+    ) && nameWords.length === toolWords.length;
   });
+  
+  if (fullWordMatch) {
+    console.log(`✅ Match completo de palavras: "${name}" → "${fullWordMatch.name}"`);
+    return fullWordMatch;
+  }
+  
+  // 🎯 PRIORIDADE 3: Match parcial (ex: "Make" → "Make.com")
+  const partialMatch = tools.find(t => {
+    const toolNormalized = normalizeName(t.name);
+    return toolNormalized.includes(normalized) || normalized.includes(toolNormalized);
+  });
+  
+  if (partialMatch) {
+    console.log(`⚠️ Match parcial: "${name}" → "${partialMatch.name}"`);
+    return partialMatch;
+  }
+  
+  // 🎯 PRIORIDADE 4: Match por palavra-chave (ÚLTIMO RECURSO)
+  const keywordMatch = tools.find(t => {
+    const toolNormalized = normalizeName(t.name);
+    const toolWords = toolNormalized.split(/[\s.]+/).filter(w => w.length > 3);
+    
+    // Pelo menos 2 palavras devem coincidir EXATAMENTE
+    const matchingWords = nameWords.filter(nw =>
+      toolWords.some(tw => tw === nw)
+    );
+    
+    return matchingWords.length >= 2;
+  });
+  
+  if (keywordMatch) {
+    console.log(`⚠️ Match por palavras-chave: "${name}" → "${keywordMatch.name}"`);
+  } else {
+    console.warn(`❌ Nenhum match encontrado para: "${name}"`);
+  }
+  
+  return keywordMatch || null;
 };
 
 // Extrair dados específicos do JSONB required_tools
@@ -105,6 +144,11 @@ export default function BuilderSolutionTools() {
 
           setLoadingStep('Organizando dados...');
 
+          console.log('🔧 FERRAMENTAS RECEBIDAS DA IA:', {
+            essenciais: aiSolution.required_tools.essential?.map((t: any) => t.name) || [],
+            opcionais: aiSolution.required_tools.optional?.map((t: any) => t.name) || []
+          });
+
           // ✅ FASE 4: Transformar para o formato do RequiredToolsGrid (APENAS ferramentas cadastradas)
           const essentialTools = (aiSolution.required_tools.essential || [])
             .map((jsonTool: any) => {
@@ -149,6 +193,44 @@ export default function BuilderSolutionTools() {
               };
             })
             .filter(Boolean); // Remove nulls
+
+          // ✅ VALIDAÇÃO: Verificar se todas as ferramentas foram encontradas
+          const expectedEssentialCount = aiSolution.required_tools.essential?.length || 0;
+          const foundEssentialCount = essentialTools.length;
+          const expectedOptionalCount = aiSolution.required_tools.optional?.length || 0;
+          const foundOptionalCount = optionalTools.length;
+
+          console.log('🔧 RESULTADO DO MATCHING:', {
+            esperadas: {
+              essenciais: expectedEssentialCount,
+              opcionais: expectedOptionalCount
+            },
+            encontradas: {
+              essenciais: foundEssentialCount,
+              opcionais: foundOptionalCount
+            },
+            ferramentasEncontradas: {
+              essenciais: essentialTools.map((t: any) => t.name),
+              opcionais: optionalTools.map((t: any) => t.name)
+            }
+          });
+
+          if (foundEssentialCount < expectedEssentialCount) {
+            const missingTools = (aiSolution.required_tools.essential || [])
+              .filter((jsonTool: any) => !findToolByName(jsonTool.name, platformTools))
+              .map((t: any) => t.name);
+            
+            console.error(`⚠️ ALERTA: Esperadas ${expectedEssentialCount} ferramentas essenciais, mas apenas ${foundEssentialCount} foram encontradas!`);
+            console.error('❌ Ferramentas essenciais não encontradas:', missingTools);
+          }
+
+          if (foundOptionalCount < expectedOptionalCount) {
+            const missingTools = (aiSolution.required_tools.optional || [])
+              .filter((jsonTool: any) => !findToolByName(jsonTool.name, platformTools))
+              .map((t: any) => t.name);
+            
+            console.warn(`⚠️ ${expectedOptionalCount - foundOptionalCount} ferramentas opcionais não encontradas:`, missingTools);
+          }
 
           return {
             essential: essentialTools,
