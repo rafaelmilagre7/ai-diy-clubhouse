@@ -83,21 +83,34 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
 
       try {
         const cleanedCode = cleanMermaidCode(code);
-        console.log('[SimpleMermaid] 🎨 Renderizando código:', cleanedCode.substring(0, 100) + '...');
+        console.log('[SimpleMermaid] 🎨 Renderizando código completo:', cleanedCode);
 
+        console.log('[SimpleMermaid] 📦 Importando Mermaid...');
         const { default: mermaid } = await import('mermaid');
-        const uniqueId = `mermaid-${currentRenderId}-${Date.now()}`;
+        console.log('[SimpleMermaid] ✅ Mermaid importado');
         
+        const uniqueId = `mermaid-${currentRenderId}-${Date.now()}`;
+        console.log('[SimpleMermaid] 🆔 Unique ID:', uniqueId);
+        
+        console.log('[SimpleMermaid] 🎨 Chamando mermaid.render...');
         const { svg } = await mermaid.render(uniqueId, cleanedCode);
+        console.log('[SimpleMermaid] ✅ SVG gerado, tamanho:', svg.length);
         
         // Verificar se ainda é a renderização ativa
         if (isActive && containerRef.current && renderIdRef.current === currentRenderId) {
           containerRef.current.innerHTML = svg;
           console.log('[SimpleMermaid] ✅ Renderizado com sucesso ID:', currentRenderId);
           setIsRendering(false);
+        } else {
+          console.warn('[SimpleMermaid] ⚠️ Renderização cancelada:', {
+            isActive,
+            hasContainer: !!containerRef.current,
+            renderIdMatch: renderIdRef.current === currentRenderId
+          });
         }
       } catch (err: any) {
-        console.error('[SimpleMermaid] ❌ Erro:', err);
+        console.error('[SimpleMermaid] ❌ Erro completo:', err);
+        console.error('[SimpleMermaid] ❌ Stack:', err.stack);
         if (isActive) {
           setError(err.message || 'Erro ao renderizar diagrama');
           setIsRendering(false);
