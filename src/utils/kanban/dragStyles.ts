@@ -1,10 +1,10 @@
 import { DraggableStyle } from "@hello-pangea/dnd";
 
 /**
- * Função helper para garantir que os estilos de drag funcionem corretamente
- * sem conflitos com transformações CSS personalizadas.
+ * Função helper para aplicar estilos de drag SEM CONFLITAR com @hello-pangea/dnd
+ * CRÍTICO: Não podemos adicionar ou modificar 'transform' - apenas @hello-pangea/dnd controla isso
  * 
- * @param style - Estilo fornecido pelo react-beautiful-dnd
+ * @param style - Estilo fornecido pelo @hello-pangea/dnd (contém transform inline)
  * @param isDragging - Se o item está sendo arrastado
  */
 export const getDraggableStyle = (
@@ -13,19 +13,15 @@ export const getDraggableStyle = (
 ): React.CSSProperties => {
   if (!style) return {};
 
-  // Durante o drag, preservar APENAS as transformações do @hello-pangea/dnd
-  // e remover qualquer transformação customizada que possa conflitar
+  // Durante o drag, adicionar APENAS propriedades que NÃO conflitam com transform
   if (isDragging) {
     return {
       ...style,
-      // Forçar GPU acceleration para performance
-      transform: style.transform,
-      // Garantir que o card siga o cursor exatamente
-      transition: 'none',
-      // Manter cursor apropriado
+      // CRÍTICO: Não sobrescrever transform - deixar @hello-pangea/dnd controlar 100%
       cursor: 'grabbing',
-      // Z-index alto para ficar acima de tudo
       zIndex: 9999,
+      boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1)',
+      opacity: 0.9,
     };
   }
 

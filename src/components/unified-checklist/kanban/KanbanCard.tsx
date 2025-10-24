@@ -41,7 +41,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       className={cn(
         "group relative select-none p-4 mb-3 last:mb-0",
         snapshot.isDragging 
-          ? "kanban-card-dragging shadow-2xl opacity-90" 
+          ? "shadow-2xl" // Removido opacity e classe conflitante
           : "cursor-grab transition-shadow duration-200 hover:shadow-lg"
       )}
     >

@@ -554,14 +554,13 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                 )}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <motion.div 
+                      <div 
                         className={cn(
-                          "p-2.5 rounded-xl shadow-sm",
+                          "p-2.5 rounded-xl shadow-sm transition-transform hover:scale-105",
                           column.id === 'done' && "bg-gradient-success",
                           column.id === 'in_progress' && "bg-gradient-warning",
                           column.id === 'todo' && "bg-muted"
                         )}
-                        whileHover={{ scale: 1.1, rotate: 5 }}
                       >
                         <Icon className={cn(
                           "h-5 w-5",
@@ -569,7 +568,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                           column.id === 'in_progress' && "text-white",
                           column.id === 'todo' && "text-muted-foreground"
                         )} />
-                      </motion.div>
+                      </div>
                       <h3 className="font-bold text-base">{column.title}</h3>
                     </div>
                     <Badge 
