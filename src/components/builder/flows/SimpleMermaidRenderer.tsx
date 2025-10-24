@@ -41,6 +41,7 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingTime, setLoadingTime] = useState(0);
+  const [shouldRender, setShouldRender] = useState(false);
   const isInitialized = useMermaidInit();
 
   // Contador de tempo de loading
@@ -55,20 +56,26 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     }
   }, [isRendering]);
 
+  // Verificar quando tudo está pronto para renderizar
   useEffect(() => {
-    // Aguardar um tick para garantir que o DOM está montado
-    const timer = setTimeout(() => {
-      const canRender = isInitialized || isMermaidInitialized();
-      
-      if (!canRender || !code || !containerRef.current) {
-        console.log('[SimpleMermaid] Aguardando:', { 
-          isInitialized, 
-          isMermaidReady: isMermaidInitialized(),
-          hasCode: !!code, 
-          hasContainer: !!containerRef.current 
-        });
-        return;
-      }
+    const canRender = (isInitialized || isMermaidInitialized()) && !!code && !!containerRef.current;
+    
+    console.log('[SimpleMermaid] Status:', { 
+      isInitialized, 
+      isMermaidReady: isMermaidInitialized(),
+      hasCode: !!code, 
+      hasContainer: !!containerRef.current,
+      canRender
+    });
+
+    if (canRender && !shouldRender) {
+      console.log('[SimpleMermaid] ✅ Tudo pronto! Iniciando renderização...');
+      setShouldRender(true);
+    }
+  }, [isInitialized, code, containerRef.current, shouldRender]);
+
+  useEffect(() => {
+    if (!shouldRender) return;
 
     const renderDiagram = async () => {
       setIsRendering(true);
@@ -96,10 +103,7 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     };
 
       renderDiagram();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [isInitialized, code]);
+  }, [shouldRender]);
 
   if (isRendering) {
     return (
