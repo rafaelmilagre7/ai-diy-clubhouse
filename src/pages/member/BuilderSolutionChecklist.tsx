@@ -13,7 +13,10 @@ import { toast } from 'sonner';
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [hasTimeout, setHasTimeout] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const MAX_RETRIES = 2;
 
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
@@ -29,13 +32,13 @@ export default function BuilderSolutionChecklist() {
     },
   });
 
-  // Verificar se já existe checklist com polling agressivo (refetch a cada 1s)
+  // 🔄 FASE 3: Verificar se já existe checklist com retry automático
   const { data: existingChecklist } = useQuery({
-    queryKey: ['unified-checklist-exists', id],
+    queryKey: ['unified-checklist-exists', id, retryCount],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('unified_checklists')
-        .select('id')
+        .select('id, checklist_data, created_at')
         .eq('solution_id', id)
         .eq('checklist_type', 'implementation')
         .eq('is_template', false)
@@ -45,28 +48,70 @@ export default function BuilderSolutionChecklist() {
       return data;
     },
     enabled: !!id && !hasTimeout,
-    staleTime: 0, // Forçar re-fetch imediato
+    retry: MAX_RETRIES,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
+    staleTime: 0,
     refetchInterval: (query) => {
-      // Parar de fazer polling quando encontrar o checklist
-      return query.state.data ? false : 1000; // 1s em vez de 3s
+      return query.state.data ? false : 1000;
     },
   });
 
-  // Timeout de 3 minutos para detectar falhas
+  // ⏱️ FASE 1: Timeout de 5 minutos (margem segura)
   useEffect(() => {
     if (existingChecklist || hasTimeout) return;
 
     const timeout = setTimeout(() => {
-      console.error('[CHECKLIST] ⏱️ Timeout de 3 minutos atingido');
+      console.error('[CHECKLIST] ⏱️ Timeout de 5 minutos atingido');
       setHasTimeout(true);
       toast.error('A geração está demorando mais que o esperado', {
         description: 'Por favor, tente novamente ou entre em contato com o suporte.',
         duration: 10000,
       });
-    }, 180000); // 3 minutos
+    }, 300000); // 🛡️ FASE 1: 5 minutos
 
     return () => clearTimeout(timeout);
   }, [existingChecklist, hasTimeout]);
+
+  // 🔄 FASE 3: Retry automático com backoff
+  useEffect(() => {
+    if (hasTimeout && retryCount < MAX_RETRIES && !existingChecklist) {
+      console.log(`[CHECKLIST] 🔄 Retry ${retryCount + 1}/${MAX_RETRIES}`);
+      
+      toast.info('Tentando novamente...', {
+        description: `Tentativa ${retryCount + 1} de ${MAX_RETRIES}`,
+        duration: 3000
+      });
+      
+      setRetryCount(prev => prev + 1);
+      setHasTimeout(false);
+      
+      // Re-disparar geração
+      supabase.functions.invoke('generate-section-content', {
+        body: {
+          solutionId: id,
+          sectionType: 'checklist',
+          userId: solution?.user_id
+        }
+      });
+    }
+  }, [hasTimeout, retryCount, existingChecklist, id, solution?.user_id]);
+
+  // 📝 FASE 4: Logging detalhado
+  useEffect(() => {
+    if (existingChecklist) {
+      console.log('[CHECKLIST] ✅ Checklist encontrado!', {
+        id: existingChecklist.id,
+        items: existingChecklist.checklist_data?.items?.length || 0,
+        createdAt: existingChecklist.created_at
+      });
+    } else if (!hasTimeout) {
+      console.log('[CHECKLIST] ⏳ Aguardando geração...', {
+        solutionId: id,
+        retryCount,
+        timeout: hasTimeout
+      });
+    }
+  }, [existingChecklist, hasTimeout, id, retryCount]);
 
   if (isLoading) {
     return (
@@ -111,7 +156,7 @@ export default function BuilderSolutionChecklist() {
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {showPreparation 
-                  ? 'Gerando seu plano personalizado...' 
+                  ? 'Gerando seu plano personalizado... (30-60s)' 
                   : 'Checklist prático e passo a passo para transformar sua ideia em realidade'
                 }
               </p>

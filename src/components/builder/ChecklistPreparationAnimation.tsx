@@ -31,6 +31,8 @@ const STAGES = [
 
 export default function ChecklistPreparationAnimation({}: ChecklistPreparationAnimationProps = {}) {
   const [currentStageIndex, setCurrentStageIndex] = React.useState(0);
+  const [elapsedTime, setElapsedTime] = React.useState(0);
+  const [estimatedTime] = React.useState(35); // 📊 FASE 2: Tempo estimado com Flash
   
   // Ciclo infinito pelos estágios
   React.useEffect(() => {
@@ -40,9 +42,19 @@ export default function ChecklistPreparationAnimation({}: ChecklistPreparationAn
     
     return () => clearInterval(interval);
   }, []);
+
+  // 📊 FASE 2: Timer de progresso
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
   
   const currentStage = STAGES[currentStageIndex];
   const IconComponent = currentStage.icon;
+  const progressPercent = Math.min((elapsedTime / estimatedTime) * 100, 95);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[500px] space-y-8 px-4">
@@ -98,19 +110,17 @@ export default function ChecklistPreparationAnimation({}: ChecklistPreparationAn
         </motion.div>
       </AnimatePresence>
 
-      {/* Barra de progresso pulsante (sem porcentagem) */}
+      {/* 📊 FASE 2: Barra de progresso com tempo real */}
       <div className="w-full max-w-md space-y-3">
         <div className="relative h-3 bg-surface-elevated rounded-full overflow-hidden border border-border/50">
-          {/* Aurora gradient animado - movimento contínuo */}
+          {/* Progresso real baseado em tempo estimado */}
           <motion.div
             className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500"
-            animate={{ 
-              x: ['-100%', '200%'],
-            }}
+            initial={{ width: '0%' }}
+            animate={{ width: `${progressPercent}%` }}
             transition={{ 
-              duration: 2, 
-              repeat: Infinity,
-              ease: 'linear' 
+              duration: 0.5,
+              ease: 'easeOut' 
             }}
           />
           
@@ -126,6 +136,12 @@ export default function ChecklistPreparationAnimation({}: ChecklistPreparationAn
               ease: 'linear'
             }}
           />
+        </div>
+
+        {/* 📊 FASE 2: Exibir tempo decorrido vs estimado */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{Math.round(progressPercent)}% concluído</span>
+          <span>{elapsedTime}s / ~{estimatedTime}s</span>
         </div>
       </div>
 

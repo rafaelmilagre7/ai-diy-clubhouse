@@ -93,9 +93,24 @@ export default function BuilderSolutionCover() {
     
     console.log('[COVER] 🔄 Conteúdo não existe, gerando...');
     
-    // Para checklist, gerar de forma assíncrona e não bloquear navegação
+    // 🔍 FASE 5: Para checklist, verificar se já existe ANTES de disparar geração
     if (sectionKey === 'checklist') {
-      console.log('[COVER] 📋 Gerando checklist de forma assíncrona...');
+      console.log('[COVER] 🔍 Verificando se checklist já existe...');
+      
+      const { data: existing } = await supabase
+        .from('unified_checklists')
+        .select('id')
+        .eq('solution_id', solution.id)
+        .eq('checklist_type', 'implementation')
+        .maybeSingle();
+      
+      if (existing) {
+        console.log('[COVER] ✅ Checklist já existe, navegando direto');
+        navigate(cardPath);
+        return;
+      }
+      
+      console.log('[COVER] 📋 Gerando checklist pela primeira vez...');
       
       // Feedback imediato ao usuário
       toast.loading('Gerando seu plano de ação personalizado...', {
