@@ -158,18 +158,56 @@ export default function BuilderFlowView() {
 
       <div className="space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold mb-2">📊 Fluxo de Implementação</h1>
-          <p className="text-muted-foreground text-lg">{solution?.title}</p>
+        <div className="space-y-4">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">🗺️ Roteiro de Implementação</h1>
+            <p className="text-muted-foreground text-lg">{solution?.title}</p>
+          </div>
+          
+          {/* Introdução Explicativa */}
+          <Card className="bg-primary/5 border-primary/20">
+            <CardContent className="pt-6">
+              <div className="space-y-3">
+                <p className="text-sm leading-relaxed">
+                  <strong>📍 Como usar este roteiro:</strong> Este fluxo visual mostra a ordem recomendada 
+                  para configurar as ferramentas da sua solução. Cada etapa é prática e executável — 
+                  <strong> não precisa de programação</strong>, apenas configuração.
+                </p>
+                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+                  <span>⏱️ Cada etapa leva entre 10-30 minutos</span>
+                  <span>🔧 Apenas configuração de ferramentas no-code</span>
+                  <span>✅ Siga a ordem para melhores resultados</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Flow Card */}
         {isGenerating ? (
           <Card>
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <Sparkles className="h-12 w-12 mb-4 animate-pulse text-primary" />
-              <p className="text-lg font-semibold mb-2">Gerando fluxo de implementação...</p>
-              <p className="text-sm text-muted-foreground">Analisando a solução e criando etapas visuais</p>
+            <CardContent className="flex flex-col items-center justify-center py-16 space-y-4">
+              <Sparkles className="h-12 w-12 animate-pulse text-primary" />
+              <div className="text-center space-y-3 max-w-md">
+                <p className="text-lg font-semibold">Criando seu roteiro de implementação...</p>
+                <div className="space-y-2 text-sm text-muted-foreground">
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse" />
+                    Analisando os 4 pilares da sua solução
+                  </p>
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse delay-100" />
+                    Ordenando as ferramentas na sequência ideal
+                  </p>
+                  <p className="flex items-center justify-center gap-2">
+                    <span className="inline-block w-2 h-2 rounded-full bg-primary animate-pulse delay-200" />
+                    Gerando fluxo visual passo a passo
+                  </p>
+                </div>
+                <p className="text-xs text-muted-foreground pt-2">
+                  ⏳ Isso pode levar 30-60 segundos...
+                </p>
+              </div>
             </CardContent>
           </Card>
         ) : flow ? (
@@ -194,7 +232,26 @@ export default function BuilderFlowView() {
               />
             </CardContent>
 
-            <CardFooter className="flex justify-between items-center">
+            <CardFooter className="flex flex-wrap gap-3 justify-between items-center">
+              <div className="flex gap-3">
+                <Button
+                  variant="secondary"
+                  onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
+                  className="gap-2"
+                >
+                  🔧 Ver Ferramentas Necessárias
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  onClick={() => generateFlow()}
+                  disabled={isGenerating}
+                  className="gap-2"
+                >
+                  🔄 Regenerar Fluxo
+                </Button>
+              </div>
+
               <Button
                 onClick={markAsImplemented}
                 disabled={isMarking || solution?.status === 'completed'}
@@ -217,14 +274,6 @@ export default function BuilderFlowView() {
                   </>
                 )}
               </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => generateFlow()}
-                disabled={isGenerating}
-              >
-                🔄 Regenerar Fluxo
-              </Button>
             </CardFooter>
           </Card>
         ) : (
@@ -241,20 +290,39 @@ export default function BuilderFlowView() {
         {/* Key Steps */}
         {flow?.key_steps && flow.key_steps.length > 0 && (
           <div>
-            <h2 className="text-xl font-semibold mb-4">📋 Etapas Principais</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              {flow.key_steps.map((step, idx) => (
-                <Card key={idx}>
-                  <CardContent className="pt-6">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold">
-                        {idx + 1}
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              📋 Etapas Principais
+              <Badge variant="secondary" className="text-xs">
+                {flow.key_steps.length} passos
+              </Badge>
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {flow.key_steps.map((step, idx) => {
+                // Emojis contextuais por tipo de etapa
+                const stepEmojis = ['📥', '⚙️', '🔗', '🧪', '✏️', '🚀'];
+                const emoji = stepEmojis[idx % stepEmojis.length];
+                
+                return (
+                  <Card key={idx} className="hover:shadow-md transition-shadow">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
+                          {emoji}
+                        </div>
+                        <div className="flex-1 space-y-1">
+                          <div className="text-xs text-muted-foreground font-medium">
+                            Passo {idx + 1}
+                          </div>
+                          <p className="text-sm font-medium leading-snug">{step}</p>
+                          <div className="text-xs text-muted-foreground">
+                            ⏱️ ~15-25 min
+                          </div>
+                        </div>
                       </div>
-                      <p className="text-sm font-medium">{step}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         )}

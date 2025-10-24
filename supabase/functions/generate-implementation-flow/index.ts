@@ -24,60 +24,128 @@ serve(async (req) => {
 
     if (solutionError) throw solutionError;
 
-    // Montar prompt focado e simples com exemplos concretos
-    const systemPrompt = `Você é um arquiteto de soluções especializado em criar fluxos visuais de implementação para projetos de IA.
+    // Buscar framework_mapping para contexto das ferramentas
+    const frameworkData = solution.framework_mapping;
+    
+    // Extrair ferramentas dos 4 pilares
+    const automationTools = frameworkData?.quadrant1_automation?.tool_names || [];
+    const aiTools = frameworkData?.quadrant2_ai?.tool_names || [];
+    const dataTools = frameworkData?.quadrant3_data?.tool_names || [];
+    const interfaceTools = frameworkData?.quadrant4_interface?.tool_names || [];
+    
+    const allTools = [...automationTools, ...aiTools, ...dataTools, ...interfaceTools]
+      .filter(Boolean)
+      .join(', ') || 'Ferramentas não especificadas';
+
+    // Montar prompt focado em negócio e no-code
+    const systemPrompt = `Você é um CONSULTOR DE TRANSFORMAÇÃO DIGITAL especializado em guiar empresários e líderes a implementarem soluções de IA usando ferramentas NO-CODE.
+
+Seu público NÃO é programador. São empresários que querem implementar IA de forma prática.
 
 REGRAS MERMAID (CRÍTICAS - SIGA EXATAMENTE):
 1. Use APENAS "graph TD" na primeira linha
-2. IDs devem ser APENAS letras maiúsculas únicas (A, B, C, D... até L)
+2. IDs devem ser APENAS letras maiúsculas únicas (A, B, C, D, E, F, G, H, I, J, K, L)
 3. Textos descritivos SEMPRE entre colchetes [ ]
 4. Setas SEMPRE com espaços: " --> " (nunca "-->")
 5. Máximo 12 nós no total
-6. Decisões (if/else) usam chaves { } e labels nas setas: -->|Sim| e -->|Não|
-7. NUNCA use: underscores, hífens, espaços ou números em IDs
-8. NUNCA quebre uma definição de nó em múltiplas linhas
-9. Cada linha deve ter EXATAMENTE: ID[Texto] --> ID2[Texto] ou ID{Decisão?}
+6. Textos CURTOS: máximo 40 caracteres por nó
+7. Decisões (if/else) usam chaves { } e labels nas setas: -->|Sim| e -->|Não|
+8. NUNCA use: underscores, hífens, espaços ou números em IDs
+9. NUNCA quebre uma definição de nó em múltiplas linhas
+10. Cada linha deve ter EXATAMENTE: ID[Texto] --> ID2[Texto] ou ID{Decisão?}
 
-EXEMPLO 100% VÁLIDO:
+LINGUAGEM (CRÍTICO):
+❌ NUNCA use termos técnicos: "Deploy", "API", "Endpoint", "Código", "Development", "Fine-tuning", "Backend", "Frontend", "Database"
+✅ USE termos de negócio: "Conectar", "Configurar", "Ativar", "Testar", "Integrar", "Criar conta", "Linkar", "Ajustar"
+
+ESTRUTURA DO FLUXO:
+O fluxo deve responder: "O que eu faço PRIMEIRO? Depois? E por último?"
+Use esta ordem lógica:
+1. Preparação (ex: "Reunir materiais", "Criar contas")
+2. Configuração inicial (ex: "Configurar ferramenta X")
+3. Integrações (ex: "Conectar ferramenta Y")
+4. Testes (ex: "Testar fluxo completo")
+5. Ajustes (ex: "Refinar respostas")
+6. Ativação (ex: "Liberar para equipe")
+
+EXEMPLO 1 - Chatbot de Vendas:
 graph TD
-    A[Definir Requisitos] --> B[Escolher LLM]
-    B --> C{Precisa Dados?}
-    C -->|Sim| D[Preparar Dataset]
-    C -->|Não| E[Usar API Direta]
-    D --> F[Fine-tuning]
-    E --> F
-    F --> G[Criar Interface]
-    G --> H[Testes]
-    H --> I[Deploy]
+    A[Reunir PDFs dos Produtos] --> B[Criar Conta no ManyChat]
+    B --> C[Conectar WhatsApp Business]
+    C --> D[Configurar Cenário no Make]
+    D --> E[Integrar GPT-4 no Make]
+    E --> F[Criar Base no Google Sheets]
+    F --> G[Testar Conversa Completa]
+    G --> H{Respostas OK?}
+    H -->|Não| I[Refinar Prompts]
+    I --> G
+    H -->|Sim| J[Conectar CRM]
+    J --> K[Ativar para Vendedores]
 
-EXEMPLO INVÁLIDO (NÃO FAÇA ISSO):
+EXEMPLO 2 - Automação de Suporte:
 graph TD
-    Setup_Inicial[Setup] --> Config_API[Config]  ❌ IDs com underscore
-    A[Texto muito longo que
-    quebra em duas linhas] --> B  ❌ Quebra de linha
-    Node1-->Node2  ❌ Sem espaços na seta`;
+    A[Mapear FAQs] --> B[Criar Base no Notion]
+    B --> C[Configurar Zapier]
+    C --> D[Integrar Claude AI]
+    D --> E[Conectar Email]
+    E --> F[Testar Resposta]
+    F --> G{Precisa Humano?}
+    G -->|Sim| H[Encaminhar Slack]
+    G -->|Não| I[Responder Direto]
+    H --> I
+    I --> J[Salvar em Airtable]`;
 
-    const userPrompt = `Crie UM ÚNICO fluxo Mermaid (graph TD) com 8-12 etapas para implementar esta solução de IA:
+    const userPrompt = `Crie um fluxo Mermaid (graph TD) com 10-12 etapas PRÁTICAS para um empresário implementar esta solução:
 
-SOLUÇÃO:
+CONTEXTO DA SOLUÇÃO:
 - Título: ${solution.title}
-- Descrição: ${solution.original_idea}
-- Ferramentas: ${solution.required_tools || 'Não especificado'}
+- Desafio do Negócio: ${solution.original_idea}
+- Ferramentas Mapeadas: ${allTools}
 
-RETORNE APENAS JSON VÁLIDO (sem markdown):
+FRAMEWORK DE 4 PILARES:
+1. 🤖 AUTOMAÇÃO: ${automationTools.join(', ') || 'Não mapeado'}
+2. 🧠 IA: ${aiTools.join(', ') || 'Não mapeado'}
+3. 📊 DADOS: ${dataTools.join(', ') || 'Não mapeado'}
+4. 💻 INTERFACE: ${interfaceTools.join(', ') || 'Não mapeado'}
+
+MISSÃO:
+Crie um roteiro visual que mostre COMO implementar essa solução usando as ferramentas mapeadas.
+O fluxo deve ser PRÁTICO e EXECUTÁVEL por alguém SEM conhecimento técnico.
+
+Use esta estrutura:
+1. Preparação (reunir materiais, criar contas)
+2. Configuração das ferramentas principais
+3. Integrações entre ferramentas
+4. Testes do fluxo completo
+5. Ajustes e refinamento
+6. Ativação para uso real
+
+LEMBRE-SE:
+- Fale como se estivesse orientando um empresário, não um programador
+- Use os nomes REAIS das ferramentas mapeadas acima
+- Ordem lógica: o que fazer primeiro, depois, por último
+- Textos curtos (máx 40 caracteres por etapa)
+
+RETORNE APENAS JSON VÁLIDO (sem markdown, sem \`\`\`):
 {
-  "mermaid_code": "graph TD\\n    A[Passo 1] --> B[Passo 2]\\n    ...",
-  "title": "Fluxo de Implementação - ${solution.title.substring(0, 30)}",
-  "description": "Etapas práticas para implementar ${solution.title}",
-  "estimated_time": "X-Y horas",
-  "key_steps": ["Etapa 1", "Etapa 2", "Etapa 3", "Etapa 4"]
+  "mermaid_code": "graph TD\\n    A[Reunir PDFs] --> B[Criar Conta]\\n    B --> C[Conectar]\\n...",
+  "title": "Roteiro de Implementação: ${solution.title.substring(0, 40)}",
+  "description": "Passo a passo prático para colocar ${solution.title.substring(0, 30)} no ar usando no-code",
+  "estimated_time": "2-4 horas",
+  "key_steps": [
+    "Preparar materiais necessários",
+    "Configurar ferramenta principal",
+    "Integrar com outras ferramentas",
+    "Testar funcionamento completo",
+    "Ajustar e refinar",
+    "Ativar para uso real"
+  ]
 }
 
-IMPORTANTE: 
-- mermaid_code deve ser uma string com \\n para quebras de linha
-- IDs devem ser A, B, C, D, E, F, G, H, I, J, K, L (apenas letras)
-- Textos curtos e diretos (máx 30 chars por nó)
-- Foque nas etapas técnicas de implementação da solução de IA`;
+VALIDAÇÃO FINAL:
+- Se você usou palavras como "deploy", "API", "código", "endpoint" → REFAÇA
+- Se os passos são muito técnicos → SIMPLIFIQUE
+- Se não mencionou as ferramentas do framework → INCLUA ELAS`;
 
     // Chamar Lovable AI com retry logic
     console.log('[FLOW-GEN] Chamando Lovable AI...');
@@ -97,12 +165,13 @@ IMPORTANTE:
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          model: 'google/gemini-2.5-flash',
+          model: 'google/gemini-2.5-pro', // Modelo mais capaz para melhor qualidade
           messages: [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: userPrompt }
           ],
-          temperature: 0.3, // Temperatura mais baixa para maior consistência
+          temperature: 0.7, // Criatividade moderada para soluções práticas
+          max_tokens: 8000, // Mais tokens para resposta detalhada
         }),
       });
 
@@ -153,6 +222,26 @@ IMPORTANTE:
     // Validar campos obrigatórios
     if (!flowData.mermaid_code || !flowData.title) {
       throw new Error('Resposta da IA incompleta');
+    }
+
+    // Validação de qualidade: verificar linguagem técnica
+    const technicalWords = ['deploy', 'api', 'endpoint', 'código', 'development', 'backend', 'frontend', 'database', 'fine-tuning'];
+    const mermaidLower = flowData.mermaid_code.toLowerCase();
+    const foundTechnicalWords = technicalWords.filter(word => mermaidLower.includes(word));
+    
+    if (foundTechnicalWords.length > 0) {
+      console.warn('[FLOW-GEN] ⚠️ Linguagem técnica detectada:', foundTechnicalWords);
+      console.warn('[FLOW-GEN] Salvando mesmo assim, mas pode precisar de regeneração');
+      // Não bloquear, apenas alertar - deixar usuário regenerar se necessário
+    }
+    
+    // Contar número de nós no diagrama (verificar se está entre 8-12)
+    const nodeMatches = flowData.mermaid_code.match(/[A-L]\[/g);
+    const nodeCount = nodeMatches ? nodeMatches.length : 0;
+    console.log(`[FLOW-GEN] 📊 Diagrama possui ${nodeCount} nós`);
+    
+    if (nodeCount < 8 || nodeCount > 12) {
+      console.warn(`[FLOW-GEN] ⚠️ Número de nós fora do ideal (8-12): ${nodeCount}`);
     }
 
     // Salvar no banco
