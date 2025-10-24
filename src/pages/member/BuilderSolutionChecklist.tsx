@@ -9,6 +9,7 @@ import ChecklistPreparationAnimation from '@/components/builder/ChecklistPrepara
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useUnifiedChecklistTemplate } from '@/hooks/useUnifiedChecklists';
 
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
@@ -32,29 +33,13 @@ export default function BuilderSolutionChecklist() {
     },
   });
 
-  // 🔄 FASE 3: Verificar se já existe checklist com retry automático
-  const { data: existingChecklist } = useQuery({
-    queryKey: ['unified-checklist-exists', id, retryCount],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('unified_checklists')
-        .select('id, checklist_data, created_at')
-        .eq('solution_id', id)
-        .eq('checklist_type', 'implementation')
-        .eq('is_template', false)
-        .maybeSingle();
-
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!id && !hasTimeout,
-    retry: MAX_RETRIES,
-    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 10000),
-    staleTime: 0,
-    refetchInterval: (query) => {
-      return query.state.data ? false : 1000;
-    },
-  });
+  // ✅ Usar hook unificado com fallback inteligente
+  const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(
+    id || '', 
+    'implementation'
+  );
+  
+  const existingChecklist = template;
 
   // ⏱️ FASE 1: Timeout de 5 minutos (margem segura)
   useEffect(() => {
@@ -99,8 +84,9 @@ export default function BuilderSolutionChecklist() {
   // 📝 FASE 4: Logging detalhado
   useEffect(() => {
     if (existingChecklist) {
-      console.log('[CHECKLIST] ✅ Checklist encontrado!', {
+      console.log('[CHECKLIST] ✅ Checklist encontrado via hook unificado!', {
         id: existingChecklist.id,
+        isTemplate: existingChecklist.is_template,
         items: existingChecklist.checklist_data?.items?.length || 0,
         createdAt: existingChecklist.created_at
       });
@@ -108,10 +94,11 @@ export default function BuilderSolutionChecklist() {
       console.log('[CHECKLIST] ⏳ Aguardando geração...', {
         solutionId: id,
         retryCount,
-        timeout: hasTimeout
+        timeout: hasTimeout,
+        isLoadingTemplate
       });
     }
-  }, [existingChecklist, hasTimeout, id, retryCount]);
+  }, [existingChecklist, hasTimeout, id, retryCount, isLoadingTemplate]);
 
   if (isLoading) {
     return (
