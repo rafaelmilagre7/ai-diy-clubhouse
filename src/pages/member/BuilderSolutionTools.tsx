@@ -5,92 +5,154 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { ToolsLoading } from '@/components/implementation/content/tools/ToolsLoading';
 import { ToolItem } from '@/components/implementation/content/tools/ToolItem';
 import type { Tool, SolutionTool } from '@/types/toolTypes';
+import { useState } from 'react';
+
+// Funções auxiliares para matching flexível de nomes
+const normalizeName = (name: string) => 
+  name.toLowerCase()
+    .replace(/\s*\([^)]*\)/g, '') // Remove (parênteses)
+    .trim();
+
+const findToolByName = (name: string, tools: Tool[] | null) => {
+  if (!tools) return null;
+  const normalized = normalizeName(name);
+  return tools.find(t => 
+    normalizeName(t.name) === normalized ||
+    normalizeName(t.name).includes(normalized) ||
+    normalized.includes(normalizeName(t.name))
+  );
+};
 
 export default function BuilderSolutionTools() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [loadingStep, setLoadingStep] = useState('Analisando solução...');
 
   // Buscar ferramentas da plataforma conectadas a essa solução
   const { data: tools, isLoading } = useQuery<(SolutionTool & { details: Tool | null })[]>({
     queryKey: ['builder-solution-tools', id],
     queryFn: async () => {
-      // Buscar solution_tools com join para tools
-      const { data: solutionTools, error } = await supabase
-        .from('solution_tools')
-        .select(`
-          *,
-          details:tool_name (
-            id,
-            name,
-            logo_url,
-            category,
-            official_url,
-            has_member_benefit,
-            benefit_type,
-            benefit_title,
-            benefit_description,
-            benefit_link,
-            video_tutorials
-          )
-        `)
-        .eq('solution_id', id);
+      try {
+        setLoadingStep('Buscando ferramentas vinculadas...');
 
-      if (error) throw error;
+        // ✅ FASE 1: Buscar solution_tools (sem JOIN inválido)
+        const { data: solutionTools, error: toolsError } = await supabase
+          .from('solution_tools')
+          .select('*')
+          .eq('solution_id', id);
 
-      // Se não tiver dados, tentar popular da tabela tools comparando por nome
-      if (!solutionTools || solutionTools.length === 0) {
-        console.log('Nenhuma ferramenta vinculada, buscando da tabela tools...');
-        
-        // Buscar a solução para pegar required_tools
-        const { data: solution } = await supabase
-          .from('ai_generated_solutions')
-          .select('required_tools')
-          .eq('id', id)
-          .single();
+        if (toolsError) throw toolsError;
 
-        if (solution?.required_tools) {
-          const allTools = [
-            ...(solution.required_tools.essential || []),
-            ...(solution.required_tools.optional || [])
+        // ✅ FASE 2: Se vazio, buscar do JSONB required_tools
+        if (!solutionTools || solutionTools.length === 0) {
+          setLoadingStep('Carregando ferramentas do builder...');
+
+          const { data: aiSolution, error: solutionError } = await supabase
+            .from('ai_generated_solutions')
+            .select('required_tools')
+            .eq('id', id)
+            .maybeSingle();
+
+          if (solutionError) throw solutionError;
+
+          if (!aiSolution?.required_tools) {
+            return [];
+          }
+
+          // Extrair nomes das ferramentas (essenciais + opcionais)
+          const toolNames = [
+            ...(aiSolution.required_tools.essential || []).map((t: any) => t.name),
+            ...(aiSolution.required_tools.optional || []).map((t: any) => t.name)
           ];
 
-          // Para cada ferramenta no JSON, buscar na tabela tools
-          const toolsFromPlatform = await Promise.all(
-            allTools.map(async (tool: any) => {
-              const { data: platformTool } = await supabase
-                .from('tools')
-                .select('*')
-                .ilike('name', `%${tool.name}%`)
-                .limit(1)
-                .single();
+          if (toolNames.length === 0) {
+            return [];
+          }
 
-              return {
-                id: crypto.randomUUID(),
-                solution_id: id as string,
-                tool_name: tool.name,
-                tool_url: platformTool?.official_url || tool.url,
-                is_required: solution.required_tools.essential?.some((t: any) => t.name === tool.name) || false,
-                order_index: 0,
-                created_at: new Date().toISOString(),
-                details: platformTool
-              };
-            })
-          );
+          setLoadingStep('Carregando ferramentas da plataforma...');
 
-          return toolsFromPlatform.filter(t => t.details !== null);
+          // ✅ FASE 3: Buscar ferramentas da plataforma em BATCH (1 query única)
+          const { data: platformTools, error: platformError } = await supabase
+            .from('tools')
+            .select('*')
+            .eq('status', true);
+
+          if (platformError) throw platformError;
+
+          setLoadingStep('Organizando dados...');
+
+          // ✅ FASE 4: Merge manual com matching flexível
+          const mergedTools = toolNames.map(name => {
+            const platformTool = findToolByName(name, platformTools);
+            const isEssential = aiSolution.required_tools.essential?.some((t: any) => 
+              normalizeName(t.name) === normalizeName(name)
+            );
+
+            return {
+              id: platformTool?.id || crypto.randomUUID(),
+              solution_id: id as string,
+              tool_name: name,
+              tool_url: platformTool?.official_url || '#',
+              is_required: isEssential || false,
+              order_index: 0,
+              created_at: new Date().toISOString(),
+              details: platformTool
+            };
+          });
+
+          return mergedTools;
         }
-      }
 
-      return solutionTools || [];
+        // ✅ Se houver solution_tools, buscar detalhes das ferramentas em BATCH
+        setLoadingStep('Carregando detalhes das ferramentas...');
+
+        const toolNames = solutionTools.map(st => st.tool_name).filter(Boolean);
+
+        if (toolNames.length === 0) {
+          return solutionTools.map(st => ({ ...st, details: null }));
+        }
+
+        const { data: platformTools, error: platformError } = await supabase
+          .from('tools')
+          .select('*')
+          .eq('status', true);
+
+        if (platformError) throw platformError;
+
+        // Merge manual com matching flexível
+        return solutionTools.map(st => ({
+          ...st,
+          details: findToolByName(st.tool_name, platformTools)
+        }));
+
+      } catch (error) {
+        console.error('Erro ao buscar ferramentas:', error);
+        throw error;
+      }
     },
     staleTime: 30 * 60 * 1000, // 30 minutos
   });
 
   if (isLoading) {
-    return <LoadingScreen message="Carregando ferramentas da plataforma..." />;
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
+        <div className="container mx-auto px-4 py-8">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
+            className="mb-8"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Voltar
+          </Button>
+          <ToolsLoading message={loadingStep} />
+        </div>
+      </div>
+    );
   }
 
   if (!tools || tools.length === 0) {
