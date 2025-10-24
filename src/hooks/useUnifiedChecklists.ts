@@ -126,7 +126,16 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
 
       return anyChecklist as UnifiedChecklistData;
     },
-    enabled: !!solutionId
+    enabled: !!solutionId,
+    // ✨ FASE 3: Configurações de cache agressivas para detecção rápida
+    staleTime: 0, // Dados sempre considerados "stale"
+    gcTime: 1000 * 60, // Cache limpo após 1 minuto sem uso
+    refetchInterval: 5000, // Refetch automático a cada 5s
+    refetchIntervalInBackground: false, // Não refetch se usuário saiu da aba
+    refetchOnMount: 'always', // Sempre refetch ao montar
+    refetchOnWindowFocus: true, // Refetch ao focar janela
+    retry: 3, // Tentar 3 vezes em caso de erro
+    retryDelay: 1000 // 1s entre retries
   });
 };
 

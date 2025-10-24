@@ -70,16 +70,22 @@ export default function BuilderSolutionChecklist() {
       setRetryCount(prev => prev + 1);
       setHasTimeout(false);
       
-      // Re-disparar geração
+      // Re-disparar geração + INVALIDAR CACHE
       supabase.functions.invoke('generate-section-content', {
         body: {
           solutionId: id,
           sectionType: 'checklist',
           userId: solution?.user_id
         }
+      }).then(() => {
+        // ✨ FASE 1: Invalidar cache após geração
+        console.log('[CHECKLIST] 🔄 Invalidando cache após geração...');
+        queryClient.invalidateQueries({ 
+          queryKey: ['unified-checklist-template', id, 'implementation'] 
+        });
       });
     }
-  }, [hasTimeout, retryCount, existingChecklist, id, solution?.user_id]);
+  }, [hasTimeout, retryCount, existingChecklist, id, solution?.user_id, queryClient]);
 
   // 📝 FASE 4: Logging detalhado
   useEffect(() => {
@@ -99,6 +105,25 @@ export default function BuilderSolutionChecklist() {
       });
     }
   }, [existingChecklist, hasTimeout, id, retryCount, isLoadingTemplate]);
+
+  // 🔄 FASE 2: Polling inteligente - refetch a cada 3s até encontrar checklist
+  useEffect(() => {
+    if (!existingChecklist && !hasTimeout && !isLoadingTemplate) {
+      console.log('[CHECKLIST] 🔄 Iniciando polling (refetch a cada 3s)...');
+      
+      const intervalId = setInterval(() => {
+        console.log('[CHECKLIST] 🔄 Polling: invalidando cache...');
+        queryClient.invalidateQueries({ 
+          queryKey: ['unified-checklist-template', id, 'implementation'] 
+        });
+      }, 3000); // Refetch a cada 3 segundos
+
+      return () => {
+        console.log('[CHECKLIST] 🛑 Parando polling (checklist encontrado ou timeout)');
+        clearInterval(intervalId);
+      };
+    }
+  }, [existingChecklist, hasTimeout, isLoadingTemplate, queryClient, id]);
 
   if (isLoading) {
     return (
@@ -143,7 +168,9 @@ export default function BuilderSolutionChecklist() {
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {showPreparation 
-                  ? 'Gerando seu plano personalizado... (30-60s)' 
+                  ? existingChecklist 
+                    ? 'Carregando seu plano...' 
+                    : `Gerando seu plano personalizado... ${retryCount > 0 ? `(Tentativa ${retryCount + 1})` : '(30-60s)'}` 
                   : 'Checklist prático e passo a passo para transformar sua ideia em realidade'
                 }
               </p>
