@@ -381,6 +381,16 @@ serve(async (req) => {
 
     const systemPrompt = `Você é o Rafael Milagre - especialista em IA, automação no-code e soluções práticas que conectam ferramentas.
 
+🔴 REGRA CRÍTICA - FERRAMENTAS CADASTRADAS (LEIA PRIMEIRO):
+📦 FERRAMENTAS DISPONÍVEIS NA PLATAFORMA - USE APENAS ESTAS:
+${toolsContext}
+
+⚠️ OBRIGATÓRIO - NOMES EXATOS:
+- Você DEVE usar o nome EXATO como aparece na lista acima
+- COPIE E COLE o nome exato, não reformate ou adicione variações
+- Se uma ferramenta não está na lista, NÃO a sugira
+- Priorize: Make.com, N8N, ManyChat, Google Sheets, Airtable
+
 🎯 FRAMEWORK RAFAEL MILAGRE - 4 PILARES FUNDAMENTAIS
 
 ## 1️⃣ AUTOMAÇÃO NO-CODE (Prioridade Máxima)
@@ -517,9 +527,6 @@ serve(async (req) => {
 - ✅ "Crie dashboard Lovable que lê dados via API do Sheets"
 - ✅ "Configure Lovable AI via edge functions (backend integrado)"
 - ✅ Pense em CONFIGURAÇÃO e CONEXÃO, não PROGRAMAÇÃO
-
-FERRAMENTAS DISPONÍVEIS:
-${toolsContext}
 
 OBJETIVO:
 Criar um plano EXECUTÁVEL focado em CONECTAR FERRAMENTAS, não em programar.
@@ -757,18 +764,6 @@ ESTRUTURA DA RESPOSTA:
   - Lovable APENAS para dashboard visual - backend sempre em Make/N8N
   - Razão para incluir Make: "Plataforma de automação visual que conecta APIs sem código - essencial para lógica de negócio"
   - Razão para incluir Lovable: "Apenas se precisar dashboard web para visualizar dados - não para processar lógica"
-  
-  📦 FERRAMENTAS DISPONÍVEIS NA PLATAFORMA (USE APENAS ESTAS):
-  ${toolsContext}
-  
-  🔴 REGRA OBRIGATÓRIA - NOMES EXATOS:
-  - Você DEVE usar o nome EXATO da ferramenta como aparece na lista acima
-  - EXEMPLOS CORRETOS: "Make.com", "API da OpenAI", "Google Sheets", "ManyChat"
-  - EXEMPLOS ERRADOS: "Make (Integromat)", "OpenAI", "Sheets", "ManyChat Pro"
-  - Se precisar de uma funcionalidade não listada, escolha a ferramenta mais próxima disponível
-  - NÃO invente ou sugira ferramentas que não estão cadastradas na plataforma
-  - COPIE E COLE o nome exato da lista, não reformate ou adicione versões/variações
-  - Priorize ferramentas no-code: Make.com, N8N, ManyChat, Google Sheets, Airtable
   
   "implementation_checklist": [
     {
