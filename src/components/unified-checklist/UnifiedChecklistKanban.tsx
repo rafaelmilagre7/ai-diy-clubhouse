@@ -614,11 +614,15 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
+                        style={{ 
+                          minHeight: '600px',
+                          position: 'relative'
+                        }}
                         className={cn(
-                          "min-h-[500px] rounded-2xl border-2 p-6 transition-all duration-300",
+                          "rounded-2xl border-2 p-6",
                           column.gradient,
                           snapshot.isDraggingOver 
-                            ? "border-primary shadow-aurora ring-4 ring-primary/20 bg-primary/5" 
+                            ? "border-primary shadow-aurora ring-4 ring-primary/20 bg-primary/5 transition-all duration-200" 
                             : cn(
                                 "border-dashed",
                                 column.id === 'done' && "border-status-success/30",
@@ -626,7 +630,6 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                                 column.id === 'todo' && "border-border"
                               )
                         )}
-                        style={{ position: 'relative' }}
                       >
                       {items.length === 0 && !snapshot.isDraggingOver && (
                         <div className="flex flex-col items-center justify-center h-48 text-center p-6">
