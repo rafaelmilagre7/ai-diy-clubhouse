@@ -18,6 +18,7 @@ const LoadingScreen = React.memo(({
   const [progress, setProgress] = useState(0);
   const [dots, setDots] = useState('');
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
+  const [phaseMessage, setPhaseMessage] = useState('');
 
   // Animação de progresso baseada no tempo estimado
   useEffect(() => {
@@ -26,7 +27,15 @@ const LoadingScreen = React.memo(({
     const startTime = Date.now();
     const interval = setInterval(() => {
       const elapsed = (Date.now() - startTime) / 1000;
-      setElapsedSeconds(Math.floor(elapsed));
+      const seconds = Math.floor(elapsed);
+      setElapsedSeconds(seconds);
+      
+      // Mensagens dinâmicas por fase
+      if (seconds < 20) setPhaseMessage("Analisando sua solução...");
+      else if (seconds < 40) setPhaseMessage("Mapeando os 4 pilares...");
+      else if (seconds < 60) setPhaseMessage("Estruturando framework...");
+      else if (seconds < 80) setPhaseMessage("Finalizando detalhes...");
+      else setPhaseMessage("Quase lá, aguarde mais um pouco...");
       
       // Progresso simulado que acelera no início e desacelera perto do fim
       const baseProgress = (elapsed / estimatedSeconds) * 100;
@@ -90,15 +99,28 @@ const LoadingScreen = React.memo(({
           </div>
         )}
         
+        {/* Mensagem de fase dinâmica */}
+        {showProgress && phaseMessage && (
+          <p className="text-sm font-medium text-primary">
+            {phaseMessage}
+          </p>
+        )}
+        
         {/* Mensagem de contexto */}
-        {description ? (
+        {description && (
           <p className="text-sm text-muted-foreground max-w-md text-center">
             {description}
           </p>
-        ) : (
-          <p className="text-sm text-muted-foreground">
-            Preparando sua experiência personalizada...
-          </p>
+        )}
+        
+        {/* Aviso após 60s */}
+        {elapsedSeconds > 60 && (
+          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg max-w-md">
+            <p className="text-sm text-yellow-600 dark:text-yellow-400">
+              ⏱️ Processamento mais demorado que o esperado. 
+              Não feche a página, estamos trabalhando nisso!
+            </p>
+          </div>
         )}
       </div>
     </div>

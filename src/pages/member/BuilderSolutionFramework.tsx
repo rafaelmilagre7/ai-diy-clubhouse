@@ -15,6 +15,7 @@ export default function BuilderSolutionFramework() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [showRetryOption, setShowRetryOption] = useState(false);
 
   const { data: solution, isLoading, refetch } = useQuery({
     queryKey: ['builder-solution', id],
@@ -42,18 +43,29 @@ export default function BuilderSolutionFramework() {
       const maxAttempts = 2;
 
       while (attempts < maxAttempts) {
+        let progressInterval: NodeJS.Timeout | undefined;
+        
         try {
           attempts++;
           console.log(`[FRAMEWORK] 🚀 Tentativa ${attempts}/${maxAttempts} iniciada`);
+          console.log('[FRAMEWORK] 🕐 Geração iniciada:', new Date().toLocaleTimeString());
           
-          // Timeout de 90 segundos
+          // Timeout de 120 segundos
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => {
-            console.log('[FRAMEWORK] ⏱️ Timeout atingido (90s)');
-            controller.abort();
-          }, 90000);
-
           const startTime = Date.now();
+          
+          // Log de progresso a cada 15s
+          progressInterval = setInterval(() => {
+            const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+            console.log(`[FRAMEWORK] ⏱️ Aguardando resposta há ${elapsed}s...`);
+          }, 15000);
+          
+          const timeoutId = setTimeout(() => {
+            if (progressInterval) clearInterval(progressInterval);
+            controller.abort();
+            setShowRetryOption(true);
+            console.error('[FRAMEWORK] ⏱️ Timeout após 120 segundos');
+          }, 120000);
 
           const { data, error } = await supabase.functions.invoke('generate-section-content', {
             body: {
@@ -67,9 +79,11 @@ export default function BuilderSolutionFramework() {
           });
 
           clearTimeout(timeoutId);
+          if (progressInterval) clearInterval(progressInterval);
           const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
           
-          console.log(`[FRAMEWORK] 📦 Resposta recebida em ${elapsed}s:`, { 
+          console.log('[FRAMEWORK] ✅ Resposta recebida:', new Date().toLocaleTimeString());
+          console.log(`[FRAMEWORK] 📦 Dados recebidos em ${elapsed}s:`, { 
             success: data?.success, 
             cached: data?.cached,
             hasContent: !!data?.content,
@@ -101,6 +115,7 @@ export default function BuilderSolutionFramework() {
           }
 
         } catch (err: any) {
+          if (progressInterval) clearInterval(progressInterval);
           console.error(`[FRAMEWORK] ❌ Erro na tentativa ${attempts}:`, {
             name: err.name,
             message: err.message,
@@ -146,12 +161,29 @@ export default function BuilderSolutionFramework() {
 
   if (isGenerating || !solution?.framework_mapping) {
     return (
-      <LoadingScreen 
-        message="Gerando Framework de Implementação" 
-        description="Isso pode levar até 60 segundos. A IA está analisando sua solução em profundidade."
-        showProgress={true}
-        estimatedSeconds={50}
-      />
+      <div className="relative">
+        <LoadingScreen 
+          message="Gerando Framework de Implementação" 
+          description="A IA está mapeando os 4 pilares da sua solução. Aguarde..."
+          showProgress={true}
+          estimatedSeconds={90}
+        />
+        {showRetryOption && (
+          <div className="fixed inset-0 flex items-center justify-center z-50 bg-background/80 backdrop-blur-sm">
+            <div className="bg-background border border-border rounded-lg p-6 shadow-lg max-w-md text-center">
+              <p className="text-muted-foreground mb-4">
+                O processamento está demorando mais que o esperado.
+              </p>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="default"
+              >
+                Tentar Novamente
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   }
 
