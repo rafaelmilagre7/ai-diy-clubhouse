@@ -65,7 +65,12 @@ export default function BuilderFlowView() {
     if (!targetSolution || !user) return;
 
     setIsGenerating(true);
+    console.log('[FLOW] 🚀 Iniciando geração de fluxo');
+    console.log('[FLOW] Solution ID:', targetSolution.id);
+    console.log('[FLOW] User ID:', user.id);
+    
     try {
+      console.log('[FLOW] 📡 Chamando edge function...');
       const { data, error } = await supabase.functions.invoke('generate-implementation-flow', {
         body: {
           solutionId: targetSolution.id,
@@ -73,12 +78,23 @@ export default function BuilderFlowView() {
         }
       });
 
-      if (error) throw error;
+      console.log('[FLOW] 📥 Resposta recebida:', { data, error });
 
+      if (error) {
+        console.error('[FLOW] ❌ Erro da edge function:', error);
+        throw error;
+      }
+
+      if (!data?.success) {
+        console.error('[FLOW] ❌ Edge function falhou:', data?.error);
+        throw new Error(data?.error || 'Falha ao gerar fluxo');
+      }
+
+      console.log('[FLOW] ✅ Fluxo gerado:', data.flow);
       setFlow(data.flow);
       toast.success('Fluxo gerado com sucesso! 🎉');
     } catch (error: any) {
-      console.error('Erro ao gerar fluxo:', error);
+      console.error('[FLOW] ❌ Erro capturado:', error);
       toast.error('Erro ao gerar fluxo de implementação');
     } finally {
       setIsGenerating(false);

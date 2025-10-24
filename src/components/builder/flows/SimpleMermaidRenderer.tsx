@@ -10,19 +10,30 @@ interface SimpleMermaidRendererProps {
 }
 
 const cleanMermaidCode = (code: string): string => {
-  return code
+  console.log('[MERMAID] 🔧 Código original:', code);
+  
+  const cleaned = code
     .trim()
-    // Remove quebras de linha extras
-    .replace(/\n{3,}/g, '\n\n')
-    // Remove espaços antes/depois de -->
-    .replace(/\s*-->\s*/g, ' --> ')
-    // Remove espaços antes/depois de |texto|
-    .replace(/\|\s+/g, '|')
-    .replace(/\s+\|/g, '|')
-    // Remove linhas vazias
+    // Remove múltiplas quebras de linha
+    .replace(/\n{3,}/g, '\n')
+    // Remove espaços extras no início/fim de cada linha
     .split('\n')
-    .filter(line => line.trim())
-    .join('\n');
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    .join('\n')
+    // Normaliza espaços ao redor de setas
+    .replace(/\s*-->\s*/g, ' --> ')
+    // Normaliza labels nas setas: -->|Sim| ou -->|Não|
+    .replace(/-->\s*\|\s*/g, '-->|')
+    .replace(/\s*\|\s*([A-Z])/g, '| $1')
+    // Remove espaços antes de colchetes/chaves
+    .replace(/\s+\[/g, '[')
+    .replace(/\]\s+/g, '] ')
+    .replace(/\s+\{/g, '{')
+    .replace(/\}\s+/g, '} ');
+  
+  console.log('[MERMAID] ✅ Código limpo:', cleaned);
+  return cleaned;
 };
 
 export const SimpleMermaidRenderer = ({ code, onRegenerate }: SimpleMermaidRendererProps) => {

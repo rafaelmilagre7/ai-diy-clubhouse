@@ -34,7 +34,7 @@ import BuilderSolutionCover from '@/pages/member/BuilderSolutionCover';
 import BuilderSolutionResult from '@/pages/member/BuilderSolutionResult';
 import BuilderSolutionFramework from '@/pages/member/BuilderSolutionFramework';
 import BuilderImplementationGuide from '@/pages/member/BuilderImplementationGuide';
-import BuilderSolutionArchitecture from '@/pages/member/BuilderSolutionArchitecture';
+
 import BuilderFlowView from '@/pages/member/BuilderFlowView';
 import BuilderSolutionTools from '@/pages/member/BuilderSolutionTools';
 import BuilderSolutionChecklist from '@/pages/member/BuilderSolutionChecklist';
@@ -90,7 +90,6 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/ferramentas/builder/resultado/:id", BuilderSolutionResult),
   createProtectedRoute("/ferramentas/builder/solution/:id", BuilderSolutionCover),
   createProtectedRoute("/ferramentas/builder/solution/:id/framework", BuilderSolutionFramework),
-  createProtectedRoute("/ferramentas/builder/solution/:id/arquitetura", BuilderSolutionArchitecture),
   createProtectedRoute("/ferramentas/builder/solution/:id/fluxo", BuilderFlowView),
   createProtectedRoute("/ferramentas/builder/solution/:id/ferramentas", BuilderSolutionTools),
   createProtectedRoute("/ferramentas/builder/solution/:id/checklist", BuilderSolutionChecklist),
