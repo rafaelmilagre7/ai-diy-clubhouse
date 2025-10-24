@@ -8,14 +8,26 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { SmartArchitectureFlow } from '@/components/builder/flows/SmartArchitectureFlow';
 import { ArchitectureInsights } from '@/components/builder/architecture/ArchitectureInsights';
+import { FlowTrailConnector } from '@/components/builder/flows/FlowTrailConnector';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { useSolutionCompletion } from '@/hooks/implementation/useSolutionCompletion';
 
 export default function BuilderSolutionArchitecture() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [isGenerating, setIsGenerating] = useState(false);
+  const [completedModules, setCompletedModules] = useState<number[]>([]);
+
+  // Hook para marcar solução como completa
+  const { isCompleting, handleConfirmImplementation } = useSolutionCompletion({
+    progressId: undefined, // Será obtido do banco se necessário
+    solutionId: id,
+    moduleIdx: 0,
+    completedModules,
+    setCompletedModules
+  });
 
   const { data: solution, isLoading, refetch } = useQuery({
     queryKey: ['builder-solution-architecture', id],
@@ -105,14 +117,23 @@ export default function BuilderSolutionArchitecture() {
               </div>
             ) : (
               <div className="space-y-8">
+                {/* Conexão com trilha de implementação */}
+                {user && (
+                  <FlowTrailConnector solutionId={solution.id} userId={user.id} />
+                )}
+
+                {/* Insights de arquitetura */}
                 {insights && <ArchitectureInsights insights={insights} />}
                 
+                {/* Fluxos interativos */}
                 {flows.map((flow: any) => (
                   <SmartArchitectureFlow
                     key={flow.id}
                     flow={flow}
                     solutionId={solution.id}
                     userId={user?.id || ''}
+                    onMarkSolutionComplete={handleConfirmImplementation}
+                    isCompletingSolution={isCompleting}
                   />
                 ))}
               </div>

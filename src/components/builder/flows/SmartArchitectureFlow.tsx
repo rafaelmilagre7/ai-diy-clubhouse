@@ -12,8 +12,14 @@ import {
   RotateCcw,
   Download,
   Sun,
-  Moon
+  Moon,
+  FileImage,
+  FileText,
+  Copy
 } from 'lucide-react';
+import { FlowExporter } from './FlowExporter';
+import { toast } from 'sonner';
+import confetti from 'canvas-confetti';
 import { cn } from '@/lib/utils';
 import { useFlowProgress } from '@/hooks/useFlowProgress';
 import { useFlowNotes } from '@/hooks/useFlowNotes';
@@ -101,9 +107,67 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
 
   // Export handler
   const handleExport = async (format: 'png' | 'svg' | 'pdf') => {
-    // TODO: Implementar export real
-    console.log(`Exporting as ${format}`);
-    analytics.trackFlowExported({ solution_id: solutionId, flow_type: flow.id, export_format: format });
+    const elementId = `mermaid-${flow.id}`;
+    const filename = `${flow.title.replace(/\s+/g, '-').toLowerCase()}.${format}`;
+    
+    try {
+      toast.loading(`Exportando como ${format.toUpperCase()}...`);
+      
+      if (format === 'png') {
+        await FlowExporter.exportAsPNG(elementId, filename);
+      } else if (format === 'svg') {
+        await FlowExporter.exportAsSVG(elementId, filename);
+      } else if (format === 'pdf') {
+        await FlowExporter.exportAsPDF(elementId, filename);
+      }
+      
+      toast.success(`Diagrama exportado como ${format.toUpperCase()}!`);
+      analytics.trackFlowExported({ solution_id: solutionId, flow_type: flow.id, export_format: format });
+    } catch (error: any) {
+      console.error('Erro ao exportar:', error);
+      toast.error(`Erro ao exportar: ${error.message}`);
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
+    const elementId = `mermaid-${flow.id}`;
+    try {
+      toast.loading('Copiando imagem...');
+      await FlowExporter.copyToClipboard(elementId);
+      toast.success('Imagem copiada para área de transferência!');
+    } catch (error: any) {
+      console.error('Erro ao copiar:', error);
+      toast.error('Erro ao copiar imagem');
+    }
+  };
+
+  // Confetti ao completar todas as etapas
+  const handleMarkSolutionComplete = () => {
+    if (onMarkSolutionComplete) {
+      onMarkSolutionComplete();
+      
+      // Confetti celebration
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+      });
+      
+      setTimeout(() => {
+        confetti({
+          particleCount: 50,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 }
+        });
+        confetti({
+          particleCount: 50,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 }
+        });
+      }, 250);
+    }
   };
 
   // Node click handler (simplified - real implementation would parse SVG clicks)
@@ -144,7 +208,7 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
         completed={stats.completed}
         total={stats.total}
         percentage={stats.percentage}
-        onMarkComplete={onMarkSolutionComplete}
+        onMarkComplete={handleMarkSolutionComplete}
         isCompleting={isCompletingSolution}
       />
 
@@ -216,17 +280,55 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
               variant="outline"
               size="sm"
               onClick={() => setTheme(prev => prev === 'light' ? 'dark' : 'light')}
+              title="Alterar tema"
             >
               {theme === 'light' ? <Moon className="h-4 w-4" /> : <Sun className="h-4 w-4" />}
             </Button>
-            <Button variant="outline" size="sm" onClick={() => handleExport('png')}>
-              <Download className="h-4 w-4 mr-1" />
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleCopyToClipboard}
+              title="Copiar imagem"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleExport('png')}
+              title="Exportar PNG"
+            >
+              <FileImage className="h-4 w-4 mr-1" />
               PNG
             </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleExport('svg')}
+              title="Exportar SVG"
+            >
+              <Download className="h-4 w-4 mr-1" />
+              SVG
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => handleExport('pdf')}
+              title="Exportar PDF"
+            >
+              <FileText className="h-4 w-4 mr-1" />
+              PDF
+            </Button>
+            
             <Button
               variant="outline"
               size="sm"
               onClick={() => setIsFullscreen(!isFullscreen)}
+              title={isFullscreen ? 'Sair do fullscreen' : 'Fullscreen'}
             >
               {isFullscreen ? (
                 <Minimize2 className="h-4 w-4" />
@@ -239,8 +341,9 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
 
         {/* Mermaid Diagram */}
         <div 
+          id={`mermaid-${flow.id}`}
           className={cn(
-            "p-6 overflow-auto",
+            "p-6 overflow-auto bg-background",
             isFullscreen ? "h-[calc(100vh-280px)]" : "max-h-[600px]"
           )}
           style={{
