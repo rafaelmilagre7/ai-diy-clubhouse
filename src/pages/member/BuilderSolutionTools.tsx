@@ -102,7 +102,7 @@ export default function BuilderSolutionTools() {
               name: jsonTool.name,
               logo_url: platformTool?.logo_url || jsonTool.logo_url,
               category: platformTool?.category || jsonTool.category || 'Outros',
-              reason: jsonTool.reason || 'Ferramenta essencial para a implementação',
+              reason: platformTool?.description || (jsonTool.reason?.substring(0, 150) + '...') || 'Ferramenta essencial para a implementação',
               setup_complexity: jsonTool.setup_complexity,
               cost_estimate: jsonTool.estimated_cost
             };
@@ -115,7 +115,7 @@ export default function BuilderSolutionTools() {
               name: jsonTool.name,
               logo_url: platformTool?.logo_url || jsonTool.logo_url,
               category: platformTool?.category || jsonTool.category || 'Outros',
-              reason: jsonTool.reason || 'Ferramenta opcional recomendada',
+              reason: platformTool?.description || (jsonTool.reason?.substring(0, 150) + '...') || 'Ferramenta opcional recomendada',
               setup_complexity: jsonTool.setup_complexity,
               cost_estimate: jsonTool.estimated_cost
             };
