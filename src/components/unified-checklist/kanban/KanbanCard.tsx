@@ -31,15 +31,16 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
   const labels = (item.metadata?.labels || []) as Label[];
 
   return (
-    <Card 
+    <div 
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      style={provided.draggableProps.style}
+      style={{
+        ...provided.draggableProps.style,
+        marginBottom: '12px'
+      }}
       className={cn(
-        "group relative p-4 mb-3 last:mb-0",
-        "bg-card/95 border border-border rounded-lg",
-        "transition-shadow duration-200",
+        "group relative p-4 bg-card border border-border rounded-lg",
         snapshot.isDragging 
           ? "shadow-2xl opacity-90 cursor-grabbing" 
           : "shadow-sm hover:shadow-md cursor-grab"
@@ -115,6 +116,6 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           )}
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
