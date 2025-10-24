@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -38,11 +38,11 @@ const cleanMermaidCode = (code: string): string => {
 
 export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const renderIdRef = useRef(0);
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingTime, setLoadingTime] = useState(0);
   const isInitialized = useMermaidInit();
-  const hasRendered = useRef(false);
 
   // Contador de tempo de loading
   useEffect(() => {
@@ -56,14 +56,16 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     }
   }, [isRendering]);
 
-  useEffect(() => {
+  // FASE 1: useLayoutEffect para garantir containerRef disponível
+  useLayoutEffect(() => {
+    const currentRenderId = ++renderIdRef.current;
+    let isActive = true;
+
     const renderDiagram = async () => {
-      // Evitar múltiplas renderizações
-      if (hasRendered.current) return;
-      
-      // Verificar se tudo está pronto
+      // Verificações de pré-requisitos
       if (!containerRef.current) {
-        console.log('[SimpleMermaid] ⏳ Aguardando container...');
+        console.log('[SimpleMermaid] ⏳ Container não disponível ainda');
+        setIsRendering(false);
         return;
       }
 
@@ -74,43 +76,57 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
       }
 
       if (!code) {
-        console.log('[SimpleMermaid] ⏳ Aguardando código...');
+        console.log('[SimpleMermaid] ⏳ Sem código para renderizar');
+        setIsRendering(false);
         return;
       }
 
-      hasRendered.current = true;
       setIsRendering(true);
       setError(null);
-
-      console.log('[SimpleMermaid] 🎨 Iniciando renderização...');
+      console.log('[SimpleMermaid] 🎨 Iniciando renderização ID:', currentRenderId);
 
       try {
         const cleanedCode = cleanMermaidCode(code);
         console.log('[SimpleMermaid] 🎨 Renderizando código:', cleanedCode.substring(0, 100) + '...');
 
         const { default: mermaid } = await import('mermaid');
-        const uniqueId = `mermaid-${Date.now()}`;
+        const uniqueId = `mermaid-${currentRenderId}-${Date.now()}`;
         
         const { svg } = await mermaid.render(uniqueId, cleanedCode);
         
-        if (containerRef.current) {
+        // Verificar se ainda é a renderização ativa
+        if (isActive && containerRef.current && renderIdRef.current === currentRenderId) {
           containerRef.current.innerHTML = svg;
-          console.log('[SimpleMermaid] ✅ Renderizado com sucesso!');
+          console.log('[SimpleMermaid] ✅ Renderizado com sucesso ID:', currentRenderId);
+          setIsRendering(false);
         }
       } catch (err: any) {
         console.error('[SimpleMermaid] ❌ Erro:', err);
-        setError(err.message || 'Erro ao renderizar diagrama');
-        hasRendered.current = false;
-      } finally {
-        setIsRendering(false);
+        if (isActive) {
+          setError(err.message || 'Erro ao renderizar diagrama');
+          setIsRendering(false);
+        }
       }
     };
 
-    // Delay para garantir que o DOM está montado
-    const timer = setTimeout(renderDiagram, 100);
-    return () => clearTimeout(timer);
+    renderDiagram();
+
+    // Cleanup para evitar memory leak
+    return () => {
+      isActive = false;
+      console.log('[SimpleMermaid] 🧹 Cleanup ID:', currentRenderId);
+    };
   }, [isInitialized, code]);
 
+  // FASE 2: Fallback de retry automático após 3s
+  useEffect(() => {
+    if (isRendering && loadingTime > 3 && containerRef.current) {
+      console.warn('[SimpleMermaid] ⚠️ Forçando re-render após 3s');
+      renderIdRef.current++;
+    }
+  }, [loadingTime, isRendering]);
+
+  // FASE 3: Feedback visual melhorado com debug info
   if (isRendering) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -119,6 +135,11 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
           <p className="text-sm text-muted-foreground">
             Renderizando fluxo... ({loadingTime}s)
           </p>
+          {import.meta.env.DEV && (
+            <p className="text-xs text-muted-foreground/60">
+              Render ID: {renderIdRef.current} | Mermaid: {isInitialized ? '✅' : '⏳'}
+            </p>
+          )}
           {loadingTime > 5 && (
             <Button 
               variant="outline" 
