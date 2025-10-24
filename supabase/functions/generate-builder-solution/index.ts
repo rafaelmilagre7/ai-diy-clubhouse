@@ -863,20 +863,53 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     let toolDefinition: any;
     
     if (mode === "quick") {
-      // MODO QUICK: Gera APENAS capa (título, descrição, tags) - 5-10s
+      // MODO QUICK: Gera capa + ferramentas essenciais - 5-10s
       toolDefinition = {
         type: "function",
         function: {
           name: "create_quick_solution",
-          description: "Criar apenas a capa da solução (título, descrição e tags)",
+          description: "Criar capa da solução com título, descrição, tags e ferramentas essenciais",
           parameters: {
             type: "object",
             properties: {
               title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (20-60 chars). NUNCA copie literalmente. EXTRAIA essência. Formato: [Tecnologia] + [Resultado]. PROIBIDO: Implementar, Criar, Fazer" },
               short_description: { type: "string", description: "Descrição objetiva em 3-5 frases sobre O QUE é e COMO funciona" },
-              tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp)" }
+              tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp)" },
+              required_tools: {
+                type: "object",
+                description: "Ferramentas essenciais e opcionais necessárias",
+                properties: {
+                  essential: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Nome EXATO da ferramenta da lista de ferramentas cadastradas" },
+                        reason: { type: "string", description: "Por que essa ferramenta é essencial (1-2 frases)" },
+                        setup_complexity: { type: "string", enum: ["easy", "medium", "hard"] },
+                        cost_estimate: { type: "string" }
+                      },
+                      required: ["name", "reason", "setup_complexity", "cost_estimate"]
+                    }
+                  },
+                  optional: {
+                    type: "array",
+                    items: {
+                      type: "object",
+                      properties: {
+                        name: { type: "string", description: "Nome EXATO da ferramenta da lista de ferramentas cadastradas" },
+                        reason: { type: "string" },
+                        setup_complexity: { type: "string", enum: ["easy", "medium", "hard"] },
+                        cost_estimate: { type: "string" }
+                      },
+                      required: ["name", "reason", "setup_complexity", "cost_estimate"]
+                    }
+                  }
+                },
+                required: ["essential", "optional"]
+              }
             },
-            required: ["title", "short_description", "tags"]
+            required: ["title", "short_description", "tags", "required_tools"]
           }
         }
       };
@@ -1197,6 +1230,93 @@ Crie um plano completo seguindo o formato JSON especificado.`;
 
     console.log(`[BUILDER] ✅ Título final validado: "${solutionData.title}"`);
 
+    // ========== 🔧 VALIDAÇÃO E FILTRO DE FERRAMENTAS ==========
+    const validateAndFilterTools = async (requiredTools: any): Promise<any> => {
+      if (!requiredTools) return null;
+      
+      console.log('[BUILDER-TOOLS] 🔍 Iniciando validação de ferramentas...');
+      
+      const validateToolsList = async (toolsList: any[], category: 'essential' | 'optional') => {
+        if (!toolsList || !Array.isArray(toolsList)) return [];
+        
+        console.log(`[BUILDER-TOOLS] 📋 Validando ${toolsList.length} ferramentas ${category}...`);
+        
+        const validatedTools = [];
+        const invalidTools = [];
+        
+        for (const tool of toolsList) {
+          const suggestedName = tool.name?.trim();
+          if (!suggestedName) {
+            console.warn('[BUILDER-TOOLS] ⚠️ Ferramenta sem nome, ignorando');
+            continue;
+          }
+          
+          // Buscar ferramenta cadastrada (case-insensitive, fuzzy match)
+          const { data: matchedTools, error } = await supabase
+            .from('tools')
+            .select('*')
+            .eq('status', true)
+            .or(`name.ilike.%${suggestedName}%,name.ilike.%${suggestedName.replace(/\s+/g, '%')}%`);
+          
+          if (error) {
+            console.error('[BUILDER-TOOLS] ❌ Erro ao buscar ferramenta:', error);
+            continue;
+          }
+          
+          if (matchedTools && matchedTools.length > 0) {
+            // Usar a primeira correspondência (melhor match)
+            const matchedTool = matchedTools[0];
+            
+            validatedTools.push({
+              ...tool,
+              name: matchedTool.name, // Nome EXATO da plataforma
+              logo_url: matchedTool.logo_url,
+              category: matchedTool.category,
+              official_url: matchedTool.official_url
+            });
+            
+            console.log(`[BUILDER-TOOLS] ✅ ${category}: "${suggestedName}" → "${matchedTool.name}" (VALIDADO)`);
+          } else {
+            invalidTools.push(suggestedName);
+            console.warn(`[BUILDER-TOOLS] ❌ ${category}: "${suggestedName}" NÃO ENCONTRADO na plataforma (ignorado)`);
+          }
+        }
+        
+        if (invalidTools.length > 0) {
+          console.warn(`[BUILDER-TOOLS] ⚠️ Total de ferramentas ${category} ignoradas: ${invalidTools.length}`);
+          console.warn(`[BUILDER-TOOLS] 📝 Ferramentas não encontradas: ${invalidTools.join(', ')}`);
+        }
+        
+        console.log(`[BUILDER-TOOLS] ✅ ${category}: ${validatedTools.length}/${toolsList.length} ferramentas validadas`);
+        return validatedTools;
+      };
+      
+      const validatedEssential = await validateToolsList(requiredTools.essential || [], 'essential');
+      const validatedOptional = await validateToolsList(requiredTools.optional || [], 'optional');
+      
+      const totalSuggested = (requiredTools.essential?.length || 0) + (requiredTools.optional?.length || 0);
+      const totalValidated = validatedEssential.length + validatedOptional.length;
+      const matchRate = totalSuggested > 0 ? Math.round((totalValidated / totalSuggested) * 100) : 0;
+      
+      console.log(`[BUILDER-TOOLS] 📊 RESUMO: ${totalValidated}/${totalSuggested} ferramentas validadas (${matchRate}%)`);
+      
+      if (matchRate < 50) {
+        console.error(`[BUILDER-TOOLS] 🚨 ATENÇÃO: Taxa de correspondência muito baixa (${matchRate}%) - IA ignorando instruções!`);
+      }
+      
+      return {
+        essential: validatedEssential,
+        optional: validatedOptional
+      };
+    };
+    
+    // Aplicar validação se houver ferramentas
+    if (solutionData.required_tools) {
+      console.log('[BUILDER-TOOLS] 🔧 Aplicando validação de ferramentas...');
+      solutionData.required_tools = await validateAndFilterTools(solutionData.required_tools);
+      console.log('[BUILDER-TOOLS] ✅ Validação concluída');
+    }
+
     // ========== INJETAR LOVABLE (somente em modo complete) ==========
     if (mode === "complete" && solutionData.required_tools) {
       console.log('[BUILDER] 🚀 Verificando se Lovable está nas ferramentas...');
@@ -1266,7 +1386,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       is_complete: mode === "complete"
     };
 
-    // Campos opcionais (apenas em modo complete)
+    // Campos opcionais (mode complete = todos os campos, mode quick = apenas required_tools)
     if (mode === "complete") {
       insertData.mind_map = solutionData.mind_map;
       insertData.required_tools = solutionData.required_tools;
@@ -1276,6 +1396,10 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       insertData.user_journey_map = solutionData.user_journey_map;
       insertData.technical_stack_diagram = solutionData.technical_stack_diagram;
       insertData.lovable_prompt = solutionData.lovable_prompt;
+    } else if (mode === "quick") {
+      // Modo quick agora salva ferramentas também
+      insertData.required_tools = solutionData.required_tools;
+      console.log(`[BUILDER] ⚡ MODO QUICK: Salvando ferramentas validadas`);
     }
 
     const { data: insertedSolution, error: saveError } = await supabase
