@@ -6,7 +6,7 @@ import { Card } from '@/components/ui/card';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { ToolsLoading } from '@/components/implementation/content/tools/ToolsLoading';
-import { ToolItem } from '@/components/implementation/content/tools/ToolItem';
+import { RequiredToolsGrid } from '@/components/builder/RequiredToolsGrid';
 import type { Tool, SolutionTool } from '@/types/toolTypes';
 import { useState } from 'react';
 
@@ -26,13 +26,29 @@ const findToolByName = (name: string, tools: Tool[] | null) => {
   );
 };
 
+// Extrair dados específicos do JSONB required_tools
+const extractFromJson = (toolName: string, field: string, requiredToolsJson: any) => {
+  if (!requiredToolsJson) return undefined;
+  
+  const allTools = [
+    ...(requiredToolsJson.essential || []),
+    ...(requiredToolsJson.optional || [])
+  ];
+  
+  const tool = allTools.find((t: any) => 
+    normalizeName(t.name) === normalizeName(toolName)
+  );
+  
+  return tool?.[field];
+};
+
 export default function BuilderSolutionTools() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [loadingStep, setLoadingStep] = useState('Analisando solução...');
 
   // Buscar ferramentas da plataforma conectadas a essa solução
-  const { data: tools, isLoading } = useQuery<(SolutionTool & { details: Tool | null })[]>({
+  const { data: tools, isLoading } = useQuery<{ essential: any[], optional: any[], requiredToolsJson?: any }>({
     queryKey: ['builder-solution-tools', id],
     queryFn: async () => {
       try {
@@ -59,17 +75,7 @@ export default function BuilderSolutionTools() {
           if (solutionError) throw solutionError;
 
           if (!aiSolution?.required_tools) {
-            return [];
-          }
-
-          // Extrair nomes das ferramentas (essenciais + opcionais)
-          const toolNames = [
-            ...(aiSolution.required_tools.essential || []).map((t: any) => t.name),
-            ...(aiSolution.required_tools.optional || []).map((t: any) => t.name)
-          ];
-
-          if (toolNames.length === 0) {
-            return [];
+            return { essential: [], optional: [] };
           }
 
           setLoadingStep('Carregando ferramentas da plataforma...');
@@ -84,26 +90,38 @@ export default function BuilderSolutionTools() {
 
           setLoadingStep('Organizando dados...');
 
-          // ✅ FASE 4: Merge manual com matching flexível
-          const mergedTools = toolNames.map(name => {
-            const platformTool = findToolByName(name, platformTools);
-            const isEssential = aiSolution.required_tools.essential?.some((t: any) => 
-              normalizeName(t.name) === normalizeName(name)
-            );
-
+          // ✅ FASE 4: Transformar para o formato do RequiredToolsGrid
+          const essentialTools = (aiSolution.required_tools.essential || []).map((jsonTool: any) => {
+            const platformTool = findToolByName(jsonTool.name, platformTools);
+            
             return {
-              id: platformTool?.id || crypto.randomUUID(),
-              solution_id: id as string,
-              tool_name: name,
-              tool_url: platformTool?.official_url || '#',
-              is_required: isEssential || false,
-              order_index: 0,
-              created_at: new Date().toISOString(),
-              details: platformTool
+              name: jsonTool.name,
+              logo_url: platformTool?.logo_url || jsonTool.logo_url,
+              category: platformTool?.category || jsonTool.category || 'Outros',
+              reason: jsonTool.reason || 'Ferramenta essencial para a implementação',
+              setup_complexity: jsonTool.setup_complexity,
+              cost_estimate: jsonTool.cost_estimate
             };
           });
 
-          return mergedTools;
+          const optionalTools = (aiSolution.required_tools.optional || []).map((jsonTool: any) => {
+            const platformTool = findToolByName(jsonTool.name, platformTools);
+            
+            return {
+              name: jsonTool.name,
+              logo_url: platformTool?.logo_url || jsonTool.logo_url,
+              category: platformTool?.category || jsonTool.category || 'Outros',
+              reason: jsonTool.reason || 'Ferramenta opcional recomendada',
+              setup_complexity: jsonTool.setup_complexity,
+              cost_estimate: jsonTool.cost_estimate
+            };
+          });
+
+          return {
+            essential: essentialTools,
+            optional: optionalTools,
+            requiredToolsJson: aiSolution.required_tools
+          };
         }
 
         // ✅ Se houver solution_tools, buscar detalhes das ferramentas em BATCH
@@ -112,7 +130,7 @@ export default function BuilderSolutionTools() {
         const toolNames = solutionTools.map(st => st.tool_name).filter(Boolean);
 
         if (toolNames.length === 0) {
-          return solutionTools.map(st => ({ ...st, details: null }));
+          return { essential: [], optional: [] };
         }
 
         const { data: platformTools, error: platformError } = await supabase
@@ -122,11 +140,36 @@ export default function BuilderSolutionTools() {
 
         if (platformError) throw platformError;
 
-        // Merge manual com matching flexível
-        return solutionTools.map(st => ({
-          ...st,
-          details: findToolByName(st.tool_name, platformTools)
-        }));
+        // Transformar solution_tools para o formato RequiredToolsGrid
+        const essential = solutionTools
+          .filter(st => st.is_required)
+          .map(st => {
+            const platformTool = findToolByName(st.tool_name, platformTools);
+            return {
+              name: st.tool_name,
+              logo_url: platformTool?.logo_url,
+              category: platformTool?.category || 'Outros',
+              reason: 'Ferramenta vinculada à solução',
+              setup_complexity: undefined,
+              cost_estimate: undefined
+            };
+          });
+
+        const optional = solutionTools
+          .filter(st => !st.is_required)
+          .map(st => {
+            const platformTool = findToolByName(st.tool_name, platformTools);
+            return {
+              name: st.tool_name,
+              logo_url: platformTool?.logo_url,
+              category: platformTool?.category || 'Outros',
+              reason: 'Ferramenta vinculada à solução',
+              setup_complexity: undefined,
+              cost_estimate: undefined
+            };
+          });
+
+        return { essential, optional };
 
       } catch (error) {
         console.error('Erro ao buscar ferramentas:', error);
@@ -155,7 +198,7 @@ export default function BuilderSolutionTools() {
     );
   }
 
-  if (!tools || tools.length === 0) {
+  if (!tools || (tools.essential.length === 0 && tools.optional.length === 0)) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
         <div className="container mx-auto px-4 py-8">
@@ -202,19 +245,7 @@ export default function BuilderSolutionTools() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tools.map((tool) => (
-              <ToolItem
-                key={tool.id}
-                toolName={tool.details?.name || tool.tool_name}
-                toolUrl={tool.details?.official_url || tool.tool_url}
-                toolId={tool.details?.id}
-                isRequired={tool.is_required}
-                hasBenefit={tool.details?.has_member_benefit}
-                benefitType={tool.details?.benefit_type as any}
-              />
-            ))}
-          </div>
+          <RequiredToolsGrid tools={tools} />
         </motion.div>
       </div>
     </div>
