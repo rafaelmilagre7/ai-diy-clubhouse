@@ -105,7 +105,7 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
         {tool.tool_id && (
           <div className="mb-4">
             <a 
-              href={APP_CONFIG.getAppUrl(`/ferramentas/${tool.tool_id}`)}
+              href={APP_CONFIG.getAppUrl(`/tools/${tool.tool_id}`)}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center justify-center w-full px-4 py-2 text-sm font-medium text-primary border border-primary/30 rounded-lg hover:bg-primary/10 transition-colors gap-2"

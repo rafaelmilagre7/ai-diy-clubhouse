@@ -761,12 +761,14 @@ ESTRUTURA DA RESPOSTA:
   📦 FERRAMENTAS DISPONÍVEIS NA PLATAFORMA (USE APENAS ESTAS):
   ${toolsContext}
   
-  🔴 REGRA OBRIGATÓRIA:
-  - Você DEVE recomendar APENAS ferramentas da lista acima que estão cadastradas na plataforma
-  - Se não encontrar uma ferramenta específica na lista, escolha a mais próxima disponível
-  - NÃO invente ou sugira ferramentas que não estão na lista acima
-  - Priorize ferramentas no-code da lista: Make, N8N, ManyChat, Google Sheets, Airtable
-  - Use o nome EXATO da ferramenta como aparece na lista
+  🔴 REGRA OBRIGATÓRIA - NOMES EXATOS:
+  - Você DEVE usar o nome EXATO da ferramenta como aparece na lista acima
+  - EXEMPLOS CORRETOS: "Make.com", "API da OpenAI", "Google Sheets", "ManyChat"
+  - EXEMPLOS ERRADOS: "Make (Integromat)", "OpenAI", "Sheets", "ManyChat Pro"
+  - Se precisar de uma funcionalidade não listada, escolha a ferramenta mais próxima disponível
+  - NÃO invente ou sugira ferramentas que não estão cadastradas na plataforma
+  - COPIE E COLE o nome exato da lista, não reformate ou adicione versões/variações
+  - Priorize ferramentas no-code: Make.com, N8N, ManyChat, Google Sheets, Airtable
   
   "implementation_checklist": [
     {

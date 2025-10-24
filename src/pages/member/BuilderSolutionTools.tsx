@@ -19,11 +19,26 @@ const normalizeName = (name: string) =>
 const findToolByName = (name: string, tools: Tool[] | null) => {
   if (!tools) return null;
   const normalized = normalizeName(name);
-  return tools.find(t => 
-    normalizeName(t.name) === normalized ||
-    normalizeName(t.name).includes(normalized) ||
-    normalized.includes(normalizeName(t.name))
-  );
+  
+  return tools.find(t => {
+    const toolNormalized = normalizeName(t.name);
+    
+    // Match exato
+    if (toolNormalized === normalized) return true;
+    
+    // Match parcial (ex: "Make" encontra "Make.com" ou vice-versa)
+    if (toolNormalized.includes(normalized) || normalized.includes(toolNormalized)) {
+      return true;
+    }
+    
+    // Match por palavras-chave (ex: "OpenAI" encontra "API da OpenAI")
+    const toolWords = toolNormalized.split(/[\s.]+/).filter(w => w.length > 2);
+    const nameWords = normalized.split(/[\s.]+/).filter(w => w.length > 2);
+    
+    return toolWords.some(tw => nameWords.some(nw => 
+      tw === nw || tw.includes(nw) || nw.includes(tw)
+    ));
+  });
 };
 
 // Extrair dados específicos do JSONB required_tools
