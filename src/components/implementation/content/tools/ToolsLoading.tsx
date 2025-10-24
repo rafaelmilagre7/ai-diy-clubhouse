@@ -3,7 +3,11 @@ import React, { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Loader2 } from "lucide-react";
 
-export const ToolsLoading = () => {
+interface ToolsLoadingProps {
+  message?: string;
+}
+
+export const ToolsLoading = ({ message }: ToolsLoadingProps) => {
   const [loadingTime, setLoadingTime] = useState(0);
   
   useEffect(() => {
@@ -21,11 +25,11 @@ export const ToolsLoading = () => {
         <div className="text-center space-y-3">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
           <p className="text-sm text-muted-foreground">
-            Carregando ferramentas... <span className="font-mono">{loadingTime}s</span>
+            {message || 'Carregando ferramentas...'} <span className="font-mono">{loadingTime}s</span>
           </p>
-          {loadingTime > 5 && (
+          {loadingTime > 3 && (
             <p className="text-xs text-muted-foreground/70">
-              Aguarde, estamos buscando os dados...
+              {message || 'Aguarde, estamos buscando os dados...'}
             </p>
           )}
         </div>
