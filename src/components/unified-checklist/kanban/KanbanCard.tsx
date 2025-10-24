@@ -4,10 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Clock, FileText, Link2, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
-import { EditableCardTitle } from "./EditableCardTitle";
 import { QuickActionsMenu } from "./QuickActionsMenu";
 import { Label } from "./LabelManager";
-import { getDraggableStyle } from "@/utils/kanban/dragStyles";
 
 interface KanbanCardProps {
   item: UnifiedChecklistItem;
@@ -37,23 +35,19 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      style={getDraggableStyle(provided.draggableProps.style, snapshot.isDragging)}
+      style={provided.draggableProps.style}
       className={cn(
-        "group relative select-none p-4 mb-3 last:mb-0",
+        "group relative p-4 mb-3 last:mb-0 bg-card border",
         snapshot.isDragging 
-          ? "shadow-2xl" // Removido opacity e classe conflitante
-          : "cursor-grab transition-shadow duration-200 hover:shadow-lg"
+          ? "shadow-2xl opacity-80" 
+          : "hover:shadow-lg"
       )}
     >
-      {/* Header com Título Editável e Quick Actions */}
+      {/* Header com Título e Quick Actions */}
       <div className="flex items-start justify-between gap-2 mb-3">
-        <div className="flex-1 min-w-0">
-          <EditableCardTitle 
-            title={item.title}
-            onSave={(newTitle) => onTitleUpdate(item.id, newTitle)}
-            placeholder="Título do card..."
-          />
-        </div>
+        <h4 className="flex-1 font-semibold text-base leading-tight">
+          {item.title}
+        </h4>
         {!snapshot.isDragging && (
           <QuickActionsMenu
             item={item}

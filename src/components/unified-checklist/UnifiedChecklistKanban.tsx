@@ -621,16 +621,12 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                         </div>
                       )}
 
-                      {/* Placeholder de drop animado */}
+                      {/* Placeholder de drop */}
                       {items.length === 0 && snapshot.isDraggingOver && (
-                        <motion.div 
-                          initial={{ scale: 0.9, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-primary rounded-xl bg-primary/5"
-                        >
+                        <div className="flex flex-col items-center justify-center h-32 border-2 border-dashed border-primary rounded-xl bg-primary/5">
                           <div className="text-primary font-semibold">Solte aqui</div>
                           <div className="text-xs text-muted-foreground">O card será movido para esta coluna</div>
-                        </motion.div>
+                        </div>
                       )}
 
                       {items.map((item, index) => (
