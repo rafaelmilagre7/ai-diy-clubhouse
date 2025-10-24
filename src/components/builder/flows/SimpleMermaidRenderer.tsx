@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { useMermaidInit } from '@/hooks/useMermaidInit';
+import { isMermaidInitialized } from '@/lib/mermaidManager';
 
 interface SimpleMermaidRendererProps {
   code: string;
@@ -38,10 +40,34 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loadingTime, setLoadingTime] = useState(0);
   const isInitialized = useMermaidInit();
 
+  // Contador de tempo de loading
   useEffect(() => {
-    if (!isInitialized || !code || !containerRef.current) return;
+    if (isRendering) {
+      const interval = setInterval(() => {
+        setLoadingTime(prev => prev + 1);
+      }, 1000);
+      return () => clearInterval(interval);
+    } else {
+      setLoadingTime(0);
+    }
+  }, [isRendering]);
+
+  useEffect(() => {
+    // Tentar renderizar mesmo se hook não confirmou (mas singleton confirma)
+    const canRender = isInitialized || isMermaidInitialized();
+    
+    if (!canRender || !code || !containerRef.current) {
+      console.log('[SimpleMermaid] Aguardando:', { 
+        isInitialized, 
+        isMermaidReady: isMermaidInitialized(),
+        hasCode: !!code, 
+        hasContainer: !!containerRef.current 
+      });
+      return;
+    }
 
     const renderDiagram = async () => {
       setIsRendering(true);
@@ -49,7 +75,7 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
 
       try {
         const cleanedCode = cleanMermaidCode(code);
-        console.log('[SimpleMermaid] Renderizando código:', cleanedCode);
+        console.log('[SimpleMermaid] 🎨 Renderizando código:', cleanedCode.substring(0, 100) + '...');
 
         const { default: mermaid } = await import('mermaid');
         const uniqueId = `mermaid-${Date.now()}`;
@@ -58,9 +84,8 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
         
         if (containerRef.current) {
           containerRef.current.innerHTML = svg;
+          console.log('[SimpleMermaid] ✅ Renderizado com sucesso!');
         }
-
-        console.log('[SimpleMermaid] ✅ Renderizado com sucesso');
       } catch (err: any) {
         console.error('[SimpleMermaid] ❌ Erro:', err);
         setError(err.message || 'Erro ao renderizar diagrama');
@@ -77,7 +102,19 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
       <div className="flex items-center justify-center py-12">
         <div className="text-center space-y-3">
           <Loader2 className="h-8 w-8 animate-spin mx-auto text-primary" />
-          <p className="text-sm text-muted-foreground">Renderizando fluxo...</p>
+          <p className="text-sm text-muted-foreground">
+            Renderizando fluxo... ({loadingTime}s)
+          </p>
+          {loadingTime > 5 && (
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="mt-2"
+            >
+              Recarregar página
+            </Button>
+          )}
         </div>
       </div>
     );

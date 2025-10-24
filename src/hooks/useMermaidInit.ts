@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { initializeMermaid } from '@/lib/mermaidManager';
+import { initializeMermaid, isMermaidInitialized } from '@/lib/mermaidManager';
 
 /**
  * Hook para inicializar Mermaid UMA ÚNICA VEZ globalmente
@@ -9,6 +9,13 @@ export const useMermaidInit = () => {
   const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
+    // Verificar se já foi inicializado anteriormente (singleton)
+    if (isMermaidInitialized()) {
+      console.log('[useMermaidInit] ⚡ Já estava inicializado');
+      setIsInitialized(true);
+      return;
+    }
+
     initializeMermaid()
       .then(() => {
         console.log('[useMermaidInit] ✅ Hook confirmou inicialização');
@@ -18,6 +25,18 @@ export const useMermaidInit = () => {
         console.error('[useMermaidInit] ❌ Erro ao inicializar:', error);
       });
   }, []);
+
+  // Timeout de segurança: se após 3s ainda não inicializou, forçar
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!isInitialized && isMermaidInitialized()) {
+        console.warn('[useMermaidInit] ⚠️ Forçando state após timeout');
+        setIsInitialized(true);
+      }
+    }, 3000);
+
+    return () => clearTimeout(timeout);
+  }, [isInitialized]);
 
   return isInitialized;
 };
