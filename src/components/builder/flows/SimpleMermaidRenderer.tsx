@@ -41,8 +41,8 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingTime, setLoadingTime] = useState(0);
-  const [shouldRender, setShouldRender] = useState(false);
   const isInitialized = useMermaidInit();
+  const hasRendered = useRef(false);
 
   // Contador de tempo de loading
   useEffect(() => {
@@ -56,30 +56,33 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
     }
   }, [isRendering]);
 
-  // Verificar quando tudo está pronto para renderizar
   useEffect(() => {
-    const canRender = (isInitialized || isMermaidInitialized()) && !!code && !!containerRef.current;
-    
-    console.log('[SimpleMermaid] Status:', { 
-      isInitialized, 
-      isMermaidReady: isMermaidInitialized(),
-      hasCode: !!code, 
-      hasContainer: !!containerRef.current,
-      canRender
-    });
-
-    if (canRender && !shouldRender) {
-      console.log('[SimpleMermaid] ✅ Tudo pronto! Iniciando renderização...');
-      setShouldRender(true);
-    }
-  }, [isInitialized, code, containerRef.current, shouldRender]);
-
-  useEffect(() => {
-    if (!shouldRender) return;
-
     const renderDiagram = async () => {
+      // Evitar múltiplas renderizações
+      if (hasRendered.current) return;
+      
+      // Verificar se tudo está pronto
+      if (!containerRef.current) {
+        console.log('[SimpleMermaid] ⏳ Aguardando container...');
+        return;
+      }
+
+      const mermaidReady = isInitialized || isMermaidInitialized();
+      if (!mermaidReady) {
+        console.log('[SimpleMermaid] ⏳ Aguardando Mermaid...');
+        return;
+      }
+
+      if (!code) {
+        console.log('[SimpleMermaid] ⏳ Aguardando código...');
+        return;
+      }
+
+      hasRendered.current = true;
       setIsRendering(true);
       setError(null);
+
+      console.log('[SimpleMermaid] 🎨 Iniciando renderização...');
 
       try {
         const cleanedCode = cleanMermaidCode(code);
@@ -97,13 +100,16 @@ export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
       } catch (err: any) {
         console.error('[SimpleMermaid] ❌ Erro:', err);
         setError(err.message || 'Erro ao renderizar diagrama');
+        hasRendered.current = false;
       } finally {
         setIsRendering(false);
       }
     };
 
-      renderDiagram();
-  }, [shouldRender]);
+    // Delay para garantir que o DOM está montado
+    const timer = setTimeout(renderDiagram, 100);
+    return () => clearTimeout(timer);
+  }, [isInitialized, code]);
 
   if (isRendering) {
     return (
