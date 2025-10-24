@@ -6,9 +6,7 @@ import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { SmartArchitectureFlow } from '@/components/builder/flows/SmartArchitectureFlow';
-import { ArchitectureInsights } from '@/components/builder/architecture/ArchitectureInsights';
-import { FlowTrailConnector } from '@/components/builder/flows/FlowTrailConnector';
+import { SimpleMermaidRenderer } from '@/components/builder/flows/SimpleMermaidRenderer';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
 import { useSolutionCompletion } from '@/hooks/implementation/useSolutionCompletion';
@@ -65,7 +63,7 @@ export default function BuilderSolutionArchitecture() {
   };
 
   useEffect(() => {
-    if (solution && !solution.implementation_flows && !isGenerating) {
+    if (solution && !solution.implementation_flow && !isGenerating) {
       generateArchitecture();
     }
   }, [solution]);
@@ -78,69 +76,16 @@ export default function BuilderSolutionArchitecture() {
     );
   }
 
-  const flows = solution?.implementation_flows?.flows || [];
-  const insights = solution?.architecture_insights;
+  // Redirecionar para a nova página de fluxo
+  useEffect(() => {
+    if (id) {
+      navigate(`/ferramentas/builder/solution/${id}/fluxo`);
+    }
+  }, [id, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
-      <div className="container mx-auto px-4 py-8">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <LiquidGlassCard className="p-6">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
-              className="mb-6"
-            >
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Voltar
-            </Button>
-
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-                Arquitetura e Fluxos Inteligentes
-              </h1>
-              <p className="text-muted-foreground text-lg">
-                Fluxos técnicos, análise de IA e estimativa de custos
-              </p>
-            </div>
-
-            {isGenerating ? (
-              <div className="text-center py-16 space-y-4">
-                <Sparkles className="h-16 w-16 mx-auto animate-pulse text-primary" />
-                <p className="font-semibold text-xl">Gerando arquitetura inteligente...</p>
-                <p className="text-muted-foreground">Analisando RAG, APIs, CRM e custos</p>
-              </div>
-            ) : flows.length === 0 ? (
-              <div className="text-center py-16">
-                <Button onClick={generateArchitecture}>Gerar Arquitetura</Button>
-              </div>
-            ) : (
-              <div className="space-y-8">
-                {/* Conexão com trilha de implementação */}
-                {user && (
-                  <FlowTrailConnector solutionId={solution.id} userId={user.id} />
-                )}
-
-                {/* Insights de arquitetura */}
-                {insights && <ArchitectureInsights insights={insights} />}
-                
-                {/* Fluxos interativos */}
-                {flows.map((flow: any) => (
-                  <SmartArchitectureFlow
-                    key={flow.id}
-                    flow={flow}
-                    solutionId={solution.id}
-                    userId={user?.id || ''}
-                    onMarkSolutionComplete={handleConfirmImplementation}
-                    isCompletingSolution={isCompleting}
-                  />
-                ))}
-              </div>
-            )}
-          </LiquidGlassCard>
-        </motion.div>
-      </div>
+    <div className="flex items-center justify-center min-h-screen">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
     </div>
   );
 }

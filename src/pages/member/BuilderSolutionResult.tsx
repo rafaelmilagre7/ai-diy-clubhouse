@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { SolutionResult } from '@/components/builder/SolutionResult';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
 
 export default function BuilderSolutionResult() {
@@ -126,6 +127,18 @@ export default function BuilderSolutionResult() {
           </p>
         </div>
       )}
+
+      <Card className="mb-6">
+        <CardContent className="pt-6">
+          <Button
+            onClick={() => navigate(`/ferramentas/builder/solution/${id}/fluxo`)}
+            className="w-full"
+            size="lg"
+          >
+            📊 Ver Fluxo de Implementação
+          </Button>
+        </CardContent>
+      </Card>
 
       <SolutionResult
         solution={solution}
