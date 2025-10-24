@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Clock, CheckCircle, Loader2, Sparkles } from 'lucide-react';
+import { ArrowLeft, Loader2, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { SimpleMermaidRenderer } from '@/components/builder/flows/SimpleMermaidRenderer';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -25,7 +24,6 @@ export default function BuilderFlowView() {
   const [flow, setFlow] = useState<ImplementationFlow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [isMarking, setIsMarking] = useState(false);
 
   useEffect(() => {
     // Validar rota
@@ -114,27 +112,6 @@ export default function BuilderFlowView() {
     }
   };
 
-  const markAsImplemented = async () => {
-    if (!solution || !user) return;
-
-    setIsMarking(true);
-    try {
-      const { error } = await supabase
-        .from('ai_generated_solutions')
-        .update({ status: 'completed' })
-        .eq('id', solution.id);
-
-      if (error) throw error;
-
-      toast.success('Solução marcada como implementada! 🎉');
-      navigate('/ferramentas/builder/historico');
-    } catch (error: any) {
-      console.error('Erro ao marcar como implementada:', error);
-      toast.error('Erro ao atualizar status');
-    } finally {
-      setIsMarking(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -163,24 +140,6 @@ export default function BuilderFlowView() {
             <h1 className="text-3xl font-bold mb-2">🗺️ Roteiro de Implementação</h1>
             <p className="text-muted-foreground text-lg">{solution?.title}</p>
           </div>
-          
-          {/* Introdução Explicativa */}
-          <Card className="bg-primary/5 border-primary/20">
-            <CardContent className="pt-6">
-              <div className="space-y-3">
-                <p className="text-sm leading-relaxed">
-                  <strong>📍 Como usar este roteiro:</strong> Este fluxo visual mostra a ordem recomendada 
-                  para configurar as ferramentas da sua solução. Cada etapa é prática e executável — 
-                  <strong> não precisa de programação</strong>, apenas configuração.
-                </p>
-                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-                  <span>⏱️ Cada etapa leva entre 10-30 minutos</span>
-                  <span>🔧 Apenas configuração de ferramentas no-code</span>
-                  <span>✅ Siga a ordem para melhores resultados</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </div>
 
         {/* Flow Card */}
@@ -213,68 +172,11 @@ export default function BuilderFlowView() {
         ) : flow ? (
           <Card>
             <CardHeader>
-              <div className="flex items-start justify-between">
-                <div className="space-y-2">
-                  <CardTitle className="text-2xl">{flow.title}</CardTitle>
-                  <CardDescription className="text-base">{flow.description}</CardDescription>
-                </div>
-                <Badge variant="secondary" className="flex items-center gap-2">
-                  <Clock className="h-3 w-3" />
-                  {flow.estimated_time}
-                </Badge>
-              </div>
+              <CardTitle className="text-xl">{flow.title}</CardTitle>
             </CardHeader>
-
             <CardContent>
-              <SimpleMermaidRenderer 
-                code={flow.mermaid_code}
-                onRegenerate={() => generateFlow()}
-              />
+              <SimpleMermaidRenderer code={flow.mermaid_code} />
             </CardContent>
-
-            <CardFooter className="flex flex-wrap gap-3 justify-between items-center">
-              <div className="flex gap-3">
-                <Button
-                  variant="secondary"
-                  onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
-                  className="gap-2"
-                >
-                  🔧 Ver Ferramentas Necessárias
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  onClick={() => generateFlow()}
-                  disabled={isGenerating}
-                  className="gap-2"
-                >
-                  🔄 Regenerar Fluxo
-                </Button>
-              </div>
-
-              <Button
-                onClick={markAsImplemented}
-                disabled={isMarking || solution?.status === 'completed'}
-                className="gap-2"
-              >
-                {isMarking ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Marcando...
-                  </>
-                ) : solution?.status === 'completed' ? (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Já Implementado
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="h-4 w-4" />
-                    Marcar como Implementado
-                  </>
-                )}
-              </Button>
-            </CardFooter>
           </Card>
         ) : (
           <Card>
@@ -285,46 +187,6 @@ export default function BuilderFlowView() {
               </Button>
             </CardContent>
           </Card>
-        )}
-
-        {/* Key Steps */}
-        {flow?.key_steps && flow.key_steps.length > 0 && (
-          <div>
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-              📋 Etapas Principais
-              <Badge variant="secondary" className="text-xs">
-                {flow.key_steps.length} passos
-              </Badge>
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {flow.key_steps.map((step, idx) => {
-                // Emojis contextuais por tipo de etapa
-                const stepEmojis = ['📥', '⚙️', '🔗', '🧪', '✏️', '🚀'];
-                const emoji = stepEmojis[idx % stepEmojis.length];
-                
-                return (
-                  <Card key={idx} className="hover:shadow-md transition-shadow">
-                    <CardContent className="pt-6">
-                      <div className="flex items-start gap-3">
-                        <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-semibold text-lg">
-                          {emoji}
-                        </div>
-                        <div className="flex-1 space-y-1">
-                          <div className="text-xs text-muted-foreground font-medium">
-                            Passo {idx + 1}
-                          </div>
-                          <p className="text-sm font-medium leading-snug">{step}</p>
-                          <div className="text-xs text-muted-foreground">
-                            ⏱️ ~15-25 min
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
         )}
       </div>
     </div>

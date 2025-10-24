@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
 import { useMermaidInit } from '@/hooks/useMermaidInit';
 
 interface SimpleMermaidRendererProps {
   code: string;
-  onRegenerate?: () => void;
 }
 
 const cleanMermaidCode = (code: string): string => {
@@ -36,7 +34,7 @@ const cleanMermaidCode = (code: string): string => {
   return cleaned;
 };
 
-export const SimpleMermaidRenderer = ({ code, onRegenerate }: SimpleMermaidRendererProps) => {
+export const SimpleMermaidRenderer = ({ code }: SimpleMermaidRendererProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -89,15 +87,9 @@ export const SimpleMermaidRenderer = ({ code, onRegenerate }: SimpleMermaidRende
     return (
       <Alert variant="destructive">
         <AlertCircle className="h-4 w-4" />
-        <AlertTitle>Erro ao renderizar fluxo</AlertTitle>
-        <AlertDescription className="space-y-3">
-          <p>O diagrama gerado tem um erro de sintaxe Mermaid.</p>
-          <p className="text-xs font-mono bg-background/50 p-2 rounded">{error}</p>
-          {onRegenerate && (
-            <Button onClick={onRegenerate} variant="outline" size="sm">
-              🔄 Regenerar Fluxo
-            </Button>
-          )}
+        <AlertTitle>Erro ao renderizar</AlertTitle>
+        <AlertDescription>
+          <p className="text-sm">{error}</p>
         </AlertDescription>
       </Alert>
     );
