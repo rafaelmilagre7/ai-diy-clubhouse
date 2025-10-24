@@ -35,82 +35,88 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      style={provided.draggableProps.style}
+      style={{
+        ...provided.draggableProps.style,
+        cursor: snapshot.isDragging ? 'grabbing' : 'grab'
+      }}
       className={cn(
-        "group relative p-4 mb-3 last:mb-0 bg-card border",
+        "group relative p-4 mb-3 last:mb-0 bg-card border transition-shadow",
         snapshot.isDragging 
-          ? "shadow-2xl opacity-80" 
+          ? "shadow-2xl opacity-90 scale-105" 
           : "hover:shadow-lg"
       )}
     >
-      {/* Header com Título e Quick Actions */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <h4 className="flex-1 font-semibold text-base leading-tight">
-          {item.title}
-        </h4>
-        {!snapshot.isDragging && (
-          <QuickActionsMenu
-            item={item}
-            onEdit={onEdit}
-            onDuplicate={onDuplicate}
-            onDelete={onDelete}
-            onAddLabel={onAddLabel}
-          />
-        )}
-      </div>
-
-      {/* Labels */}
-      {labels.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
-          {labels.map((label: Label) => (
-            <Badge 
-              key={label.id}
-              style={{ backgroundColor: label.color }}
-              className="text-xs font-medium text-white px-2 py-0.5"
-            >
-              {label.name}
-            </Badge>
-          ))}
+      {/* Wrapper com pointer-events controlado durante drag */}
+      <div style={{ pointerEvents: snapshot.isDragging ? 'none' : 'auto' }}>
+        {/* Header com Título e Quick Actions */}
+        <div className="flex items-start justify-between gap-2 mb-3">
+          <h4 className="flex-1 font-semibold text-base leading-tight">
+            {item.title}
+          </h4>
+          {!snapshot.isDragging && (
+            <QuickActionsMenu
+              item={item}
+              onEdit={onEdit}
+              onDuplicate={onDuplicate}
+              onDelete={onDelete}
+              onAddLabel={onAddLabel}
+            />
+          )}
         </div>
-      )}
 
-      {/* Descrição Preview */}
-      {item.description && (
-        <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">
-          {item.description}
-        </p>
-      )}
+        {/* Labels */}
+        {labels.length > 0 && (
+          <div className="flex flex-wrap gap-1.5 mb-3">
+            {labels.map((label: Label) => (
+              <Badge 
+                key={label.id}
+                style={{ backgroundColor: label.color }}
+                className="text-xs font-medium text-white px-2 py-0.5"
+              >
+                {label.name}
+              </Badge>
+            ))}
+          </div>
+        )}
 
-      {/* Footer com Badges Informativos */}
-      <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex flex-wrap gap-2">
-          {item.metadata?.estimated_time && (
-            <Badge variant="outline" className="text-xs gap-1">
-              <Clock className="h-3 w-3" />
-              {item.metadata.estimated_time}
-            </Badge>
-          )}
-          
-          {item.metadata?.dependencies?.length > 0 && (
-            <Badge variant="outline" className="text-xs gap-1 bg-status-warning/5 text-status-warning border-status-warning/20">
-              <Link2 className="h-3 w-3" />
-              {item.metadata.dependencies.length} dep.
-            </Badge>
-          )}
+        {/* Descrição Preview */}
+        {item.description && (
+          <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed mb-3">
+            {item.description}
+          </p>
+        )}
 
-          {item.metadata?.resources?.length > 0 && (
-            <Badge variant="outline" className="text-xs gap-1 bg-primary/5 text-primary border-primary/20">
-              <FileText className="h-3 w-3" />
-              {item.metadata.resources.length} recursos
-            </Badge>
-          )}
-          
-          {item.notes && (
-            <Badge variant="outline" className="text-xs gap-1 bg-status-warning/5 text-status-warning border-status-warning/20">
-              <StickyNote className="h-3 w-3" />
-              Notas
-            </Badge>
-          )}
+        {/* Footer com Badges Informativos */}
+        <div className="flex items-center justify-between flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
+            {item.metadata?.estimated_time && (
+              <Badge variant="outline" className="text-xs gap-1">
+                <Clock className="h-3 w-3" />
+                {item.metadata.estimated_time}
+              </Badge>
+            )}
+            
+            {item.metadata?.dependencies?.length > 0 && (
+              <Badge variant="outline" className="text-xs gap-1 bg-status-warning/5 text-status-warning border-status-warning/20">
+                <Link2 className="h-3 w-3" />
+                {item.metadata.dependencies.length} dep.
+              </Badge>
+            )}
+
+            {item.metadata?.resources?.length > 0 && (
+              <Badge variant="outline" className="text-xs gap-1 bg-primary/5 text-primary border-primary/20">
+                <FileText className="h-3 w-3" />
+                {item.metadata.resources.length} recursos
+              </Badge>
+            )}
+            
+            {item.notes && (
+              <Badge variant="outline" className="text-xs gap-1 bg-status-warning/5 text-status-warning border-status-warning/20">
+                <StickyNote className="h-3 w-3" />
+                Notas
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
     </Card>

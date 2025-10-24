@@ -132,10 +132,21 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   }, [filteredItems]);
 
   const handleDragEnd = (result: DropResult) => {
-    console.log('🎯 DRAG END CHAMADO:', result);
+    console.log('🎯 ========== DRAG END INICIADO ==========');
+    console.log('📋 Result completo:', {
+      draggableId: result.draggableId,
+      type: result.type,
+      source: result.source,
+      destination: result.destination,
+      reason: result.reason
+    });
     
     if (!result.destination) {
-      console.log('❌ Sem destination - drop cancelado ou fora da área');
+      console.error('❌ DESTINATION É NULL - Possíveis causas:');
+      console.error('  1. Drop fora de área válida');
+      console.error('  2. Droppable não está recebendo eventos');
+      console.error('  3. pointer-events bloqueado');
+      console.error('  4. z-index ou position incorretos');
       return;
     }
 
@@ -149,7 +160,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     const sourceCol = source.droppableId as ColumnType;
     const destCol = destination.droppableId as ColumnType;
     
-    console.log(`📦 Movendo: ${sourceCol}[${source.index}] → ${destCol}[${destination.index}]`);
+    console.log(`✅ DRAG VÁLIDO: ${sourceCol}[${source.index}] → ${destCol}[${destination.index}]`);
 
     // 1. Criar cópia das colunas
     const newColumns = {
@@ -590,23 +601,33 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
                 {/* Droppable Area - Design System */}
                 <Droppable droppableId={column.id}>
-                  {(provided, snapshot) => (
-                    <div
-                      ref={provided.innerRef}
-                      {...provided.droppableProps}
-                      className={cn(
-                        "min-h-[400px] rounded-2xl border-2 p-5 transition-all duration-300 backdrop-blur-sm",
-                        column.gradient,
-                        snapshot.isDraggingOver 
-                          ? "border-primary shadow-aurora ring-4 ring-primary/20" 
-                          : cn(
-                              "border-dashed",
-                              column.id === 'done' && "border-status-success/30",
-                              column.id === 'in_progress' && "border-status-warning/30",
-                              column.id === 'todo' && "border-border"
-                            )
-                      )}
-                    >
+                  {(provided, snapshot) => {
+                    // Log para debug de drag over
+                    if (snapshot.isDraggingOver) {
+                      console.log(`🎯 Dragging over: ${column.id}`, {
+                        draggingOverWith: snapshot.draggingOverWith,
+                        draggingFromThisWith: snapshot.draggingFromThisWith
+                      });
+                    }
+                    
+                    return (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={cn(
+                          "min-h-[500px] rounded-2xl border-2 p-6 transition-all duration-300",
+                          column.gradient,
+                          snapshot.isDraggingOver 
+                            ? "border-primary shadow-aurora ring-4 ring-primary/20 bg-primary/5" 
+                            : cn(
+                                "border-dashed",
+                                column.id === 'done' && "border-status-success/30",
+                                column.id === 'in_progress' && "border-status-warning/30",
+                                column.id === 'todo' && "border-border"
+                              )
+                        )}
+                        style={{ position: 'relative' }}
+                      >
                       {items.length === 0 && !snapshot.isDraggingOver && (
                         <div className="flex flex-col items-center justify-center h-48 text-center p-6">
                           <div className="p-4 rounded-full bg-muted/50 mb-3">
@@ -631,23 +652,34 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
                       {items.map((item, index) => (
                         <Draggable key={item.id} draggableId={item.id} index={index}>
-                          {(provided, snapshot) => (
-                            <KanbanCard
-                              item={item}
-                              provided={provided}
-                              snapshot={snapshot}
-                              onTitleUpdate={handleTitleUpdate}
-                              onEdit={() => handleCardClick(item)}
-                              onDuplicate={() => handleDuplicateCard(item)}
-                              onDelete={() => handleDeleteCard(item.id)}
-                              onAddLabel={() => setSelectedLabelItem(item)}
-                            />
-                          )}
+                          {(provided, snapshot) => {
+                            // Log para debug de drag
+                            if (snapshot.isDragging) {
+                              console.log(`🚀 Arrastando: ${item.title}`, {
+                                id: item.id,
+                                column: item.column
+                              });
+                            }
+                            
+                            return (
+                              <KanbanCard
+                                item={item}
+                                provided={provided}
+                                snapshot={snapshot}
+                                onTitleUpdate={handleTitleUpdate}
+                                onEdit={() => handleCardClick(item)}
+                                onDuplicate={() => handleDuplicateCard(item)}
+                                onDelete={() => handleDeleteCard(item.id)}
+                                onAddLabel={() => setSelectedLabelItem(item)}
+                              />
+                            );
+                          }}
                         </Draggable>
                       ))}
                         {provided.placeholder}
-                    </div>
-                  )}
+                      </div>
+                    );
+                  }}
                 </Droppable>
               </div>
             );
