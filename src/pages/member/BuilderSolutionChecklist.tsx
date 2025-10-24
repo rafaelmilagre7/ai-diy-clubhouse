@@ -147,11 +147,10 @@ export default function BuilderSolutionChecklist() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
       <div className="container mx-auto px-4 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+        <div 
+          className="animate-fade-in"
         >
-          <LiquidGlassCard className="p-6">
+          <LiquidGlassCard className="p-6 liquid-glass-kanban-container">
             <Button
               variant="ghost"
               size="sm"
@@ -219,7 +218,7 @@ export default function BuilderSolutionChecklist() {
               />
             )}
           </LiquidGlassCard>
-        </motion.div>
+        </div>
       </div>
     </div>
   );

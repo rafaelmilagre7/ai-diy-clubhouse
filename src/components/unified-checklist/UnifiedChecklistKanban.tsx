@@ -68,17 +68,20 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
   const updateMutation = useUpdateUnifiedChecklist();
 
-  // Normalizar itens (adicionar coluna se não existir) - VALIDAÇÃO ROBUSTA
+  // Normalizar itens (adicionar coluna se não existir) - VALIDAÇÃO ROBUSTA COM PRESERVAÇÃO DE IN_PROGRESS
   const normalizedItems = useMemo(() => {
     const normalized = checklistItems.map((item, index) => {
-      // Validar se a coluna é válida, se não for, usar fallback baseado em completed
       const validColumns: ColumnType[] = ['todo', 'in_progress', 'done'];
       let itemColumn = item.column as ColumnType;
       
-      // Se coluna inválida ou não existe, determinar pela flag completed
-      if (!itemColumn || !validColumns.includes(itemColumn)) {
+      // ✅ CRÍTICO: Preservar in_progress quando válido
+      if (itemColumn && validColumns.includes(itemColumn)) {
+        // Coluna válida, preservar exatamente como está
+        console.log(`✅ Item "${item.title}" tem coluna válida: "${itemColumn}"`);
+      } else {
+        // Coluna inválida, usar fallback baseado em completed
         itemColumn = item.completed ? 'done' : 'todo';
-        console.warn(`Item "${item.title}" tinha coluna inválida: "${item.column}". Corrigido para: "${itemColumn}"`);
+        console.warn(`⚠️ Item "${item.title}" tinha coluna inválida: "${item.column}". Corrigido para: "${itemColumn}"`);
       }
       
       return {
@@ -88,12 +91,18 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       };
     });
     
-    // Log para debug
-    console.log('📦 Itens normalizados:', {
+    // Log detalhado para debug de persistência
+    console.log('📦 NORMALIZAÇÃO COMPLETA:', {
       total: normalized.length,
       todo: normalized.filter(i => i.column === 'todo').length,
       in_progress: normalized.filter(i => i.column === 'in_progress').length,
       done: normalized.filter(i => i.column === 'done').length,
+      detalhes: normalized.map(i => ({ 
+        id: i.id.slice(0, 8), 
+        title: i.title.slice(0, 30), 
+        column: i.column,
+        completed: i.completed 
+      }))
     });
     
     // Atualizar filteredItems quando normalizedItems mudar
@@ -500,38 +509,35 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         </div>
 
         <div className="grid grid-cols-3 gap-4 mt-8">
-          <motion.div 
-            className="glass-card p-4 rounded-xl hover:shadow-md transition-all"
-            whileHover={{ y: -2 }}
+          <div 
+            className="glass-card p-4 rounded-xl hover:shadow-md transition-all hover:-translate-y-0.5"
           >
             <div className="flex items-center gap-2 mb-2">
               <Clock className="h-5 w-5 text-status-neutral" />
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">A Fazer</span>
             </div>
             <p className="text-3xl font-bold">{stats.todo}</p>
-          </motion.div>
+          </div>
           
-          <motion.div 
-            className="glass-card p-4 rounded-xl border-2 border-status-warning/20 hover:shadow-glow-sm transition-all"
-            whileHover={{ y: -2 }}
+          <div 
+            className="glass-card p-4 rounded-xl border-2 border-status-warning/20 hover:shadow-glow-sm transition-all hover:-translate-y-0.5"
           >
             <div className="flex items-center gap-2 mb-2">
               <TrendingUp className="h-5 w-5 text-status-warning" />
               <span className="text-xs font-semibold text-status-warning uppercase tracking-wide">Em Progresso</span>
             </div>
             <p className="text-3xl font-bold text-status-warning">{stats.in_progress}</p>
-          </motion.div>
+          </div>
           
-          <motion.div 
-            className="glass-card p-4 rounded-xl border-2 border-status-success/20 hover:shadow-glow-sm transition-all"
-            whileHover={{ y: -2 }}
+          <div 
+            className="glass-card p-4 rounded-xl border-2 border-status-success/20 hover:shadow-glow-sm transition-all hover:-translate-y-0.5"
           >
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="h-5 w-5 text-status-success" />
               <span className="text-xs font-semibold text-status-success uppercase tracking-wide">Concluídos</span>
             </div>
             <p className="text-3xl font-bold text-status-success">{stats.done}</p>
-          </motion.div>
+          </div>
         </div>
       </Card>
 
@@ -594,7 +600,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                         "min-h-[400px] rounded-2xl border-2 p-5 transition-all duration-300 backdrop-blur-sm",
                         column.gradient,
                         snapshot.isDraggingOver 
-                          ? "border-primary shadow-aurora ring-4 ring-primary/20 scale-[1.01]" 
+                          ? "border-primary shadow-aurora ring-4 ring-primary/20" 
                           : cn(
                               "border-dashed",
                               column.id === 'done' && "border-status-success/30",

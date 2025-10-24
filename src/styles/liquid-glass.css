@@ -34,6 +34,23 @@
   /* SEM transition ou hover com transform! */
 }
 
+/* Kanban Container - SEM transform para não conflitar com @hello-pangea/dnd */
+.liquid-glass-kanban-container {
+  background: hsl(var(--glass-white-base) / 0.08);
+  backdrop-filter: blur(var(--blur-xl)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--blur-xl)) saturate(180%);
+  border: 1px solid hsl(var(--glass-white-base) / 0.18);
+  border-radius: var(--radius-2xl);
+  box-shadow: 0 8px 32px 0 hsl(var(--glass-shadow-primary) / 0.37);
+  transition: box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.liquid-glass-kanban-container:hover {
+  /* APENAS box-shadow e border - SEM transform! */
+  box-shadow: 0 16px 48px 0 hsl(var(--glass-shadow-primary) / 0.5);
+  border-color: hsl(var(--glass-white-base) / 0.3);
+}
+
 .liquid-glass-card-premium {
   background: linear-gradient(135deg, hsl(var(--glass-white-base) / 0.1) 0%, hsl(var(--glass-white-base) / 0.05) 100%);
   backdrop-filter: blur(var(--blur-2xl)) saturate(200%);
@@ -488,5 +505,24 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================
+   BROWSER FALLBACKS
+   ============================================ */
+
+/* Fallback para navegadores que não suportam backdrop-filter */
+@supports not (backdrop-filter: blur(20px)) {
+  .liquid-glass-card,
+  .liquid-glass-modal,
+  .liquid-glass-kanban-container {
+    background: hsl(var(--card));
+    border: 2px solid hsl(var(--border));
+  }
+  
+  .liquid-glass-card-premium {
+    background: hsl(var(--card));
+    border: 2px solid hsl(var(--primary) / 0.3);
   }
 }
