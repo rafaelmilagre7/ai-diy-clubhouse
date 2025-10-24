@@ -30,7 +30,7 @@ export default function BuilderSolutionFramework() {
     },
   });
 
-  // Auto-geração se framework não existir
+  // Auto-geração se framework não existir com retry e timeout
   useEffect(() => {
     const generateIfNeeded = async () => {
       if (!solution || solution.framework_mapping || isGenerating) return;
@@ -38,34 +38,103 @@ export default function BuilderSolutionFramework() {
       console.log('[FRAMEWORK] Framework não existe, gerando automaticamente...');
       setIsGenerating(true);
 
-      try {
-        const { data, error } = await supabase.functions.invoke('generate-section-content', {
-          body: {
-            solutionId: solution.id,
-            sectionType: 'framework',
-            userId: solution.user_id
+      let attempts = 0;
+      const maxAttempts = 2;
+
+      while (attempts < maxAttempts) {
+        try {
+          attempts++;
+          console.log(`[FRAMEWORK] 🚀 Tentativa ${attempts}/${maxAttempts} iniciada`);
+          
+          // Timeout de 90 segundos
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => {
+            console.log('[FRAMEWORK] ⏱️ Timeout atingido (90s)');
+            controller.abort();
+          }, 90000);
+
+          const startTime = Date.now();
+
+          const { data, error } = await supabase.functions.invoke('generate-section-content', {
+            body: {
+              solutionId: solution.id,
+              sectionType: 'framework',
+              userId: solution.user_id
+            },
+            headers: {
+              'Content-Type': 'application/json'
+            }
+          });
+
+          clearTimeout(timeoutId);
+          const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+          
+          console.log(`[FRAMEWORK] 📦 Resposta recebida em ${elapsed}s:`, { 
+            success: data?.success, 
+            cached: data?.cached,
+            hasContent: !!data?.content,
+            error 
+          });
+
+          if (error) throw error;
+
+          // SEMPRE faz refetch, independente da estrutura de resposta
+          console.log('[FRAMEWORK] 🔄 Atualizando dados via refetch...');
+          const refetchResult = await refetch();
+          
+          const hasFramework = !!refetchResult.data?.framework_mapping;
+          console.log('[FRAMEWORK] ✅ Refetch completo:', hasFramework ? 'Framework encontrado!' : 'Framework ainda NULL');
+
+          if (hasFramework) {
+            toast.success('Framework gerado com sucesso! 🎉', {
+              description: 'Os 4 pilares da sua solução foram mapeados.'
+            });
+            break; // Sucesso, sai do loop
+          } else {
+            // Framework gerado mas ainda não apareceu no refetch
+            console.log('[FRAMEWORK] ⚠️ Framework não apareceu no refetch, aguardando...');
+            toast.success('Framework processado!', {
+              description: 'Recarregando em 2 segundos...'
+            });
+            setTimeout(() => window.location.reload(), 2000);
+            break;
           }
-        });
 
-        if (error) throw error;
-
-        if (data?.success) {
-          console.log('[FRAMEWORK] ✅ Framework gerado!');
-          toast.success('Framework gerado com sucesso! 🎉');
-          await refetch();
+        } catch (err: any) {
+          console.error(`[FRAMEWORK] ❌ Erro na tentativa ${attempts}:`, {
+            name: err.name,
+            message: err.message,
+            stack: err.stack
+          });
+          
+          if (attempts >= maxAttempts) {
+            // Última tentativa falhou
+            if (err.name === 'AbortError') {
+              toast.error('Tempo esgotado', {
+                description: 'A geração demorou muito. Tente recarregar a página.',
+                action: {
+                  label: 'Recarregar',
+                  onClick: () => window.location.reload()
+                }
+              });
+            } else {
+              toast.error('Erro ao gerar framework', {
+                description: err.message || 'Tente recarregar a página.',
+                action: {
+                  label: 'Recarregar',
+                  onClick: () => window.location.reload()
+                }
+              });
+            }
+          } else {
+            // Tentar novamente
+            console.log(`[FRAMEWORK] ⚠️ Tentativa ${attempts} falhou, aguardando 2s antes de retry...`);
+            await new Promise(resolve => setTimeout(resolve, 2000));
+          }
         }
-      } catch (err: any) {
-        console.error('[FRAMEWORK] Erro:', err);
-        toast.error('Erro ao gerar framework', {
-          description: 'Tente recarregar a página.',
-          action: {
-            label: 'Voltar',
-            onClick: () => navigate(`/ferramentas/builder/solution/${id}`)
-          }
-        });
-      } finally {
-        setIsGenerating(false);
       }
+
+      setIsGenerating(false);
     };
 
     generateIfNeeded();
@@ -76,7 +145,14 @@ export default function BuilderSolutionFramework() {
   }
 
   if (isGenerating || !solution?.framework_mapping) {
-    return <LoadingScreen message="Gerando Framework de Implementação..." />;
+    return (
+      <LoadingScreen 
+        message="Gerando Framework de Implementação" 
+        description="Isso pode levar até 60 segundos. A IA está analisando sua solução em profundidade."
+        showProgress={true}
+        estimatedSeconds={50}
+      />
+    );
   }
 
   if (!solution) {

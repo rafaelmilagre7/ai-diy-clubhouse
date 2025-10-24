@@ -301,12 +301,17 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
     }
 
     console.log(`[SECTION-GEN] ✅ ${sectionType} gerado e salvo com sucesso!`);
+    console.log(`[SECTION-GEN] 📊 Tamanho do conteúdo: ${JSON.stringify(parsedContent).length} caracteres`);
+    console.log(`[SECTION-GEN] 🎯 Solution ID: ${solutionId}`);
+    console.log(`[SECTION-GEN] 📤 Retornando resposta de sucesso ao cliente`);
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         cached: false,
-        content: parsedContent 
+        content: parsedContent,
+        solutionId: solutionId,
+        sectionType: sectionType
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

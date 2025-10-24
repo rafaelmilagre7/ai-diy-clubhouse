@@ -4,30 +4,39 @@ import { Loader2 } from "lucide-react";
 
 interface LoadingScreenProps {
   message?: string;
+  description?: string;
   showProgress?: boolean;
+  estimatedSeconds?: number;
 }
 
 const LoadingScreen = React.memo(({ 
   message = "Carregando...",
-  showProgress = false 
+  description,
+  showProgress = false,
+  estimatedSeconds = 30
 }: LoadingScreenProps) => {
   const [progress, setProgress] = useState(0);
   const [dots, setDots] = useState('');
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
-  // Animação de progresso simulado
+  // Animação de progresso baseada no tempo estimado
   useEffect(() => {
     if (!showProgress) return;
     
+    const startTime = Date.now();
     const interval = setInterval(() => {
-      setProgress(prev => {
-        const increment = Math.random() * 10 + 5; // 5-15% por vez
-        const newProgress = prev + increment;
-        return newProgress > 85 ? 85 : newProgress; // Parar em 85%
-      });
-    }, 300);
+      const elapsed = (Date.now() - startTime) / 1000;
+      setElapsedSeconds(Math.floor(elapsed));
+      
+      // Progresso simulado que acelera no início e desacelera perto do fim
+      const baseProgress = (elapsed / estimatedSeconds) * 100;
+      const cappedProgress = Math.min(baseProgress, 95); // Nunca chega a 100%
+      
+      setProgress(cappedProgress);
+    }, 100);
     
     return () => clearInterval(interval);
-  }, [showProgress]);
+  }, [showProgress, estimatedSeconds]);
 
   // Animação de dots
   useEffect(() => {
@@ -64,22 +73,33 @@ const LoadingScreen = React.memo(({
         {/* Barra de progresso */}
         {showProgress && (
           <div className="w-full max-w-xs mx-auto">
-            <div className="bg-secondary rounded-full h-2">
+            <div className="bg-secondary rounded-full h-2.5">
               <div 
-                className="bg-primary h-2 rounded-full transition-all duration-slower ease-out"
+                className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {Math.round(progress)}% concluído
-            </p>
+            <div className="flex items-center justify-between mt-2">
+              <p className="text-xs text-muted-foreground">
+                {Math.round(progress)}% concluído
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {elapsedSeconds}s / ~{estimatedSeconds}s
+              </p>
+            </div>
           </div>
         )}
         
         {/* Mensagem de contexto */}
-        <p className="text-sm text-muted-foreground">
-          Preparando sua experiência personalizada...
-        </p>
+        {description ? (
+          <p className="text-sm text-muted-foreground max-w-md text-center">
+            {description}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            Preparando sua experiência personalizada...
+          </p>
+        )}
       </div>
     </div>
   );
