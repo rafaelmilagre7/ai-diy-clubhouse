@@ -282,6 +282,46 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       updateData.required_tools = parsedContent.required_tools;
     } else if (sectionType === "checklist") {
       updateData.implementation_checklist = parsedContent.implementation_checklist;
+      
+      // 🆕 Salvar também em unified_checklists para acesso rápido
+      const unifiedItems = parsedContent.implementation_checklist.map((step: any, index: number) => ({
+        id: `step-${step.step_number || index + 1}`,
+        title: step.title,
+        description: step.description,
+        completed: false,
+        column: 'todo',
+        order: index,
+        notes: '',
+        metadata: {
+          step_number: step.step_number,
+          estimated_time: step.estimated_time,
+          difficulty: step.difficulty,
+          dependencies: step.dependencies,
+          validation_criteria: step.validation_criteria,
+          common_pitfalls: step.common_pitfalls,
+          resources: step.resources
+        }
+      }));
+      
+      // Inserir em unified_checklists
+      const { error: unifiedError } = await supabase
+        .from('unified_checklists')
+        .insert({
+          solution_id: solutionId,
+          checklist_type: 'implementation',
+          is_template: false,
+          checklist_data: {
+            items: unifiedItems,
+            lastUpdated: new Date().toISOString()
+          }
+        });
+      
+      if (unifiedError) {
+        console.error('[SECTION-GEN] ⚠️ Erro ao salvar em unified_checklists:', unifiedError);
+        // Não falhar a requisição por isso, apenas logar
+      } else {
+        console.log('[SECTION-GEN] ✅ Checklist salvo também em unified_checklists');
+      }
     } else if (sectionType === "architecture") {
       updateData.implementation_flows = parsedContent.implementation_flows;
     } else if (sectionType === "lovable") {

@@ -45,129 +45,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     isLoadingProgress
   });
   
-  // Buscar checklist específico da solução se não houver template
-  const { data: solutionChecklist, isLoading: isLoadingSolutionChecklist } = useQuery({
-    queryKey: ['solution-checklist', solutionId, checklistType],
-    queryFn: async () => {
-      console.log('🔍 Buscando checklist específico da solução:', { solutionId, checklistType });
-      
-      const { data, error } = await supabase
-        .from('unified_checklists')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .eq('checklist_type', checklistType)
-        .eq('is_template', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Erro ao buscar checklist da solução:', error);
-        return null;
-      }
-
-      console.log('✅ Checklist da solução encontrado:', !!data);
-      return data;
-    },
-    enabled: !!solutionId && !template && !isLoadingTemplate
-  });
-
-  // Buscar checklist alternativo se não houver do tipo solicitado
-  const { data: alternativeChecklist, isLoading: isLoadingAlternative } = useQuery({
-    queryKey: ['alternative-checklist', solutionId],
-    queryFn: async () => {
-      console.log('🔍 Buscando checklist alternativo para solução:', solutionId);
-      
-      const { data, error } = await supabase
-        .from('unified_checklists')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .eq('is_template', false)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Erro ao buscar checklist alternativo:', error);
-        return null;
-      }
-
-      console.log('✅ Checklist alternativo encontrado:', !!data, data?.checklist_type);
-      return data;
-    },
-    enabled: !!solutionId && !template && !solutionChecklist && !isLoadingTemplate && !isLoadingSolutionChecklist
-  });
-
-  // 🆕 FALLBACK FINAL: Buscar implementation_checklist diretamente da solução
-  const { data: solutionDirectChecklist, isLoading: isLoadingDirect } = useQuery({
-    queryKey: ['solution-direct-checklist', solutionId],
-    queryFn: async () => {
-      console.log('🔍 [FALLBACK] Buscando implementation_checklist diretamente de ai_generated_solutions:', solutionId);
-      
-      const { data, error } = await supabase
-        .from('ai_generated_solutions')
-        .select('implementation_checklist')
-        .eq('id', solutionId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('❌ Erro ao buscar checklist direto:', error);
-        return null;
-      }
-
-      if (!data?.implementation_checklist || !Array.isArray(data.implementation_checklist)) {
-        console.log('⚠️ implementation_checklist não encontrado ou inválido');
-        return null;
-      }
-
-      console.log('✅ Checklist direto encontrado:', data.implementation_checklist.length, 'items');
-      
-      // Converter formato antigo para novo formato unified_checklists
-      return {
-        id: `direct-${solutionId}`,
-        solution_id: solutionId,
-        checklist_type: checklistType,
-        is_template: false,
-        checklist_data: {
-          items: data.implementation_checklist.map((step: any, index: number) => ({
-            id: `step-${index + 1}`,
-            title: step.title || `Etapa ${step.step_number || index + 1}`,
-            description: step.description || '',
-            completed: false,
-            notes: '',
-            metadata: {
-              step_number: step.step_number,
-              estimated_time: step.estimated_time,
-              difficulty: step.difficulty,
-              dependencies: step.dependencies,
-              validation_criteria: step.validation_criteria,
-              common_pitfalls: step.common_pitfalls,
-              resources: step.resources
-            }
-          })),
-          lastUpdated: new Date().toISOString()
-        }
-      };
-    },
-    enabled: !!solutionId && 
-             !template && 
-             !solutionChecklist && 
-             !alternativeChecklist && 
-             !isLoadingTemplate && 
-             !isLoadingSolutionChecklist && 
-             !isLoadingAlternative
-  });
-  
   const updateMutation = useUpdateUnifiedChecklist();
 
-  // Combinar template/checklist com progresso para obter lista de items
+  // Combinar template com progresso para obter lista de items
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    // Priorizar: template > checklist específico > checklist direto da solução
-    const sourceChecklist = template || solutionChecklist || solutionDirectChecklist;
+    if (!template?.checklist_data?.items) return [];
     
-    if (!sourceChecklist?.checklist_data?.items) return [];
-    
-    const sourceItems = sourceChecklist.checklist_data.items;
+    const sourceItems = template.checklist_data.items;
     const progressItems = userProgress?.checklist_data?.items || [];
     
     return sourceItems.map((sourceItem: any) => {
@@ -180,10 +64,10 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         completed: progressItem?.completed || false,
         notes: progressItem?.notes || '',
         completedAt: progressItem?.completedAt,
-        metadata: sourceItem.metadata // 🆕 preservar metadados extras
+        metadata: sourceItem.metadata
       };
     });
-  }, [template, solutionChecklist, solutionDirectChecklist, userProgress]);
+  }, [template, userProgress]);
 
   // Função para atualizar item
   const handleItemUpdate = (itemId: string, isCompleted: boolean, notes?: string) => {
@@ -195,14 +79,12 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
                    item.id === itemId && !isCompleted ? undefined :
                    item.completedAt
     }));
-
-    const sourceChecklist = template || solutionChecklist;
     
     const checklistData: UnifiedChecklistData = {
       id: userProgress?.id,
       user_id: userProgress?.user_id || '',
       solution_id: solutionId,
-      template_id: sourceChecklist?.id,
+      template_id: template?.id,
       checklist_type: checklistType,
       checklist_data: {
         items: updatedItems,
@@ -219,7 +101,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       checklistData,
       solutionId,
       checklistType,
-      templateId: sourceChecklist?.id
+      templateId: template?.id
     });
   };
 
@@ -250,7 +132,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   }, [allCompleted, onComplete]);
 
-  if (isLoadingTemplate || isLoadingProgress || isLoadingSolutionChecklist || isLoadingAlternative || isLoadingDirect) {
+  if (isLoadingTemplate || isLoadingProgress) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -258,29 +140,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     );
   }
 
-  // Se não há template nem checklist específico, mas há alternativo, mostrar aviso amigável
-  if ((!template && !solutionChecklist) && alternativeChecklist) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-status-warning mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Checklist Disponível em Outro Formato</h3>
-        <p className="text-muted-foreground mb-4">
-          Esta solução possui um checklist do tipo <Badge variant="outline">{alternativeChecklist.checklist_type}</Badge>, 
-          mas não especificamente de <Badge variant="outline">{checklistType}</Badge>.
-        </p>
-        <p className="text-sm text-muted-foreground mb-4">
-          Visite a aba correspondente ou entre em contato com nossa equipe para mais informações.
-        </p>
-        {onComplete && (
-          <Button onClick={onComplete} variant="outline">
-            Continuar para próxima etapa
-          </Button>
-        )}
-      </div>
-    );
-  }
-
-  if ((!template && !solutionChecklist && !alternativeChecklist && !solutionDirectChecklist) || !checklistItems.length) {
+  if (!template || !checklistItems.length) {
     return (
       <div className="text-center py-12">
         <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
@@ -320,7 +180,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
           id: userProgress?.id,
           user_id: userProgress?.user_id || '',
           solution_id: solutionId,
-          template_id: (template || solutionChecklist)?.id,
+          template_id: template?.id,
           checklist_type: checklistType,
           checklist_data: {
             items: checklistItems,
@@ -334,7 +194,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         }}
         solutionId={solutionId}
         checklistType={checklistType}
-        templateId={(template || solutionChecklist)?.id}
+        templateId={template?.id}
       />
     </div>
   );

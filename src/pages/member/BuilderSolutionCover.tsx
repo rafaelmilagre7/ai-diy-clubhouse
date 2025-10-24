@@ -38,11 +38,45 @@ export default function BuilderSolutionCover() {
     'prompt': { field: 'lovable_prompt', type: 'lovable', label: 'Prompt Lovable' }
   };
 
+  // Validar pré-requisitos para o plano de ação
+  const validatePrerequisites = (sectionKey: string): { valid: boolean; message?: string } => {
+    if (sectionKey !== 'checklist') return { valid: true };
+    
+    // Verificar se framework, arquitetura e ferramentas estão gerados
+    const hasFramework = solution?.framework_mapping !== null && solution?.framework_mapping !== undefined;
+    const hasArchitecture = solution?.implementation_flows !== null && solution?.implementation_flows !== undefined;
+    const hasTools = solution?.required_tools !== null && solution?.required_tools !== undefined;
+    
+    if (!hasFramework || !hasArchitecture || !hasTools) {
+      const missing: string[] = [];
+      if (!hasFramework) missing.push('Framework');
+      if (!hasArchitecture) missing.push('Arquitetura');
+      if (!hasTools) missing.push('Ferramentas');
+      
+      return {
+        valid: false,
+        message: `Complete estas etapas primeiro: ${missing.join(', ')}`
+      };
+    }
+    
+    return { valid: true };
+  };
+
   const handleCardClick = async (cardPath: string) => {
     const sectionKey = cardPath.split('/').pop() as string;
     const sectionInfo = sectionMapping[sectionKey];
     
     if (!sectionInfo || !solution) return;
+    
+    // Validar pré-requisitos
+    const validation = validatePrerequisites(sectionKey);
+    if (!validation.valid) {
+      toast.error('Pré-requisitos não atendidos', {
+        description: validation.message,
+        duration: 5000
+      });
+      return;
+    }
     
     console.log('[COVER] 📍 Navegando para:', cardPath);
     console.log('[COVER] 📊 Seção:', sectionInfo);
@@ -59,7 +93,34 @@ export default function BuilderSolutionCover() {
     
     console.log('[COVER] 🔄 Conteúdo não existe, gerando...');
     
-    // Caso contrário, gera sob demanda
+    // Para checklist, gerar de forma assíncrona e não bloquear navegação
+    if (sectionKey === 'checklist') {
+      console.log('[COVER] 📋 Gerando checklist de forma assíncrona...');
+      
+      // Navegar imediatamente para a tela de preparação
+      navigate(cardPath);
+      
+      // Disparar geração em background
+      supabase.functions.invoke('generate-section-content', {
+        body: {
+          solutionId: solution.id,
+          sectionType: sectionInfo.type,
+          userId: solution.user_id
+        }
+      }).then(({ data, error }) => {
+        if (error) {
+          console.error('[COVER] ❌ Erro ao gerar checklist:', error);
+        } else if (data?.success) {
+          console.log('[COVER] ✅ Checklist gerado com sucesso!');
+          queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+          queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
+        }
+      });
+      
+      return;
+    }
+    
+    // Caso contrário, gera sob demanda e bloqueia
     setGeneratingSection(sectionInfo.label);
     
     try {
@@ -266,11 +327,15 @@ export default function BuilderSolutionCover() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {cards.map((card, index) => {
               const IconComponent = card.icon;
+              const sectionKey = card.path.split('/').pop() as string;
+              const validation = validatePrerequisites(sectionKey);
+              const isDisabled = !!generatingSection || !validation.valid;
+              
               return (
                 <motion.button
                   key={index}
                   onClick={() => handleCardClick(card.path)}
-                  disabled={!!generatingSection}
+                  disabled={isDisabled}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.08 }}
@@ -282,7 +347,9 @@ export default function BuilderSolutionCover() {
                     bg-gradient-to-br ${card.color}
                     ${card.borderColor} hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/30
                     disabled:opacity-50 disabled:cursor-not-allowed
+                    ${!validation.valid ? 'opacity-60 grayscale' : ''}
                   `}
+                  title={!validation.valid ? validation.message : undefined}
                 >
                   {/* Glow effect animado no hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />

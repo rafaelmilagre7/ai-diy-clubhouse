@@ -5,18 +5,18 @@ import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import ChecklistPreparationAnimation from '@/components/builder/ChecklistPreparationAnimation';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import LoadingScreen from '@/components/common/LoadingScreen';
 
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const queryClient = useQueryClient();
-  const [isGenerating, setIsGenerating] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const [stage, setStage] = useState(0);
 
-  const { data: solution, isLoading, refetch } = useQuery({
+  const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -30,7 +30,7 @@ export default function BuilderSolutionChecklist() {
     },
   });
 
-  // Verificar se já existe checklist unificado
+  // Verificar se já existe checklist com polling (refetch a cada 3s)
   const { data: existingChecklist } = useQuery({
     queryKey: ['unified-checklist-exists', id],
     queryFn: async () => {
@@ -46,63 +46,32 @@ export default function BuilderSolutionChecklist() {
       return data;
     },
     enabled: !!id,
-  });
-
-  // Mutation para migrar dados do formato antigo para o novo
-  const migrateMutation = useMutation({
-    mutationFn: async () => {
-      if (!solution?.implementation_checklist || !id) return;
-
-      // Transformar itens do formato antigo para o novo
-      const migratedItems = solution.implementation_checklist.map((item: any, idx: number) => ({
-        id: `step-${item.step_number || idx + 1}`,
-        title: item.title,
-        description: item.description,
-        completed: false,
-        column: 'todo',
-        order: idx,
-        notes: '',
-        metadata: {
-          estimated_time: item.estimated_time,
-          difficulty: item.difficulty,
-          resources: item.resources,
-          common_pitfalls: item.common_pitfalls
-        }
-      }));
-
-      const { data, error } = await supabase
-        .from('unified_checklists')
-        .insert({
-          solution_id: id,
-          checklist_type: 'implementation',
-          is_template: false,
-          checklist_data: {
-            items: migratedItems,
-            lastUpdated: new Date().toISOString()
-          }
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
-      toast.success('Checklist migrado com sucesso!');
-    },
-    onError: (error) => {
-      console.error('Erro ao migrar checklist:', error);
-      toast.error('Erro ao migrar checklist');
+    refetchInterval: (query) => {
+      // Parar de fazer polling quando encontrar o checklist
+      return query.state.data ? false : 3000;
     },
   });
 
-  // Migrar automaticamente se necessário
-  React.useEffect(() => {
-    if (solution?.implementation_checklist && !existingChecklist && !migrateMutation.isPending) {
-      migrateMutation.mutate();
+  // Timer para animação de progresso
+  useEffect(() => {
+    if (existingChecklist) {
+      setElapsedTime(0);
+      setStage(0);
+      return;
     }
-  }, [solution, existingChecklist]);
+
+    const startTime = Date.now();
+    const interval = setInterval(() => {
+      const elapsed = Math.floor((Date.now() - startTime) / 1000);
+      setElapsedTime(elapsed);
+      
+      // Atualizar estágio baseado no tempo (120s total / 9 estágios = ~13s por estágio)
+      const newStage = Math.min(8, Math.floor(elapsed / 13));
+      setStage(newStage);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [existingChecklist]);
 
   if (isLoading) {
     return (
@@ -119,6 +88,9 @@ export default function BuilderSolutionChecklist() {
       </div>
     );
   }
+
+  // Se não existe checklist, mostrar animação de preparação
+  const showPreparation = !existingChecklist;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
@@ -143,17 +115,27 @@ export default function BuilderSolutionChecklist() {
                 Plano de Ação
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
-                Checklist prático e passo a passo para transformar sua ideia em realidade
+                {showPreparation 
+                  ? 'Gerando seu plano personalizado...' 
+                  : 'Checklist prático e passo a passo para transformar sua ideia em realidade'
+                }
               </p>
             </div>
 
-            <UnifiedChecklistTab
-              solutionId={id || ''}
-              checklistType="implementation"
-              onComplete={() => {
-                toast.success('Parabéns! Você completou todos os passos!');
-              }}
-            />
+            {showPreparation ? (
+              <ChecklistPreparationAnimation 
+                stage={stage} 
+                elapsedTime={elapsedTime} 
+              />
+            ) : (
+              <UnifiedChecklistTab
+                solutionId={id || ''}
+                checklistType="implementation"
+                onComplete={() => {
+                  toast.success('Parabéns! Você completou todos os passos!');
+                }}
+              />
+            )}
           </LiquidGlassCard>
         </motion.div>
       </div>
