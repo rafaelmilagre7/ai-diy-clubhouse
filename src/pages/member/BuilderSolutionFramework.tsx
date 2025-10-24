@@ -29,6 +29,12 @@ export default function BuilderSolutionFramework() {
       if (error) throw error;
       return data;
     },
+    // 🔄 FASE 2: Polling agressivo enquanto framework for NULL
+    refetchInterval: (query) => {
+      const hasFramework = query.state.data?.framework_mapping;
+      return hasFramework ? false : 1000; // 1s polling até aparecer
+    },
+    staleTime: 0 // Força atualização imediata
   });
 
   // Auto-geração se framework não existir com retry e timeout
@@ -64,8 +70,8 @@ export default function BuilderSolutionFramework() {
             if (progressInterval) clearInterval(progressInterval);
             controller.abort();
             setShowRetryOption(true);
-            console.error('[FRAMEWORK] ⏱️ Timeout após 120 segundos');
-          }, 120000);
+            console.error('[FRAMEWORK] ⏱️ Timeout após 60 segundos');
+          }, 60000); // ⏱️ FASE 3: 1 minuto (margem de segurança para 30s de geração)
 
           const { data, error } = await supabase.functions.invoke('generate-section-content', {
             body: {
@@ -92,8 +98,7 @@ export default function BuilderSolutionFramework() {
 
           if (error) throw error;
 
-          // SEMPRE faz refetch, independente da estrutura de resposta
-          console.log('[FRAMEWORK] 🔄 Atualizando dados via refetch...');
+          // 🔄 FASE 2: Polling automático faz refetch, mas mantemos como fallback
           const refetchResult = await refetch();
           
           const hasFramework = !!refetchResult.data?.framework_mapping;
@@ -166,7 +171,7 @@ export default function BuilderSolutionFramework() {
           message="Gerando Framework de Implementação" 
           description="A IA está mapeando os 4 pilares da sua solução. Aguarde..."
           showProgress={true}
-          estimatedSeconds={90}
+          estimatedSeconds={45}
         />
         {showRetryOption && (
           <div className="fixed inset-0 flex items-center justify-center z-50 bg-background/80 backdrop-blur-sm">

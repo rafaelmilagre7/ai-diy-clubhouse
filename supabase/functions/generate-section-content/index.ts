@@ -74,7 +74,7 @@ serve(async (req) => {
 
     // Criar prompts específicos para cada tipo
     let systemPrompt = "";
-    let model = "google/gemini-2.5-pro";
+    let model = "google/gemini-2.5-flash"; // 🚀 FASE 1: Flash é 2-3x mais rápido
     let maxTokens = 30000;
 
     if (sectionType === "framework") {
@@ -105,7 +105,7 @@ Retorne JSON com a estrutura:
 }
 
 Seja DETALHADO e ESPECÍFICO em cada campo.`;
-      maxTokens = 50000;
+      maxTokens = 15000; // 🚀 FASE 1: Frameworks raramente ultrapassam 8k tokens
     } else if (sectionType === "tools") {
       systemPrompt = `Você é especialista em ferramentas SaaS e APIs.
 
@@ -212,6 +212,8 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
     console.log(`[SECTION-GEN] 🤖 Modelo: ${model}`);
     console.log(`[SECTION-GEN] 📊 Max tokens: ${maxTokens}`);
     console.log(`[SECTION-GEN] 🚀 Chamando Lovable AI...`);
+    
+    const startTime = Date.now(); // 🚀 FASE 1: Tracking de tempo
 
     const aiResponse = await fetch(lovableUrl, {
       method: "POST",
@@ -260,7 +262,9 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       throw new Error("Resposta vazia da IA");
     }
 
+    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`[SECTION-GEN] 📥 Resposta recebida (${content.length} chars)`);
+    console.log(`[SECTION-GEN] ⚡ Tempo de geração: ${elapsedTime}s`);
 
     // Parse do JSON retornado
     let parsedContent;
