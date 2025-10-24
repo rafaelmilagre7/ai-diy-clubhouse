@@ -14,23 +14,19 @@ const cleanMermaidCode = (code: string): string => {
   
   const cleaned = code
     .trim()
-    // Remove múltiplas quebras de linha
-    .replace(/\n{3,}/g, '\n')
-    // Remove espaços extras no início/fim de cada linha
+    // Remove múltiplas quebras de linha (mais de 2)
+    .replace(/\n{3,}/g, '\n\n')
+    // Processa cada linha individualmente
     .split('\n')
     .map(line => line.trim())
     .filter(line => line.length > 0)
+    // MANTÉM as quebras de linha entre statements
     .join('\n')
-    // Normaliza espaços ao redor de setas
-    .replace(/\s*-->\s*/g, ' --> ')
-    // Normaliza labels nas setas: -->|Sim| ou -->|Não|
-    .replace(/-->\s*\|\s*/g, '-->|')
-    .replace(/\s*\|\s*([A-Z])/g, '| $1')
-    // Remove espaços antes de colchetes/chaves
-    .replace(/\s+\[/g, '[')
-    .replace(/\]\s+/g, '] ')
-    .replace(/\s+\{/g, '{')
-    .replace(/\}\s+/g, '} ');
+    // Normaliza espaços ao redor de setas (mas mantém quebras de linha)
+    .replace(/\s+-->\s+/g, ' --> ')
+    // Normaliza labels nas setas
+    .replace(/-->\s*\|\s*/g, ' -->|')
+    .replace(/\s*\|/g, '|');
   
   console.log('[MERMAID] ✅ Código limpo:', cleaned);
   return cleaned;
