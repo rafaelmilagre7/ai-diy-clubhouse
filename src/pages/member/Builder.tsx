@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Layout, ArrowRight, MessageSquare, Calendar, History } from 'lucide-react';
+import { Layout, ArrowRight, MessageSquare, FileText, History } from 'lucide-react';
 import { useAuth } from '@/contexts/auth';
 import { useBuilderAI } from '@/hooks/builder/useBuilderAI';
 import { QuestionWizard } from '@/components/builder/QuestionWizard';
@@ -17,18 +17,18 @@ import { Button } from '@/components/ui/button';
 
 const exampleIdeas = [
   {
-    title: "Chatbot de Atendimento",
-    description: "Chatbot no WhatsApp que usa IA para responder dúvidas sobre produtos",
+    title: "Agente de IA de vendas no WhatsApp",
+    description: "Agente inteligente que automatiza vendas, qualifica leads e acompanha clientes via WhatsApp",
     icon: MessageSquare,
-    color: "from-blue-500/20 to-cyan-500/20",
-    borderColor: "border-blue-500/30"
+    color: "from-green-500/20 to-emerald-500/20",
+    borderColor: "border-green-500/30"
   },
   {
-    title: "Sistema de Agendamento",
-    description: "Sistema automático que integra Google Calendar com notificações personalizadas",
-    icon: Calendar,
-    color: "from-purple-500/20 to-pink-500/20",
-    borderColor: "border-purple-500/30"
+    title: "Blog no piloto automático com IA",
+    description: "Sistema que cria, publica e gerencia conteúdo automaticamente usando inteligência artificial",
+    icon: FileText,
+    color: "from-violet-500/20 to-purple-500/20",
+    borderColor: "border-violet-500/30"
   }
 ];
 
