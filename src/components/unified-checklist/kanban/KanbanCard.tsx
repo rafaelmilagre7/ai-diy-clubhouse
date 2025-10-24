@@ -40,10 +40,11 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
         cursor: snapshot.isDragging ? 'grabbing' : 'grab'
       }}
       className={cn(
-        "group relative p-4 mb-3 last:mb-0 bg-card border transition-shadow",
+        "group relative p-4 mb-3 last:mb-0 border",
+        "liquid-glass-kanban-card",
         snapshot.isDragging 
-          ? "shadow-2xl opacity-90 scale-105" 
-          : "hover:shadow-lg"
+          ? "shadow-2xl opacity-80" 
+          : ""
       )}
     >
       {/* Wrapper com pointer-events controlado durante drag */}
