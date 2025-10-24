@@ -6,13 +6,26 @@ import { Loader2 } from 'lucide-react';
 interface MermaidFlowRendererProps {
   mermaidCode: string;
   flowId: string;
+  zoom?: number;
 }
 
-export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRendererProps) => {
+export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 100 }: MermaidFlowRendererProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isRendering, setIsRendering] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const isInitialized = useMermaidInit();
+
+  // Aplicar zoom ao SVG quando mudar
+  useEffect(() => {
+    if (containerRef.current && !isRendering) {
+      const svg = containerRef.current.querySelector('svg');
+      if (svg) {
+        svg.style.transform = `scale(${externalZoom / 100})`;
+        svg.style.transformOrigin = 'center';
+        svg.style.transition = 'transform 0.2s ease-out';
+      }
+    }
+  }, [externalZoom, isRendering]);
 
   useEffect(() => {
     if (!isInitialized || !mermaidCode) {
@@ -27,21 +40,35 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
       try {
         console.log(`[Mermaid][${flowId}] 🎨 Renderizando...`);
         
-        // Sanitizar código Mermaid de forma mais robusta
+        // Sanitizar código Mermaid de forma ultra-robusta
         let cleanedCode = mermaidCode.trim();
-        const lines = cleanedCode.split('\n');
         
-        // Processar cada linha
-        const cleanLines = lines.map(line => {
-          // Remove metadados inválidos (id:, title:) que aparecem após ]
-          if (line.includes(']') && (line.includes(' id:') || line.includes(' title:'))) {
-            const bracketIndex = line.lastIndexOf(']');
-            return line.substring(0, bracketIndex + 1);
-          }
-          return line;
-        }).filter(line => line.trim().length > 0);
-        
-        cleanedCode = cleanLines.join('\n');
+        // Remove espaços extras em branco que causam erros de parsing
+        cleanedCode = cleanedCode
+          .split('\n')
+          .map(line => {
+            // Remove espaços extras no final das linhas
+            line = line.trimEnd();
+            
+            // Corrige parênteses e colchetes com espaços extras
+            line = line.replace(/\]\s+\(/g, '](');
+            line = line.replace(/\)\s+\[/g, ')[');
+            
+            // Remove metadados inválidos após fechamento de nós
+            if (line.includes(']')) {
+              // Remove id:, title:, class: após ]
+              line = line.replace(/\]\s*(id|title|class):[^\s\]\-\>]*/g, ']');
+            }
+            
+            // Corrige espaços extras em arrows
+            line = line.replace(/\s*-->\s*/g, ' --> ');
+            line = line.replace(/\s*---\s*/g, ' --- ');
+            line = line.replace(/\s*-\.->\s*/g, ' -.-> ');
+            
+            return line;
+          })
+          .filter(line => line.trim().length > 0)
+          .join('\n');
         console.log(`[Mermaid][${flowId}] Código sanitizado:`, cleanedCode.substring(0, 100) + '...');
         
         const uniqueId = `mermaid-${flowId}-${Date.now()}`;
@@ -93,9 +120,10 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId }: MermaidFlowRenderer
           )}
           <div 
             ref={containerRef} 
-            className="mermaid-container w-full overflow-x-auto py-4 transition-transform duration-200"
+            className="mermaid-container w-full overflow-auto py-4 transition-all duration-200 flex items-center justify-center"
             style={{ 
-              transformOrigin: 'top left',
+              transformOrigin: 'center',
+              minHeight: '400px'
             }}
           />
         </>

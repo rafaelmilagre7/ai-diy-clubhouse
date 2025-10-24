@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { MermaidFlowRenderer } from './MermaidFlowRenderer';
 import { FlowNodeSidebar } from './FlowNodeSidebar';
 import { FlowProgressBar } from './FlowProgressBar';
@@ -201,8 +201,29 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
     }
   };
 
+  // ESC para sair do fullscreen
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false);
+      }
+    };
+    
+    window.addEventListener('keydown', handleEscape);
+    return () => window.removeEventListener('keydown', handleEscape);
+  }, [isFullscreen]);
+
   return (
-    <div className="space-y-4">
+    <>
+      {/* Backdrop para fullscreen */}
+      {isFullscreen && (
+        <div 
+          className="fixed inset-0 bg-black/80 z-40 backdrop-blur-sm"
+          onClick={() => setIsFullscreen(false)}
+        />
+      )}
+      
+      <div className="space-y-4">
       {/* Progress Bar */}
       <FlowProgressBar
         completed={stats.completed}
@@ -214,8 +235,8 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
 
       {/* Flow Card */}
       <div className={cn(
-        "relative bg-surface border border-border rounded-lg overflow-hidden transition-all duration-300",
-        isFullscreen && "fixed inset-4 z-50 shadow-2xl"
+        "relative bg-surface border border-border rounded-lg transition-all duration-300",
+        isFullscreen && "fixed inset-4 z-50 shadow-2xl bg-background/95 backdrop-blur-sm"
       )}>
         {/* Header */}
         <div className="p-4 border-b border-border bg-surface-elevated">
@@ -343,19 +364,14 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
         <div 
           id={`mermaid-${flow.id}`}
           className={cn(
-            "p-6 overflow-auto bg-background",
-            isFullscreen ? "h-[calc(100vh-280px)]" : "max-h-[600px]"
+            "p-6 bg-background",
+            isFullscreen ? "h-[calc(100vh-280px)] overflow-auto" : "min-h-[500px]"
           )}
-          style={{
-            transform: `scale(${zoom / 100})`,
-            transformOrigin: 'top left',
-            width: `${(100 / zoom) * 100}%`,
-            height: `${(100 / zoom) * 100}%`
-          }}
         >
           <MermaidFlowRenderer 
             mermaidCode={flow.mermaid_code} 
             flowId={flow.id}
+            zoom={zoom}
           />
         </div>
       </div>
@@ -373,5 +389,6 @@ export const SmartArchitectureFlow: React.FC<SmartArchitectureFlowProps> = ({
         onNoteChange={handleNoteChange}
       />
     </div>
+    </>
   );
 };
