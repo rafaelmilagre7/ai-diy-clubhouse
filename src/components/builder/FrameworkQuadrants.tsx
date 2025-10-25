@@ -18,10 +18,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant1_automation,
       title: '🤖 Automação No-Code',
       icon: Zap,
-      color: 'from-amber-500/20 to-orange-400/10',
-      borderColor: 'border-amber-400/30',
-      iconBg: 'bg-amber-500/10',
-      iconColor: 'text-amber-500',
+      color: 'from-status-warning/20 to-status-warning/10',
+      borderColor: 'border-status-warning/30',
+      iconBg: 'bg-status-warning/10',
+      iconColor: 'text-status-warning',
       position: 'top-left'
     },
     {
@@ -29,10 +29,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant2_ai,
       title: '🧠 Modelos de IA',
       icon: Brain,
-      color: 'from-purple-500/20 to-violet-400/10',
-      borderColor: 'border-purple-400/30',
-      iconBg: 'bg-purple-500/10',
-      iconColor: 'text-purple-500',
+      color: 'from-aurora/20 to-aurora-light/10',
+      borderColor: 'border-aurora/30',
+      iconBg: 'bg-aurora/10',
+      iconColor: 'text-aurora',
       position: 'top-right'
     },
     {
@@ -40,10 +40,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant3_data,
       title: '📊 Dados Simples',
       icon: Database,
-      color: 'from-blue-500/20 to-cyan-400/10',
-      borderColor: 'border-blue-400/30',
-      iconBg: 'bg-blue-500/10',
-      iconColor: 'text-blue-500',
+      color: 'from-status-info/20 to-status-info/10',
+      borderColor: 'border-status-info/30',
+      iconBg: 'bg-status-info/10',
+      iconColor: 'text-status-info',
       position: 'bottom-left'
     },
     {
@@ -51,10 +51,10 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       data: framework?.quadrant4_interface,
       title: '🎨 Canais de Contato',
       icon: Monitor,
-      color: 'from-teal-500/20 to-emerald-400/10',
-      borderColor: 'border-teal-400/30',
-      iconBg: 'bg-teal-500/10',
-      iconColor: 'text-teal-500',
+      color: 'from-operational/20 to-operational/10',
+      borderColor: 'border-operational/30',
+      iconBg: 'bg-operational/10',
+      iconColor: 'text-operational',
       position: 'bottom-right'
     }
   ];
@@ -84,15 +84,15 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
               bg-gradient-to-br ${quadrant.color}
               backdrop-blur-sm
               hover:scale-[1.02] hover:border-aurora/40 hover:shadow-aurora
-              transition-all duration-300
+              transition-all duration-slow
             `}
           >
             {/* Ícone + Título */}
             <div className="flex items-center gap-3 mb-4">
-              <div className={`p-3 rounded-xl ${quadrant.iconBg} border ${quadrant.borderColor} group-hover:scale-110 transition-transform duration-300`}>
+              <div className={`p-3 rounded-xl ${quadrant.iconBg} border ${quadrant.borderColor} group-hover:scale-110 transition-transform duration-slow`}>
                 <Icon className={`w-7 h-7 ${quadrant.iconColor}`} />
               </div>
-              <h3 className="text-2xl font-bold group-hover:text-aurora transition-colors duration-300">
+              <h3 className="text-2xl font-bold group-hover:text-aurora transition-colors duration-slow">
                 {quadrant.data?.title || quadrant.title}
               </h3>
             </div>
@@ -109,8 +109,8 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
               <ul className="space-y-3 mb-6">
                 {quadrant.data.items.map((item: string, idx: number) => (
                   <li key={idx} className="flex items-start gap-3 leading-relaxed group/item">
-                    <span className="text-aurora mt-0.5 flex-shrink-0 group-hover/item:translate-x-1 transition-transform duration-200">→</span>
-                    <span className="text-base text-foreground/80 break-words group-hover/item:text-foreground transition-colors duration-200">{item}</span>
+                    <span className="text-aurora mt-0.5 flex-shrink-0 group-hover/item:translate-x-1 transition-transform duration-base">→</span>
+                    <span className="text-base text-foreground/80 break-words group-hover/item:text-foreground transition-colors duration-base">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -123,7 +123,7 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
                   {quadrant.data.tool_names.map((tool: string, idx: number) => (
                     <span 
                       key={idx}
-                      className="px-3 py-1.5 text-xs bg-background/60 rounded-full border border-border/30 hover:border-aurora/40 hover:bg-aurora/10 transition-all duration-200"
+                      className="px-3 py-1.5 text-xs bg-background/60 rounded-full border border-border/30 hover:border-aurora/40 hover:bg-aurora/10 transition-all duration-base"
                     >
                       {tool}
                     </span>

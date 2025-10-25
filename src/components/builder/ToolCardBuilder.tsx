@@ -35,7 +35,7 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
-      className="group relative flex flex-col h-full overflow-hidden rounded-xl border border-border/50 bg-surface-elevated/50 backdrop-blur-sm transition-all duration-300 hover:shadow-aurora hover:border-aurora/40 hover:scale-[1.02] hover:-translate-y-1"
+      className="group relative flex flex-col h-full overflow-hidden rounded-xl border border-border/50 bg-surface-elevated/50 backdrop-blur-sm transition-all duration-slow hover:shadow-aurora hover:border-aurora/40 hover:scale-[1.02] hover:-translate-y-1"
     >
       {/* Background effects */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -45,13 +45,13 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
         }} />
       </div>
       
-      <div className="absolute inset-0 bg-gradient-to-br from-aurora/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute inset-0 bg-gradient-to-br from-aurora/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-slow" />
 
       {/* Content */}
       <div className="relative z-10 p-6 flex flex-col h-full">
         {/* Logo Section */}
         <div className="flex justify-center mb-4">
-          <div className="h-16 w-16 rounded-xl bg-surface-overlay border border-border/50 group-hover:border-aurora/50 flex items-center justify-center overflow-hidden flex-shrink-0 transition-all duration-200">
+          <div className="h-16 w-16 rounded-xl bg-surface-overlay border border-border/50 group-hover:border-aurora/50 flex items-center justify-center overflow-hidden flex-shrink-0 transition-all duration-base">
             {tool.logo_url ? (
               <img 
                 src={tool.logo_url} 
@@ -75,13 +75,13 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
 
         {/* Header */}
         <div className="text-center mb-4">
-          <h4 className="text-lg font-bold mb-2 group-hover:text-aurora transition-colors duration-200">
+          <h4 className="text-lg font-bold mb-2 group-hover:text-aurora transition-colors duration-base">
             {tool.name}
           </h4>
           <div className="flex flex-wrap gap-2 justify-center">
             <Badge 
               variant="outline" 
-              className="text-xs border-border/50 text-text-muted group-hover:border-aurora/30 group-hover:text-aurora transition-all duration-200"
+              className="text-xs border-border/50 text-text-muted group-hover:border-aurora/30 group-hover:text-aurora transition-all duration-base"
             >
               {tool.category}
             </Badge>
@@ -97,7 +97,7 @@ export const ToolCardBuilder: React.FC<ToolCardBuilderProps> = ({ tool, isEssent
         </div>
 
         {/* Description */}
-        <p className="text-sm text-text-secondary leading-relaxed mb-4 flex-grow text-center group-hover:text-text-primary transition-colors duration-200">
+        <p className="text-sm text-text-secondary leading-relaxed mb-4 flex-grow text-center group-hover:text-text-primary transition-colors duration-base">
           {tool.reason}
         </p>
 
