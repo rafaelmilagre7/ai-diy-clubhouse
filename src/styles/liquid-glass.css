@@ -86,16 +86,25 @@
   transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease !important;
 }
 
-/* ✅ Garantir que elementos sendo arrastados NUNCA percam transform */
+/* ✅ Garantir precedência MÁXIMA para elementos DND */
 [data-rbd-drag-handle-draggable-id],
 [data-rbd-draggable-id],
 [data-rbd-draggable-context-id],
 .is-dragging {
-  pointer-events: none !important;
-  will-change: transform;
+  transform: unset !important;
+  pointer-events: auto !important;
+  will-change: transform !important;
+  z-index: 9999 !important;
+  transition: none !important;
 }
 
-/* ✅ Permitir transitions apenas quando NÃO estiver arrastando */
+/* ✅ Aplicar backdrop-filter APENAS em elementos não-DND */
+.glass-card:not([data-rbd-draggable-id]):not(.is-dragging) {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* Transições suaves apenas quando NÃO estiver arrastando */
 .dnd-safe-zone *:not([data-rbd-drag-handle-draggable-id]):not([data-rbd-draggable-id]):not(.is-dragging):not([data-rbd-draggable-context-id]) {
   transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease;
 }

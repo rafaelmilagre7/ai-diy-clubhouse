@@ -68,6 +68,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragInProgressRef = useRef(false);
+  const itemsSnapshotRef = useRef<UnifiedChecklistItem[]>([]);
+  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateMutation = useUpdateUnifiedChecklist();
   const queryClient = useQueryClient();
 
@@ -90,11 +92,11 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
   }, [checklistItems]);
 
-  // ✅ Snapshot estável dos items durante drag para evitar re-renders
+  // ✅ Snapshot REAL dos items durante drag usando ref imutável
   const stableItems = useMemo(() => {
-    // Durante drag, congelar snapshot para prevenir recálculos
-    if (isDragging && dragInProgressRef.current) {
-      return normalizedItems;
+    // Durante drag, usar snapshot congelado armazenado no ref
+    if (isDragging && dragInProgressRef.current && itemsSnapshotRef.current.length > 0) {
+      return itemsSnapshotRef.current;
     }
     return normalizedItems;
   }, [normalizedItems, isDragging]);
@@ -124,112 +126,125 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     if (dragInProgressRef.current) return;
     dragInProgressRef.current = true;
     setIsDragging(true);
+    
+    // ✅ Criar snapshot IMUTÁVEL dos items no início do drag
+    itemsSnapshotRef.current = JSON.parse(JSON.stringify(normalizedItems));
+    console.log('🚀 Drag iniciado - Snapshot criado:', itemsSnapshotRef.current.length, 'items');
   };
 
   const handleDragEnd = (result: DropResult) => {
-    try {
-      dragInProgressRef.current = false;
-      setIsDragging(false);
-      
-      if (!result.destination) return;
+    // ✅ Cancelar drag anterior se existir
+    if (dragTimeoutRef.current) {
+      clearTimeout(dragTimeoutRef.current);
+    }
+    
+    // ✅ Debounce de 50ms para evitar conflitos
+    dragTimeoutRef.current = setTimeout(() => {
+      try {
+        console.log('🎯 handleDragEnd CHAMADO:', {
+          from: result.source?.droppableId,
+          to: result.destination?.droppableId,
+          itemId: result.draggableId
+        });
 
-      const { source, destination } = result;
-      
-      if (source.droppableId === destination.droppableId && source.index === destination.index) {
-        return;
-      }
+        dragInProgressRef.current = false;
+        setIsDragging(false);
+        
+        if (!result.destination) {
+          console.log('⚠️ Sem destino - drag cancelado');
+          return;
+        }
 
-      const sourceCol = source.droppableId as ColumnType;
-      const destCol = destination.droppableId as ColumnType;
+        const { source, destination } = result;
+        
+        if (source.droppableId === destination.droppableId && source.index === destination.index) {
+          console.log('⚠️ Mesma posição - nenhuma mudança');
+          return;
+        }
 
-      // 1. Criar nova estrutura de colunas
-      const newColumns = {
-        todo: [...itemsByColumn.todo],
-        in_progress: [...itemsByColumn.in_progress],
-        done: [...itemsByColumn.done]
-      };
+        const sourceCol = source.droppableId as ColumnType;
+        const destCol = destination.droppableId as ColumnType;
 
-      // 2. Mover item
-      const [movedItem] = newColumns[sourceCol].splice(source.index, 1);
-      
-      if (!movedItem) {
-        console.error('❌ Item não encontrado!');
-        return;
-      }
+        // 1. Criar nova estrutura de colunas
+        const newColumns = {
+          todo: [...itemsByColumn.todo],
+          in_progress: [...itemsByColumn.in_progress],
+          done: [...itemsByColumn.done]
+        };
 
-      movedItem.column = destCol;
-      movedItem.completed = destCol === 'done';
-      if (destCol === 'done') {
-        movedItem.completedAt = new Date().toISOString();
-      }
-      newColumns[destCol].splice(destination.index, 0, movedItem);
+        // 2. Mover item
+        const [movedItem] = newColumns[sourceCol].splice(source.index, 1);
+        
+        if (!movedItem) {
+          console.error('❌ Item não encontrado!');
+          return;
+        }
 
-      // 3. Recalcular orders
-      const allItems: UnifiedChecklistItem[] = [];
-      (['todo', 'in_progress', 'done'] as ColumnType[]).forEach(col => {
-        newColumns[col].forEach((item, idx) => {
-          allItems.push({
-            ...item,
-            order: idx,
-            column: col
+        movedItem.column = destCol;
+        movedItem.completed = destCol === 'done';
+        if (destCol === 'done') {
+          movedItem.completedAt = new Date().toISOString();
+        }
+        newColumns[destCol].splice(destination.index, 0, movedItem);
+
+        // 3. Recalcular orders
+        const allItems: UnifiedChecklistItem[] = [];
+        (['todo', 'in_progress', 'done'] as ColumnType[]).forEach(col => {
+          newColumns[col].forEach((item, idx) => {
+            allItems.push({
+              ...item,
+              order: idx,
+              column: col
+            });
           });
         });
-      });
 
-      // 4. ATUALIZAÇÃO OTIMISTA NO CACHE
-      const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
-      
-      queryClient.setQueryData(queryKey, (oldData: UnifiedChecklistData | undefined) => {
-        if (!oldData) return oldData;
-        
-        return {
-          ...oldData,
-          checklist_data: {
-            items: allItems,
-            lastUpdated: new Date().toISOString()
+        const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
+
+        // 4. ✅ SALVAR DIRETAMENTE NO BANCO (sem update otimista duplicado)
+        console.log('💾 Salvando no banco...');
+        updateMutation.mutate(
+          {
+            checklistData: {
+              ...checklistData,
+              checklist_data: {
+                items: allItems,
+                lastUpdated: new Date().toISOString()
+              }
+            },
+            solutionId,
+            checklistType,
+            templateId,
+            silent: true
           },
-          updated_at: new Date().toISOString()
-        };
-      });
-
-      // 5. Salvar no banco SEM invalidar queries
-      updateMutation.mutate(
-        {
-          checklistData: {
-            ...checklistData,
-            checklist_data: {
-              items: allItems,
-              lastUpdated: new Date().toISOString()
+          {
+            onSuccess: () => {
+              // ✅ Invalidar queries APENAS depois do sucesso
+              console.log('✅ Salvo com sucesso - invalidando cache');
+              queryClient.invalidateQueries({ queryKey });
+              
+              const columnNames = {
+                'done': 'Concluído',
+                'in_progress': 'Em Progresso',
+                'todo': 'A Fazer'
+              };
+              toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}!`);
+            },
+            onError: (error) => {
+              console.error('❌ ERRO ao salvar drag:', error);
+              queryClient.invalidateQueries({ queryKey });
+              toast.error('Erro ao mover card. Recarregando...');
             }
-          },
-          solutionId,
-          checklistType,
-          templateId,
-          silent: true
-        },
-        {
-          onError: (error) => {
-            console.error('❌ ERRO ao salvar drag:', error);
-            queryClient.invalidateQueries({ queryKey });
-            toast.error('Erro ao mover card. Recarregando...');
           }
-        }
-      );
-
-      // 6. Toast de confirmação
-      const columnNames = {
-        'done': 'Concluído',
-        'in_progress': 'Em Progresso',
-        'todo': 'A Fazer'
-      };
-      toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}!`);
-      
-    } catch (error) {
-      console.error('❌ ERRO CRÍTICO no handleDragEnd:', error);
-      toast.error('Erro inesperado ao mover card');
-      dragInProgressRef.current = false;
-      setIsDragging(false);
-    }
+        );
+        
+      } catch (error) {
+        console.error('❌ ERRO CRÍTICO no handleDragEnd:', error);
+        toast.error('Erro inesperado ao mover card');
+        dragInProgressRef.current = false;
+        setIsDragging(false);
+      }
+    }, 50); // ✅ 50ms de debounce
   };
 
   const handleCardClick = (item: UnifiedChecklistItem) => {
