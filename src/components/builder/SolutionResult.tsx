@@ -310,11 +310,15 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.45 }}
+        style={{ border: '2px solid red', marginTop: '24px', marginBottom: '24px' }}
       >
         <LiquidGlassCard className="p-6 bg-gradient-to-br from-primary/5 via-background to-background">
           <button
             onClick={() => {
-              console.log('🎓 [RECOMMENDATIONS] Expandindo card', { solutionId: solutionData.id });
+              console.log('🎓 [RECOMMENDATIONS] Card clicado', { 
+                solutionId: solutionData.id,
+                cardName: 'Conteúdos Recomendados para Você'
+              });
               toggleSection('recommendations');
             }}
             className="w-full flex items-center justify-between mb-4 group"
