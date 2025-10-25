@@ -90,7 +90,16 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
   }, [checklistItems]);
 
-  // Agrupar itens por coluna
+  // ✅ Snapshot estável dos items durante drag para evitar re-renders
+  const stableItems = useMemo(() => {
+    // Durante drag, congelar snapshot para prevenir recálculos
+    if (isDragging && dragInProgressRef.current) {
+      return normalizedItems;
+    }
+    return normalizedItems;
+  }, [normalizedItems, isDragging]);
+
+  // Agrupar itens por coluna usando snapshot estável
   const itemsByColumn = useMemo(() => {
     const grouped: Record<ColumnType, UnifiedChecklistItem[]> = {
       todo: [],
@@ -98,7 +107,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       done: []
     };
 
-    normalizedItems.forEach(item => {
+    stableItems.forEach(item => {
       const column = item.column as ColumnType;
       grouped[column].push(item);
     });
@@ -109,7 +118,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
 
     return grouped;
-  }, [normalizedItems]);
+  }, [stableItems]);
 
   const handleDragStart = () => {
     if (dragInProgressRef.current) return;
@@ -118,29 +127,17 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   };
 
   const handleDragEnd = (result: DropResult) => {
-    console.log('✅ handleDragEnd CHAMADO', { result });
-    
     try {
       dragInProgressRef.current = false;
       setIsDragging(false);
       
-      if (!result.destination) {
-        console.log('⚠️ Sem destino - card solto fora');
-        return;
-      }
+      if (!result.destination) return;
 
       const { source, destination } = result;
       
       if (source.droppableId === destination.droppableId && source.index === destination.index) {
-        console.log('⚠️ Mesma posição - nada a fazer');
         return;
       }
-
-      console.log('🔄 Processando movimento', { 
-        from: source.droppableId, 
-        to: destination.droppableId,
-        item: result.draggableId 
-      });
 
       const sourceCol = source.droppableId as ColumnType;
       const destCol = destination.droppableId as ColumnType;
@@ -179,16 +176,11 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         });
       });
 
-      console.log('💾 Atualizando cache otimista');
-
       // 4. ATUALIZAÇÃO OTIMISTA NO CACHE
       const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
       
       queryClient.setQueryData(queryKey, (oldData: UnifiedChecklistData | undefined) => {
-        if (!oldData) {
-          console.warn('⚠️ Sem dados anteriores no cache');
-          return oldData;
-        }
+        if (!oldData) return oldData;
         
         return {
           ...oldData,
@@ -199,8 +191,6 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
           updated_at: new Date().toISOString()
         };
       });
-
-      console.log('🚀 Salvando no banco...');
 
       // 5. Salvar no banco SEM invalidar queries
       updateMutation.mutate(
@@ -220,12 +210,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         {
           onError: (error) => {
             console.error('❌ ERRO ao salvar drag:', error);
-            // Rollback: invalidar cache para buscar do banco novamente
             queryClient.invalidateQueries({ queryKey });
             toast.error('Erro ao mover card. Recarregando...');
-          },
-          onSuccess: () => {
-            console.log('✅ Salvo com sucesso!');
           }
         }
       );
@@ -602,16 +588,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
                 {/* Droppable Area - Design System */}
                 <Droppable droppableId={column.id}>
-                  {(provided, snapshot) => {
-                    // Log para debug de drag over
-                    if (snapshot.isDraggingOver) {
-                      console.log(`🎯 Dragging over: ${column.id}`, {
-                        draggingOverWith: snapshot.draggingOverWith,
-                        draggingFromThisWith: snapshot.draggingFromThisWith
-                      });
-                    }
-                    
-                    return (
+                  {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
@@ -676,8 +653,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                       ))}
                         {provided.placeholder}
                       </div>
-                    );
-                  }}
+                    )}
                 </Droppable>
               </div>
             );

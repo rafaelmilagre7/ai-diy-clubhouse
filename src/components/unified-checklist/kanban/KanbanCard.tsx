@@ -36,7 +36,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {...provided.dragHandleProps}
       style={{
         ...provided.draggableProps.style,
-        marginBottom: '12px'
+        marginBottom: '12px',
+        pointerEvents: snapshot.isDragging ? 'none' : 'auto'
       }}
       className={cn(
         "kanban-draggable-card group relative p-4",
