@@ -31,7 +31,7 @@ export const QuickActionsMenu: React.FC<QuickActionsMenuProps> = ({
         <Button 
           variant="ghost" 
           size="sm" 
-          className="h-8 w-8 p-0 hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity"
+          className="h-8 w-8 p-0 hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto"
           onClick={(e) => {
             e.stopPropagation();
           }}

@@ -118,10 +118,15 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
 };
 
 export default memo(KanbanCard, (prevProps, nextProps) => {
-  return (
-    prevProps.item.id === nextProps.item.id &&
-    prevProps.item.title === nextProps.item.title &&
-    prevProps.item.column === nextProps.item.column &&
-    prevProps.item.completed === nextProps.item.completed
-  );
+  // ✅ Retornar FALSE quando props mudaram (para re-renderizar)
+  // ✅ Retornar TRUE quando props NÃO mudaram (para evitar re-render)
+  if (prevProps.item.id !== nextProps.item.id) return false;
+  if (prevProps.item.title !== nextProps.item.title) return false;
+  if (prevProps.item.column !== nextProps.item.column) return false;
+  if (prevProps.item.completed !== nextProps.item.completed) return false;
+  if (prevProps.item.order !== nextProps.item.order) return false;
+  if (prevProps.snapshot?.isDragging !== nextProps.snapshot?.isDragging) return false;
+  
+  // Se nada mudou, evitar re-render
+  return true;
 });
