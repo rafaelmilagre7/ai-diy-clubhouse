@@ -226,6 +226,7 @@ export default function Builder() {
     }));
     
     try {
+      console.log('[BUILDER] 📞 Chamando generateSolution...');
       const result = await generateSolution(currentIdea, answers);
       
       console.log('[BUILDER] 📦 Resultado recebido:', {
@@ -244,8 +245,18 @@ export default function Builder() {
         localStorage.removeItem('builder_last_attempt');
         localStorage.removeItem(recoveryFlag);
         
+        // Toast de sucesso
+        toast.success('Solução gerada com sucesso! 🎉', {
+          description: 'Redirecionando para visualização...'
+        });
+        
+        // Aguardar um pouco para o usuário ver o toast
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Redirecionar
+        console.log('[BUILDER] 🔀 Executando navigate...');
         navigate(targetUrl);
+        console.log('[BUILDER] ✅ Navigate executado');
       } else {
         console.error('[BUILDER] ❌ Resultado sem ID:', result);
         throw new Error('ID da solução não foi retornado pela API');
@@ -256,7 +267,7 @@ export default function Builder() {
       
       // Toast SEMPRE visível
       toast.error('Erro ao gerar solução', {
-        description: 'Não foi possível criar sua solução. Verifique os logs do console e tente novamente.',
+        description: 'Não foi possível criar sua solução. Tente novamente.',
         action: {
           label: 'Tentar novamente',
           onClick: () => handleWizardComplete(answers)

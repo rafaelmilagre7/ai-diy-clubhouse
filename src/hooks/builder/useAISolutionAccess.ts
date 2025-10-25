@@ -14,15 +14,29 @@ export const useAISolutionAccess = () => {
     queryFn: async () => {
       if (!user) throw new Error('Usuário não autenticado');
       
+      console.log('[AI-SOLUTION-ACCESS] 📊 Verificando limite de gerações para:', user.id.substring(0, 8) + '***');
+      
       const { data, error } = await supabase.rpc('check_ai_solution_limit', {
         p_user_id: user.id
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('[AI-SOLUTION-ACCESS] ❌ Erro ao verificar limite:', error);
+        throw error;
+      }
+      
+      console.log('[AI-SOLUTION-ACCESS] ✅ Limite verificado:', {
+        can_generate: data?.can_generate,
+        generations_used: data?.generations_used,
+        monthly_limit: data?.monthly_limit,
+        remaining: data?.remaining
+      });
+      
       return data;
     },
     enabled: !!user && hasAccess,
     staleTime: 30000, // Cache por 30 segundos
+    retry: 2, // Tentar 2 vezes em caso de erro
   });
   
   return {

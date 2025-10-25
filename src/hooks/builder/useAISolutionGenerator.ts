@@ -72,6 +72,7 @@ export const useAISolutionGenerator = () => {
 
       // Atualizar contador de uso
       await refetchUsage();
+      console.log('[BUILDER-GENERATOR] 🔄 Contador de uso atualizado');
 
       toast.success('Solução gerada com sucesso! 🎉', {
         description: `Tempo de processamento: ${(elapsedTime / 1000).toFixed(1)}s`

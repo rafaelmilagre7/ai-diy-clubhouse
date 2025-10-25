@@ -467,18 +467,43 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Verificar limite
+    // Verificar limite COM LOG DETALHADO
+    console.log(`[BUILDER][${requestId}] 🔍 Verificando limite de gerações...`);
     const { data: limitCheck, error: limitError } = await supabase.rpc(
       "check_ai_solution_limit",
       { p_user_id: userId }
     );
 
-    if (limitError || !limitCheck.can_generate) {
+    if (limitError) {
+      console.error(`[BUILDER][${requestId}] ❌ Erro ao verificar limite:`, {
+        message: limitError.message,
+        code: limitError.code,
+        details: limitError.details,
+        hint: limitError.hint
+      });
+      return new Response(
+        JSON.stringify({ error: "Erro ao verificar limite de gerações" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    console.log(`[BUILDER][${requestId}] 📊 Limite check:`, {
+      can_generate: limitCheck?.can_generate,
+      generations_used: limitCheck?.generations_used,
+      monthly_limit: limitCheck?.monthly_limit,
+      remaining: limitCheck?.remaining
+    });
+
+    if (!limitCheck || !limitCheck.can_generate) {
+      console.warn(`[BUILDER][${requestId}] ⚠️ Limite mensal atingido`);
       return new Response(
         JSON.stringify({ error: "Limite mensal atingido" }),
         { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    console.log(`[BUILDER][${requestId}] ✅ Limite OK: ${limitCheck.remaining} gerações restantes`);
+
 
     // Buscar ferramentas COM logos
     const { data: tools } = await supabase
@@ -1608,8 +1633,21 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       );
     }
 
-    // Incrementar contador
-    await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });
+    // Incrementar contador COM TRATAMENTO DE ERRO
+    console.log(`[BUILDER][${requestId}] 🔢 Incrementando contador de uso...`);
+    const { error: incrementError } = await supabase.rpc("increment_ai_solution_usage", { p_user_id: userId });
+    
+    if (incrementError) {
+      console.error(`[BUILDER][${requestId}] ❌ Erro ao incrementar contador:`, {
+        message: incrementError.message,
+        code: incrementError.code,
+        details: incrementError.details
+      });
+      // NÃO falhar a requisição se só o contador falhou - solução já foi salva!
+      console.warn(`[BUILDER][${requestId}] ⚠️ Continuando mesmo com erro no contador...`);
+    } else {
+      console.log(`[BUILDER][${requestId}] ✅ Contador incrementado com sucesso`);
+    }
 
     console.log(`[BUILDER] ✅ === GERAÇÃO COMPLETA CONCLUÍDA ===`);
     console.log(`[BUILDER] ⏱️ Tempo total: ${(generationTime / 1000).toFixed(1)}s`);
