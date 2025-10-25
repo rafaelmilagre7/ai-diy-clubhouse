@@ -984,6 +984,13 @@ Crie um plano completo seguindo o formato JSON especificado.`;
 
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
+    
+    if (!lovableAIKey) {
+      console.error(`[BUILDER][${requestId}] ❌ LOVABLE_API_KEY não configurada!`);
+      throw new Error("LOVABLE_API_KEY não está configurada no ambiente");
+    }
+    
+    console.log(`[BUILDER][${requestId}] ✅ LOVABLE_API_KEY encontrada (${lovableAIKey.substring(0, 8)}...)`);
 
     const aiCallStart = Date.now();
 
@@ -1082,26 +1089,46 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     }
 
     console.log(`[BUILDER][${requestId}] 📦 Tool: ${toolDefinition.function.name}`);
+    console.log(`[BUILDER][${requestId}] 🚀 Iniciando chamada para Lovable AI Gateway...`);
+    console.log(`[BUILDER][${requestId}] ⏱️ Timeout configurado: ${mode === "quick" ? 60 : 180}s`);
     
-    const aiResponse = await fetch(lovableAIUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableAIKey}`,
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
-        ],
-        temperature: 0.7,
-        max_tokens: mode === "quick" ? 8000 : 64000,
-        tools: [toolDefinition],
-        tool_choice: { type: "function", function: { name: toolDefinition.function.name } }
-      }),
-      signal: AbortSignal.timeout(mode === "quick" ? 60000 : 180000)
-    });
+    let aiResponse;
+    try {
+      aiResponse = await fetch(lovableAIUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableAIKey}`,
+        },
+        body: JSON.stringify({
+          model: "google/gemini-2.5-flash",
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt },
+          ],
+          temperature: 0.7,
+          max_tokens: mode === "quick" ? 8000 : 64000,
+          tools: [toolDefinition],
+          tool_choice: { type: "function", function: { name: toolDefinition.function.name } }
+        }),
+        signal: AbortSignal.timeout(mode === "quick" ? 60000 : 180000)
+      });
+      
+      console.log(`[BUILDER][${requestId}] ✅ Resposta recebida da AI (status: ${aiResponse.status})`);
+    } catch (fetchError: any) {
+      console.error(`[BUILDER][${requestId}] ❌ Erro na chamada fetch:`, {
+        name: fetchError.name,
+        message: fetchError.message,
+        cause: fetchError.cause
+      });
+      
+      if (fetchError.name === 'AbortError' || fetchError.name === 'TimeoutError') {
+        console.error(`[BUILDER][${requestId}] ⏱️ TIMEOUT na chamada AI (limite: ${mode === "quick" ? 60 : 180}s)`);
+        throw new Error('TIMEOUT: A geração está demorando muito. Tente novamente.');
+      }
+      
+      throw new Error(`Erro ao chamar Lovable AI: ${fetchError.message}`);
+    }
 
     if (!aiResponse.ok) {
       if (aiResponse.status === 429) {
@@ -1119,7 +1146,16 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       throw new Error(`Erro na API: ${aiResponse.status}`);
     }
 
-    const aiData = await aiResponse.json();
+    let aiData;
+    try {
+      console.log(`[BUILDER][${requestId}] 📥 Fazendo parse do JSON da resposta...`);
+      aiData = await aiResponse.json();
+      console.log(`[BUILDER][${requestId}] ✅ JSON parsed com sucesso`);
+    } catch (jsonError: any) {
+      console.error(`[BUILDER][${requestId}] ❌ Erro ao fazer parse do JSON:`, jsonError);
+      throw new Error('Erro ao processar resposta da IA');
+    }
+    
     const aiResponseTime = Date.now() - aiCallStart;
 
     console.log(`[BUILDER][${requestId}] ⚡ Tempo de resposta: ${(aiResponseTime / 1000).toFixed(1)}s`);
@@ -1128,16 +1164,24 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     // Extrair dados do tool_calls (não content)
     const message = aiData.choices?.[0]?.message;
     if (!message || !message.tool_calls?.[0]) {
-      console.error("[BUILDER] ❌ Resposta não contém tool_calls");
+      console.error(`[BUILDER][${requestId}] ❌ Resposta não contém tool_calls`);
+      console.error(`[BUILDER][${requestId}] 📋 Estrutura da resposta:`, JSON.stringify(aiData, null, 2).substring(0, 500));
       throw new Error("Resposta inválida da IA");
     }
 
     let solutionData;
     try {
+      console.log(`[BUILDER][${requestId}] 🔍 Extraindo tool call arguments...`);
       const toolCall = message.tool_calls[0];
+      console.log(`[BUILDER][${requestId}] 📦 Tool call encontrado: ${toolCall.function.name}`);
+      
       solutionData = JSON.parse(toolCall.function.arguments);
-    } catch (parseError) {
-      console.error("[BUILDER] ❌ Erro ao fazer parse do JSON:", parseError);
+      console.log(`[BUILDER][${requestId}] ✅ Arguments parsed com sucesso`);
+    } catch (parseError: any) {
+      console.error(`[BUILDER][${requestId}] ❌ Erro ao fazer parse do JSON:`, {
+        error: parseError.message,
+        toolCall: message.tool_calls?.[0]
+      });
       throw new Error("JSON inválido na resposta");
     }
 
