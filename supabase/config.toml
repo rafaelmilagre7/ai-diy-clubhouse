@@ -372,3 +372,6 @@ verify_jwt = false
 
 [functions.recommend-learning-content]
 verify_jwt = true
+
+[functions.broadcast-notification]
+verify_jwt = false
