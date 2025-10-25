@@ -140,6 +140,19 @@ export default function BuilderSolutionResult() {
         </CardContent>
       </Card>
 
+      {/* 🔴 TESTE CRÍTICO: Card ANTES do SolutionResult */}
+      <div className="border-8 border-red-500 bg-yellow-400 p-10 my-10 min-h-[200px]">
+        <h1 className="text-4xl font-bold text-black">
+          🚨 TESTE NO PAI - BuilderSolutionResult.tsx
+        </h1>
+        <p className="text-xl text-black mt-5">
+          Se você vê ESTE card amarelo, o problema está DENTRO do SolutionResult.tsx
+        </p>
+        <p className="text-xl text-black mt-5">
+          Se NÃO vê, o problema é mais grave (CSS global, layout, etc)
+        </p>
+      </div>
+
       <SolutionResult
         solution={solution}
         onNewIdea={handleNewIdea}
