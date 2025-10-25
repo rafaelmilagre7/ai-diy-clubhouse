@@ -2,6 +2,7 @@ import React from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { Card } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
 import SimpleKanbanCard from "./SimpleKanbanCard";
 
@@ -20,6 +21,12 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
+  // Calculate progress based on completed items in this column
+  const completedCount = items.filter(item => item.completed).length;
+  const progressPercentage = items.length > 0 
+    ? Math.round((completedCount / items.length) * 100) 
+    : 0;
+
   return (
     <Card
       className={`flex flex-col h-full transition-colors ${
@@ -27,11 +34,29 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       }`}
     >
       {/* Column Header */}
-      <div className="p-4 border-b border-border">
-        <h3 className="font-semibold text-foreground">{title}</h3>
-        <p className="text-xs text-muted-foreground mt-1">
-          {items.length} {items.length === 1 ? "tarefa" : "tarefas"}
-        </p>
+      <div className="p-4 border-b border-border space-y-3">
+        <div className="flex items-center justify-between">
+          <h3 className="font-semibold text-foreground">{title}</h3>
+          <span className="text-xs font-medium text-muted-foreground">
+            {completedCount}/{items.length}
+          </span>
+        </div>
+        
+        {/* Progress Bar */}
+        {items.length > 0 && (
+          <div className="space-y-1">
+            <Progress value={progressPercentage} className="h-1.5" />
+            <p className="text-xs text-muted-foreground">
+              {progressPercentage}% completo
+            </p>
+          </div>
+        )}
+        
+        {items.length === 0 && (
+          <p className="text-xs text-muted-foreground">
+            Nenhuma tarefa
+          </p>
+        )}
       </div>
 
       {/* Column Content */}
