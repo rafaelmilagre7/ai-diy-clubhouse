@@ -89,13 +89,13 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
               transition={{ delay: index * 0.1 }}
               className="group relative overflow-hidden rounded-lg border border-border/50 bg-surface-elevated/30 hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10"
             >
-              {/* Thumbnail com overlay */}
-              <div className="relative h-48 w-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
+              {/* Thumbnail com overlay - Formato vertical otimizado */}
+              <div className="relative aspect-[9/12] w-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
                 {lesson.cover_image_url ? (
                   <img 
                     src={lesson.cover_image_url} 
                     alt={lesson.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
@@ -162,15 +162,21 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
                   </div>
                 )}
 
-                {/* Botão de ação */}
+                {/* Botão de ação - Link que abre em nova guia */}
                 <Button
-                  onClick={() => navigate(`/learning/lesson/${lesson.id}`)}
+                  asChild
                   className="w-full group/btn"
                   size="sm"
                 >
-                  <BookOpen className="h-4 w-4 mr-2" />
-                  Assistir Aula
-                  <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                  <a 
+                    href={`/learning/lesson/${lesson.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <BookOpen className="h-4 w-4 mr-2" />
+                    Assistir Aula
+                    <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                  </a>
                 </Button>
               </div>
             </motion.div>
