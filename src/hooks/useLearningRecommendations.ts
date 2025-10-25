@@ -44,9 +44,9 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
             title,
             description,
             cover_image_url,
-            learning_modules!inner (
+            learning_modules (
               title,
-              learning_courses!inner (
+              learning_courses (
                 id,
                 title
               )
@@ -63,7 +63,8 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
 
       // Se já existem recomendações, retornar do cache
       if (existing && existing.length > 0) {
-        console.log(`Encontradas ${existing.length} recomendações no cache`);
+        console.log(`✅ Encontradas ${existing.length} recomendações no cache`);
+        console.log('Primeira recomendação:', existing[0]);
         return existing as LearningRecommendation[];
       }
 
