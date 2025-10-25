@@ -190,7 +190,7 @@ export const logSuspiciousLogin = async (details: {
   ip?: string;
 }): Promise<void> => {
   try {
-    await supabase.from('audit_logs').insert({
+    const { error } = await supabase.from('audit_logs').insert({
       user_id: null,
       event_type: 'security_event',
       action: 'suspicious_login_attempt',
@@ -201,8 +201,13 @@ export const logSuspiciousLogin = async (details: {
       },
       severity: 'medium'
     });
+    
+    if (error) {
+      console.warn('⚠️ [AUDIT_LOG] Falha ao registrar log (não bloqueante):', error.message);
+    }
   } catch (error) {
-    console.error('Erro ao registrar tentativa suspeita:', error);
+    // Erro silencioso - não deve bloquear o fluxo principal
+    console.warn('⚠️ [AUDIT_LOG] Exceção ao registrar tentativa suspeita (não bloqueante):', error);
   }
 };
 
@@ -273,17 +278,25 @@ export const secureSignIn = async (email: string, password: string): Promise<{
     }
     
     if (data.user) {
-      // Log de login bem-sucedido
-      await supabase.from('audit_logs').insert({
-        user_id: data.user.id,
-        event_type: 'login',
-        action: 'user_login_success',
-        details: {
-          email: data.user.email,
-          timestamp: new Date().toISOString()
-        },
-        severity: 'info'
-      });
+      // Log de login bem-sucedido (não bloqueante)
+      try {
+        const { error } = await supabase.from('audit_logs').insert({
+          user_id: data.user.id,
+          event_type: 'login',
+          action: 'user_login_success',
+          details: {
+            email: data.user.email,
+            timestamp: new Date().toISOString()
+          },
+          severity: 'info'
+        });
+        
+        if (error) {
+          console.warn('⚠️ [AUDIT_LOG] Falha ao registrar login (não bloqueante):', error.message);
+        }
+      } catch (error) {
+        console.warn('⚠️ [AUDIT_LOG] Exceção ao registrar login (não bloqueante):', error);
+      }
       
       return { success: true, needsRedirect: true };
     }
