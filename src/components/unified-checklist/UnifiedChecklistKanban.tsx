@@ -147,6 +147,12 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       console.error('  2. Droppable não está recebendo eventos');
       console.error('  3. pointer-events bloqueado');
       console.error('  4. z-index ou position incorretos');
+      console.error('🔍 Detalhes do drop:', {
+        source: result.source,
+        draggableId: result.draggableId,
+        reason: result.reason,
+        mode: result.mode
+      });
       return;
     }
 
@@ -619,7 +625,6 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                           backgroundColor: snapshot.isDraggingOver 
                             ? 'hsl(var(--primary) / 0.05)' 
                             : 'transparent',
-                          transform: 'none',
                           willChange: 'background-color'
                         }}
                         className={cn(

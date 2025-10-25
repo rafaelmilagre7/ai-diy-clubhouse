@@ -86,8 +86,9 @@
   transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease !important;
 }
 
-.dnd-safe-zone *:hover {
+.dnd-safe-zone *:hover:not([data-rbd-drag-handle-draggable-id]):not([data-rbd-draggable-id]) {
   /* Permitir apenas efeitos seguros no hover - SEM transform */
+  /* MAS PRESERVAR transform em elementos sendo arrastados */
   transform: none !important;
 }
 
