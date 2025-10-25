@@ -149,12 +149,14 @@ export const useUpdateUnifiedChecklist = () => {
       checklistData, 
       solutionId, 
       checklistType = 'implementation',
-      templateId 
+      templateId,
+      silent = false
     }: {
       checklistData: UnifiedChecklistData;
       solutionId: string;
       checklistType?: string;
       templateId?: string;
+      silent?: boolean;
     }) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
@@ -209,18 +211,23 @@ export const useUpdateUnifiedChecklist = () => {
       }
     },
     onSuccess: (data, variables) => {
-      // Invalidar AMBOS os caches (checklist + template) para garantir sincronização
-      queryClient.invalidateQueries({ 
-        queryKey: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType] 
-      });
-      queryClient.invalidateQueries({ 
-        queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
-      });
-      console.log('✅ Caches invalidados:', { 
-        checklist: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType],
-        template: ['unified-checklist-template', variables.solutionId, variables.checklistType]
-      });
-      toast.success('Progresso salvo com sucesso!');
+      // ✅ Invalidar queries de forma assíncrona com delay para evitar conflito com drag
+      setTimeout(() => {
+        queryClient.invalidateQueries({ 
+          queryKey: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType] 
+        });
+        queryClient.invalidateQueries({ 
+          queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
+        });
+        console.log('✅ Caches invalidados:', { 
+          checklist: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType],
+          template: ['unified-checklist-template', variables.solutionId, variables.checklistType]
+        });
+      }, 100); // 100ms de delay para garantir que drag terminou
+      
+      if (!variables.silent) {
+        toast.success('Progresso salvo com sucesso!');
+      }
     },
     onError: (error) => {
       console.error('Erro ao salvar checklist:', error);

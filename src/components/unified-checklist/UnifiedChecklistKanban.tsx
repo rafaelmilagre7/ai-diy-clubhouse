@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -66,6 +66,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   });
   const [filteredItems, setFilteredItems] = useState<UnifiedChecklistItem[]>(checklistItems);
   const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const dragInProgressRef = useRef(false);
   const updateMutation = useUpdateUnifiedChecklist();
 
   // Normalizar itens (adicionar coluna se não existir) - VALIDAÇÃO ROBUSTA COM PRESERVAÇÃO DE IN_PROGRESS
@@ -131,7 +133,20 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     return grouped;
   }, [filteredItems]);
 
+  const handleDragStart = () => {
+    if (dragInProgressRef.current) {
+      console.warn('⚠️ Drag já em progresso, ignorando...');
+      return;
+    }
+    dragInProgressRef.current = true;
+    setIsDragging(true);
+    console.log('🚀 DRAG INICIADO - Refetch bloqueado');
+  };
+
   const handleDragEnd = (result: DropResult) => {
+    dragInProgressRef.current = false;
+    setIsDragging(false);
+    
     console.log('🎯 ========== DRAG END INICIADO ==========');
     console.log('📋 Result completo:', {
       draggableId: result.draggableId,
@@ -229,7 +244,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         },
         solutionId,
         checklistType,
-        templateId
+        templateId,
+        silent: true
       },
       {
         onSuccess: (data) => {
@@ -408,6 +424,12 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
   return (
     <div className="space-y-6">
+      {isDragging && (
+        <div className="fixed top-20 right-4 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg z-[9999] font-bold">
+          🚀 DRAG EM PROGRESSO - Refetch bloqueado
+        </div>
+      )}
+      
       {/* Filtros de Busca */}
       <KanbanFilters 
         items={normalizedItems} 
@@ -557,7 +579,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       </Card>
 
       {/* Kanban Board */}
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
         <div className="dnd-safe-zone grid grid-cols-1 md:grid-cols-3 gap-6">
           {COLUMNS.map(column => {
             const Icon = column.icon;
@@ -664,14 +686,6 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                       {items.map((item, index) => (
                         <Draggable key={item.id} draggableId={item.id} index={index}>
                           {(provided, snapshot) => {
-                            // Log para debug de drag
-                            if (snapshot.isDragging) {
-                              console.log(`🚀 Arrastando: ${item.title}`, {
-                                id: item.id,
-                                column: item.column
-                              });
-                            }
-                            
                             return (
                               <KanbanCard
                                 item={item}
