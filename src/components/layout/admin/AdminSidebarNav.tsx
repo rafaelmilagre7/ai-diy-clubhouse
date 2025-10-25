@@ -29,7 +29,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-const navigationItems = [
+interface NavigationItem {
+  title: string;
+  href: string;
+  icon: any;
+  subItems?: { title: string; href: string; }[];
+}
+
+const navigationItems: NavigationItem[] = [
   {
     title: "Dashboard",
     href: "/admin",
@@ -79,6 +86,10 @@ const navigationItems = [
     title: "Notificações",
     href: "/admin/notifications",
     icon: Bell,
+    subItems: [
+      { title: "Dashboard", href: "/admin/notifications" },
+      { title: "Envio em Massa", href: "/admin/notifications/broadcast" },
+    ],
   },
   {
     title: "Networking",
@@ -183,27 +194,56 @@ export const AdminSidebarNav = ({ sidebarOpen }: AdminSidebarNavProps) => {
       <div className="flex flex-col space-y-xs">
         {navigationItems.map((item) => {
           const active = isActive(item.href);
+          const hasSubItems = item.subItems && item.subItems.length > 0;
           
           return (
-            <Button
-              key={item.href}
-              variant="ghost"
-              className={cn(
-                "w-full justify-start gap-sm h-10 px-sm text-sm font-medium transition-all duration-200 rounded-lg group",
-                !sidebarOpen && "justify-center px-sm",
-                active 
-                  ? "bg-surface-elevated/50 text-foreground shadow-lg border border-border" 
-                  : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/30 hover:shadow-md"
-              )}
-              asChild
-            >
-              <Link to={item.href}>
-                <item.icon className="h-5 w-5 flex-shrink-0" />
-                {sidebarOpen && (
-                  <span className="truncate">{item.title}</span>
+            <div key={item.href}>
+              <Button
+                variant="ghost"
+                className={cn(
+                  "w-full justify-start gap-sm h-10 px-sm text-sm font-medium transition-all duration-200 rounded-lg group",
+                  !sidebarOpen && "justify-center px-sm",
+                  active 
+                    ? "bg-surface-elevated/50 text-foreground shadow-lg border border-border" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/30 hover:shadow-md"
                 )}
-              </Link>
-            </Button>
+                asChild
+              >
+                <Link to={item.href}>
+                  <item.icon className="h-5 w-5 flex-shrink-0" />
+                  {sidebarOpen && (
+                    <span className="truncate">{item.title}</span>
+                  )}
+                </Link>
+              </Button>
+              
+              {/* Renderizar subitens se existirem */}
+              {hasSubItems && sidebarOpen && (
+                <div className="ml-8 mt-1 space-y-1">
+                  {item.subItems!.map((subItem) => {
+                    const subActive = isActive(subItem.href);
+                    return (
+                      <Button
+                        key={subItem.href}
+                        variant="ghost"
+                        size="sm"
+                        className={cn(
+                          "w-full justify-start h-8 px-2 text-xs transition-all duration-200 rounded-md",
+                          subActive
+                            ? "bg-surface-elevated/40 text-foreground font-medium"
+                            : "text-muted-foreground hover:text-foreground hover:bg-surface-elevated/20"
+                        )}
+                        asChild
+                      >
+                        <Link to={subItem.href}>
+                          {subItem.title}
+                        </Link>
+                      </Button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
