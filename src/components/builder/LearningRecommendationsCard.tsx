@@ -183,7 +183,9 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
                         return;
                       }
 
-                      const courseId = lessonData.learning_modules[0]?.course_id;
+            const courseId = Array.isArray(lessonData.learning_modules) 
+              ? lessonData.learning_modules[0]?.course_id 
+              : (lessonData.learning_modules as any)?.course_id;
                       
                       if (!courseId) {
                         console.error('❌ courseId não encontrado');
