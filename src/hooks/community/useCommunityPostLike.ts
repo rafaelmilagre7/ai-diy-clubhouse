@@ -62,35 +62,81 @@ export const useCommunityPostLike = (topicId: string) => {
 
         // 📢 Criar notificação para o autor (se não for o próprio usuário)
         if (authorId !== user.id) {
-          // Buscar informações do usuário que curtiu
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('id', user.id)
-            .single();
-
-          // Buscar informações do post para contexto
-          const { data: postData } = await supabase
-            .from('community_posts')
-            .select('content, topic_id')
-            .eq('id', postId)
-            .single();
-
-          if (postData) {
-            const contentPreview = postData.content.substring(0, 100);
+          try {
+            console.log('📢 Criando notificação de like...', { postId, authorId, userId: user.id });
             
-            await supabase
-              .from('notifications')
-              .insert({
-                user_id: authorId,
-                actor_id: user.id,
-                type: 'community_post_liked',
-                title: `${profile?.name || 'Alguém'} curtiu sua resposta`,
-                message: `"${contentPreview}${postData.content.length > 100 ? '...' : ''}"`,
-                action_url: `/comunidade/topico/${postData.topic_id}#post-${postId}`,
-                category: 'community',
-                priority: 1
-              });
+            // Buscar informações do usuário que curtiu
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('name')
+              .eq('id', user.id)
+              .single();
+
+            if (profileError) {
+              console.error('⚠️ Erro ao buscar perfil para notificação:', profileError);
+            }
+
+            // Buscar informações do post para contexto
+            const { data: postData, error: postError } = await supabase
+              .from('community_posts')
+              .select('content, topic_id')
+              .eq('id', postId)
+              .single();
+
+            if (postError) {
+              console.error('⚠️ Erro ao buscar post para notificação:', postError);
+              // Fallback: criar notificação básica usando topicId disponível
+              const { error: notifError } = await supabase
+                .from('notifications')
+                .insert({
+                  user_id: authorId,
+                  actor_id: user.id,
+                  type: 'community_post_liked',
+                  title: `${profile?.name || 'Alguém'} curtiu sua resposta`,
+                  message: 'Veja a resposta curtida no tópico',
+                  action_url: `/comunidade/topico/${topicId}#post-${postId}`,
+                  reference_id: postId,
+                  reference_type: 'community_post',
+                  category: 'community',
+                  priority: 1
+                });
+              
+              if (notifError) {
+                console.error('❌ Erro ao criar notificação fallback:', notifError);
+              } else {
+                console.log('✅ Notificação fallback criada com sucesso');
+              }
+              return;
+            }
+
+            // Criar notificação com dados completos
+            if (postData) {
+              const contentPreview = postData.content.substring(0, 100);
+              
+              const { error: notifError } = await supabase
+                .from('notifications')
+                .insert({
+                  user_id: authorId,
+                  actor_id: user.id,
+                  type: 'community_post_liked',
+                  title: `${profile?.name || 'Alguém'} curtiu sua resposta`,
+                  message: `"${contentPreview}${postData.content.length > 100 ? '...' : ''}"`,
+                  action_url: `/comunidade/topico/${postData.topic_id}#post-${postId}`,
+                  reference_id: postId,
+                  reference_type: 'community_post',
+                  category: 'community',
+                  priority: 1
+                });
+              
+              if (notifError) {
+                console.error('❌ Erro ao criar notificação:', notifError);
+              } else {
+                console.log('✅ Notificação criada com sucesso');
+              }
+            }
+          } catch (notifError) {
+            // NÃO bloquear o like se a notificação falhar
+            console.error('❌ Erro no sistema de notificações:', notifError);
           }
         }
       }
