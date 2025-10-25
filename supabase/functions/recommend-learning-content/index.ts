@@ -148,7 +148,6 @@ IMPORTANTE:
         messages: [
           { role: 'user', content: aiPrompt }
         ],
-        temperature: 0.3,
       }),
     });
 
