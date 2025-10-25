@@ -328,9 +328,6 @@ verify_jwt = false
 [functions.send-assistant-message]
 verify_jwt = false
 
-[functions.send-communication-email]
-verify_jwt = false
-
 [functions.send-invite-whatsapp]
 verify_jwt = false
 

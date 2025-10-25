@@ -1,6 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { Resend } from "npm:resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,57 @@ const corsHeaders = {
 interface SendCommunicationRequest {
   communicationId: string;
 }
+
+// Helper para gerar template de email
+const getEmailTemplate = (content: string, templateType: string, priority: string, title: string) => {
+  const priorityColors = {
+    urgent: '#dc2626',
+    high: '#ea580c',
+    normal: '#2563eb',
+    low: '#6b7280'
+  };
+
+  const templateTypeIcons = {
+    announcement: '📢',
+    maintenance: '🔧',
+    event: '📅',
+    educational: '📚',
+    urgent: '🚨'
+  };
+
+  const priorityColor = priorityColors[priority as keyof typeof priorityColors] || '#2563eb';
+  const icon = templateTypeIcons[templateType as keyof typeof templateTypeIcons] || '📢';
+
+  return `
+    <!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      </head>
+      <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;">
+        <div style="max-width: 600px; margin: 0 auto; background-color: white; border-radius: 8px; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Viver de IA</h1>
+          </div>
+          <div style="padding: 15px 20px; background-color: ${priorityColor}; color: white; text-align: center;">
+            <span style="font-size: 16px;">${icon}</span>
+            <span style="font-weight: bold; margin-left: 8px; text-transform: uppercase; font-size: 12px;">
+              ${priority === 'urgent' ? 'URGENTE' : priority === 'high' ? 'ALTA PRIORIDADE' : 'COMUNICADO'}
+            </span>
+          </div>
+          <div style="padding: 30px 20px;">
+            <h2 style="color: #333; margin-top: 0;">${title}</h2>
+            ${content}
+          </div>
+          <div style="background-color: #f8f9fa; padding: 20px; text-align: center; border-top: 1px solid #e9ecef;">
+            <p style="margin: 0; font-size: 12px; color: #6c757d;">Comunicado oficial - Viver de IA</p>
+          </div>
+        </div>
+      </body>
+    </html>
+  `;
+};
 
 // Helper para retry com exponential backoff
 const retryWithBackoff = async <T>(
@@ -139,21 +191,34 @@ const handler = async (req: Request): Promise<Response> => {
             (!preferences || preferences.admin_communications_email !== false)) {
           
           try {
+            // Inicializar Resend
+            const resendApiKey = Deno.env.get("RESEND_API_KEY");
+            if (!resendApiKey) {
+              throw new Error("RESEND_API_KEY não configurada");
+            }
+            
+            const resend = new Resend(resendApiKey);
+            const emailHtml = getEmailTemplate(
+              communication.content,
+              communication.template_type,
+              communication.priority,
+              communication.title
+            );
+
             // Enviar email com retry automático
             const emailResult = await retryWithBackoff(async () => {
-              const { data, error } = await supabase.functions.invoke('send-communication-email', {
-                body: {
-                  to: user.email,
-                  name: user.name,
-                  subject: communication.email_subject || communication.title,
-                  content: communication.content,
-                  templateType: communication.template_type,
-                  priority: communication.priority
-                }
+              const response = await resend.emails.send({
+                from: "Viver de IA <onboarding@resend.dev>",
+                to: [user.email],
+                subject: communication.email_subject || communication.title,
+                html: emailHtml,
               });
               
-              if (error) throw error;
-              return data;
+              if (response.error) {
+                throw new Error(response.error.message);
+              }
+              
+              return response;
             }, 3, 1000);
 
             console.log(`[SEND-COMM][${requestId}] ✅ Email enviado para: ${user.email}`);
