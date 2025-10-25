@@ -75,6 +75,10 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     return grouped;
   }, [localItems]);
 
+  // Calcular progresso global do checklist
+  const totalTasks = localItems.length;
+  const completedTasks = localItems.filter(item => item.completed).length;
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
     console.log("🟢 Drag Start:", event.active.id);
@@ -184,6 +188,8 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
               id={column.id}
               title={column.title}
               items={itemsByColumn[column.id] || []}
+              totalTasks={totalTasks}
+              completedTasks={completedTasks}
               onViewDetails={handleViewDetails}
             />
           ))}

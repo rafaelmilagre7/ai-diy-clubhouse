@@ -10,6 +10,8 @@ interface KanbanColumnProps {
   id: string;
   title: string;
   items: UnifiedChecklistItem[];
+  totalTasks: number;
+  completedTasks: number;
   onViewDetails: (item: UnifiedChecklistItem) => void;
 }
 
@@ -17,14 +19,15 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   id,
   title,
   items,
+  totalTasks,
+  completedTasks,
   onViewDetails,
 }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
 
-  // Calculate progress based on completed items in this column
-  const completedCount = items.filter(item => item.completed).length;
-  const progressPercentage = items.length > 0 
-    ? Math.round((completedCount / items.length) * 100) 
+  // Calcular progresso global do checklist
+  const progressPercentage = totalTasks > 0 
+    ? Math.round((completedTasks / totalTasks) * 100) 
     : 0;
 
   return (
@@ -38,25 +41,22 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-foreground">{title}</h3>
           <span className="text-xs font-medium text-muted-foreground">
-            {completedCount}/{items.length}
+            {completedTasks}/{totalTasks}
           </span>
         </div>
         
-        {/* Progress Bar */}
-        {items.length > 0 && (
-          <div className="space-y-1">
-            <Progress value={progressPercentage} className="h-1.5" />
+        {/* Progress Bar Global */}
+        <div className="space-y-1">
+          <Progress value={progressPercentage} className="h-1.5" />
+          <div className="flex items-center justify-between">
             <p className="text-xs text-muted-foreground">
               {progressPercentage}% completo
             </p>
+            <p className="text-xs text-muted-foreground">
+              {items.length} {items.length === 1 ? "tarefa" : "tarefas"}
+            </p>
           </div>
-        )}
-        
-        {items.length === 0 && (
-          <p className="text-xs text-muted-foreground">
-            Nenhuma tarefa
-          </p>
-        )}
+        </div>
       </div>
 
       {/* Column Content */}
