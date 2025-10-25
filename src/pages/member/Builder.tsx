@@ -364,7 +364,7 @@ export default function Builder() {
                 Builder
               </h1>
               <p className="text-muted-foreground text-sm max-w-2xl mx-auto leading-tight">
-                Metodologia comprovada para transformar ideias em soluções executáveis de IA
+                Extraia o Cérebro do Rafael Milagre e transforme ideias em soluções práticas de IA
               </p>
             </motion.div>
 
