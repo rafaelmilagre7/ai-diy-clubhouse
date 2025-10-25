@@ -65,6 +65,14 @@ export default function BuilderSolutionCover() {
 
   const handleCardClick = async (cardPath: string) => {
     const sectionKey = cardPath.split('/').pop() as string;
+    
+    // 🎯 CASO ESPECIAL: Recomendações navega direto (não precisa gerar nada)
+    if (sectionKey === 'recomendacoes') {
+      console.log('[COVER] 📚 Navegando para recomendações...');
+      navigate(cardPath);
+      return;
+    }
+    
     const sectionInfo = sectionMapping[sectionKey];
     
     if (!sectionInfo || !solution) return;
