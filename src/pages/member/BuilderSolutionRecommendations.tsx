@@ -24,23 +24,18 @@ export default function BuilderSolutionRecommendations() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="space-y-6"
+        className="space-y-8"
       >
-        <div className="flex items-center gap-3 mb-8">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-400/10">
-            <BookOpen className="h-8 w-8 text-blue-400" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold">Conteúdos Recomendados</h1>
-            <p className="text-muted-foreground">
-              Aulas selecionadas por IA para implementar sua solução
-            </p>
-          </div>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
+            📚 Conteúdos Recomendados
+          </h1>
+          <p className="text-foreground/70 text-lg">
+            Aulas selecionadas por IA para implementar sua solução
+          </p>
         </div>
 
-        <LiquidGlassCard className="p-6">
-          <LearningRecommendationsCard solutionId={id || ''} />
-        </LiquidGlassCard>
+        <LearningRecommendationsCard solutionId={id || ''} />
       </motion.div>
     </div>
   );
