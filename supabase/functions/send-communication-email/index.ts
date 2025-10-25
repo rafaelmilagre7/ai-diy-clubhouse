@@ -1,6 +1,6 @@
-// Edge Function: Send Communication Email - v1.0.1 (re-deploy)
+// Edge Function: Send Communication Email - v1.0.2 (npm import)
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { Resend } from "https://esm.sh/resend@4.0.0";
+import { Resend } from "npm:resend@4.0.0";
 
 // Verificar credenciais do Supabase Secrets
 const resendApiKey = Deno.env.get("RESEND_API_KEY");
