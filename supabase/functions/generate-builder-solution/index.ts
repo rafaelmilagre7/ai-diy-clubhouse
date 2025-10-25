@@ -36,8 +36,8 @@ const GenerateRequestSchema = z.object({
   mode: z.enum(["quick", "complete"]).optional().default("quick") // Modo de geração
 });
 
-// 🎯 FUNÇÃO ASSÍNCRONA PARA GERAR TUTORIAL MAKE/N8N EM BACKGROUND
-async function generateMakeTutorialAsync(
+// 🎯 FUNÇÃO ASSÍNCRONA PARA GERAR PROMPT LOVABLE OTIMIZADO
+async function generateLovablePromptAsync(
   solutionId: string,
   solutionData: any,
   idea: string,
@@ -46,151 +46,171 @@ async function generateMakeTutorialAsync(
   lovableApiKey: string
 ) {
   try {
-    const tutorialStart = Date.now();
-    console.log(`[BUILDER-ASYNC][${requestId}] 🎥 Gerando tutorial Make/N8N...`);
+    const promptStart = Date.now();
+    console.log(`[BUILDER-ASYNC][${requestId}] 🚀 Gerando prompt Lovable otimizado...`);
     
-    const makeTutorialSystemPrompt = `Você é o Rafael Milagre - especialista em automação no-code com Make.com e N8N.
+    const lovablePromptSystemPrompt = `Você é um especialista em Lovable - plataforma de desenvolvimento web com IA.
 
-🎯 MISSÃO: Gerar tutorial PASSO-A-PASSO para configurar automação visual, SEM CÓDIGO.
+🎯 MISSÃO: Gerar um PROMPT INICIAL PERFEITO que o Lovable possa executar para construir a solução completa.
 
 ⚠️ REGRAS CRÍTICAS:
-- NÃO mencione programação, código, SQL, TypeScript, React, Edge Functions
-- FOCO TOTAL em CONFIGURAÇÃO de módulos visuais
-- Linguagem simples para empreendedores SEM conhecimento técnico
-- Cada passo deve ser EXECUTÁVEL na interface do Make/N8N
+- O prompt deve ser EXECUTÁVEL pelo Lovable (gerar código React + TypeScript + Supabase)
+- Use tecnologias que o Lovable domina: React, TypeScript, Tailwind CSS, Shadcn/UI, Supabase
+- Seja ESPECÍFICO sobre funcionalidades, não genérico
+- Inclua requisitos de UI/UX, autenticação, banco de dados se relevante
+- Mencione integrações externas quando necessário (APIs)
 
 ESTRUTURA OBRIGATÓRIA do JSON:
 
 {
-  "tutorial": {
-    "title": "Título prático do tutorial",
-    "estimated_time": "Tempo para CONFIGURAR (ex: 30-45 minutos)",
-    "difficulty": "beginner|intermediate|advanced",
-    "tools_needed": ["Make.com", "Google Sheets", "ChatGPT API"],
-    "prerequisites": [
-      "Conta Make.com (gratuita)",
-      "API key OpenAI (se usar IA)",
-      "Google Account"
+  "lovable_prompt": {
+    "title": "Título claro do que será construído",
+    "context": "Contexto do negócio e problema a resolver (2-3 parágrafos)",
+    "core_features": [
+      "Feature 1 específica e detalhada",
+      "Feature 2 específica e detalhada",
+      "Feature 3 específica e detalhada"
     ],
-    "steps": [
-      {
-        "step_number": 1,
-        "title": "Criar novo cenário no Make",
-        "action": "O QUE fazer (ex: Adicionar módulo Webhook)",
-        "tool": "Ferramenta específica (ex: Make.com)",
-        "details": "COMO configurar de forma visual",
-        "screenshot_tip": "O que procurar na tela",
-        "estimated_duration": "2 minutos"
-      }
+    "technical_requirements": {
+      "frontend": "Descrição dos componentes React necessários",
+      "backend": "Descrição das necessidades de backend (Supabase/Edge Functions)",
+      "database": "Estrutura de tabelas e relações necessárias",
+      "authentication": "Tipo de autenticação necessária (se aplicável)",
+      "external_apis": ["Lista de APIs externas a integrar"]
+    },
+    "ui_ux_guidelines": {
+      "design_style": "Estilo visual desejado (moderno, minimalista, etc)",
+      "color_scheme": "Paleta de cores sugerida",
+      "key_interactions": ["Interações principais do usuário"]
+    },
+    "success_criteria": [
+      "Critério 1 mensurável de sucesso",
+      "Critério 2 mensurável de sucesso"
     ],
-    "testing_checklist": [
-      "Item 1 para testar se funcionou",
-      "Item 2 para testar"
-    ],
-    "troubleshooting": [
-      {
-        "problem": "Problema comum",
-        "solution": "Como resolver visualmente"
-      }
-    ],
-    "cost_breakdown": {
-      "make_plan": "Core ($10/mês) ou Free",
-      "api_costs": "OpenAI ~$3/mês para 100 chamadas",
-      "total_monthly": "$13-15/mês"
-    }
+    "full_prompt": "PROMPT COMPLETO E DETALHADO pronto para ser copiado e colado no Lovable. Deve incluir TODOS os detalhes técnicos, funcionais e visuais. Seja extremamente específico sobre o que construir, como deve funcionar, e como deve parecer. Use parágrafos bem estruturados."
   }
 }
 
-IMPORTANTE: Retorne APENAS JSON válido, sem texto adicional.`;
+EXEMPLO DE FULL_PROMPT:
+"Crie um sistema de atendimento ao cliente com WhatsApp Business API. 
 
-    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+FUNCIONALIDADES PRINCIPAIS:
+1. Dashboard administrativo para visualizar conversas em tempo real
+2. Sistema de tickets automático que cria um registro quando cliente envia primeira mensagem
+3. Classificação automática de urgência usando IA (Lovable AI com Gemini Flash)
+4. Notificações por email quando ticket é criado ou atualizado
+5. Histórico completo de conversas por cliente
+6. Status do ticket (novo, em andamento, resolvido, fechado)
+
+BANCO DE DADOS (Supabase):
+- Tabela 'tickets' com campos: id, customer_name, customer_phone, subject, status, priority, created_at, updated_at, assigned_to
+- Tabela 'messages' com campos: id, ticket_id, content, sender_type (customer/agent), sent_at
+- Tabela 'profiles' para dados dos agentes
+
+INTEGRAÇÕES:
+- WhatsApp Business API via webhook (edge function para receber mensagens)
+- Lovable AI para classificar urgência automaticamente
+- Sistema de email para notificações
+
+UI/UX:
+- Design moderno e clean com Tailwind
+- Dashboard com lista de tickets em cards
+- Filtros por status e prioridade
+- Modal para ver detalhes completos do ticket
+- Interface de chat estilo WhatsApp para ver histórico
+- Indicador visual de tickets não lidos
+- Tema claro/escuro
+
+AUTENTICAÇÃO:
+- Login com email/senha via Supabase Auth
+- RLS policies para agentes só verem seus tickets
+- Admin pode ver todos os tickets"`;
+
+    const userPrompt = `Ideia do usuário: ${idea}
+
+Dados da solução gerada:
+- Título: ${solutionData.title}
+- Descrição: ${solutionData.short_description}
+- Stack principal: ${solutionData.technical_overview?.main_stack || 'N/A'}
+- Ferramentas essenciais: ${solutionData.required_tools?.essential?.map((t: any) => t.name).join(', ') || 'N/A'}
+
+Gere um prompt Lovable otimizado e executável.`;
+
+    console.log(`[BUILDER-ASYNC][${requestId}] 🤖 Chamando Lovable AI...`);
+    
+    const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
+    
+    const aiResponse = await fetch(lovableAIUrl, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${lovableApiKey}`
+        Authorization: `Bearer ${lovableApiKey}`,
       },
       body: JSON.stringify({
         model: "google/gemini-2.5-flash",
         messages: [
-          { role: "system", content: makeTutorialSystemPrompt },
-          {
-            role: "user",
-            content: `Gere um tutorial Make/N8N PASSO-A-PASSO baseado nesta solução:
-
-SOLUÇÃO GERADA:
-${JSON.stringify(solutionData, null, 2)}
-
-IDEIA ORIGINAL:
-${idea}
-
-INSTRUÇÕES:
-- Seja ULTRA-específico: "Clique em X", "Selecione Y", "Configure Z"
-- Use nomes REAIS de módulos Make (ex: "HTTP > Make a Request", "OpenAI > Create a Completion")
-- Linguagem para NÃO-programadores
-- Foque em CONFIGURAÇÃO visual, não em código`
-          }
+          { role: "system", content: lovablePromptSystemPrompt },
+          { role: "user", content: userPrompt }
         ],
         temperature: 0.7,
         max_completion_tokens: 8000
       }),
-      signal: AbortSignal.timeout(120000)
+      signal: AbortSignal.timeout(60000)
     });
 
     if (!aiResponse.ok) {
-      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao gerar tutorial: ${aiResponse.status}`);
-      throw new Error(`Tutorial generation error: ${aiResponse.status}`);
+      const errorText = await aiResponse.text();
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro na API:`, errorText);
+      throw new Error(`Erro ${aiResponse.status}: ${errorText}`);
     }
 
     const aiData = await aiResponse.json();
-    const tutorialTime = Date.now() - tutorialStart;
-    
-    const rawContent = aiData.choices[0].message.content;
-    
-    const cleanJsonResponse = (text: string): string => {
-      let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
-      const firstBrace = cleaned.indexOf('{');
-      const lastBrace = cleaned.lastIndexOf('}');
-      
-      if (firstBrace === -1 || lastBrace === -1) {
-        throw new Error('JSON não encontrado na resposta');
-      }
-      
-      return cleaned.substring(firstBrace, lastBrace + 1);
-    };
-    
-    let makeTutorial: any;
-    
+    const lovablePrompt = aiData.choices?.[0]?.message?.content;
+
+    if (!lovablePrompt) {
+      throw new Error("Resposta vazia da IA");
+    }
+
+    console.log(`[BUILDER-ASYNC][${requestId}] ✅ Prompt gerado (${lovablePrompt.length} chars)`);
+
+    // Extrair JSON do prompt
+    let parsedPrompt;
     try {
-      const cleanedJson = cleanJsonResponse(rawContent);
-      const parsed = JSON.parse(cleanedJson);
-      
-      if (parsed.tutorial) {
-        makeTutorial = parsed.tutorial;
-        console.log(`[BUILDER-ASYNC][${requestId}] ✅ Tutorial Make parseado com sucesso`);
-        console.log(`[BUILDER-ASYNC][${requestId}] 📊 ${makeTutorial.steps?.length || 0} passos`);
+      const jsonMatch = lovablePrompt.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        parsedPrompt = JSON.parse(jsonMatch[0]);
       } else {
-        throw new Error('Campo "tutorial" não encontrado no JSON');
+        throw new Error("JSON não encontrado na resposta");
       }
     } catch (parseError) {
       console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao parsear JSON:`, parseError);
-      makeTutorial = { error: "Falha ao gerar tutorial", raw: rawContent };
+      parsedPrompt = {
+        lovable_prompt: {
+          title: solutionData.title,
+          full_prompt: lovablePrompt
+        }
+      };
     }
-    
-    console.log(`[BUILDER-ASYNC][${requestId}] ✅ Tutorial gerado em ${(tutorialTime / 1000).toFixed(1)}s`);
-    
-    // Atualizar solução no banco
+
+    // Salvar no banco
     const { error: updateError } = await supabase
-      .from("ai_generated_solutions")
-      .update({ make_tutorial: makeTutorial })
-      .eq("id", solutionId);
-    
+      .from('ai_generated_solutions')
+      .update({ 
+        lovable_prompt: parsedPrompt.lovable_prompt,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', solutionId);
+
     if (updateError) {
-      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao salvar tutorial:`, updateError);
-    } else {
-      console.log(`[BUILDER-ASYNC][${requestId}] ✅ Tutorial Make salvo no banco`);
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao salvar:`, updateError);
+      throw updateError;
     }
+
+    const promptTime = Date.now() - promptStart;
+    console.log(`[BUILDER-ASYNC][${requestId}] 🎉 Prompt Lovable salvo! (${(promptTime / 1000).toFixed(1)}s)`);
+    
   } catch (error) {
-    console.error(`[BUILDER-ASYNC][${requestId}] ❌ ERRO ao gerar tutorial:`, {
+    console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro fatal:`, {
       message: error?.message || 'Erro desconhecido',
       solutionId
     });
@@ -353,77 +373,83 @@ Empreendedores e gestores SEM conhecimento técnico que querem automatizar proce
 - Gemini Flash: ~$0.01/1k tokens (~$1 para 100 análises)
 - Cache respostas comuns em Sheets = economia 60-70%
 
-### 3️⃣ ARMAZENAMENTO DE DADOS (Simples → Complexo)
+### 3️⃣ ARMAZENAMENTO DE DADOS (Lovable Cloud = Supabase integrado)
 
-**HIERARQUIA RIGOROSA:**
+**HIERARQUIA PARA LOVABLE:**
 
-1. **Google Sheets** (SEMPRE COMEÇAR AQUI - 95% dos casos):
-   - Abas organizadas por tipo de dado
-   - Fórmulas nativas para cálculos
-   - Make tem módulos nativos (Add Row, Update Row, Search)
-   - Colaboração em tempo real
-   - IDEAL: até 50k linhas
-   
-   **ESTRUTURA TÍPICA:**
-   \`\`\`
-   Aba 'Leads': [Nome | Email | Telefone | Score IA | Status | Data]
-   Aba 'Conversas': [Lead ID | Mensagem | Resposta IA | Timestamp]
-   Aba 'Métricas': [KPI | Valor | Meta | % Alcançado]
-   \`\`\`
+1. **Lovable Cloud (Supabase PostgreSQL)** - PRIMEIRA ESCOLHA:
+   - Banco de dados relacional completo incluído no Lovable
+   - Ideal para aplicações web com autenticação, CRUD, relações entre tabelas
+   - Escalável até milhões de registros
+   - RLS (Row Level Security) nativo para segurança
+   - Queries SQL otimizadas
+   - Integração automática com React Query
+   - **Use quando**: precisa persistir dados, múltiplos usuários, autenticação, relações complexas
 
-2. **Airtable** (APENAS se precisar relações entre tabelas):
-   - Quando tem estrutura: Empresas (1) → Contatos (N) → Conversas (N)
-   - Views filtradas visuais
-   - Ainda no-code, mas mais robusto
-   - IDEAL: 50k-500k registros relacionados
+2. **Lovable Storage (Supabase Storage)** - PARA ARQUIVOS:
+   - Armazenamento de imagens, PDFs, vídeos
+   - Integrado com Lovable Cloud
+   - Buckets públicos e privados
+   - **Use quando**: precisa upload/download de arquivos
 
-3. **Supabase** (ÚLTIMO RECURSO - raríssimo):
-   - APENAS com 500k+ registros
-   - APENAS se precisa autenticação multi-usuário complexa
-   - Usado via Lovable Cloud (quando tem dashboard)
+3. **APIs Externas (quando necessário)**:
+   - Google Sheets via API: apenas para integração com planilhas existentes
+   - Airtable: quando cliente já usa e precisa sincronizar
+   - Outros: quando integração externa é requisito de negócio
 
-**FLUXO TÍPICO:**
-Entrada (WhatsApp) → Make processa + IA → Salva Sheets → Dashboard lê via API
+**PADRÃO LOVABLE:**
+Frontend (React) ↔ Supabase Client ↔ Database/Storage ↔ Edge Functions (quando necessário) ↔ APIs externas
 
-### 4️⃣ CANAIS DE CONTATO (Onde Cliente Interage)
+### 4️⃣ INTERFACES E INTEGRAÇÕES (Como usuário interage)
 
-**FOCAR EM ONDE, NÃO EM COMO:**
+**PRIORIZAR LOVABLE PARA INTERFACES WEB:**
 
-**CANAIS PRIORITÁRIOS:**
-1. **WhatsApp** (via ManyChat ou Business API+Make):
-   - Chatbot para atendimento 24/7
-   - Notificações automáticas
-   - Qualificação de leads
-   
-2. **Instagram DM** (via ManyChat):
-   - Respostas automáticas em stories
-   - Captura de interesse
-   
-3. **Email** (via Gmail API+Make ou SMTP):
-   - Relatórios diários automatizados
-   - Notificações importantes
-   
-4. **Dashboard Web** (via Lovable - opcional):
-   - Visualizar métricas
-   - Painel administrativo
-   - Gestão de dados
-   
-5. **CRM Existente** (HubSpot, Pipedrive, RD Station):
-   - Sincronização via Make
-   - Enriquecimento de dados
+**TIPOS DE INTERFACE:**
+1. **Dashboard Web (Lovable)** - PRIMEIRA OPÇÃO:
+   - Aplicação React completa com autenticação
+   - Painel administrativo para gestão de dados
+   - Visualização de métricas e relatórios
+   - CRUD completo (Create, Read, Update, Delete)
+   - Responsivo (desktop + mobile)
+   - Tema claro/escuro
+   - **Use quando**: precisa interface web para usuários internos ou externos
+
+2. **WhatsApp Business API** - PARA ATENDIMENTO:
+   - Integração via webhooks (Edge Functions)
+   - Recebe e envia mensagens programaticamente
+   - Armazena histórico no Lovable Cloud
+   - Dashboard Lovable para gerenciar conversas
+   - **Use quando**: atendimento ao cliente, notificações, automação de conversas
+
+3. **APIs de Terceiros**:
+   - Integrações via Edge Functions (backend seguro)
+   - Exemplos: Stripe (pagamentos), Resend (emails), OpenAI (IA)
+   - Credenciais armazenadas em Secrets (Lovable Cloud)
+   - **Use quando**: funcionalidade externa é necessária
+
+4. **Automações (Make/N8N)** - APENAS QUANDO NECESSÁRIO:
+   - Para conectar sistemas legados que não têm API REST
+   - Sincronizações agendadas com sistemas externos
+   - **Use quando**: Lovable Edge Functions não são suficientes
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-## 🚫 LISTA PROIBIDA - NUNCA MENCIONE:
-- ❌ "Criar edge function", "Desenvolver API REST", "Programar webhook"
-- ❌ "Implementar banco de dados", "Criar schema SQL"
-- ❌ Código, TypeScript, React components, programação
+## 🎯 FOCO: GERAR SOLUÇÕES LOVABLE EXECUTÁVEIS
 
-## ✅ LINGUAGEM CORRETA - SEMPRE USE:
-- ✅ "Configure módulo Make X → conecte com Y"
-- ✅ "Use ManyChat para fluxo visual no WhatsApp"
-- ✅ "Armazene em Google Sheets com abas organizadas"
-- ✅ "Dashboard Lovable lê dados via API"
+**LINGUAGEM TÉCNICA CORRETA:**
+- ✅ "Criar componentes React para dashboard administrativo"
+- ✅ "Implementar autenticação com Supabase Auth"
+- ✅ "Estruturar banco de dados com tabelas X, Y, Z"
+- ✅ "Edge Functions para integrar com API externa"
+- ✅ "Lovable AI (Gemini Flash) para análise de sentimento"
+- ✅ "RLS policies para segurança multi-tenant"
+- ✅ "React Query para cache e sincronização"
+- ✅ "Shadcn/UI components com Tailwind CSS"
+
+**QUANDO MENCIONAR NO-CODE:**
+- ✅ Use Make/N8N APENAS quando cliente já usa ou quando precisa conectar sistemas legados
+- ✅ Priorize SEMPRE Lovable Cloud + Edge Functions para lógica de backend
+- ✅ Se precisar automação externa, explique POR QUE Edge Functions não bastam
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
@@ -572,31 +598,31 @@ ESTRUTURA DA RESPOSTA:
   },
   
   "framework_quadrants": {
-    "quadrant1_automation": {
-      "title": "🤖 Automação No-Code",
-      "description": "Ferramentas visuais para conectar sistemas - priorize Lovable, Make, N8N, ManyChat, Typebot.",
+    "quadrant1_frontend": {
+      "title": "🎨 Frontend (Lovable React)",
+      "description": "Interface web construída com React, TypeScript, Tailwind CSS e Shadcn/UI",
       "items": [
-        "PRIORIDADE 1 - Lovable: [descreva caso específico - ex: 'Dashboard web para acompanhar análises de IA em tempo real com filtros e gráficos']",
-        "PRIORIDADE 2 - Make: [cenário específico - ex: 'Captura email → processa com GPT-5 → salva resposta em Google Sheets → notifica por WhatsApp']",
-        "PRIORIDADE 3 - ManyChat: [se WhatsApp/Instagram - ex: 'Bot qualifica leads com 5 perguntas → envia para Make processar com IA → salva em Sheets']",
-        "PRIORIDADE 4 - N8N: [alternativa ao Make - ex: 'Workflow self-hosted para processar dados sensíveis sem enviar para cloud externa']",
-        "PRIORIDADE 5 - Typebot: [se chatbot web - ex: 'Fluxo no site coleta requisitos → envia webhook para Make → IA processa → responde em tempo real']"
+        "COMPONENTES PRINCIPAIS: [liste 3-5 componentes React principais - ex: 'DashboardLayout (sidebar + header)', 'TicketList (grid de tickets)', 'TicketDetailModal (visualização completa)', 'ChatInterface (histórico de mensagens)', 'FilterBar (filtros de status/prioridade)']",
+        "PÁGINAS/ROTAS: [liste rotas principais - ex: '/dashboard (home)', '/tickets (lista)', '/tickets/:id (detalhe)', '/settings (configurações)', '/login (autenticação)']",
+        "ESTADOS E DADOS: [como gerenciar dados - ex: 'React Query para cache de tickets', 'Zustand para estado global (user, theme)', 'Real-time subscriptions Supabase para novos tickets']",
+        "UI/UX: [detalhes visuais - ex: 'Design moderno com cards glassmorphism', 'Animações Framer Motion', 'Loading skeletons', 'Toast notifications', 'Tema dark/light com next-themes']",
+        "RESPONSIVIDADE: [como adaptar - ex: 'Mobile-first com Tailwind breakpoints', 'Sidebar colapsável em mobile', 'Tabelas viram cards em mobile']"
       ],
-      "tool_names": ["Lovable", "Make", "ManyChat", "N8N", "Typebot"],
-      "integration_details": "DETALHE A CONEXÃO: Como as ferramentas se conectam de ponta a ponta. Ex: 'ManyChat captura mensagem → webhook POST para Make → Make chama OpenAI → resposta volta para ManyChat → histórico salvo em Sheets → dashboard Lovable atualiza via polling a cada 10s'"
+      "tool_names": ["React", "TypeScript", "Tailwind CSS", "Shadcn/UI", "React Query", "Zustand", "Framer Motion"],
+      "integration_details": "FLUXO DE DADOS: Como o frontend se comunica com backend. Ex: 'Componente TicketList → useQuery hook → Supabase client.from(tickets).select() → cache em React Query → re-fetch a cada 30s ou ao receber evento real-time'"
     },
-    "quadrant2_ai": {
-      "title": "🧠 Modelos de IA",
-      "description": "APIs comerciais (via Make) e ferramentas prontas - especifique qual modelo e por quê.",
+    "quadrant2_backend": {
+      "title": "⚙️ Backend (Lovable Cloud)",
+      "description": "Banco de dados, autenticação, storage e edge functions via Supabase integrado",
       "items": [
-        "API COMERCIAL 1: [modelo específico + caso - ex: 'GPT-5 via Make para análise de sentimento em reviews (maior acurácia em português)']",
-        "API COMERCIAL 2: [se aplicável - ex: 'Gemini 2.5 Pro para processar PDFs enviados via WhatsApp (melhor em OCR + contexto longo)']",
-        "API COMERCIAL 3: [se aplicável - ex: 'Claude Sonnet 4.5 como fallback se OpenAI falhar (configurar timeout de 30s no Make)']",
-        "FERRAMENTA PRONTA: [se time usa direto - ex: 'ChatGPT para time rascunhar respostas antes de enviar aos clientes']",
-        "LOVABLE AI: [APENAS se tem dashboard Lovable - ex: 'Edge function processa análise via Lovable AI (Gemini 2.5 Flash) e exibe no dashboard']"
+        "DATABASE SCHEMA: [estrutura de tabelas - ex: 'tickets (id, customer_name, status, priority, created_at)', 'messages (id, ticket_id, content, sender_type, sent_at)', 'profiles (id, user_id, full_name, role, avatar_url)']",
+        "AUTENTICAÇÃO: [tipo de auth - ex: 'Supabase Auth com email/senha', 'Login social (Google OAuth)', 'Magic links', 'RLS policies por role (admin/agent/customer)']",
+        "EDGE FUNCTIONS: [funções serverless - ex: 'receive-whatsapp-webhook (POST /whatsapp)', 'classify-ticket-priority (chamada interna)', 'send-email-notification (via Resend API)', 'generate-report (scheduled daily)']",
+        "STORAGE: [buckets e arquivos - ex: 'avatars (público)', 'ticket-attachments (privado com RLS)', 'reports (privado admin-only)']",
+        "REAL-TIME: [subscriptions - ex: 'Supabase real-time subscription em tickets para atualizar dashboard ao vivo', 'Broadcast para notificar agentes online']"
       ],
-      "tool_names": ["GPT-5 (OpenAI)", "Gemini 2.5 (Google)", "Claude Sonnet (Anthropic)", "ChatGPT", "Lovable AI"],
-      "ai_strategy": "ESTRATÉGIA DETALHADA DE IA (seja ULTRA-específico):\n\n🎯 COMO IMPLEMENTAR:\n1. Cenário Make: módulo HTTP → URL: https://api.openai.com/v1/chat/completions\n2. Headers: Authorization: Bearer {{api_key_openai}}, Content-Type: application/json\n3. Body JSON: {\"model\": \"gpt-5\", \"messages\": [{\"role\": \"user\", \"content\": \"{{1.message}}\"}]}\n4. Parse resposta: {{body.choices[0].message.content}}\n5. Se erro 429 (rate limit): aguardar 30s e tentar Claude (fallback)\n6. Cache respostas comuns em Google Sheets coluna 'FAQ_Cache' para economizar chamadas\n\n💰 CUSTOS ESTIMADOS:\n- GPT-5: ~$0.03 por 1k tokens (~500 palavras) = $3 para 100 análises\n- Gemini 2.5 Flash: ~$0.01 por 1k tokens = $1 para 100 análises\n- Cache em Sheets reduz custos em 60-70%\n\n📊 CASOS DE USO ESPECÍFICOS:\n- Qualificação de leads: Make captura dados → GPT-5 analisa perfil → classifica como 'Quente/Morno/Frio' → Sheets salva com score\n- Resumo de conversas: ManyChat envia histórico → GPT-5 resume em 3 bullet points → Email envia para gestor\n- Respostas automáticas: Cliente pergunta → Claude analisa contexto → gera resposta personalizada → ManyChat envia"
+      "tool_names": ["Supabase PostgreSQL", "Supabase Auth", "Edge Functions", "Supabase Storage", "Supabase Realtime"],
+      "backend_strategy": "ARQUITETURA BACKEND DETALHADA:\n\n🗄️ DATABASE:\n- Tabelas com relações (foreign keys)\n- Indexes para queries otimizadas (ex: index em tickets.status para filtros)\n- Triggers para updated_at automático\n- RLS policies granulares (ex: agentes só veem tickets assigned_to = auth.uid())\n\n🔐 SEGURANÇA:\n- Row Level Security (RLS) em TODAS as tabelas\n- Policies separadas para SELECT, INSERT, UPDATE, DELETE\n- API keys em Secrets (Lovable Cloud)\n- Validação de dados no Edge Functions\n\n⚡ EDGE FUNCTIONS:\n- Criadas em /supabase/functions/nome-funcao/index.ts\n- Deploy automático ao fazer commit\n- CORS configurado para chamadas do frontend\n- Error handling robusto com try/catch\n- Logs estruturados para debugging\n\n💾 CUSTOS:\n- Lovable Cloud free tier: 500MB database, 1GB storage, 500k edge function invocations/mês\n- Escalável até milhões de registros sem mudar código"
     },
     "quadrant3_data": {
       "title": "📊 Dados Simples",
@@ -1351,15 +1377,15 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] 💾 Retornando solution.id: ${savedSolution.id}`);
     console.log(`[BUILDER] ⏱️  Tempo total: ${generationTime}ms`);
     
-    // 🎥 GERAR TUTORIAL MAKE/N8N EM BACKGROUND (NÃO BLOQUEIA RESPOSTA)
+    // 🚀 GERAR PROMPT LOVABLE OTIMIZADO EM BACKGROUND (NÃO BLOQUEIA RESPOSTA)
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {
-      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando tutorial Make`);
+      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando geração de prompt`);
     } else if (savedSolution?.id && mode === "complete") {
-      console.log(`[BUILDER][${requestId}] 🚀 Iniciando geração de Tutorial Make em BACKGROUND`);
+      console.log(`[BUILDER][${requestId}] 🚀 Iniciando geração de Prompt Lovable em BACKGROUND`);
       
       EdgeRuntime.waitUntil(
-        generateMakeTutorialAsync(
+        generateLovablePromptAsync(
           savedSolution.id,
           solutionData,
           idea,
@@ -1367,7 +1393,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
           supabase,
           lovableApiKey
         ).catch(err => {
-          console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Tutorial Make:`, err);
+          console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Prompt Lovable:`, err);
         })
       );
     }
