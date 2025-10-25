@@ -91,7 +91,7 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
                 <img
                   src={lastLesson.cover_image}
                   alt={lastLesson.title}
-                  className="object-cover w-full h-full transition-transform duration-500 group-hover:scale-105"
+                  className="object-cover w-full h-full transition-transform duration-slower group-hover:scale-105"
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-r from-blue-600 via-blue-500 to-blue-700" />
@@ -126,7 +126,7 @@ export const ContinueLearning = ({ className }: ContinueLearningProps) => {
               
               {/* Botão de play centralizado que aparece em hover */}
               <div className="absolute inset-0 flex items-center justify-center">
-                <div className="bg-card/90 rounded-full p-6 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-105 duration-300 shadow-xl">
+                <div className="bg-card/90 rounded-full p-6 opacity-0 group-hover:opacity-100 transition-opacity transform group-hover:scale-105 duration-slow shadow-xl">
                   <Play className="h-8 w-8 text-primary fill-current" />
                 </div>
               </div>

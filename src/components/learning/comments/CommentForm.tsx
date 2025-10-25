@@ -113,7 +113,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
                 variant="ghost"
                 onClick={onCancel}
                 disabled={isSubmitting}
-                className="bg-surface-elevated/30 border-0 hover:bg-surface-elevated/50 text-muted-foreground hover:text-foreground transition-all duration-200"
+                className="bg-surface-elevated/30 border-0 hover:bg-surface-elevated/50 text-muted-foreground hover:text-foreground transition-all duration-base"
               >
                 Cancelar
               </Button>
@@ -122,7 +122,7 @@ export const CommentForm: React.FC<CommentFormProps> = ({
             <Button 
               type="submit"
               disabled={!content.trim() || isSubmitting}
-              className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 border-0 shadow-lg hover:shadow-xl backdrop-blur-sm transition-all duration-300 disabled:opacity-50"
+              className="bg-gradient-to-r from-primary via-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 border-0 shadow-lg hover:shadow-xl backdrop-blur-sm transition-all duration-slow disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

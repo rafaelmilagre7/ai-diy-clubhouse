@@ -49,7 +49,7 @@ export const CourseCard = memo<CourseCardProps>(({
   
   return (
     <Link to={`/learning/course/${id}`} className="block h-full group">
-      <Card className="overflow-hidden h-full flex flex-col transition-all duration-300 border-transparent hover:scale-105 hover:z-10 hover:shadow-xl relative">
+      <Card className="overflow-hidden h-full flex flex-col transition-all duration-slow border-transparent hover:scale-105 hover:z-10 hover:shadow-xl relative">
         <div className="relative">
           <AspectRatio ratio={9/16}>
             <div 
@@ -62,7 +62,7 @@ export const CourseCard = memo<CourseCardProps>(({
                 <img 
                   src={imageUrl} 
                   alt={title}
-                  className="w-full h-full object-cover transition-all duration-500 group-hover:scale-110"
+                  className="w-full h-full object-cover transition-all duration-slower group-hover:scale-110"
                   onError={(e) => {
                     (e.target as HTMLImageElement).style.display = 'none';
                   }}

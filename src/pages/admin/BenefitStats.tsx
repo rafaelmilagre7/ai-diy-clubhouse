@@ -260,7 +260,7 @@ const BenefitStats = () => {
         ].map((metric, index) => (
           <div 
             key={metric.label} 
-            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
+            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-slower hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-border/30`}>
@@ -269,14 +269,14 @@ const BenefitStats = () => {
                   <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-300">
+                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-slow">
                     {metric.value}
                   </p>
                 </div>
               </div>
             </div>
             <div className="p-4">
-              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-300 mb-1">
+              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-slow mb-1">
                 {metric.label}
               </p>
               <p className="text-xs text-muted-foreground">

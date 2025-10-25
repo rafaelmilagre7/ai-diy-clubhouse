@@ -332,7 +332,7 @@ const FormacaoMateriais = () => {
           {isAdmin && (
             <Button 
               onClick={handleNovoRecurso}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-105"
+              className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-3 text-lg font-medium shadow-lg hover:shadow-xl transition-all duration-base hover:scale-105"
             >
               <Plus className="h-5 w-5 mr-2" />
               Novo Material
@@ -342,7 +342,7 @@ const FormacaoMateriais = () => {
 
         {/* Estatísticas Expandidas */}
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-6">
-          <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-slow hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total</CardTitle>
               <FileText className="h-5 w-5 text-primary" />
@@ -357,7 +357,7 @@ const FormacaoMateriais = () => {
             </CardContent>
           </Card>
           
-          <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
+          <Card className="bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-slow hover:scale-105">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Arquivos</CardTitle>
               <Download className="h-5 w-5 text-green-500" />

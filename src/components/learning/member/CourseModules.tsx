@@ -105,9 +105,9 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
           <AccordionItem
             key={module.id}
             value={module.id}
-            className="border-0 bg-card/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300"
+            className="border-0 bg-card/50 backdrop-blur-sm rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-slow"
           >
-            <AccordionTrigger className="px-6 py-6 text-left hover:no-underline group bg-gradient-to-r from-transparent via-primary/5 to-transparent hover:from-primary/10 hover:via-primary/5 hover:to-primary/10 transition-all duration-300">
+            <AccordionTrigger className="px-6 py-6 text-left hover:no-underline group bg-gradient-to-r from-transparent via-primary/5 to-transparent hover:from-primary/10 hover:via-primary/5 hover:to-primary/10 transition-all duration-slow">
               <div className="flex items-center justify-between w-full">
                 <div className="space-y-2">
                   <h3 className="text-xl font-semibold text-foreground group-hover:text-primary transition-colors">
@@ -121,7 +121,7 @@ export const CourseModules: React.FC<CourseModulesProps> = ({
                 </div>
                 
                 <div className="flex items-center gap-4">
-                  <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all duration-200 group-data-[state=open]:rotate-180" />
+                  <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all duration-base group-data-[state=open]:rotate-180" />
                 </div>
               </div>
             </AccordionTrigger>
