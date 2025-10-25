@@ -204,7 +204,7 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
 
           {/* Test Results */}
           {testResult && (
-            <Card className={testResult.success ? "border-green-500" : "border-red-500"}>
+            <Card className={testResult.success ? "border-status-success" : "border-status-error"}>
               <CardContent className="pt-6 space-y-4">
                 {/* Status Header */}
                 <div className="flex items-center gap-3">

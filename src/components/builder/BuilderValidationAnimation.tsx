@@ -55,7 +55,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
             initial={{ scale: 0 }}
             animate={{ scale: [0, 1.2, 1] }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="p-8 rounded-full bg-gradient-to-br from-green-500/20 to-green-400/5 border-2 border-green-500/30"
+            className="p-8 rounded-full bg-gradient-to-br from-status-success/20 to-status-success/5 border-2 border-status-success/30"
           >
             <CheckCircle className="h-16 w-16 text-status-success" />
           </motion.div>
@@ -66,7 +66,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
             initial={{ scale: 0 }}
             animate={{ scale: [0, 1.2, 1] }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="p-8 rounded-full bg-gradient-to-br from-red-500/20 to-red-400/5 border-2 border-red-500/30"
+            className="p-8 rounded-full bg-gradient-to-br from-status-error/20 to-status-error/5 border-2 border-status-error/30"
           >
             <XCircle className="h-16 w-16 text-status-error" />
           </motion.div>

@@ -160,7 +160,30 @@ bg-operational, text-operational, border-operational
 | **Exceções** | 176 | 176 | 100% | ✅ Documentadas |
 | **Total** | 727 | 446+ | 61%+ | 🟡 Em progresso |
 
-**Compliance Atual:** ~85% (meta: 98-99%)
+## 📊 Progresso em Tempo Real
+
+**Sprint 1: Transições (47% completo)**
+- ✅ 201+ transições normalizadas em 41+ arquivos
+- Últimas: RecommendedLessons (6), SmartSolutionCard (2), SolutionRecommendationCard (10)
+- 🔄 68 arquivos restantes
+
+**Sprint 2: Status Colors (87% completo)**
+- ✅ 93+ cores normalizadas
+- Últimas: TestAutomationDialog (2), BuilderValidationAnimation (4), SolutionResult (1)
+- 🔄 14 ocorrências restantes
+
+**Sprint 3: Gradientes (100% completo em arquivos críticos)**
+- ✅ 24+ gradientes normalizados (incluindo BuilderValidationAnimation)
+
+**Compliance atual: ~88%**
+
+### Últimas alterações (Batch 2)
+- `RecommendedLessons.tsx`: 6 transições (duration-300 → duration-slow, duration-200 → duration-base)
+- `SmartSolutionCard.tsx`: 2 transições (duration-300/500 → duration-slow/slower)
+- `SolutionRecommendationCard.tsx`: 10 transições (duration-500/700/1000/300/200 → semantic tokens)
+- `TestAutomationDialog.tsx`: 2 cores (border-green-500/red-500 → border-status-success/error)
+- `BuilderValidationAnimation.tsx`: 4 cores e gradientes (green-500/red-500 → status-success/error)
+- `SolutionResult.tsx`: Removido card de teste com cores hardcoded (border-red-500, bg-yellow-400)
 
 ---
 
@@ -177,6 +200,9 @@ bg-operational, text-operational, border-operational
 - [x] `ImplementationTrailHeader.tsx`
 - [x] `ImplementationTrailTabs.tsx`
 - [x] `PersonalizationInsights.tsx`
+- [x] `RecommendedLessons.tsx`
+- [x] `SmartSolutionCard.tsx`
+- [x] `SolutionRecommendationCard.tsx`
 
 ### Segurança
 - [x] `SecurityAlertsWidget.tsx`
@@ -188,6 +214,10 @@ bg-operational, text-operational, border-operational
 
 ### Builder
 - [x] `ArchitectureInsights.tsx`
+- [x] `BuilderValidationAnimation.tsx`
+
+### Solutions
+- [x] `SolutionResult.tsx`
 
 ### Layout
 - [x] `MemberUserMenu.tsx`
@@ -224,10 +254,11 @@ bg-operational, text-operational, border-operational
 - [x] `BroadcastForm.tsx`
 - [x] `TestAutomationDialog.tsx`
 - [x] `BuilderValidationAnimation.tsx`
+- [x] `BuilderValidationAnimation.tsx`
 - [x] `FlowNodeSidebar.tsx`
 - [x] `BlockedIPsManager.tsx`
 
-**Total:** 35+ arquivos 100% normalizados ✅
+**Total:** 41+ arquivos 100% normalizados ✅
 
 ---
 

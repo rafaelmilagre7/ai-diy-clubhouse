@@ -35,8 +35,8 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
   };
 
   return (
-    <Card className="group relative overflow-hidden backdrop-blur-xl bg-card/80 border border-border/50 hover:border-aurora-primary/50 transition-all duration-300 hover:scale-[1.02] shadow-md hover:shadow-xl hover:shadow-aurora-primary/5">
-      <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <Card className="group relative overflow-hidden backdrop-blur-xl bg-card/80 border border-border/50 hover:border-aurora-primary/50 transition-all duration-slow hover:scale-[1.02] shadow-md hover:shadow-xl hover:shadow-aurora-primary/5">
+      <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-0 group-hover:opacity-100 transition-opacity duration-slow" />
       
       <CardContent className="p-0 relative z-10">
         <div className="flex h-40">
@@ -44,7 +44,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
           <div className="w-64 relative overflow-hidden rounded-l-xl bg-gradient-aurora-subtle">
             <div className="w-full h-full flex items-center justify-center">
               <div className="text-center">
-                <PlayCircle className="h-16 w-16 mx-auto mb-2 text-aurora-primary group-hover:scale-110 transition-transform duration-300" />
+                <PlayCircle className="h-16 w-16 mx-auto mb-2 text-aurora-primary group-hover:scale-110 transition-transform duration-slow" />
                 <p className="text-xs text-muted-foreground font-medium">Aula Recomendada</p>
               </div>
             </div>
@@ -61,7 +61,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
           <div className="flex-1 p-4 flex flex-col justify-between">
             <div className="space-y-3">
               <div>
-                <h4 className="text-base font-bold text-foreground group-hover:text-aurora-primary transition-colors duration-200 line-clamp-2">
+                <h4 className="text-base font-bold text-foreground group-hover:text-aurora-primary transition-colors duration-base line-clamp-2">
                   {lesson.title}
                 </h4>
                 <div className="flex items-center gap-2 mt-1">
@@ -77,7 +77,7 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
 
             {/* Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-border/50">
-              <div className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-200">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground group-hover:text-foreground transition-colors duration-base">
                 <GraduationCap className="h-4 w-4" />
                 <span>Aprendizado</span>
               </div>
@@ -86,10 +86,10 @@ const LessonCard = ({ lesson }: { lesson: RecommendedLesson }) => {
                 size="sm" 
                 onClick={handleViewLesson}
                 variant="aurora-primary"
-                className="shadow-md hover:shadow-lg hover:shadow-aurora-primary/20 group-hover:scale-105 transition-all duration-200"
+                className="shadow-md hover:shadow-lg hover:shadow-aurora-primary/20 group-hover:scale-105 transition-all duration-base"
               >
                 Ver Aula
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-200" />
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform duration-base" />
               </Button>
             </div>
           </div>

@@ -178,18 +178,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </LiquidGlassCard>
       </motion.div>
 
-      {/* 🔴 TESTE: Card Simplificado SEM INLINE STYLES */}
-      <div className="border-8 border-red-500 bg-yellow-400 p-10 my-10 min-h-[200px] relative z-50">
-        <h1 className="text-4xl font-bold text-black">
-          🎓 CARD DE TESTE - AGORA VOCÊ VÊ?
-        </h1>
-        <p className="text-xl text-black mt-5">
-          Card usando APENAS Tailwind (sem inline styles que o CSP bloqueia!)
-        </p>
-        <p className="text-base text-black mt-3">
-          Solution ID: {solutionData?.id || 'N/A'}
-        </p>
-      </div>
+      {/* REMOVIDO: Card de teste que continha cores hardcoded - Normalização Fase 12 */}
 
       {/* Arquitetura Visual (Fluxograma) - 3º Bloco - ON DEMAND */}
       {(solutionData.architecture_flowchart || true) && (

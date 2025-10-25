@@ -163,7 +163,7 @@ export const SmartSolutionCard = ({
   return (
     <Card 
       className={cn(
-        "h-full cursor-pointer group transition-all duration-300 overflow-hidden transform hover:-translate-y-1 bg-card border-border",
+        "h-full cursor-pointer group transition-all duration-slow overflow-hidden transform hover:-translate-y-1 bg-card border-border",
         getCategoryStyle(solution.category),
         isImplemented && "opacity-75"
       )}
@@ -175,7 +175,7 @@ export const SmartSolutionCard = ({
           <img 
             src={solution.thumbnail_url}
             alt={solution.title}
-            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500"
+            className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-slower"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-surface-elevated">

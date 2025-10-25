@@ -78,15 +78,15 @@ export const SolutionRecommendationCard = ({
   }
 
   return (
-    <Card className="group relative overflow-hidden border border-border/50 hover:border-aurora-primary/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-aurora-primary/10 bg-gradient-to-br from-card/95 to-muted/95 backdrop-blur-md">
+    <Card className="group relative overflow-hidden border border-border/50 hover:border-aurora-primary/50 transition-all duration-slower hover:scale-[1.02] hover:shadow-2xl hover:shadow-aurora-primary/10 bg-gradient-to-br from-card/95 to-muted/95 backdrop-blur-md">
       {/* Efeito de brilho animado */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-aurora-primary/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-aurora-primary/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-slowest ease-out" />
       
       {/* Glow effect */}
-      <div className="absolute inset-0 bg-gradient-to-t from-aurora-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+      <div className="absolute inset-0 bg-gradient-to-t from-aurora-primary/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-slower" />
       
       {/* Particles effect background */}
-      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+      <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-slower">
         <div className="absolute top-1/4 left-1/4 w-1 h-1 bg-aurora-primary rounded-full animate-pulse" style={{animationDelay: '0.2s'}} />
         <div className="absolute top-3/4 right-1/3 w-1 h-1 bg-aurora-primary-light rounded-full animate-pulse" style={{animationDelay: '0.5s'}} />
         <div className="absolute bottom-1/3 left-2/3 w-1 h-1 bg-aurora-primary-dark rounded-full animate-pulse" style={{animationDelay: '0.8s'}} />
@@ -101,14 +101,14 @@ export const SolutionRecommendationCard = ({
                 <img 
                   src={solutionData.thumbnail_url} 
                   alt={solutionData.title || 'Solução'}
-                  className="w-full h-full object-cover transition-all duration-700 group-hover:scale-115 group-hover:rotate-1"
+                  className="w-full h-full object-cover transition-all duration-slower group-hover:scale-115 group-hover:rotate-1"
                   loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-background/60"></div>
                 <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent"></div>
                 
                 {/* Efeito de scan line */}
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-aurora-primary/20 to-transparent h-8 translate-y-[-100%] group-hover:translate-y-[300%] transition-transform duration-1500 ease-out" />
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent via-aurora-primary/20 to-transparent h-8 translate-y-[-100%] group-hover:translate-y-[300%] transition-transform duration-slowest ease-out" />
               </>
             ) : (
               <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-aurora-primary/20 to-aurora-primary-light/20 relative">
@@ -127,9 +127,9 @@ export const SolutionRecommendationCard = ({
             
             {/* Badge de prioridade com efeito glass */}
             <div className="absolute top-4 left-4">
-              <span className={`text-xs px-3 py-1.5 rounded-full border font-medium ${badge.color} backdrop-blur-md shadow-lg group-hover:scale-105 transition-transform duration-300`}>
+              <span className={`text-xs px-3 py-1.5 rounded-full border font-medium ${badge.color} backdrop-blur-md shadow-lg group-hover:scale-105 transition-transform duration-slow`}>
                 <span className="relative z-10">{badge.text}</span>
-                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-slow" />
               </span>
             </div>
 
@@ -149,7 +149,7 @@ export const SolutionRecommendationCard = ({
               {/* Header com título e score */}
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <h3 className="text-lg font-bold text-high-contrast group-hover:text-white transition-colors duration-200 line-clamp-2">
+                  <h3 className="text-lg font-bold text-high-contrast group-hover:text-white transition-colors duration-base line-clamp-2">
                     {solutionData?.title || 'Carregando...'}
                   </h3>
                   {solutionData?.category && (
@@ -163,23 +163,23 @@ export const SolutionRecommendationCard = ({
                 </div>
                 
                 {recommendation.aiScore && (
-                  <div className="flex items-center gap-2 px-3 py-2 bg-aurora-primary/10 rounded-lg border border-aurora-primary/20 group-hover:bg-aurora-primary/20 group-hover:scale-105 transition-all duration-300 ml-4 relative overflow-hidden">
+                  <div className="flex items-center gap-2 px-3 py-2 bg-aurora-primary/10 rounded-lg border border-aurora-primary/20 group-hover:bg-aurora-primary/20 group-hover:scale-105 transition-all duration-slow ml-4 relative overflow-hidden">
                     {/* Progress fill animation */}
                     <div 
-                      className="absolute left-0 top-0 h-full bg-aurora-primary/5 transition-all duration-1000 group-hover:bg-aurora-primary/10"
+                      className="absolute left-0 top-0 h-full bg-aurora-primary/5 transition-all duration-slowest group-hover:bg-aurora-primary/10"
                       style={{width: `${recommendation.aiScore}%`}}
                     />
-                    <Target className="h-4 w-4 text-aurora-primary relative z-10 group-hover:rotate-12 transition-transform duration-300" />
+                    <Target className="h-4 w-4 text-aurora-primary relative z-10 group-hover:rotate-12 transition-transform duration-slow" />
                     <span className="text-sm text-aurora-primary font-semibold relative z-10">
                       {recommendation.aiScore}%
                     </span>
-                    <Award className="h-3 w-3 text-aurora-primary relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                    <Award className="h-3 w-3 text-aurora-primary relative z-10 group-hover:scale-125 transition-transform duration-slow" />
                   </div>
                 )}
               </div>
 
               {/* Justificativa */}
-              <p className="text-high-contrast text-sm leading-relaxed group-hover:text-white transition-colors duration-200 line-clamp-3">
+              <p className="text-high-contrast text-sm leading-relaxed group-hover:text-white transition-colors duration-base line-clamp-3">
                 {recommendation.justification}
               </p>
             </div>
@@ -187,7 +187,7 @@ export const SolutionRecommendationCard = ({
             {/* Footer */}
             <div className="flex items-center justify-between pt-4 border-t border-border/50">
               {recommendation.estimatedTime && (
-                <div className="flex items-center gap-2 text-sm text-medium-contrast group-hover:text-high-contrast transition-colors duration-200">
+                <div className="flex items-center gap-2 text-sm text-medium-contrast group-hover:text-high-contrast transition-colors duration-base">
                   <Clock className="h-4 w-4" />
                   <span>{recommendation.estimatedTime}</span>
                 </div>
@@ -196,12 +196,12 @@ export const SolutionRecommendationCard = ({
               <Button 
                 size="sm" 
                 onClick={handleViewSolution}
-                className="bg-aurora-primary hover:bg-aurora-primary-dark text-white shadow-lg hover:shadow-aurora-primary/25 hover:shadow-xl group-hover:scale-110 transition-all duration-300 ml-auto relative overflow-hidden"
+                className="bg-aurora-primary hover:bg-aurora-primary-dark text-white shadow-lg hover:shadow-aurora-primary/25 hover:shadow-xl group-hover:scale-110 transition-all duration-slow ml-auto relative overflow-hidden"
               >
                 {/* Button shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-slower" />
                 <span className="relative z-10">Ver Solução</span>
-                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-2 transition-transform duration-300 relative z-10" />
+                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-2 transition-transform duration-slow relative z-10" />
               </Button>
             </div>
           </div>
