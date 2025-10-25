@@ -166,23 +166,15 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </LiquidGlassCard>
       </motion.div>
 
-      {/* 🔴 TESTE: Card Simplificado MOVIDO AQUI */}
-      <div style={{ 
-        border: '5px solid red', 
-        padding: '40px', 
-        margin: '40px 0',
-        backgroundColor: 'yellow',
-        minHeight: '200px',
-        zIndex: 9999,
-        position: 'relative'
-      }}>
-        <h1 style={{ fontSize: '32px', color: 'black' }}>
-          🎓 CARD MOVIDO PARA CIMA - VOCÊ VÊ AGORA?
+      {/* 🔴 TESTE: Card Simplificado SEM INLINE STYLES */}
+      <div className="border-8 border-red-500 bg-yellow-400 p-10 my-10 min-h-[200px] relative z-50">
+        <h1 className="text-4xl font-bold text-black">
+          🎓 CARD DE TESTE - AGORA VOCÊ VÊ?
         </h1>
-        <p style={{ fontSize: '20px', color: 'black', marginTop: '20px' }}>
-          Este é o MESMO card, mas movido para logo após o Framework!
+        <p className="text-xl text-black mt-5">
+          Card usando APENAS Tailwind (sem inline styles que o CSP bloqueia!)
         </p>
-        <p style={{ fontSize: '16px', color: 'black', marginTop: '10px' }}>
+        <p className="text-base text-black mt-3">
           Solution ID: {solutionData?.id || 'N/A'}
         </p>
       </div>
