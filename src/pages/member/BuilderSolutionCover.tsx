@@ -262,6 +262,15 @@ export default function BuilderSolutionCover() {
       borderColor: "border-violet-400/30",
       path: `/ferramentas/builder/solution/${id}/prompt`,
     },
+    {
+      title: "Conteúdos Recomendados",
+      subtitle: "Aulas selecionadas por IA para implementar sua solução",
+      icon: BookOpen,
+      badge: "Aprendizado",
+      color: "from-blue-500/20 to-indigo-400/20",
+      borderColor: "border-blue-400/30",
+      path: `/ferramentas/builder/solution/${id}/recomendacoes`,
+    },
   ];
 
   if (isLoading) {
@@ -403,29 +412,6 @@ export default function BuilderSolutionCover() {
               );
             })}
           </div>
-
-          {/* Card de Recomendações de Aprendizado */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8"
-          >
-            <LiquidGlassCard className="p-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
-                  <BookOpen className="h-6 w-6 text-primary" />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold">Conteúdos Recomendados</h2>
-                  <p className="text-sm text-muted-foreground">
-                    Aulas selecionadas por IA para implementar sua solução
-                  </p>
-                </div>
-              </div>
-              <LearningRecommendationsCard solutionId={solution.id} />
-            </LiquidGlassCard>
-          </motion.div>
 
           {/* Loading Modal */}
           {generatingSection && (
