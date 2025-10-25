@@ -17,7 +17,7 @@ import {
   type UnifiedChecklistItem,
   type UnifiedChecklistData
 } from "@/hooks/useUnifiedChecklists";
-import UnifiedChecklistKanban from "./UnifiedChecklistKanban";
+import SimpleKanban from "./kanban/SimpleKanban";
 
 interface UnifiedChecklistTabProps {
   solutionId: string;
@@ -177,7 +177,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
 
   return (
     <div className="space-y-6">
-      <UnifiedChecklistKanban
+      <SimpleKanban
         checklistItems={normalizeChecklistItems(checklistItems)}
         checklistData={{
           id: userProgress?.id,
@@ -197,7 +197,6 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         }}
         solutionId={solutionId}
         checklistType={checklistType}
-        templateId={template?.id}
       />
     </div>
   );
