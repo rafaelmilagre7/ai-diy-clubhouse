@@ -35,7 +35,7 @@ export function LiveUpdateIndicator({
       <span className="text-xs">
         {count} online
       </span>
-      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+      <div className="w-1.5 h-1.5 bg-system-healthy rounded-full animate-pulse" />
     </Badge>
   );
 }

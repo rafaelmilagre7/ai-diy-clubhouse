@@ -101,9 +101,9 @@ export const BlockedIPsManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">IPs Bloqueados</p>
-                <p className="text-3xl font-bold text-red-500">{activeBlocks.length}</p>
+                <p className="text-3xl font-bold text-status-error">{activeBlocks.length}</p>
               </div>
-              <Shield className="h-8 w-8 text-red-500" />
+              <Shield className="h-8 w-8 text-status-error" />
             </div>
           </CardContent>
         </Card>
@@ -171,7 +171,7 @@ export const BlockedIPsManager = () => {
               {/* Active Blocks */}
               {activeBlocks.length > 0 && (
                 <div className="space-y-3">
-                  <h3 className="font-semibold text-red-500 flex items-center gap-2">
+                  <h3 className="font-semibold text-status-error flex items-center gap-2">
                     <Shield className="h-4 w-4" />
                     Bloqueios Ativos ({activeBlocks.length})
                   </h3>
@@ -179,11 +179,11 @@ export const BlockedIPsManager = () => {
                     {activeBlocks.map((ip) => (
                       <div
                         key={ip.id}
-                        className="flex items-center justify-between p-4 border border-red-500/20 bg-red-500/5 rounded-lg"
+                        className="flex items-center justify-between p-4 border border-status-error/20 bg-status-error/5 rounded-lg"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-mono font-semibold text-red-500">
+                            <span className="font-mono font-semibold text-status-error">
                               {ip.ip_address}
                             </span>
                             {ip.auto_blocked && (

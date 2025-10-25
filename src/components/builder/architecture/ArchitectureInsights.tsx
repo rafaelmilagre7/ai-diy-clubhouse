@@ -221,7 +221,7 @@ export const ArchitectureInsights: React.FC<ArchitectureInsightsProps> = ({ insi
       {insights.recommended_stack && insights.recommended_stack.length > 0 && (
         <LiquidGlassCard className="p-6">
           <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-green-500/20 rounded-lg">
+            <div className="p-2 bg-severity-info/20 rounded-lg">
               <CheckCircle2 className="h-5 w-5 text-green-400" />
             </div>
             <h3 className="font-semibold text-high-contrast">

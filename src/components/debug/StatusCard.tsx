@@ -36,7 +36,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({
   
   return (
     <div className={cn(
-      "flex items-center justify-between p-4 rounded-lg border transition-all duration-200 hover:scale-[1.02]",
+      "flex items-center justify-between p-4 rounded-lg border transition-all duration-base hover:scale-[1.02]",
       getStatusColor(),
       className
     )}>

@@ -11,7 +11,7 @@ export const CardContentSection = ({ title, description }: CardContentProps) => 
     <div className="space-y-2">
       <h3 className={cn(
         "font-heading font-semibold text-lg line-clamp-2 text-foreground",
-        "group-hover:text-primary transition-colors duration-300"
+        "group-hover:text-primary transition-colors duration-slow"
       )}>
         {title}
       </h3>

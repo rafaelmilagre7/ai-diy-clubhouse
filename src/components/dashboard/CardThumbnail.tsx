@@ -18,7 +18,7 @@ export const CardThumbnail = ({ thumbnailUrl }: CardThumbnailProps) => {
         <img 
           src={thumbnailUrl} 
           alt="Miniatura da solução" 
-          className="w-full h-full object-cover transition-all duration-300 hover:scale-105"
+          className="w-full h-full object-cover transition-all duration-slow hover:scale-105"
           loading="lazy"
         />
       ) : (

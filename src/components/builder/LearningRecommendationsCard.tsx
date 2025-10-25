@@ -82,7 +82,7 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="group relative overflow-hidden rounded-lg border border-border/50 bg-surface-elevated/30 hover:border-primary/50 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10"
+              className="group relative overflow-hidden rounded-lg border border-border/50 bg-surface-elevated/30 hover:border-primary/50 transition-all duration-slow hover:-translate-y-1 hover:shadow-lg hover:shadow-primary/10"
             >
               {/* Thumbnail com overlay - Formato vertical otimizado */}
               <div className="relative aspect-[9/12] w-full overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5">
@@ -90,7 +90,7 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
                   <img 
                     src={lesson.cover_image_url} 
                     alt={lesson.title}
-                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-slow"
                   />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">

@@ -84,7 +84,7 @@ const LoadingScreen = React.memo(({
           <div className="w-full max-w-xs mx-auto">
             <div className="bg-secondary rounded-full h-2.5">
               <div 
-                className="bg-primary h-2.5 rounded-full transition-all duration-300 ease-out"
+                className="bg-primary h-2.5 rounded-full transition-all duration-slow ease-out"
                 style={{ width: `${progress}%` }}
               />
             </div>
@@ -115,7 +115,7 @@ const LoadingScreen = React.memo(({
         
         {/* Aviso após 60s */}
         {elapsedSeconds > 60 && (
-          <div className="mt-4 p-3 bg-yellow-500/10 border border-yellow-500/30 rounded-lg max-w-md">
+          <div className="mt-4 p-3 bg-status-warning/10 border border-status-warning/30 rounded-lg max-w-md">
             <p className="text-sm text-yellow-600 dark:text-yellow-400">
               ⏱️ Processamento mais demorado que o esperado. 
               Não feche a página, estamos trabalhando nisso!

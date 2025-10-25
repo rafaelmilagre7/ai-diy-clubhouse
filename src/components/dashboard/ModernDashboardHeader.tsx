@@ -51,7 +51,7 @@ export const ModernDashboardHeader: FC<ModernDashboardHeaderProps> = memo(({ use
             <Button 
               onClick={handleExploreClick}
               variant="aurora-primary"
-              className="px-lg py-md rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg hover:shadow-primary/20"
+              className="px-lg py-md rounded-xl font-semibold transition-all duration-base hover:scale-105 shadow-lg hover:shadow-primary/20"
             >
               Explorar Soluções
               <ArrowRight className="ml-2 h-4 w-4" />

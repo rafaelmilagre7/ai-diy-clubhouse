@@ -7,7 +7,7 @@ import { Rocket, Plus, Clock, CheckCircle } from 'lucide-react';
 
 export const ImplementationTrailCard: React.FC = () => {
   return (
-    <Card className="bg-card/80 border-border hover:shadow-lg hover:border-aurora-primary/30 transition-all duration-300">
+    <Card className="bg-card/80 border-border hover:shadow-lg hover:border-aurora-primary/30 transition-all duration-slow">
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-sm">

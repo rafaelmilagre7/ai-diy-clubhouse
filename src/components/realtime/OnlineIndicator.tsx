@@ -27,7 +27,7 @@ export function OnlineIndicator({
     <div
       className={cn(
         'w-3 h-3 rounded-full border-2 border-background',
-        online ? 'bg-green-500 animate-pulse' : 'bg-gray-400',
+        online ? 'bg-system-healthy animate-pulse' : 'bg-muted',
         className
       )}
       title={online ? 'Online' : 'Offline'}

@@ -106,7 +106,7 @@ export function ChatWindow({ conversationId, className }: ChatWindowProps) {
           <div
             className={cn(
               'w-2 h-2 rounded-full',
-              isConnected ? 'bg-green-500 animate-pulse' : 'bg-gray-400'
+              isConnected ? 'bg-system-healthy animate-pulse' : 'bg-muted'
             )}
           />
           <span className="text-sm text-muted-foreground">

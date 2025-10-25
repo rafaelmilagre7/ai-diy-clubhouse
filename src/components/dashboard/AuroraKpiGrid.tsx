@@ -44,7 +44,7 @@ const ProgressRing = ({ progress, size = 48, strokeWidth = 4 }: {
           fill="transparent"
           strokeDasharray={circumference}
           strokeDashoffset={offset}
-          className="transition-all duration-500"
+          className="transition-all duration-slower"
           strokeLinecap="round"
         />
       </svg>
@@ -138,7 +138,7 @@ export const AuroraKpiGrid = memo(({
             <div className="p-lg">
               <div className="flex items-center justify-between mb-md">
                 <div className="flex items-center space-x-md">
-                  <div className="p-md rounded-xl bg-aurora-primary/10 group-hover:bg-aurora-primary/20 transition-all duration-300">
+                  <div className="p-md rounded-xl bg-aurora-primary/10 group-hover:bg-aurora-primary/20 transition-all duration-slow">
                     <IconComponent className="h-6 w-6 text-aurora-primary" />
                   </div>
                   <div>
@@ -168,7 +168,7 @@ export const AuroraKpiGrid = memo(({
                 {/* Barra de progresso visual */}
                 <div className="w-full h-1.5 bg-muted/20 rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-light rounded-full transition-all duration-500"
+                    className="h-full bg-gradient-to-r from-aurora-primary to-aurora-primary-light rounded-full transition-all duration-slower"
                     style={{ width: `${item.id === 'total' ? 100 : item.percentage}%` }}
                   />
                 </div>

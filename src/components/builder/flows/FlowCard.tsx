@@ -17,9 +17,9 @@ interface FlowCardProps {
 }
 
 const complexityConfig = {
-  low: { label: 'Simples', color: 'bg-green-500/10 text-green-500 border-green-500/20' },
-  medium: { label: 'Médio', color: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20' },
-  high: { label: 'Complexo', color: 'bg-red-500/10 text-red-500 border-red-500/20' }
+  low: { label: 'Simples', color: 'bg-difficulty-beginner/10 text-difficulty-beginner border-difficulty-beginner/20' },
+  medium: { label: 'Médio', color: 'bg-difficulty-intermediate/10 text-difficulty-intermediate border-difficulty-intermediate/20' },
+  high: { label: 'Complexo', color: 'bg-difficulty-advanced/10 text-difficulty-advanced border-difficulty-advanced/20' }
 };
 
 export const FlowCard = ({ flow }: FlowCardProps) => {
@@ -108,7 +108,7 @@ export const FlowCard = ({ flow }: FlowCardProps) => {
       </div>
 
       <div 
-        className={`transition-all duration-300 ${
+        className={`transition-all duration-slow ${
           isFullscreen 
             ? 'fixed inset-4 z-50 bg-background/95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl overflow-auto' 
             : 'relative'

@@ -137,8 +137,8 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
   };
 
   const getActionStatusIcon = (success: boolean) => {
-    if (success) return <CheckCircle2 className="h-4 w-4 text-green-500" />;
-    return <XCircle className="h-4 w-4 text-red-500" />;
+    if (success) return <CheckCircle2 className="h-4 w-4 text-status-success" />;
+    return <XCircle className="h-4 w-4 text-status-error" />;
   };
 
   return (
@@ -209,9 +209,9 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
                 {/* Status Header */}
                 <div className="flex items-center gap-3">
                   {testResult.success ? (
-                    <CheckCircle2 className="h-6 w-6 text-green-500" />
+                    <CheckCircle2 className="h-6 w-6 text-status-success" />
                   ) : (
-                    <XCircle className="h-6 w-6 text-red-500" />
+                    <XCircle className="h-6 w-6 text-status-error" />
                   )}
                   <div>
                     <h3 className="font-semibold">
@@ -226,9 +226,9 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
                 {/* Conditions Met */}
                 <div className="flex items-center gap-2 p-3 bg-muted rounded-lg">
                   {testResult.conditionsMet ? (
-                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <CheckCircle2 className="h-4 w-4 text-status-success" />
                   ) : (
-                    <AlertCircle className="h-4 w-4 text-yellow-500" />
+                    <AlertCircle className="h-4 w-4 text-status-warning" />
                   )}
                   <span className="text-sm font-medium">
                     Condições: {testResult.conditionsMet ? 'Atendidas ✓' : 'Não atendidas ✗'}
@@ -252,7 +252,7 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
                                 {action.type}
                               </Badge>
                               {action.success && (
-                                <Badge variant="default" className="text-xs bg-green-500">
+                                <Badge variant="default" className="text-xs bg-status-success">
                                   Sucesso
                                 </Badge>
                               )}

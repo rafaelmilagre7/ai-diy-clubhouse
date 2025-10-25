@@ -124,7 +124,7 @@ export const MermaidFlowRenderer = ({ mermaidCode, flowId, zoom: externalZoom = 
       {/* Container sempre presente no DOM */}
       <div 
         ref={containerRef} 
-        className="mermaid-container w-full overflow-auto py-4 transition-all duration-200 flex items-center justify-center"
+        className="mermaid-container w-full overflow-auto py-4 transition-all duration-base flex items-center justify-center"
         style={{ 
           transformOrigin: 'center',
           minHeight: '400px'

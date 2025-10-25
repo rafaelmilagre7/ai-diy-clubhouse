@@ -48,9 +48,9 @@ export const ChecklistCardModal: React.FC<ChecklistCardModalProps> = ({
   if (!item) return null;
 
   const difficultyConfig: Record<string, { label: string; color: string; icon: any }> = {
-    easy: { label: 'Fácil', color: 'bg-green-500/10 text-green-600 border-green-500/20', icon: CheckCircle2 },
-    medium: { label: 'Médio', color: 'bg-yellow-500/10 text-yellow-600 border-yellow-500/20', icon: AlertCircle },
-    hard: { label: 'Difícil', color: 'bg-red-500/10 text-red-600 border-red-500/20', icon: Zap }
+    easy: { label: 'Fácil', color: 'bg-difficulty-beginner/10 text-difficulty-beginner border-difficulty-beginner/20', icon: CheckCircle2 },
+    medium: { label: 'Médio', color: 'bg-difficulty-intermediate/10 text-difficulty-intermediate border-difficulty-intermediate/20', icon: AlertCircle },
+    hard: { label: 'Difícil', color: 'bg-difficulty-advanced/10 text-difficulty-advanced border-difficulty-advanced/20', icon: Zap }
   };
 
   const difficulty = item.metadata?.difficulty || 'medium';

@@ -37,7 +37,7 @@ export const EventsListModal = ({ date, events, onSelectEvent, onClose }: Events
           {events.map((event) => (
             <div 
               key={event.id} 
-              className="p-4 surface-elevated rounded-xl border border-border/50 hover:border-aurora-primary/50 hover:shadow-aurora transition-all duration-200 cursor-pointer group"
+              className="p-4 surface-elevated rounded-xl border border-border/50 hover:border-aurora-primary/50 hover:shadow-aurora transition-all duration-base cursor-pointer group"
               onClick={() => onSelectEvent(event)}
             >
               <h3 className="text-body-large font-semibold text-text-primary group-hover:text-aurora-primary transition-colors">

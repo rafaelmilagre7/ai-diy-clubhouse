@@ -57,7 +57,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="p-8 rounded-full bg-gradient-to-br from-green-500/20 to-green-400/5 border-2 border-green-500/30"
           >
-            <CheckCircle className="h-16 w-16 text-green-500" />
+            <CheckCircle className="h-16 w-16 text-status-success" />
           </motion.div>
         )}
 
@@ -68,7 +68,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
             transition={{ duration: 0.6, ease: "easeOut" }}
             className="p-8 rounded-full bg-gradient-to-br from-red-500/20 to-red-400/5 border-2 border-red-500/30"
           >
-            <XCircle className="h-16 w-16 text-red-500" />
+            <XCircle className="h-16 w-16 text-status-error" />
           </motion.div>
         )}
 
@@ -111,7 +111,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-2xl font-bold text-green-500 mb-2"
+                className="text-2xl font-bold text-status-success mb-2"
               >
                 Sua ideia é viável!
               </motion.h3>
@@ -132,7 +132,7 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="text-2xl font-bold text-red-500 mb-2"
+                className="text-2xl font-bold text-status-error mb-2"
               >
                 Ideia não viável
               </motion.h3>

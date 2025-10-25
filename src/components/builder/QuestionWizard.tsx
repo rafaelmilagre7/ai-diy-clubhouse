@@ -214,7 +214,7 @@ export const QuestionWizard: React.FC<QuestionWizardProps> = ({
             <div
               key={idx}
               className={cn(
-                "h-2 rounded-full transition-all duration-300",
+                "h-2 rounded-full transition-all duration-slow",
                 idx === currentStep 
                   ? "w-8 bg-aurora-primary" 
                   : idx < currentStep

@@ -32,7 +32,7 @@ export function OnlineUsersList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-2 px-4 pt-4">
-        <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+        <div className="w-2 h-2 bg-system-healthy rounded-full animate-pulse" />
         <span className="text-sm font-medium">
           {count} {count === 1 ? 'pessoa' : 'pessoas'} online
         </span>
@@ -52,7 +52,7 @@ export function OnlineUsersList() {
                     {user.name?.charAt(0) || '?'}
                   </AvatarFallback>
                 </Avatar>
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-background" />
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-system-healthy rounded-full border-2 border-background" />
               </div>
 
               <div className="flex-1 min-w-0">

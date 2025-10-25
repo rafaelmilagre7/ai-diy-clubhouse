@@ -29,12 +29,12 @@ interface InviteDetailsModalProps {
 }
 
 const EVENT_CONFIG: Record<string, { icon: any; label: string; color: string }> = {
-  sent: { icon: Mail, label: 'Enviado', color: 'text-blue-500' },
-  delivered: { icon: CheckCircle, label: 'Entregue', color: 'text-green-500' },
-  opened: { icon: Eye, label: 'Aberto', color: 'text-purple-500' },
-  clicked: { icon: MousePointerClick, label: 'Clicado', color: 'text-indigo-500' },
-  bounced: { icon: XCircle, label: 'Rejeitado', color: 'text-red-500' },
-  delivery_delayed: { icon: Clock, label: 'Atrasado', color: 'text-amber-500' },
+  sent: { icon: Mail, label: 'Enviado', color: 'text-tracking-sent' },
+  delivered: { icon: CheckCircle, label: 'Entregue', color: 'text-tracking-delivered' },
+  opened: { icon: Eye, label: 'Aberto', color: 'text-tracking-opened' },
+  clicked: { icon: MousePointerClick, label: 'Clicado', color: 'text-tracking-clicked' },
+  bounced: { icon: XCircle, label: 'Rejeitado', color: 'text-tracking-bounced' },
+  delivery_delayed: { icon: Clock, label: 'Atrasado', color: 'text-status-warning' },
 };
 
 export function InviteDetailsModal({ invite, isOpen, onClose, onResend }: InviteDetailsModalProps) {
@@ -104,7 +104,7 @@ export function InviteDetailsModal({ invite, isOpen, onClose, onResend }: Invite
                 <p className="text-sm text-muted-foreground">Status</p>
                 <div className="mt-1">
                   {isUsed ? (
-                    <Badge className="bg-green-500/10 text-green-500 border-green-500/20">
+                    <Badge className="bg-status-success/10 text-status-success border-status-success/20">
                       ✓ Ativo
                     </Badge>
                   ) : isExpired ? (
@@ -260,7 +260,7 @@ export function InviteDetailsModal({ invite, isOpen, onClose, onResend }: Invite
                   </div>
                 )}
                 <div>
-                  <p className="text-2xl font-bold text-green-500">
+                  <p className="text-2xl font-bold text-status-success">
                     {events?.filter((e: any) => e.event_type === 'delivered').length || 0}
                   </p>
                   <p className="text-xs text-muted-foreground">Entregas</p>

@@ -81,7 +81,7 @@ export const KpiGrid: FC<KpiGridProps> = memo(({
         return (
           <Card 
             key={kpi.title} 
-            className={`${kpi.bgColor} ${kpi.borderColor} border backdrop-blur-sm hover:scale-105 transition-all duration-200 animate-fade-in`}
+            className={`${kpi.bgColor} ${kpi.borderColor} border backdrop-blur-sm hover:scale-105 transition-all duration-base animate-fade-in`}
             style={{ animationDelay: `${index * 0.1}s` }}
           >
             <CardContent className="p-lg">

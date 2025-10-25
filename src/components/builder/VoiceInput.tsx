@@ -172,7 +172,7 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       <div className="relative max-w-xl w-full mx-auto flex items-center flex-col gap-2">
         <button
           className={cn(
-            "group w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-200 relative",
+            "group w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-base relative",
             isRecording
               ? "bg-primary/10 ring-2 ring-primary/30"
               : "bg-surface-elevated/50 hover:bg-surface-elevated border border-border hover:border-primary/50",

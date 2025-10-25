@@ -33,8 +33,8 @@ export const BuilderOverviewMetrics: React.FC<BuilderOverviewMetricsProps> = ({
       title: 'Média por Usuário',
       value: usageStats?.avgPerUser || '0',
       icon: TrendingUp,
-      color: 'text-green-500',
-      bgColor: 'bg-green-500/10'
+      color: 'text-status-success',
+      bgColor: 'bg-status-success/10'
     },
     {
       title: 'Soluções Concluídas',

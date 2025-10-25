@@ -90,11 +90,11 @@ export const OptimizedKpiGrid = memo(({
         return (
           <Card 
             key={item.id} 
-            className="group hover:shadow-md transition-all duration-300 hover-scale border-l-4 border-l-primary/20 hover:border-l-primary"
+            className="group hover:shadow-md transition-all duration-slow hover-scale border-l-4 border-l-primary/20 hover:border-l-primary"
           >
             <CardContent className="p-6">
               <div className="flex items-center space-x-4">
-                <div className={`p-3 rounded-lg ${item.bgClass} group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`p-3 rounded-lg ${item.bgClass} group-hover:scale-110 transition-transform duration-slow`}>
                   <IconComponent className={`h-6 w-6 ${item.colorClass}`} />
                 </div>
                 <div className="flex-1">

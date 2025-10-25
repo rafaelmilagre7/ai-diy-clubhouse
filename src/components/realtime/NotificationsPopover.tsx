@@ -147,7 +147,7 @@ export function NotificationsPopover() {
 
           {/* Indicador de conexão */}
           {isConnected && (
-            <div className="absolute bottom-1 right-1 w-2 h-2 bg-green-500 rounded-full border border-background animate-pulse" />
+            <div className="absolute bottom-1 right-1 w-2 h-2 bg-system-healthy rounded-full border border-background animate-pulse" />
           )}
         </Button>
       </PopoverTrigger>
