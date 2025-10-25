@@ -16,18 +16,7 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
   const { data: recommendations, isLoading, error } = useLearningRecommendations(solutionId);
 
   if (isLoading) {
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div 
-            key={i} 
-            className="h-96 rounded-lg bg-muted animate-pulse relative overflow-hidden"
-          >
-            <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-          </div>
-        ))}
-      </div>
-    );
+    return null; // Deixar a página pai gerenciar o loading
   }
 
   if (error) {

@@ -112,6 +112,10 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
     },
     enabled: !!solutionId,
     staleTime: 1000 * 60 * 60 * 24, // Cache por 24h
-    retry: 1
+    retry: 2,
+    refetchInterval: (query) => {
+      const hasData = query.state.data && query.state.data.length > 0;
+      return hasData ? false : 3000; // Poll a cada 3s até ter dados
+    }
   });
 };
