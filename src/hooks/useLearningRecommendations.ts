@@ -41,7 +41,7 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
         throw new Error('solutionId é obrigatório');
       }
 
-      console.log('Buscando recomendações para solução:', solutionId);
+      console.log('[RECOMMENDATIONS] 🔍 Buscando recomendações para:', solutionId);
 
       // 1. Verificar se já existem recomendações no banco (cache)
       const { data: existing, error: existingError } = await supabase
@@ -66,56 +66,71 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
         .order('relevance_score', { ascending: false });
 
       if (existingError) {
-        console.error('Erro ao buscar recomendações existentes:', existingError);
+        console.error('[RECOMMENDATIONS] ❌ Erro ao buscar cache:', existingError);
         throw existingError;
       }
 
       // Se já existem recomendações, retornar do cache
       if (existing && existing.length > 0) {
-        console.log(`✅ Encontradas ${existing.length} recomendações no cache`);
-        console.log('Primeira recomendação:', existing[0]);
+        console.log(`[RECOMMENDATIONS] ✅ ${existing.length} recomendações encontradas no cache`);
         return existing as LearningRecommendation[];
       }
 
-      // 2. Se não existir, gerar via edge function
-      console.log('Nenhuma recomendação encontrada, gerando via IA...');
-      const { data: generated, error: generateError } = await supabase.functions.invoke(
+      // 2. Se não existir, gerar via edge function (com timeout)
+      console.log('[RECOMMENDATIONS] 🤖 Gerando recomendações via IA...');
+      
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Timeout após 60 segundos')), 60000)
+      );
+
+      const invokePromise = supabase.functions.invoke(
         'recommend-learning-content',
         {
           body: { solutionId }
         }
       );
 
-      if (generateError) {
-        console.error('Erro ao gerar recomendações:', generateError);
-        throw generateError;
-      }
+      try {
+        const { data: generated, error: generateError } = await Promise.race([
+          invokePromise,
+          timeoutPromise
+        ]) as any;
 
-      if (!generated?.success || !generated?.recommendations) {
-        console.warn('Nenhuma recomendação gerada pela IA');
-        return [];
-      }
+        if (generateError) {
+          console.error('[RECOMMENDATIONS] ❌ Erro ao gerar:', generateError);
+          throw new Error(generateError.message || 'Erro ao gerar recomendações');
+        }
 
-      console.log(`Geradas ${generated.recommendations.length} recomendações pela IA`);
-      
-      // Mapear para o formato esperado
-      return generated.recommendations.map((rec: any) => ({
-        id: rec.lessonId,
-        solution_id: solutionId,
-        lesson_id: rec.lessonId,
-        relevance_score: rec.relevanceScore,
-        justification: rec.justification,
-        key_topics: rec.keyTopics || [],
-        created_at: new Date().toISOString(),
-        lesson: rec.lesson
-      })) as LearningRecommendation[];
+        if (!generated?.success || !generated?.recommendations) {
+          console.warn('[RECOMMENDATIONS] ⚠️ IA não retornou recomendações');
+          return [];
+        }
+
+        console.log(`[RECOMMENDATIONS] ✅ ${generated.recommendations.length} recomendações geradas`);
+        
+        // Mapear para o formato esperado
+        return generated.recommendations.map((rec: any) => ({
+          id: rec.lessonId,
+          solution_id: solutionId,
+          lesson_id: rec.lessonId,
+          relevance_score: rec.relevanceScore,
+          justification: rec.justification,
+          key_topics: rec.keyTopics || [],
+          created_at: new Date().toISOString(),
+          lesson: rec.lesson
+        })) as LearningRecommendation[];
+      } catch (err: any) {
+        if (err.message?.includes('Timeout')) {
+          console.error('[RECOMMENDATIONS] ⏰', err.message);
+          throw new Error('Tempo esgotado ao gerar recomendações. Tente novamente.');
+        }
+        
+        throw err;
+      }
     },
     enabled: !!solutionId,
     staleTime: 1000 * 60 * 60 * 24, // Cache por 24h
-    retry: 2,
-    refetchInterval: (query) => {
-      const hasData = query.state.data && query.state.data.length > 0;
-      return hasData ? false : 3000; // Poll a cada 3s até ter dados
-    }
+    retry: 1,
+    retryDelay: 2000
   });
 };
