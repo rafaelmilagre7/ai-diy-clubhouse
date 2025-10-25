@@ -369,3 +369,6 @@ verify_jwt = false
 
 [functions.generate-implementation-flow]
 verify_jwt = false
+
+[functions.recommend-learning-content]
+verify_jwt = true

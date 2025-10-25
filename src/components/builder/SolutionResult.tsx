@@ -11,6 +11,7 @@ import { FrameworkQuadrants } from './FrameworkQuadrants';
 import { RequiredToolsGrid } from './RequiredToolsGrid';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
 import { ArchitectureFlowchart } from './ArchitectureFlowchart';
+import { LearningRecommendationsCard } from './LearningRecommendationsCard';
 
 interface SolutionResultProps {
   solution: any;
@@ -291,6 +292,47 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
                     solutionId={solutionData.id}
                   />
                 )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </LiquidGlassCard>
+      </motion.div>
+
+      {/* Recomendações de Conteúdo Educacional - ON DEMAND */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+      >
+        <LiquidGlassCard className="p-6 bg-gradient-to-br from-primary/5 via-background to-background">
+          <button
+            onClick={() => toggleSection('recommendations')}
+            className="w-full flex items-center justify-between mb-4 group"
+          >
+            <div className="text-left">
+              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                Conteúdos Recomendados para Você 🎓
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                Aulas que vão te ajudar a implementar essa solução
+              </p>
+            </div>
+            {isExpanded('recommendations') ? (
+              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            )}
+          </button>
+          
+          <AnimatePresence mode="wait">
+            {isExpanded('recommendations') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <LearningRecommendationsCard solutionId={solutionData.id} />
               </motion.div>
             )}
           </AnimatePresence>

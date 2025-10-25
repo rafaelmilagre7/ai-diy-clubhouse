@@ -5514,6 +5514,51 @@ export type Database = {
           },
         ]
       }
+      solution_learning_recommendations: {
+        Row: {
+          created_at: string | null
+          id: string
+          justification: string
+          key_topics: Json | null
+          lesson_id: string
+          relevance_score: number
+          solution_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          justification: string
+          key_topics?: Json | null
+          lesson_id: string
+          relevance_score: number
+          solution_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          justification?: string
+          key_topics?: Json | null
+          lesson_id?: string
+          relevance_score?: number
+          solution_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "solution_learning_recommendations_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "learning_lessons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_learning_recommendations_solution_id_fkey"
+            columns: ["solution_id"]
+            isOneToOne: false
+            referencedRelation: "ai_generated_solutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       solution_metrics: {
         Row: {
           abandonment_rates: Json | null
