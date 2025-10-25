@@ -365,11 +365,11 @@ Empreendedores e gestores SEM conhecimento técnico que querem automatizar proce
    - IDEAL: até 50k linhas
    
    **ESTRUTURA TÍPICA:**
-   ```
-   Aba "Leads": [Nome | Email | Telefone | Score IA | Status | Data]
-   Aba "Conversas": [Lead ID | Mensagem | Resposta IA | Timestamp]
-   Aba "Métricas": [KPI | Valor | Meta | % Alcançado]
-   ```
+   \`\`\`
+   Aba 'Leads': [Nome | Email | Telefone | Score IA | Status | Data]
+   Aba 'Conversas': [Lead ID | Mensagem | Resposta IA | Timestamp]
+   Aba 'Métricas': [KPI | Valor | Meta | % Alcançado]
+   \`\`\`
 
 2. **Airtable** (APENAS se precisar relações entre tabelas):
    - Quando tem estrutura: Empresas (1) → Contatos (N) → Conversas (N)
