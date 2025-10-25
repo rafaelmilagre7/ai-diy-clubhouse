@@ -18,12 +18,13 @@ const LessonRedirect = () => {
   useEffect(() => {
     const redirectToLesson = async () => {
       if (!lessonId) {
+        console.error('❌ [LESSON-REDIRECT] lessonId não fornecido');
         navigate('/learning');
         return;
       }
 
       try {
-        console.log('🔍 Buscando curso para aula:', lessonId);
+        console.log('🔍 [LESSON-REDIRECT] Iniciando busca para aula:', lessonId);
 
         // Buscar a aula e seu curso
         const { data: lesson, error } = await supabase
@@ -40,20 +41,30 @@ const LessonRedirect = () => {
           .eq('id', lessonId)
           .single();
 
+        console.log('📦 [LESSON-REDIRECT] Resultado da query:', { lesson, error });
+
         if (error || !lesson) {
-          console.error('❌ Aula não encontrada:', error);
+          console.error('❌ [LESSON-REDIRECT] Aula não encontrada:', error);
           navigate('/learning');
           return;
         }
 
         const courseId = lesson.learning_modules[0]?.course_id;
-        console.log('✅ Redirecionando para:', `/learning/course/${courseId}/lesson/${lessonId}`);
+        
+        if (!courseId) {
+          console.error('❌ [LESSON-REDIRECT] courseId não encontrado na aula');
+          navigate('/learning');
+          return;
+        }
+
+        const targetPath = `/learning/course/${courseId}/lesson/${lessonId}`;
+        console.log('✅ [LESSON-REDIRECT] Redirecionando para:', targetPath);
 
         // Redirecionar para a rota correta
-        navigate(`/learning/course/${courseId}/lesson/${lessonId}`, { replace: true });
+        navigate(targetPath, { replace: true });
 
       } catch (error) {
-        console.error('❌ Erro ao buscar aula:', error);
+        console.error('❌ [LESSON-REDIRECT] Erro ao buscar aula:', error);
         navigate('/learning');
       }
     };

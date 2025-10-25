@@ -1,11 +1,10 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { BookOpen, Brain, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
 import { useLearningRecommendations } from '@/hooks/useLearningRecommendations';
+import { supabase } from '@/lib/supabase';
 
 interface LearningRecommendationsCardProps {
   solutionId: string;
@@ -14,7 +13,6 @@ interface LearningRecommendationsCardProps {
 export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardProps> = ({ 
   solutionId 
 }) => {
-  const navigate = useNavigate();
   const { data: recommendations, isLoading, error } = useLearningRecommendations(solutionId);
 
   if (isLoading) {
@@ -162,21 +160,51 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
                   </div>
                 )}
 
-                {/* Botão de ação - Link que abre em nova guia */}
+                {/* Botão de ação - Busca courseId e abre em nova guia */}
                 <Button
-                  asChild
+                  onClick={async () => {
+                    try {
+                      console.log('🔍 Buscando courseId para lesson:', lesson.id);
+                      
+                      // Buscar o curso da aula
+                      const { data: lessonData, error } = await supabase
+                        .from('learning_lessons')
+                        .select(`
+                          id,
+                          learning_modules!inner(
+                            course_id
+                          )
+                        `)
+                        .eq('id', lesson.id)
+                        .single();
+
+                      if (error || !lessonData) {
+                        console.error('❌ Erro ao buscar aula:', error);
+                        return;
+                      }
+
+                      const courseId = lessonData.learning_modules[0]?.course_id;
+                      
+                      if (!courseId) {
+                        console.error('❌ courseId não encontrado');
+                        return;
+                      }
+
+                      const url = `/learning/course/${courseId}/lesson/${lesson.id}`;
+                      console.log('✅ Abrindo URL:', url);
+                      
+                      // Abrir em nova guia
+                      window.open(url, '_blank', 'noopener,noreferrer');
+                    } catch (err) {
+                      console.error('❌ Erro ao abrir aula:', err);
+                    }
+                  }}
                   className="w-full group/btn"
                   size="sm"
                 >
-                  <a 
-                    href={`/learning/lesson/${lesson.id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Assistir Aula
-                    <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
-                  </a>
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Assistir Aula
+                  <ArrowRight className="h-4 w-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
                 </Button>
               </div>
             </motion.div>
