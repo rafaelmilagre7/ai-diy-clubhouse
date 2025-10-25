@@ -125,9 +125,9 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
             label: "Violações Críticas",
             value: metrics.criticalViolations,
             icon: AlertTriangle,
-            gradient: "from-destructive/20 to-red-500/10",
-            iconColor: "text-destructive",
-            border: "border-destructive/30",
+            gradient: "from-status-error/20 to-status-error/10",
+            iconColor: "text-status-error",
+            border: "border-status-error/30",
             description: "Requer atenção imediata"
           },
           {
@@ -144,16 +144,16 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
             value: metrics.criticalViolations > 0 ? 'Alerta' : 'Seguro',
             icon: metrics.criticalViolations > 0 ? XCircle : CheckCircle,
             gradient: metrics.criticalViolations > 0 
-              ? "from-destructive/20 to-red-500/10" 
+              ? "from-status-error/20 to-status-error/10" 
               : "from-operational/20 to-operational/10",
-            iconColor: metrics.criticalViolations > 0 ? "text-destructive" : "text-operational",
-            border: metrics.criticalViolations > 0 ? "border-destructive/30" : "border-operational/30",
+            iconColor: metrics.criticalViolations > 0 ? "text-status-error" : "text-operational",
+            border: metrics.criticalViolations > 0 ? "border-status-error/30" : "border-operational/30",
             description: metrics.criticalViolations > 0 ? 'Sistema comprometido' : 'Sistema protegido'
           }
         ].map((metric, index) => (
           <div 
             key={metric.label} 
-            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-slower hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
+            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-smooth hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-white/10`}>
@@ -173,7 +173,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
               </div>
             </div>
             <div className="p-4">
-              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-slow mb-1">
+              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-base mb-1">
                 {metric.label}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -189,7 +189,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
         <TabsList className="aurora-glass border-aurora/20 backdrop-blur-md h-12 rounded-2xl p-1">
           <TabsTrigger 
             value="violations"
-            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-destructive/20 data-[state=active]:to-red-500/10 data-[state=active]:text-destructive data-[state=active]:shadow-lg transition-all duration-slow rounded-xl font-medium"
+            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-status-error/20 data-[state=active]:to-status-error/10 data-[state=active]:text-status-error data-[state=active]:shadow-lg transition-all duration-base rounded-xl font-medium"
           >
             Violações Recentes
           </TabsTrigger>
@@ -202,11 +202,11 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
         </TabsList>
 
         <TabsContent value="violations" className="space-y-6 mt-8">
-          <div className="aurora-glass rounded-2xl border border-destructive/20 backdrop-blur-md overflow-hidden">
-            <div className="bg-gradient-to-r from-destructive/10 via-red-500/5 to-transparent p-6 border-b border-destructive/20">
+          <div className="aurora-glass rounded-2xl border border-status-error/20 backdrop-blur-md overflow-hidden">
+            <div className="bg-gradient-to-r from-status-error/10 via-status-error/5 to-transparent p-6 border-b border-status-error/20">
               <div className="flex items-center gap-3">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-destructive/20 to-red-500/10 aurora-glass">
-                  <AlertTriangle className="h-5 w-5 text-destructive" />
+                <div className="p-3 rounded-xl bg-gradient-to-br from-status-error/20 to-status-error/10 aurora-glass">
+                  <AlertTriangle className="h-5 w-5 text-status-error" />
                 </div>
                 <div>
                   <h3 className="text-xl font-bold aurora-text-gradient">Violações de Segurança</h3>
@@ -220,8 +220,8 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
               <div className="space-y-4">
                 {violations.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-system-healthy/20 to-system-healthy/10 aurora-glass mx-auto w-fit mb-4">
-                      <Shield className="h-12 w-12 text-system-healthy aurora-pulse" />
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-operational/20 to-operational/10 aurora-glass mx-auto w-fit mb-4">
+                      <Shield className="h-12 w-12 text-operational aurora-pulse" />
                     </div>
                     <h4 className="text-lg font-bold aurora-text-gradient mb-2">Nenhuma Violação Detectada</h4>
                     <p className="text-muted-foreground">
@@ -238,10 +238,10 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-4 flex-1">
                           <div className={`p-3 rounded-xl aurora-glass ${
-                            violation.severity === 'critical' ? 'bg-gradient-to-br from-destructive/20 to-red-500/10' :
-                            violation.severity === 'high' ? 'bg-gradient-to-br from-orange-500/20 to-red-500/10' :
-                            violation.severity === 'medium' ? 'bg-gradient-to-br from-amber-500/20 to-yellow-500/10' :
-                            'bg-gradient-to-br from-blue-500/20 to-cyan-500/10'
+                            violation.severity === 'critical' ? 'bg-gradient-to-br from-status-error/20 to-status-error/10' :
+                            violation.severity === 'high' ? 'bg-gradient-to-br from-status-warning/20 to-status-error/10' :
+                            violation.severity === 'medium' ? 'bg-gradient-to-br from-status-warning/20 to-status-warning/10' :
+                            'bg-gradient-to-br from-status-info/20 to-status-info/10'
                           }`}>
                             {getSeverityIcon(violation.severity)}
                           </div>
@@ -289,7 +289,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
                               variant="outline"
                               onClick={() => handleResolveViolation(violation.id)}
                               disabled={resolvingId === violation.id}
-                              className="hover:shadow-lg transition-all duration-slow"
+                              className="hover:shadow-lg transition-all duration-base"
                             >
                               {resolvingId === violation.id ? 'Resolvendo...' : 'Resolver'}
                             </Button>
@@ -323,8 +323,8 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
               <div className="space-y-4">
                 {metrics.topViolationTypes.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-status-info/20 to-status-info/10 aurora-glass mx-auto w-fit mb-4">
-                      <TrendingUp className="h-12 w-12 text-status-info" />
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-severity-info/20 to-severity-info/10 aurora-glass mx-auto w-fit mb-4">
+                      <TrendingUp className="h-12 w-12 text-severity-info" />
                     </div>
                     <h4 className="text-lg font-bold aurora-text-gradient mb-2">Nenhum Tipo Registrado</h4>
                     <p className="text-muted-foreground">

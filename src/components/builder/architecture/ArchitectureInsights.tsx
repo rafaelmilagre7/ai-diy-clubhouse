@@ -52,8 +52,8 @@ export const ArchitectureInsights: React.FC<ArchitectureInsightsProps> = ({ insi
       {insights.needs_rag && (
         <LiquidGlassCard className="p-6">
           <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-purple-500/20 rounded-lg">
-              <BrainCircuit className="h-5 w-5 text-purple-400" />
+            <div className="p-2 bg-severity-info/20 rounded-lg">
+              <BrainCircuit className="h-5 w-5 text-severity-info" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-high-contrast mb-1">
@@ -78,8 +78,8 @@ export const ArchitectureInsights: React.FC<ArchitectureInsightsProps> = ({ insi
       {insights.needs_crm && (
         <LiquidGlassCard className="p-6">
           <div className="flex items-start gap-3 mb-4">
-            <div className="p-2 bg-blue-500/20 rounded-lg">
-              <Database className="h-5 w-5 text-blue-400" />
+            <div className="p-2 bg-status-info/20 rounded-lg">
+              <Database className="h-5 w-5 text-status-info" />
             </div>
             <div className="flex-1">
               <h3 className="font-semibold text-high-contrast mb-1">

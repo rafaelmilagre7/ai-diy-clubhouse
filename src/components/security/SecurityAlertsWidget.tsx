@@ -63,13 +63,13 @@ export function SecurityAlertsWidget() {
   const getAlertGradient = (type: string) => {
     switch (type) {
       case 'critical':
-        return 'from-destructive/20 to-red-500/10';
+        return 'from-status-error/20 to-status-error/10';
       case 'high':
-        return 'from-orange-500/20 to-red-500/10';
+        return 'from-status-warning/20 to-status-error/10';
       case 'medium':
-        return 'from-amber-500/20 to-yellow-500/10';
+        return 'from-status-warning/20 to-status-warning/10';
       default:
-        return 'from-blue-500/20 to-cyan-500/10';
+        return 'from-status-info/20 to-status-info/10';
     }
   };
 
@@ -82,9 +82,9 @@ export function SecurityAlertsWidget() {
             label: "Violações (24h)",
             value: metrics.recentViolations,
             icon: AlertTriangle,
-            gradient: "from-destructive/20 to-red-500/10",
-            iconColor: "text-destructive",
-            border: "border-destructive/30"
+            gradient: "from-status-error/20 to-status-error/10",
+            iconColor: "text-status-error",
+            border: "border-status-error/30"
           },
           {
             label: "Falhas de Login",
@@ -113,7 +113,7 @@ export function SecurityAlertsWidget() {
         ].map((metric, index) => (
           <div 
             key={metric.label} 
-            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-slower hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
+            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-smooth hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-white/10`}>
@@ -122,14 +122,14 @@ export function SecurityAlertsWidget() {
                   <metric.icon className={`h-6 w-6 ${metric.iconColor}`} />
                 </div>
                 <div className="text-right">
-                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-slow">
+                  <p className="text-3xl font-bold aurora-text-gradient group-hover:scale-110 transition-transform duration-base">
                     {metric.value}
                   </p>
                 </div>
               </div>
             </div>
             <div className="p-4">
-              <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-slow">
+              <p className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors duration-base">
                 {metric.label}
               </p>
             </div>
@@ -151,7 +151,7 @@ export function SecurityAlertsWidget() {
           </div>
           <Button 
             onClick={runSecurityScan}
-            className="h-12 px-6 bg-gradient-to-r from-aurora to-viverblue hover:from-aurora-dark hover:to-viverblue-dark text-white font-medium shadow-lg hover:shadow-xl transition-all duration-slow"
+            className="h-12 px-6 bg-gradient-to-r from-aurora to-viverblue hover:from-aurora-dark hover:to-viverblue-dark text-white font-medium shadow-lg hover:shadow-xl transition-all duration-base"
           >
             <Activity className="h-4 w-4 mr-2" />
             Nova Varredura
@@ -227,17 +227,17 @@ export function SecurityAlertsWidget() {
             {metrics.suspiciousIPs.map((ip, index) => (
               <div 
                 key={ip} 
-                className="flex items-center justify-between p-4 aurora-glass rounded-xl border border-orange-500/20 animate-fade-in"
+                className="flex items-center justify-between p-4 aurora-glass rounded-xl border border-status-warning/20 animate-fade-in"
                 style={{ animationDelay: `${index * 50}ms` }}
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-gradient-to-r from-red-500 to-orange-500 rounded-full aurora-pulse"></div>
+                  <div className="w-3 h-3 bg-gradient-to-r from-status-error to-status-warning rounded-full aurora-pulse"></div>
                   <code className="font-mono font-medium">{ip}</code>
                 </div>
                 <Button 
                   variant="destructive" 
                   size="sm"
-                  className="hover:shadow-lg transition-all duration-slow"
+                  className="hover:shadow-lg transition-all duration-base"
                   onClick={() => {
                     console.log(`Bloqueando IP: ${ip}`);
                   }}

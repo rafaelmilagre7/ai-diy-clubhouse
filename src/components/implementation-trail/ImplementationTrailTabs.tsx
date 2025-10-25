@@ -34,7 +34,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
         <TabsList className="grid w-full grid-cols-3 h-auto p-2 bg-card/60 backdrop-blur-xl border border-border/50 rounded-2xl shadow-lg">
           <TabsTrigger 
             value="overview" 
-            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-slow data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
           >
             <Eye className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Visão Geral</span>
@@ -42,7 +42,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
           </TabsTrigger>
           <TabsTrigger 
             value="solutions" 
-            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-slow data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
           >
             <Target className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Soluções</span>
@@ -55,7 +55,7 @@ export const ImplementationTrailTabs = ({ trail }: ImplementationTrailTabsProps)
           </TabsTrigger>
           <TabsTrigger 
             value="lessons" 
-            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-300 data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
+            className="flex items-center gap-2 px-6 py-3.5 rounded-xl transition-all duration-slow data-[state=active]:bg-gradient-aurora data-[state=active]:text-primary-foreground data-[state=active]:shadow-md hover:bg-muted/50"
           >
             <GraduationCap className="h-4 w-4" />
             <span className="hidden sm:inline font-medium">Aulas</span>

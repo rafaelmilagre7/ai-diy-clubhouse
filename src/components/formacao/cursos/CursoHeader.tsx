@@ -33,7 +33,7 @@ export const CursoHeader: React.FC<CursoHeaderProps> = ({
         {/* Main Hero Card */}
         <div className="relative h-80 md:h-96 rounded-2xl overflow-hidden glass border border-white/10 shadow-2xl">
           <div 
-            className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-700 hover:scale-110" 
+            className="absolute inset-0 bg-cover bg-center scale-105 transition-transform duration-slowest hover:scale-110" 
             style={{ backgroundImage: `url(${coverImage})` }}
           >
             <div className="absolute inset-0 bg-gradient-to-br from-aurora/60 via-transparent to-revenue/40" />
@@ -98,7 +98,7 @@ export const CursoHeader: React.FC<CursoHeaderProps> = ({
                 variant="secondary" 
                 size="sm" 
                 onClick={onEditarCurso}
-                className="bg-white/20 backdrop-blur-md border-white/20 text-white hover:bg-white/30 transition-all duration-300"
+                className="bg-white/20 backdrop-blur-md border-white/20 text-white hover:bg-white/30 transition-all duration-slow"
               >
                 <Edit className="mr-2 h-4 w-4" />
                 Editar Curso
@@ -129,7 +129,7 @@ export const CursoHeader: React.FC<CursoHeaderProps> = ({
               <Button 
                 onClick={onNovoModulo}
                 className="bg-gradient-to-r from-aurora to-revenue hover:from-aurora-dark hover:to-revenue-dark 
-                          shadow-lg hover:shadow-xl transition-all duration-300 group"
+                          shadow-lg hover:shadow-xl transition-all duration-slow group"
                 size="lg"
               >
                 <FileText className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />

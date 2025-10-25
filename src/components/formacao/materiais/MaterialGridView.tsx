@@ -96,7 +96,7 @@ export const MaterialGridView = ({
         return (
           <Card 
             key={recurso.id} 
-            className="group bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02] overflow-hidden"
+            className="group bg-gradient-to-br from-card to-card/50 border-0 shadow-lg hover:shadow-xl transition-all duration-slow hover:scale-[1.02] overflow-hidden"
           >
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between">

@@ -134,7 +134,7 @@ export const ImplementationTrailHeader = ({
               
               {/* Progress bar */}
               <div className="h-1 bg-aurora-primary/20 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-aurora w-0 group-hover:w-full transition-all duration-1000 ease-out" />
+                <div className="h-full bg-gradient-aurora w-0 group-hover:w-full transition-all duration-slowest ease-out" />
               </div>
             </div>
           </div>
@@ -159,7 +159,7 @@ export const ImplementationTrailHeader = ({
               </div>
               
               <div className="h-1 bg-operational/20 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-operational w-0 group-hover:w-full transition-all duration-1000 ease-out animation-delay-500" />
+                <div className="h-full bg-gradient-operational w-0 group-hover:w-full transition-all duration-slowest ease-out animation-delay-500" />
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@ export const ImplementationTrailHeader = ({
               </div>
               
               <div className="h-1 bg-revenue/20 rounded-full overflow-hidden">
-                <div className="h-full bg-gradient-revenue w-0 group-hover:w-trail-progress transition-all duration-slowest ease-out animation-delay-1000" />
+                <div className="h-full bg-gradient-revenue w-0 group-hover:w-full transition-all duration-slowest ease-out animation-delay-1000" />
               </div>
             </div>
           </div>

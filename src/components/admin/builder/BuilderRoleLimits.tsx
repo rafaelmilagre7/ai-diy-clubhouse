@@ -100,9 +100,9 @@ export const BuilderRoleLimits: React.FC = () => {
       </CardHeader>
       <CardContent className="space-y-4">
         {/* Info Banner */}
-        <div className="p-4 rounded-lg bg-blue-500/10 border border-blue-500/20 flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
-          <div className="text-sm text-blue-600 dark:text-blue-400">
+        <div className="p-4 rounded-lg bg-status-info/10 border border-status-info/20 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-status-info flex-shrink-0 mt-0.5" />
+          <div className="text-sm text-status-info">
             <p className="font-medium mb-1">Como funciona:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>Cada role pode ter um limite mensal customizado</li>

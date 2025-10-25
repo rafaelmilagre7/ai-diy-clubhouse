@@ -57,7 +57,7 @@ export const ModuloDeleteDialog = ({
             disabled={isDeleting}
             className="w-full sm:w-auto bg-gradient-to-r from-destructive to-destructive/80 
                      hover:from-destructive/90 hover:to-destructive/70 text-destructive-foreground 
-                     shadow-lg hover:shadow-xl transition-all duration-300"
+                     shadow-lg hover:shadow-xl transition-all duration-slow"
           >
             {isDeleting ? (
               <>

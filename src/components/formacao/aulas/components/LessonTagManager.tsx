@@ -264,7 +264,7 @@ export const LessonTagManager = ({ form, fieldName = 'tags' }: LessonTagManagerP
                                         setSearchTerm('');
                                         setOpen(false);
                                       }}
-                                      className={`w-full px-3 py-2 text-left rounded-md transition-all duration-200 flex items-center gap-2 group ${
+                                      className={`w-full px-3 py-2 text-left rounded-md transition-all duration-base flex items-center gap-2 group ${
                                         selectedTagIds.includes(tag.id) 
                                           ? 'bg-primary/10 border border-primary/20 text-primary' 
                                           : 'hover:bg-accent hover:text-accent-foreground border border-transparent'

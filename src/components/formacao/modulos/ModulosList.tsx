@@ -70,7 +70,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
           {isAdmin && (
             <Button 
               className="bg-gradient-to-r from-aurora to-revenue hover:from-aurora-dark hover:to-revenue-dark 
-                        shadow-lg hover:shadow-xl transition-all duration-300"
+                        shadow-lg hover:shadow-xl transition-all duration-slow"
             >
               <Plus className="mr-2 h-4 w-4" />
               Criar Primeiro Módulo
@@ -93,11 +93,11 @@ export const ModulosList: React.FC<ModulosListProps> = ({
             <Link to={`/formacao/modulos/${modulo.id}`} className="block h-full">
               <Card className="h-full bg-gradient-to-br from-card/90 to-card/70 backdrop-blur-sm border border-border/50 
                             hover:border-aurora/30 hover:shadow-2xl hover:shadow-aurora/10 
-                            transition-all duration-500 hover:-translate-y-2 overflow-hidden relative group/card cursor-pointer">
+                            transition-all duration-slower hover:-translate-y-2 overflow-hidden relative group/card cursor-pointer">
                 
                 {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-aurora/[0.02] via-transparent to-revenue/[0.02] 
-                              opacity-0 group-hover/card:opacity-100 transition-opacity duration-500" />
+                              opacity-0 group-hover/card:opacity-100 transition-opacity duration-slower" />
                 
                 {/* Module Number Badge */}
                 <div className="absolute top-4 left-4 z-10">
@@ -117,7 +117,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
                         e.stopPropagation();
                         onEdit(modulo);
                       }}
-                      className="w-8 h-8 p-0 border-aurora/40 bg-white/90 text-aurora hover:bg-aurora/10 hover:border-aurora transition-all duration-300 shadow-lg"
+                      className="w-8 h-8 p-0 border-aurora/40 bg-white/90 text-aurora hover:bg-aurora/10 hover:border-aurora transition-all duration-slow shadow-lg"
                     >
                       <Edit className="h-3.5 w-3.5" />
                     </Button>
@@ -130,7 +130,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
                         e.stopPropagation();
                         onDelete(modulo.id);
                       }}
-                      className="w-8 h-8 p-0 border-destructive/40 bg-white/90 text-destructive hover:bg-destructive/10 hover:border-destructive transition-all duration-300 shadow-lg"
+                      className="w-8 h-8 p-0 border-destructive/40 bg-white/90 text-destructive hover:bg-destructive/10 hover:border-destructive transition-all duration-slow shadow-lg"
                     >
                       <Trash2 className="h-3.5 w-3.5" />
                     </Button>
@@ -138,7 +138,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
                 )}
 
                 <CardHeader className="pb-4 pt-16">
-                  <CardTitle className="text-lg font-bold text-text-primary group-hover/card:text-aurora transition-colors duration-300 line-clamp-2">
+                  <CardTitle className="text-lg font-bold text-text-primary group-hover/card:text-aurora transition-colors duration-slow line-clamp-2">
                     {modulo.title}
                   </CardTitle>
                   <CardDescription className="text-text-secondary line-clamp-3 leading-relaxed">
@@ -154,7 +154,7 @@ export const ModulosList: React.FC<ModulosListProps> = ({
                       <span>100%</span>
                     </div>
                     <div className="w-full bg-border/30 rounded-full h-2 overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-aurora to-revenue rounded-full transition-all duration-500" 
+                      <div className="h-full bg-gradient-to-r from-aurora to-revenue rounded-full transition-all duration-slower" 
                            style={{ width: '100%' }}></div>
                     </div>
                   </div>
@@ -174,11 +174,11 @@ export const ModulosList: React.FC<ModulosListProps> = ({
 
                 <CardFooter className="pt-4 border-t border-border/30 bg-surface-elevated/50">
                   <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center text-text-primary group-hover/card:text-aurora transition-colors duration-300">
+                    <div className="flex items-center text-text-primary group-hover/card:text-aurora transition-colors duration-slow">
                       <BookOpen className="mr-2 h-4 w-4 group-hover/card:scale-110 transition-transform" />
                       <span className="font-medium">Ver Aulas</span>
                     </div>
-                    <ChevronRight className="h-4 w-4 text-text-muted group-hover/card:text-aurora group-hover/card:translate-x-1 transition-all duration-300" />
+                    <ChevronRight className="h-4 w-4 text-text-muted group-hover/card:text-aurora group-hover/card:translate-x-1 transition-all duration-slow" />
                   </div>
                   
                   {/* Admin Action - Add Lesson */}

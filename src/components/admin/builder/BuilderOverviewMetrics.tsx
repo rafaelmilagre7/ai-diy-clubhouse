@@ -26,8 +26,8 @@ export const BuilderOverviewMetrics: React.FC<BuilderOverviewMetricsProps> = ({
       title: 'Usuários Ativos',
       value: usageStats?.activeUsers || 0,
       icon: Users,
-      color: 'text-blue-500',
-      bgColor: 'bg-blue-500/10'
+      color: 'text-status-info',
+      bgColor: 'bg-status-info/10'
     },
     {
       title: 'Média por Usuário',

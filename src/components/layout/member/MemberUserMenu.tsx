@@ -96,13 +96,13 @@ export const MemberUserMenu = () => {
               to="/profile/notifications" 
               className={cn(
                 "flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer",
-                "hover:bg-accent/80 transition-colors duration-200",
+                "hover:bg-accent/80 transition-colors duration-base",
                 "focus:bg-accent/80 focus:outline-none"
               )}
             >
               <div className="flex items-center gap-3">
-                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-blue-500/10">
-                  <Bell className="h-4 w-4 text-blue-500" />
+                <div className="flex items-center justify-center w-9 h-9 rounded-lg bg-status-info/10">
+                  <Bell className="h-4 w-4 text-status-info" />
                 </div>
                 <span className="font-medium text-sm">Notificações</span>
               </div>

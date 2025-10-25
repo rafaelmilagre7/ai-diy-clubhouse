@@ -82,7 +82,7 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Solutions */}
-        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-aurora-primary/30 hover:border-aurora-primary/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-aurora-primary/30 hover:border-aurora-primary/50 hover:scale-105 transition-all duration-slow shadow-md hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-aurora-subtle opacity-20" />
           <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
@@ -96,7 +96,7 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
         </Card>
 
         {/* Complexity Level */}
-        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-operational/30 hover:border-operational/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-operational/30 hover:border-operational/50 hover:scale-105 transition-all duration-slow shadow-md hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-operational-subtle opacity-20" />
           <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
@@ -110,7 +110,7 @@ export const PersonalizationInsights: React.FC<PersonalizationInsightsProps> = (
         </Card>
 
         {/* Estimated Time */}
-        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-strategy/30 hover:border-strategy/50 hover:scale-105 transition-all duration-300 shadow-md hover:shadow-lg">
+        <Card className="relative overflow-hidden bg-card/60 backdrop-blur-md border border-strategy/30 hover:border-strategy/50 hover:scale-105 transition-all duration-slow shadow-md hover:shadow-lg">
           <div className="absolute inset-0 bg-gradient-strategy-subtle opacity-20" />
           <CardContent className="relative p-6">
             <div className="flex items-center justify-between">
