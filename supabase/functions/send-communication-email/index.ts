@@ -1,4 +1,4 @@
-
+// Edge Function: Send Communication Email - v1.0.1 (re-deploy)
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@4.0.0";
 
