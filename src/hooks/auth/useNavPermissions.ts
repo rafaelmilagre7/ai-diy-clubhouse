@@ -35,7 +35,7 @@ export const useNavPermissions = () => {
     canViewBenefits: checkPermission('benefits.access', 'benefits'),
     canViewNetworking: checkPermission('networking.access', 'networking'),
     canViewCommunity: checkPermission('community.access', 'community'),
-    canViewEvents: checkPermission('events.access', 'events'),
+    canViewMentorships: checkPermission('events.access', 'events'),
     canViewSuggestions: checkPermission('suggestions.access', 'suggestions'),
     canViewAITrail: checkPermission('ai_trail.access', 'ai_trail'),
     canViewCertificates: checkPermission('certificates.access', 'certificates'),

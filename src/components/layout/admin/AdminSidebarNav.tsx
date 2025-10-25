@@ -91,7 +91,7 @@ const navigationItems = [
     icon: Layout,
   },
   {
-    title: "Eventos",
+    title: "Mentorias",
     href: "/admin/events",
     icon: Calendar,
   },

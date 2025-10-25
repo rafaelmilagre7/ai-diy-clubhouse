@@ -74,6 +74,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/suggestions", AdminSuggestions),
   createAdminRoute("/admin/events/debug", EventsDebugPage),
   createAdminRoute("/admin/events", AdminEvents),
+  createAdminRoute("/admin/mentorias", AdminEvents), // Alias para nova nomenclatura
   createAdminRoute("/admin/roles", AdminRoles),
   createAdminRoute("/admin/invites", InvitesManagement),
   createAdminRoute("/admin/invite-debug", InviteDebug),

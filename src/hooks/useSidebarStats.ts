@@ -7,7 +7,7 @@ interface SidebarStats {
   courses: number;
   tools: number;
   communityTopics: number;
-  monthlyEvents: number;
+  monthlyMentorships: number;
   benefits: number;
   networkingActive: boolean;
 }
@@ -49,13 +49,13 @@ export const useSidebarStats = () => {
           currentYear: now.getFullYear()
         });
         
-        const { count: eventsCount, error: eventsError } = await supabase
+        const { count: mentorshipsCount, error: mentorshipsError } = await supabase
           .from('events')
           .select('*', { count: 'exact', head: true })
           .gte('start_time', startOfMonth.toISOString())
           .lte('start_time', endOfMonth.toISOString());
 
-        console.log('📊 [SIDEBAR-STATS] Resultado eventos:', { eventsCount, eventsError });
+        console.log('📊 [SIDEBAR-STATS] Resultado mentorias:', { mentorshipsCount, mentorshipsError });
 
         // Buscar ferramentas que têm benefícios cadastrados
         const { count: benefitsCount } = await supabase
@@ -68,7 +68,7 @@ export const useSidebarStats = () => {
           courses: coursesCount || 0,
           tools: toolsCount || 0,
           communityTopics: communityTopicsCount || 0,
-          monthlyEvents: eventsCount || 0,
+          monthlyMentorships: mentorshipsCount || 0,
           benefits: benefitsCount,
           networkingActive: true // Sempre ativo para membros
         };
@@ -80,7 +80,7 @@ export const useSidebarStats = () => {
           courses: 8,
           tools: 82,
           communityTopics: 3,
-          monthlyEvents: 4,
+          monthlyMentorships: 4,
           benefits: 7,
           networkingActive: true
         };

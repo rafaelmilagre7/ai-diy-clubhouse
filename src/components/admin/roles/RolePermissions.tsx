@@ -137,7 +137,7 @@ const getFeatureDescription = (permission: Permission) => {
     'benefits.access': 'Acessar benefícios e descontos exclusivos',
     'networking.access': 'Conectar-se com outros membros da comunidade',
     'community.access': 'Participar de discussões e fóruns',
-    'events.access': 'Ver e participar de eventos e webinars',
+    'events.access': 'Ver e participar de mentorias e webinars',
     'suggestions.access': 'Enviar sugestões de melhorias para a plataforma',
   };
   

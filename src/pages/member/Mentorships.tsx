@@ -6,7 +6,7 @@ import { useFeatureAccess } from '@/hooks/auth/useFeatureAccess';
 import { usePremiumUpgradeModal } from '@/hooks/usePremiumUpgradeModal';
 import { AuroraUpgradeModal } from '@/components/ui/aurora-upgrade-modal';
 
-const Events = () => {
+const Mentorships = () => {
   const { isLoading } = useEvents();
   const { hasFeatureAccess } = useFeatureAccess();
   const { modalState, showUpgradeModal, hideUpgradeModal } = usePremiumUpgradeModal();
@@ -29,9 +29,9 @@ const Events = () => {
               <CalendarIcon className="w-6 h-6 text-aurora-primary" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold mb-1 text-zinc-100">Calendário de Eventos</h1>
+              <h1 className="text-2xl font-bold mb-1 text-zinc-100">Calendário de Mentorias</h1>
               <p className="text-muted-foreground">
-                Acompanhe os próximos eventos e não perca nenhuma oportunidade.
+                Acompanhe as próximas mentorias e não perca nenhuma oportunidade.
               </p>
             </div>
           </div>
@@ -93,10 +93,10 @@ const Events = () => {
       <AuroraUpgradeModal 
         open={modalState.open}
         onOpenChange={hideUpgradeModal}
-        itemTitle={modalState.itemTitle || "Desbloquear Eventos Premium"}
+        itemTitle={modalState.itemTitle || "Desbloquear Mentorias Premium"}
         feature="solutions"
       />
     </>
   );
 };
-export default Events;
+export default Mentorships;

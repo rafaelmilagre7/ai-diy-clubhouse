@@ -39,7 +39,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
     canViewBenefits,
     canViewNetworking,
     canViewCommunity,
-    canViewEvents,
+    canViewMentorships,
     canViewSuggestions,
     canViewAITrail,
     canViewCertificates,
@@ -92,12 +92,24 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             sidebarOpen={sidebarOpen}
             badge={isLoading ? "..." : stats?.courses?.toString()}
           />
-          <TooltipNavItem
-            to="/learning/certificates"
-            label="Certificados"
-            icon={Award}
-            sidebarOpen={sidebarOpen}
-          />
+          {canViewMentorships && (
+            <TooltipNavItem
+              to="/mentorias"
+              label="Mentorias"
+              icon={Calendar}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.monthlyMentorships?.toString()}
+            />
+          )}
+          {canViewCommunity && (
+            <TooltipNavItem
+              to="/comunidade"
+              label="Comunidade"
+              icon={MessageSquare}
+              sidebarOpen={sidebarOpen}
+              badge={isLoading ? "..." : stats?.communityTopics?.toString()}
+            />
+          )}
         </SidebarNavigationGroup>
 
         {/* Separador visual */}
@@ -143,35 +155,10 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               isNew={true}
             />
           )}
-          {canViewCommunity && (
-            <TooltipNavItem
-              to="/comunidade"
-              label="Comunidade"
-              icon={MessageSquare}
-              sidebarOpen={sidebarOpen}
-              badge={isLoading ? "..." : stats?.communityTopics?.toString()}
-            />
-          )}
-        </SidebarNavigationGroup>
-
-        {/* Separador visual */}
-        {sidebarOpen && (
-          <div className="mx-3 border-t border-border/50" />
-        )}
-
-        {/* Grupo: Eventos */}
-        <SidebarNavigationGroup title="Eventos" sidebarOpen={sidebarOpen}>
           <TooltipNavItem
-            to="/events"
-            label="Eventos"
-            icon={Calendar}
-            sidebarOpen={sidebarOpen}
-            badge={isLoading ? "..." : stats?.monthlyEvents?.toString()}
-          />
-          <TooltipNavItem
-            to="/suggestions"
-            label="Sugestões"
-            icon={Lightbulb}
+            to="/learning/certificates"
+            label="Certificados"
+            icon={Award}
             sidebarOpen={sidebarOpen}
           />
         </SidebarNavigationGroup>
@@ -194,6 +181,14 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               to="/team-management"
               label="Gestão de Equipe"
               icon={Users}
+              sidebarOpen={sidebarOpen}
+            />
+          )}
+          {canViewSuggestions && (
+            <TooltipNavItem
+              to="/suggestions"
+              label="Sugestões"
+              icon={Lightbulb}
               sidebarOpen={sidebarOpen}
             />
           )}

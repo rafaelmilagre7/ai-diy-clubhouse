@@ -19,7 +19,7 @@ import Benefits from '@/pages/member/Benefits';
 import Suggestions from '@/pages/member/Suggestions';
 import SuggestionDetails from '@/pages/member/SuggestionDetails';
 import NewSuggestion from '@/pages/member/NewSuggestion';
-import Events from '@/pages/member/Events';
+import Mentorships from '@/pages/member/Mentorships';
 import SolutionCertificate from '@/pages/member/SolutionCertificate';
 import Networking from '@/pages/member/Networking';
 import NetworkingAnalytics from '@/pages/member/NetworkingAnalytics';
@@ -137,7 +137,13 @@ export const memberRoutes: RouteObject[] = [
   createProtectedRoute("/implementation/:id/:moduleIdx", SolutionImplementation),
   createProtectedRoute("/implementation/completed/:id", ImplementationCompleted),
   createProtectedRoute("/benefits", Benefits),
-  createProtectedRoute("/events", Events),
+  createProtectedRoute("/mentorias", Mentorships),
+  
+  // Redirect old /events to /mentorias for backward compatibility
+  {
+    path: "/events",
+    element: <Navigate to="/mentorias" replace />
+  },
   
   // Learning/LMS Routes
   createProtectedRoute("/learning", LearningPage),
