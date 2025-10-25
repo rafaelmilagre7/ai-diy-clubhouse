@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase';
+import { warnAboutSensitiveData } from './security/sensitiveDataDetector';
 
 /**
  * Realiza limpeza completa do estado de autenticação
@@ -46,6 +47,11 @@ export const performCompleteAuthCleanup = async (reason?: string): Promise<void>
     
     // 4. Aguardar um pouco para garantir que a limpeza seja processada
     await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // 5. Verificar dados sensíveis residuais em desenvolvimento
+    if (import.meta.env.DEV) {
+      warnAboutSensitiveData();
+    }
     
   } catch (error) {
     console.error('❌ [AUTH-CLEANUP] Erro durante limpeza de autenticação:', error);

@@ -6,7 +6,24 @@
     <link rel="icon" type="image/x-icon" href="https://storage.googleapis.com/gpt-engineer-file-uploads/te7XwFxcwgelM6LaLUMqey9YEci1/uploads/1761370713850-icon.png">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Viver de IA</title>
-    <!-- CSP será aplicada dinamicamente via SecurityProvider para evitar conflitos -->
+    
+    <!-- Content Security Policy - Fase 3: Headers Restritivos -->
+    <meta http-equiv="Content-Security-Policy" content="
+      default-src 'self';
+      script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://esm.sh https://deno.land;
+      style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+      font-src 'self' https://fonts.gstatic.com data:;
+      img-src 'self' data: https: blob:;
+      connect-src 'self' https://*.supabase.co https://api.imgbb.com https://api.openai.com wss://*.supabase.co;
+      media-src 'self' https: blob:;
+      object-src 'none';
+      base-uri 'self';
+      form-action 'self';
+      frame-ancestors 'none';
+      upgrade-insecure-requests;
+    ">
+    
+    <!-- Modo dinâmico via SecurityProvider (mantido para compatibilidade) -->
     <meta name="csp-mode" content="dynamic">
     <meta property="og:title" content="Viver de IA">
   <meta name="twitter:title" content="Viver de IA">

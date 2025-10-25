@@ -47,6 +47,10 @@ refresh_token_reuse_interval = 10
 [functions]
 enabled = true
 
+# Fase 3: Função de segurança para cleanup automático de sessões
+[functions.session-cleanup-cron]
+verify_jwt = false
+
 # Novas funções de otimização de conexões
 [functions.audit-logs-cleaner]
 verify_jwt = false

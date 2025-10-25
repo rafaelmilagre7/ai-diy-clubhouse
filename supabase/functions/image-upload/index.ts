@@ -1,10 +1,14 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limiting: 10 uploads por minuto por usuário
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minuto em ms
+const MAX_UPLOADS_PER_WINDOW = 10;
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -47,6 +51,48 @@ serve(async (req) => {
 
     console.log(`[IMAGE-UPLOAD] Usuário autenticado: ${user.id}`);
 
+    // Rate Limiting: Verificar uploads recentes
+    const { count, error: rateLimitError } = await supabase
+      .from('rate_limits')
+      .select('*', { count: 'exact', head: true })
+      .eq('identifier', user.id)
+      .eq('action_type', 'image_upload')
+      .gte('window_start', new Date(Date.now() - RATE_LIMIT_WINDOW).toISOString());
+
+    if (rateLimitError) {
+      console.warn('[IMAGE-UPLOAD] Erro ao verificar rate limit:', rateLimitError);
+      // Continuar mesmo com erro de rate limit (fail open para não bloquear usuários)
+    } else if (count && count >= MAX_UPLOADS_PER_WINDOW) {
+      console.warn(`[IMAGE-UPLOAD] Rate limit excedido para usuário ${user.id}: ${count} uploads`);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Muitos uploads em curto período',
+          message: `Limite: ${MAX_UPLOADS_PER_WINDOW} uploads por minuto. Tente novamente em alguns instantes.`,
+          retry_after: 60
+        }),
+        { 
+          status: 429,
+          headers: { 
+            ...corsHeaders, 
+            'Content-Type': 'application/json',
+            'Retry-After': '60'
+          }
+        }
+      );
+    }
+
+    // Registrar tentativa de upload para rate limiting
+    const { error: logError } = await supabase.rpc('check_rate_limit', {
+      p_action_type: 'image_upload',
+      p_identifier: user.id,
+      p_max_attempts: MAX_UPLOADS_PER_WINDOW,
+      p_window_minutes: 1
+    });
+
+    if (logError) {
+      console.warn('[IMAGE-UPLOAD] Erro ao registrar rate limit:', logError);
+      // Não bloquear upload por erro de log
+    }
 
     // Obter chave segura do environment
     const imgbbApiKey = Deno.env.get('IMGBB_API_KEY');

@@ -31,6 +31,10 @@ import './utils/testEmailMasking';
 // Console administrativo (apenas para admins)
 import './utils/adminConsole';
 
+// Fase 3: Inicializar detector de dados sensíveis em desenvolvimento
+import { initSensitiveDataDetector } from './utils/security/sensitiveDataDetector';
+initSensitiveDataDetector();
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <App />
