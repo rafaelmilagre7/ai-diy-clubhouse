@@ -13,7 +13,7 @@ interface LearningRecommendation {
     id: string;
     title: string;
     description: string;
-    thumbnail_url?: string;
+    cover_image_url?: string;
     learning_modules: Array<{
       title: string;
       learning_courses: Array<{
@@ -43,7 +43,7 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
             id,
             title,
             description,
-            thumbnail_url,
+            cover_image_url,
             learning_modules!inner (
               title,
               learning_courses!inner (
