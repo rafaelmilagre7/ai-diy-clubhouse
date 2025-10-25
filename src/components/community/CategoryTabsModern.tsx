@@ -39,7 +39,7 @@ export const CategoryTabsModern = ({ categories, isLoading }: CategoryTabsModern
       <TabsList className="relative w-full bg-transparent p-3 h-auto flex flex-wrap justify-center lg:justify-start gap-3">
         <TabsTrigger 
           value="todos" 
-          className="relative group px-6 py-3 rounded-xl bg-background/40 backdrop-blur-sm hover:bg-background/60 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:text-primary data-[state=active]:border-primary/30 border border-transparent transition-all duration-300 hover:scale-105 data-[state=active]:shadow-xl"
+          className="relative group px-6 py-3 rounded-xl bg-background/40 backdrop-blur-sm hover:bg-background/60 data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary/20 data-[state=active]:to-accent/20 data-[state=active]:text-primary data-[state=active]:border-primary/30 border border-transparent transition-all duration-slow hover:scale-105 data-[state=active]:shadow-xl"
         >
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-accent/20 group-data-[state=active]:from-primary/30 group-data-[state=active]:to-accent/30 transition-all">
@@ -59,8 +59,8 @@ export const CategoryTabsModern = ({ categories, isLoading }: CategoryTabsModern
           <TabsTrigger 
             key={category.id} 
             value={category.slug} 
-            className={`relative group px-6 py-3 rounded-xl bg-background/40 backdrop-blur-sm hover:bg-background/60 border border-transparent transition-all duration-300 hover:scale-105 data-[state=active]:shadow-xl ${
-              categoryGradients[category.name as keyof typeof categoryGradients] || 
+            className={`relative group px-6 py-3 rounded-xl bg-background/40 backdrop-blur-sm hover:bg-background/60 border border-transparent transition-all duration-slow hover:scale-105 data-[state=active]:shadow-xl ${
+              categoryGradients[category.name as keyof typeof categoryGradients] ||
               'data-[state=active]:bg-gradient-to-r data-[state=active]:from-muted/30 data-[state=active]:to-muted/20 data-[state=active]:text-foreground data-[state=active]:border-border'
             }`}
           >

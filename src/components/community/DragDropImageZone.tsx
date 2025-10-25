@@ -68,7 +68,7 @@ export const DragDropImageZone: React.FC<DragDropImageZoneProps> = ({
   return (
     <div
       className={`
-        relative border-2 border-dashed rounded-lg p-4 text-center transition-all duration-200
+        relative border-2 border-dashed rounded-lg p-4 text-center transition-all duration-base
         ${isDragOver ? 'border-primary bg-primary/5' : 'border-border'}
         ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:border-primary/50'}
         ${isUploading ? 'border-operational bg-operational/5' : ''}
@@ -96,7 +96,7 @@ export const DragDropImageZone: React.FC<DragDropImageZoneProps> = ({
             {progress > 0 && (
               <div className="w-full max-w-xs bg-muted rounded-full h-2">
                 <div 
-                  className="bg-primary h-2 rounded-full transition-all duration-300"
+                  className="bg-primary h-2 rounded-full transition-all duration-slow"
                   style={{ width: `${progress}%` }}
                 />
               </div>

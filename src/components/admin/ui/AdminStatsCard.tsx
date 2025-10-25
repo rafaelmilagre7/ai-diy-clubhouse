@@ -76,7 +76,7 @@ export const AdminStatsCard = ({
   return (
     <Card className={cn(
       'surface-elevated border backdrop-blur-sm overflow-hidden',
-      'group cursor-pointer transition-all duration-300',
+      'group cursor-pointer transition-all duration-slow',
       'hover:scale-[1.02] hover:shadow-lg',
       variantStyles.border,
       className
@@ -93,7 +93,7 @@ export const AdminStatsCard = ({
             <Icon className={cn('h-6 w-6', variantStyles.iconColor)} />
           </div>
           <div className="text-right">
-            <p className="text-heading-2 text-foreground group-hover:scale-110 transition-transform duration-300">
+            <p className="text-heading-2 text-foreground group-hover:scale-110 transition-transform duration-slow">
               {value}
             </p>
           </div>

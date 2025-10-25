@@ -127,9 +127,9 @@ export const BlockedIPsManager = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Histórico Total</p>
-                <p className="text-3xl font-bold text-blue-500">{blockedIPs.length}</p>
+                <p className="text-3xl font-bold text-status-info">{blockedIPs.length}</p>
               </div>
-              <RefreshCw className="h-8 w-8 text-blue-500" />
+              <RefreshCw className="h-8 w-8 text-status-info" />
             </div>
           </CardContent>
         </Card>

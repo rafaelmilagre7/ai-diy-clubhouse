@@ -36,8 +36,8 @@ export const CategoryTabs = ({ categories, isLoading }: CategoryTabsProps) => {
         <TabsTrigger 
           key={category.id} 
           value={category.slug} 
-          className={`min-w-max px-md py-md transition-all duration-200 ${
-            categoryColors[category.name as keyof typeof categoryColors] || 
+          className={`min-w-max px-md py-md transition-all duration-base ${
+            categoryColors[category.name as keyof typeof categoryColors] ||
             'data-[state=active]:bg-muted data-[state=active]:text-foreground'
           }`}
         >

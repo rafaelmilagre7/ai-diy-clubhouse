@@ -153,7 +153,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
         ].map((metric, index) => (
           <div 
             key={metric.label} 
-            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
+            className={`aurora-glass rounded-2xl border ${metric.border} backdrop-blur-md overflow-hidden group cursor-pointer transition-all duration-slower hover:scale-[1.02] hover:shadow-2xl animate-fade-in`}
             style={{ animationDelay: `${index * 100}ms` }}
           >
             <div className={`bg-gradient-to-r ${metric.gradient} p-6 border-b border-white/10`}>
@@ -173,7 +173,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
               </div>
             </div>
             <div className="p-4">
-              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-300 mb-1">
+              <p className="font-medium text-foreground group-hover:text-foreground transition-colors duration-slow mb-1">
                 {metric.label}
               </p>
               <p className="text-xs text-muted-foreground">
@@ -189,7 +189,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
         <TabsList className="aurora-glass border-aurora/20 backdrop-blur-md h-12 rounded-2xl p-1">
           <TabsTrigger 
             value="violations"
-            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-destructive/20 data-[state=active]:to-red-500/10 data-[state=active]:text-destructive data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-medium"
+            className="data-[state=active]:aurora-glass data-[state=active]:bg-gradient-to-r data-[state=active]:from-destructive/20 data-[state=active]:to-red-500/10 data-[state=active]:text-destructive data-[state=active]:shadow-lg transition-all duration-slow rounded-xl font-medium"
           >
             Violações Recentes
           </TabsTrigger>
@@ -289,7 +289,7 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
                               variant="outline"
                               onClick={() => handleResolveViolation(violation.id)}
                               disabled={resolvingId === violation.id}
-                              className="hover:shadow-lg transition-all duration-300"
+                              className="hover:shadow-lg transition-all duration-slow"
                             >
                               {resolvingId === violation.id ? 'Resolvendo...' : 'Resolver'}
                             </Button>
@@ -323,8 +323,8 @@ export const SecurityDashboard: React.FC<SecurityDashboardProps> = ({ days = 7 }
               <div className="space-y-4">
                 {metrics.topViolationTypes.length === 0 ? (
                   <div className="text-center py-12">
-                    <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/20 to-cyan-500/10 aurora-glass mx-auto w-fit mb-4">
-                      <TrendingUp className="h-12 w-12 text-blue-500" />
+                    <div className="p-4 rounded-xl bg-gradient-to-br from-status-info/20 to-status-info/10 aurora-glass mx-auto w-fit mb-4">
+                      <TrendingUp className="h-12 w-12 text-status-info" />
                     </div>
                     <h4 className="text-lg font-bold aurora-text-gradient mb-2">Nenhum Tipo Registrado</h4>
                     <p className="text-muted-foreground">

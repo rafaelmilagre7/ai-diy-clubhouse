@@ -57,8 +57,8 @@ export const TopicItemModern = ({ topic, isPinned = false }: TopicItemModernProp
       )}
       
       {/* Main Card */}
-      <div className={`relative bg-background/80 backdrop-blur-xl border rounded-2xl p-6 transition-all duration-300 hover:shadow-2xl ${
-        isPinned 
+      <div className={`relative bg-background/80 backdrop-blur-xl border rounded-2xl p-6 transition-all duration-slow hover:shadow-2xl ${
+        isPinned
           ? 'border-status-warning/30 bg-gradient-to-br from-status-warning/5 to-status-warning/10' 
           : 'border-border/50 hover:border-border/80'
       }`}>

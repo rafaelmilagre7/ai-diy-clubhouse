@@ -56,8 +56,8 @@ export const CommunityFilters = ({
               <Badge
                 key={filter.key}
                 variant={isActive ? "default" : "secondary"}
-                className={`px-md py-sm cursor-pointer transition-all duration-300 hover:scale-105 gap-sm ${
-                  isActive 
+                className={`px-md py-sm cursor-pointer transition-all duration-slow hover:scale-105 gap-sm ${
+                  isActive
                     ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg" 
                     : "bg-background/60 backdrop-blur-sm hover:bg-background/80"
                 }`}

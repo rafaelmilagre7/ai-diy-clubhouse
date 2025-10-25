@@ -61,7 +61,7 @@ export const CommunityStats = () => {
       {statCards.map((stat, index) => {
         const Icon = stat.icon;
         return (
-          <Card key={index} className={`${stat.border} ${stat.bgColor} hover:shadow-md transition-all duration-200`}>
+          <Card key={index} className={`${stat.border} ${stat.bgColor} hover:shadow-md transition-all duration-base`}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>

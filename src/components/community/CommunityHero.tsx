@@ -71,7 +71,7 @@ export const CommunityHero = ({
         <div className="max-w-3xl mx-auto mb-8">
           <div className="relative group">
             {/* Glow effect apenas no hover */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-500"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-primary/0 via-primary/20 to-primary/0 rounded-2xl opacity-0 group-hover:opacity-100 blur-xl transition-opacity duration-slower"></div>
             
             {/* Card glassmorphism */}
             <div className="relative bg-card/80 backdrop-blur-xl border border-border rounded-2xl shadow-lg overflow-hidden">
@@ -85,7 +85,7 @@ export const CommunityHero = ({
                 />
                 <Button 
                   onClick={() => setCreateTopicOpen(true)}
-                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 py-2.5 rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/25 flex-shrink-0"
+                  className="bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90 text-white px-6 py-2.5 rounded-xl transition-all duration-slow hover:shadow-lg hover:shadow-primary/25 flex-shrink-0"
                 >
                   <PlusCircle className="h-4 w-4 mr-2" />
                   <span className="hidden sm:inline">Criar Tópico</span>
@@ -107,8 +107,8 @@ export const CommunityHero = ({
                 key={filter.key}
                 variant={isActive ? "default" : "secondary"}
                 className={cn(
-                  "px-4 py-2 cursor-pointer transition-all duration-300 border",
-                  isActive 
+                  "px-4 py-2 cursor-pointer transition-all duration-slow border",
+                  isActive
                     ? "bg-primary text-white border-primary shadow-lg shadow-primary/25 scale-105" 
                     : "bg-card/60 backdrop-blur-sm hover:bg-card border-border hover:border-primary/30 hover:scale-105"
                 )}

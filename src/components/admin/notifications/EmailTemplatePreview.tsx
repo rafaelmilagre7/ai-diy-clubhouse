@@ -302,7 +302,7 @@ export const EmailTemplatePreview = () => {
           }`}
         >
           <div
-            className={`bg-background rounded-lg shadow-2xl overflow-hidden transition-all duration-300 ${
+            className={`bg-background rounded-lg shadow-2xl overflow-hidden transition-all duration-slow ${
               viewMode === 'mobile' ? 'max-w-[375px] w-full' : 'max-w-[600px] w-full'
             }`}
             style={{
