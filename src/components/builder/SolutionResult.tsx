@@ -38,13 +38,20 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       return;
     }
 
+    // Recomendações são sempre geradas on-demand via hook
+    if (sectionId === 'recommendations') {
+      setExpandedSections(prev => new Set([...prev, sectionId]));
+      return;
+    }
+
     // Mapear sectionId para campo do banco e tipo
-    const sectionMapping: Record<string, { field: string; type: string }> = {
-      'tools': { field: 'required_tools', type: 'tools' },
-      'checklist': { field: 'implementation_checklist', type: 'checklist' },
-      'architecture': { field: 'architecture_flowchart', type: 'architecture' },
-      'lovable': { field: 'lovable_prompt', type: 'lovable' }
-    };
+  const sectionMapping: Record<string, { field: string; type: string }> = {
+    'tools': { field: 'required_tools', type: 'tools' },
+    'checklist': { field: 'implementation_checklist', type: 'checklist' },
+    'architecture': { field: 'architecture_flowchart', type: 'architecture' },
+    'recommendations': { field: 'learning_recommendations', type: 'recommendations' },
+    'lovable': { field: 'lovable_prompt', type: 'lovable' }
+  };
 
     const mapping = sectionMapping[sectionId];
     const hasContent = mapping && solutionData[mapping.field];
