@@ -29,6 +29,12 @@ export const NotificationBell = () => {
   } = useNotifications();
 
   const handleNotificationClick = async (notification: any) => {
+    console.log('🔔 [NOTIFICATION CLICK]', {
+      action_url: notification.action_url,
+      type: notification.type,
+      notification_id: notification.id,
+    });
+
     // Marcar como lida (incluindo notificações agrupadas)
     if (!notification.is_read) {
       const idsToMark = notification.grouped_ids || [notification.id];
@@ -37,17 +43,37 @@ export const NotificationBell = () => {
 
     // Navegar e fazer scroll para o elemento se houver
     if (notification.action_url) {
-      const url = new URL(notification.action_url, window.location.origin);
-      const hash = url.hash;
-      
-      navigate(url.pathname);
-      
-      // Aguardar navegação e fazer scroll
-      if (hash) {
+      try {
+        const url = new URL(notification.action_url, window.location.origin);
+        const hash = url.hash;
+        
+        console.log('🚀 [NAVIGATION] Navegando para:', url.pathname);
+        
+        // CORREÇÃO: Fechar dropdown ANTES de navegar
+        document.body.click();
+        
+        // Usar setTimeout para garantir que o dropdown fechou
         setTimeout(() => {
-          const element = document.querySelector(hash);
-          element?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        }, 300);
+          navigate(url.pathname, { state: { from: 'notification' } });
+          
+          // Aguardar navegação e fazer scroll
+          if (hash) {
+            setTimeout(() => {
+              const element = document.querySelector(hash);
+              if (element) {
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                console.log('✅ [SCROLL] Elemento encontrado e scroll aplicado:', hash);
+              } else {
+                console.warn('⚠️ [SCROLL] Elemento não encontrado:', hash);
+              }
+            }, 300);
+          }
+        }, 100);
+        
+      } catch (error) {
+        console.error('❌ [NAVIGATION ERROR]', error);
+        // FALLBACK: Recarregar a página diretamente
+        window.location.href = notification.action_url;
       }
     }
   };
