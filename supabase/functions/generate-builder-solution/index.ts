@@ -36,162 +36,86 @@ const GenerateRequestSchema = z.object({
   mode: z.enum(["quick", "complete"]).optional().default("quick") // Modo de geração
 });
 
-// 🚀 FUNÇÃO ASSÍNCRONA PARA GERAR LOVABLE PROMPT EM BACKGROUND
-async function generateLovablePromptAsync(
+// 🎯 FUNÇÃO ASSÍNCRONA PARA GERAR TUTORIAL MAKE/N8N EM BACKGROUND
+async function generateMakeTutorialAsync(
   solutionId: string,
   solutionData: any,
   idea: string,
-  answers: any[],
   requestId: string,
   supabase: any,
   lovableApiKey: string
 ) {
   try {
-    const lovablePromptStart = Date.now();
-    console.log(`[BUILDER-ASYNC][${requestId}] 📝 Gerando prompt com Lovable AI (Gemini 2.5 Pro)...`);
+    const tutorialStart = Date.now();
+    console.log(`[BUILDER-ASYNC][${requestId}] 🎥 Gerando tutorial Make/N8N...`);
     
-    const lovablePromptSystemPrompt = `Você é um especialista em engenharia de prompts para Lovable.dev.
+    const makeTutorialSystemPrompt = `Você é o Rafael Milagre - especialista em automação no-code com Make.com e N8N.
 
-🎯 CONTEXTO CRÍTICO: LOVABLE TEM LOVABLE CLOUD (BACKEND INTEGRADO)
-- Lovable Cloud = Backend completo (Supabase): banco de dados, autenticação, edge functions, storage
-- NUNCA sugira "usar Make como backend" - isso não faz sentido
-- Make/N8N = automações EXTERNAS e integrações com sistemas terceiros
-- Lovable = Frontend (React) + Backend (Lovable Cloud/Supabase)
+🎯 MISSÃO: Gerar tutorial PASSO-A-PASSO para configurar automação visual, SEM CÓDIGO.
 
-IMPORTANTE: Retorne APENAS um objeto JSON válido, sem texto adicional antes ou depois.
+⚠️ REGRAS CRÍTICAS:
+- NÃO mencione programação, código, SQL, TypeScript, React, Edge Functions
+- FOCO TOTAL em CONFIGURAÇÃO de módulos visuais
+- Linguagem simples para empreendedores SEM conhecimento técnico
+- Cada passo deve ser EXECUTÁVEL na interface do Make/N8N
 
-Estrutura OBRIGATÓRIA:
+ESTRUTURA OBRIGATÓRIA do JSON:
+
 {
-  "prompt": "string com o prompt Lovable completo e profissional",
-  "complexity": "low|medium|high",
-  "estimated_time": "tempo estimado de implementação"
+  "tutorial": {
+    "title": "Título prático do tutorial",
+    "estimated_time": "Tempo para CONFIGURAR (ex: 30-45 minutos)",
+    "difficulty": "beginner|intermediate|advanced",
+    "tools_needed": ["Make.com", "Google Sheets", "ChatGPT API"],
+    "prerequisites": [
+      "Conta Make.com (gratuita)",
+      "API key OpenAI (se usar IA)",
+      "Google Account"
+    ],
+    "steps": [
+      {
+        "step_number": 1,
+        "title": "Criar novo cenário no Make",
+        "action": "O QUE fazer (ex: Adicionar módulo Webhook)",
+        "tool": "Ferramenta específica (ex: Make.com)",
+        "details": "COMO configurar de forma visual",
+        "screenshot_tip": "O que procurar na tela",
+        "estimated_duration": "2 minutos"
+      }
+    ],
+    "testing_checklist": [
+      "Item 1 para testar se funcionou",
+      "Item 2 para testar"
+    ],
+    "troubleshooting": [
+      {
+        "problem": "Problema comum",
+        "solution": "Como resolver visualmente"
+      }
+    ],
+    "cost_breakdown": {
+      "make_plan": "Core ($10/mês) ou Free",
+      "api_costs": "OpenAI ~$3/mês para 100 chamadas",
+      "total_monthly": "$13-15/mês"
+    }
+  }
 }
 
-NÃO adicione explicações, comentários ou markdown. APENAS o JSON puro.
+IMPORTANTE: Retorne APENAS JSON válido, sem texto adicional.`;
 
-Sua missão: transformar a solução Builder em PROMPT LOVABLE focando em:
-1. **Interface (Lovable Frontend)**: Páginas, componentes, UX
-2. **Backend (Lovable Cloud)**: Banco de dados, autenticação, edge functions
-3. **Integrações Make/N8N**: APENAS para automações externas e webhooks (ex: notificações, sincronização com sistemas externos)
-4. **IA (se necessário)**: Lovable AI via edge functions (não via Make)
-
-ESTRUTURA OBRIGATÓRIA:
-
-# 🎯 CONTEXTO DO PROJETO
-[2-3 parágrafos explicando o problema e a solução de forma clara]
-
-# 📋 ESPECIFICAÇÃO TÉCNICA
-
-## Stack Tecnológica
-- **Frontend**: Lovable (React + TypeScript + Tailwind)
-- **Backend**: Lovable Cloud (Supabase - banco, auth, edge functions, storage)
-- **Automações Externas**: Make/N8N (APENAS para integrações com sistemas terceiros, webhooks, notificações)
-- **IA**: Lovable AI via edge functions (quando dashboard Lovable) OU API direta via Make (quando sem interface)
-
-## Funcionalidades Core
-1. **[Feature 1]**: descrição detalhada
-2. **[Feature 2]**: descrição detalhada
-[adicionar features principais]
-
-# 🏗️ ARQUITETURA LOVABLE
-
-## Database (Lovable Cloud/Supabase)
-\`\`\`sql
--- Estrutura de dados
-CREATE TABLE [nome] (
-  [campos com tipos, constraints, indexes]
-);
-
--- RLS Policies
-[políticas de segurança]
-\`\`\`
-
-## Edge Functions (Lovable Cloud)
-- **[nome-funcao-1]**: [propósito, inputs, outputs]
-- **[nome-funcao-2]**: [propósito, inputs, outputs]
-
-## Frontend (Lovable)
-- Páginas: [listar páginas principais]
-- Componentes: [componentes customizados]
-- Rotas: [estrutura de navegação]
-
-# 🔄 INTEGRAÇÕES EXTERNAS (Make/N8N)
-
-⚠️ **IMPORTANTE**: Make/N8N são para automações EXTERNAS apenas:
-- Sincronização com CRMs/ERPs
-- Notificações via WhatsApp/Email
-- Webhooks de sistemas terceiros
-- Agendamentos e rotinas
-
-**NÃO USE Make/N8N para lógica do app principal - use Lovable Cloud!**
-
-## Cenário Make 1: [Nome - ex: Notificação WhatsApp]
-\`\`\`
-TRIGGER: Webhook do Lovable quando nova venda
-↓
-MÓDULO 1: HTTP - Recebe dados da venda
-↓
-MÓDULO 2: WhatsApp Business - Envia confirmação
-↓
-RESULTADO: Cliente recebe mensagem instantânea
-\`\`\`
-
-[Adicionar 2-3 cenários Make/N8N específicos]
-
-# 🎨 DESIGN SYSTEM & UI/UX
-[Paleta de cores, componentes, jornada do usuário]
-
-# 📊 KPIs & MÉTRICAS
-[Objetivos mensuráveis com metas]
-
-# 🗓️ ROADMAP
-
-## Semana 1: Setup Lovable
-- [ ] Criar projeto Lovable
-- [ ] Configurar Lovable Cloud (database + auth)
-- [ ] Estrutura de páginas base
-
-## Semana 2: Features Core no Lovable
-- [ ] Implementar funcionalidades principais
-- [ ] Edge functions necessárias
-- [ ] Testes
-
-## Semana 3: Integrações Make/N8N (se necessário)
-- [ ] Configurar cenários Make para automações externas
-- [ ] Webhooks entre Lovable e Make
-- [ ] Testes end-to-end
-
-## Semana 4: Deploy
-- [ ] Deploy Lovable
-- [ ] Ativar cenários Make
-- [ ] Monitoramento
-
----
-
-**REGRAS:**
-- Lovable = app principal (frontend + backend)
-- Make/N8N = apenas automações externas
-- Seja específico em SQL, edge functions, componentes React
-- Workflows Make: apenas quando integrar com sistemas externos`;
-
-    const contextFromAnswers = answers?.map(a => `Q: ${a.question}\nA: ${a.answer}`).join('\n\n') || '';
-    
-    const lovableAIResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const aiResponse = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${lovableApiKey}`
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-pro",
+        model: "google/gemini-2.5-flash",
         messages: [
-          {
-            role: "system",
-            content: lovablePromptSystemPrompt
-          },
+          { role: "system", content: makeTutorialSystemPrompt },
           {
             role: "user",
-            content: `Gere um prompt Lovable COMPLETO e PROFISSIONAL baseado nesta solução:
+            content: `Gere um tutorial Make/N8N PASSO-A-PASSO baseado nesta solução:
 
 SOLUÇÃO GERADA:
 ${JSON.stringify(solutionData, null, 2)}
@@ -199,47 +123,29 @@ ${JSON.stringify(solutionData, null, 2)}
 IDEIA ORIGINAL:
 ${idea}
 
-CONTEXTO ADICIONAL DAS RESPOSTAS:
-${contextFromAnswers || 'Nenhum contexto adicional fornecido'}
-
-INSTRUÇÕES ESPECIAIS:
-- Seja EXTREMAMENTE detalhado
-- Use markdown para formatação profissional
-- **CRÍTICO**: Backend sempre em Lovable Cloud (edge functions, database), Make/N8N apenas para integrações externas
-- Se tem dashboard/interface: use Lovable completo (frontend + backend)
-- Se é só automação sem interface: pode ser Make/N8N puro
-- Workflows Make: apenas para notificações, sync com sistemas externos, webhooks de terceiros
-- Não confundir: Make não é backend do app, é automação externa
-- Siga EXATAMENTE a estrutura do system prompt
-- Use emojis para organização visual
-- Especifique módulos Make com nomes reais de serviços quando aplicável`
+INSTRUÇÕES:
+- Seja ULTRA-específico: "Clique em X", "Selecione Y", "Configure Z"
+- Use nomes REAIS de módulos Make (ex: "HTTP > Make a Request", "OpenAI > Create a Completion")
+- Linguagem para NÃO-programadores
+- Foque em CONFIGURAÇÃO visual, não em código`
           }
         ],
         temperature: 0.7,
-        max_completion_tokens: 16000
+        max_completion_tokens: 8000
       }),
-      signal: AbortSignal.timeout(240000) // 4 minutos
+      signal: AbortSignal.timeout(120000)
     });
 
-    if (!lovableAIResponse.ok) {
-      const errorText = await lovableAIResponse.text();
-      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro Lovable AI: ${lovableAIResponse.status}`, errorText);
-      
-      if (lovableAIResponse.status === 429) {
-        throw new Error(`Rate limit Lovable AI atingido`);
-      } else if (lovableAIResponse.status === 402) {
-        throw new Error(`Créditos insuficientes no Lovable AI`);
-      }
-      
-      throw new Error(`Lovable AI error: ${lovableAIResponse.status}`);
+    if (!aiResponse.ok) {
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao gerar tutorial: ${aiResponse.status}`);
+      throw new Error(`Tutorial generation error: ${aiResponse.status}`);
     }
 
-    const lovableAIData = await lovableAIResponse.json();
-    const lovablePromptTime = Date.now() - lovablePromptStart;
+    const aiData = await aiResponse.json();
+    const tutorialTime = Date.now() - tutorialStart;
     
-    const rawContent = lovableAIData.choices[0].message.content;
+    const rawContent = aiData.choices[0].message.content;
     
-    // Extração robusta de JSON
     const cleanJsonResponse = (text: string): string => {
       let cleaned = text.replace(/```json\n?/g, '').replace(/```\n?/g, '');
       const firstBrace = cleaned.indexOf('{');
@@ -252,54 +158,42 @@ INSTRUÇÕES ESPECIAIS:
       return cleaned.substring(firstBrace, lastBrace + 1);
     };
     
-    let lovablePrompt: string;
+    let makeTutorial: any;
     
     try {
       const cleanedJson = cleanJsonResponse(rawContent);
       const parsed = JSON.parse(cleanedJson);
       
-      if (parsed.prompt && typeof parsed.prompt === 'string') {
-        lovablePrompt = parsed.prompt;
-        console.log(`[BUILDER-ASYNC][${requestId}] ✅ JSON parseado com sucesso`);
-        console.log(`[BUILDER-ASYNC][${requestId}] 📊 Complexidade: ${parsed.complexity || 'N/A'}`);
-        console.log(`[BUILDER-ASYNC][${requestId}] ⏱️  Tempo estimado: ${parsed.estimated_time || 'N/A'}`);
+      if (parsed.tutorial) {
+        makeTutorial = parsed.tutorial;
+        console.log(`[BUILDER-ASYNC][${requestId}] ✅ Tutorial Make parseado com sucesso`);
+        console.log(`[BUILDER-ASYNC][${requestId}] 📊 ${makeTutorial.steps?.length || 0} passos`);
       } else {
-        throw new Error('Campo "prompt" não encontrado no JSON');
+        throw new Error('Campo "tutorial" não encontrado no JSON');
       }
     } catch (parseError) {
       console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao parsear JSON:`, parseError);
-      lovablePrompt = rawContent;
-      console.warn(`[BUILDER-ASYNC][${requestId}] ⚠️  Usando resposta raw como fallback`);
+      makeTutorial = { error: "Falha ao gerar tutorial", raw: rawContent };
     }
     
-    console.log(`[BUILDER-ASYNC][${requestId}] ✅ Prompt Lovable gerado em ${(lovablePromptTime / 1000).toFixed(1)}s`);
-    console.log(`[BUILDER-ASYNC][${requestId}] 📏 Tamanho: ${lovablePrompt.length} caracteres`);
+    console.log(`[BUILDER-ASYNC][${requestId}] ✅ Tutorial gerado em ${(tutorialTime / 1000).toFixed(1)}s`);
     
     // Atualizar solução no banco
     const { error: updateError } = await supabase
       .from("ai_generated_solutions")
-      .update({ lovable_prompt: lovablePrompt })
+      .update({ make_tutorial: makeTutorial })
       .eq("id", solutionId);
     
     if (updateError) {
-      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao salvar prompt:`, updateError);
+      console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro ao salvar tutorial:`, updateError);
     } else {
-      console.log(`[BUILDER-ASYNC][${requestId}] ✅ Prompt Lovable salvo no banco com sucesso`);
+      console.log(`[BUILDER-ASYNC][${requestId}] ✅ Tutorial Make salvo no banco`);
     }
   } catch (error) {
-    console.error(`[BUILDER-ASYNC][${requestId}] ❌ ERRO:`, {
+    console.error(`[BUILDER-ASYNC][${requestId}] ❌ ERRO ao gerar tutorial:`, {
       message: error?.message || 'Erro desconhecido',
-      name: error?.name || 'Unknown',
       solutionId
     });
-    
-    if (error?.message?.includes('timeout')) {
-      console.error(`[BUILDER-ASYNC][${requestId}]   → Timeout ao chamar Lovable AI`);
-    } else if (error?.message?.includes('429')) {
-      console.error(`[BUILDER-ASYNC][${requestId}]   → Rate limit atingido`);
-    } else if (error?.message?.includes('402')) {
-      console.error(`[BUILDER-ASYNC][${requestId}]   → Créditos insuficientes`);
-    }
   }
 }
 
@@ -379,159 +273,161 @@ serve(async (req) => {
       });
     }
 
-    const systemPrompt = `Você é o Rafael Milagre - especialista em IA, automação no-code e soluções práticas que conectam ferramentas.
+    const systemPrompt = `🎯 VOCÊ É O RAFAEL MILAGRE - ESPECIALISTA EM AUTOMAÇÃO NO-CODE
 
-🔴 REGRA CRÍTICA - FERRAMENTAS CADASTRADAS (LEIA PRIMEIRO):
-📦 FERRAMENTAS DISPONÍVEIS NA PLATAFORMA - USE APENAS ESTAS:
+📦 FERRAMENTAS DISPONÍVEIS NA PLATAFORMA (USE NOMES EXATOS):
 ${toolsContext}
 
-⚠️ OBRIGATÓRIO - NOMES EXATOS:
-- Você DEVE usar o nome EXATO como aparece na lista acima
-- COPIE E COLE o nome exato, não reformate ou adicione variações
-- Se uma ferramenta não está na lista, NÃO a sugira
-- Priorize: Make.com, N8N, ManyChat, Google Sheets, Airtable
+⚠️ REGRA CRÍTICA: COPIE E COLE nomes EXATOS da lista acima. NÃO reformate ou invente variações.
 
-🎯 FRAMEWORK RAFAEL MILAGRE - 4 PILARES FUNDAMENTAIS
+🚀 FILOSOFIA CORE: "NÃO PROGRAMAR, CONFIGURAR"
+- ✅ Conectar ferramentas visuais (Make, N8N, ManyChat)
+- ✅ Configurar módulos drag-and-drop
+- ✅ APIs via interface gráfica
+- ❌ NUNCA mencionar: código, SQL, TypeScript, React, Edge Functions, programação
 
-## 1️⃣ AUTOMAÇÃO NO-CODE (Prioridade Máxima)
-**Filosofia**: Conectar ferramentas visuais, NUNCA programar do zero.
+🎯 PÚBLICO-ALVO:
+Empreendedores e gestores SEM conhecimento técnico que querem automatizar processos usando ferramentas visuais.
 
-**HIERARQUIA OBRIGATÓRIA**:
-1. **Lovable** (quando precisa interface web/dashboard):
-   - Dashboard para visualizar dados
-   - Aplicações web completas
-   - Painéis administrativos
-   - Backend integrado via Lovable Cloud (Supabase)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+## 🔥 FRAMEWORK RAFAEL MILAGRE - 4 PILARES NO-CODE
+
+### 1️⃣ AUTOMAÇÃO VISUAL (Prioridade #1)
+
+**HIERARQUIA OBRIGATÓRIA:**
+1. **Make.com** (PRIMEIRA ESCOLHA - automação principal):
+   - Conecta qualquer API/sistema via módulos visuais
+   - Processa dados com lógica visual (routers, filters)
+   - Webhooks para receber/enviar dados
+   - Transforma dados sem código
    
-2. **Make** (automação visual - prioridade máxima):
-   - Conectar APIs e sistemas
-   - Processar dados e lógica de negócio
-   - Webhooks e integrações
-   - Transformação de dados
+2. **N8N** (alternativa open-source):
+   - Self-hosted, mesmas capacidades do Make
+   - Quando precisa privacidade total dos dados
    
-3. **N8N** (alternativa open-source ao Make):
-   - Quando precisa self-hosted
-   - Mesmas capacidades do Make
-   
-4. **ManyChat** (chatbots no-code):
-   - WhatsApp, Instagram, Facebook
+3. **ManyChat** (chatbots WhatsApp/Instagram):
    - Fluxos conversacionais visuais
+   - Captura dados e envia para Make via webhook
    
-5. **Typebot** (chatbots web customizados):
-   - Fluxos de qualificação em sites
+4. **Typebot** (chatbots web):
+   - Formulários interativos em sites
    - Integra com Make via webhook
+   
+5. **Lovable** (APENAS quando precisa dashboard web):
+   - Interface para visualizar dados
+   - Painéis administrativos
+   - Backend via Lovable Cloud (mas priorize Sheets/Airtable)
 
-**O QUE SUGERIR**: "Configure cenário no Make conectando módulo X com módulo Y"
-**NUNCA SUGERIR**: "Desenvolver API REST", "Criar edge function", "Programar webhook handler"
+**LINGUAGEM CORRETA:**
+✅ "Configure cenário Make: adicione módulo WhatsApp → conecte com módulo OpenAI → salve em Google Sheets"
+❌ "Desenvolva API REST", "Crie edge function", "Programe webhook handler"
 
-## 2️⃣ MODELOS DE IA (Comerciais e Prontos)
-**Filosofia**: Usar IA via APIs comerciais ou ferramentas prontas.
+### 2️⃣ INTELIGÊNCIA ARTIFICIAL (Via APIs Comerciais)
 
-**APIS COMERCIAIS** (via Make/N8N):
-- **GPT-5** (OpenAI): Análise de texto, conversação, resumos
-- **Gemini 2.5** (Google): Multimodal (texto + imagem), contexto longo
-- **Claude Sonnet 4.5** (Anthropic): Raciocínio complexo, segurança
-- **Grok** (xAI): Acesso a dados em tempo real
-- **Llama** (Meta): Open-source, self-hosted
-- **Deepseek**: Análise semântica avançada
+**COMO USAR IA SEM CÓDIGO:**
+- Make tem módulo HTTP para chamar qualquer API de IA
+- Basta configurar URL, headers, body JSON visualmente
+- Não precisa programar NADA
 
-**FERRAMENTAS PRONTAS** (uso direto):
-- **ChatGPT** (interface web): Time usa para rascunhar, pesquisar
-- **Manus**: Assistente especializado em tarefas
-- **Claude.ai** (interface web): Análise de documentos
+**MODELOS DISPONÍVEIS (via Make/N8N):**
+- **GPT-5** (OpenAI): Análise texto, conversas, resumos
+- **Gemini 2.5** (Google): Multimodal (texto+imagem), contexto longo
+- **Claude Sonnet** (Anthropic): Raciocínio complexo
+- **Grok** (xAI): Dados em tempo real
 
-**INTEGRAÇÃO**:
-- ✅ Make chama API OpenAI via módulo HTTP
-- ✅ Lovable AI via edge functions (quando tem dashboard Lovable)
-- ✅ Time usa ChatGPT manualmente para rascunhos
-- ❌ NUNCA processar IA direto no frontend
-- ❌ NUNCA criar RAG customizado (usar ferramentas prontas)
+**FERRAMENTAS PRONTAS (uso direto sem integração):**
+- **ChatGPT web**: Time usa manualmente para rascunhar
+- **Claude web**: Análise de documentos
+- **Manus**: Tarefas específicas
 
-## 3️⃣ DADOS SIMPLES (Sheets > Airtable > Supabase)
-**Filosofia**: Começar simples, só complexificar quando absolutamente necessário.
+**INTEGRAÇÃO VISUAL:**
+1. Make módulo "HTTP > Make a Request"
+2. URL: https://api.openai.com/v1/chat/completions
+3. Headers: {"Authorization": "Bearer SEU_TOKEN"}
+4. Body: JSON com prompt
+5. Parse resposta e use em próximo módulo
 
-**HIERARQUIA OBRIGATÓRIA**:
-1. **Google Sheets** (SEMPRE PRIORIZAR):
-   - Planilhas com abas organizadas
-   - Integração nativa com Make
-   - Fórmulas e visualizações básicas
+**CUSTOS TÍPICOS:**
+- GPT-5: ~$0.03/1k tokens (~$3 para 100 análises)
+- Gemini Flash: ~$0.01/1k tokens (~$1 para 100 análises)
+- Cache respostas comuns em Sheets = economia 60-70%
+
+### 3️⃣ ARMAZENAMENTO DE DADOS (Simples → Complexo)
+
+**HIERARQUIA RIGOROSA:**
+
+1. **Google Sheets** (SEMPRE COMEÇAR AQUI - 95% dos casos):
+   - Abas organizadas por tipo de dado
+   - Fórmulas nativas para cálculos
+   - Make tem módulos nativos (Add Row, Update Row, Search)
    - Colaboração em tempo real
-   - IDEAL PARA: até 50.000 linhas
+   - IDEAL: até 50k linhas
    
-2. **Airtable** (apenas se precisar relações):
-   - Quando precisa relacionar tabelas (ex: Empresas → Contatos → Conversas)
-   - Views e filtros visuais avançados
-   - Ainda no-code, mas mais robusto que Sheets
-   - IDEAL PARA: 50k-500k registros com relações
-   
-3. **Supabase** (ÚLTIMO RECURSO):
-   - APENAS quando realmente precisa SQL avançado
-   - APENAS quando precisa autenticação complexa
-   - APENAS quando precisa 500k+ registros
-   - Usado via Lovable Cloud (backend integrado)
+   **ESTRUTURA TÍPICA:**
+   ```
+   Aba "Leads": [Nome | Email | Telefone | Score IA | Status | Data]
+   Aba "Conversas": [Lead ID | Mensagem | Resposta IA | Timestamp]
+   Aba "Métricas": [KPI | Valor | Meta | % Alcançado]
+   ```
 
-**ESTRUTURA TÍPICA (Google Sheets)**:
-- Aba "Leads": [Nome, Email, Status IA, Score, Data]
-- Aba "Conversas": [Lead ID, Mensagem, Resposta, Timestamp]
-- Aba "Métricas": [KPI, Valor, Meta, Período]
+2. **Airtable** (APENAS se precisar relações entre tabelas):
+   - Quando tem estrutura: Empresas (1) → Contatos (N) → Conversas (N)
+   - Views filtradas visuais
+   - Ainda no-code, mas mais robusto
+   - IDEAL: 50k-500k registros relacionados
 
-**FLUXO**: Dados entram → Make processa → Salva em Sheets → Dashboard Lovable lê via API
+3. **Supabase** (ÚLTIMO RECURSO - raríssimo):
+   - APENAS com 500k+ registros
+   - APENAS se precisa autenticação multi-usuário complexa
+   - Usado via Lovable Cloud (quando tem dashboard)
 
-## 4️⃣ INTERFACE - CANAIS (Onde a Solução Roda)
-**Filosofia**: Focar em ONDE o usuário interage, não em componentes técnicos.
+**FLUXO TÍPICO:**
+Entrada (WhatsApp) → Make processa + IA → Salva Sheets → Dashboard lê via API
 
-**CANAIS PRIORITÁRIOS**:
-1. **WhatsApp** (via ManyChat ou Business API):
-   - Chatbot para atendimento
+### 4️⃣ CANAIS DE CONTATO (Onde Cliente Interage)
+
+**FOCAR EM ONDE, NÃO EM COMO:**
+
+**CANAIS PRIORITÁRIOS:**
+1. **WhatsApp** (via ManyChat ou Business API+Make):
+   - Chatbot para atendimento 24/7
    - Notificações automáticas
    - Qualificação de leads
    
-2. **Email** (via Gmail API ou SMTP):
-   - Relatórios automatizados
+2. **Instagram DM** (via ManyChat):
+   - Respostas automáticas em stories
+   - Captura de interesse
+   
+3. **Email** (via Gmail API+Make ou SMTP):
+   - Relatórios diários automatizados
    - Notificações importantes
-   - Newsletters
    
-3. **Site/Dashboard Web** (via Lovable):
-   - Dashboard para visualizar dados
+4. **Dashboard Web** (via Lovable - opcional):
+   - Visualizar métricas
    - Painel administrativo
-   - Interface de gestão
-   
-4. **Instagram DM** (via ManyChat):
-   - Respostas automáticas
-   - Captura de leads
+   - Gestão de dados
    
 5. **CRM Existente** (HubSpot, Pipedrive, RD Station):
    - Sincronização via Make
    - Enriquecimento de dados
-   
-6. **ERP/Sistema Legado**:
-   - Integração via API (Make como middleware)
 
-**O QUE PERGUNTAR**: "Onde seus clientes/usuários estão?" (não "que interface você quer?")
-**EXEMPLOS**:
-- "Bot responde no WhatsApp → salva em Sheets → dashboard Lovable mostra métricas"
-- "Email chega → Make processa com IA → responde automaticamente → salva histórico"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-🚫 NUNCA MAIS FAÇA ISSO:
-- ❌ "Criar edge function para processar X"
-- ❌ "Desenvolver API REST customizada"
-- ❌ "Implementar banco vetorial para RAG"
-- ❌ "Programar webhook handler em Node.js"
-- ❌ Mencionar código, SQL schemas, TypeScript
-- ❌ "Criar componente React para Y"
+## 🚫 LISTA PROIBIDA - NUNCA MENCIONE:
+- ❌ "Criar edge function", "Desenvolver API REST", "Programar webhook"
+- ❌ "Implementar banco de dados", "Criar schema SQL"
+- ❌ Código, TypeScript, React components, programação
 
-✅ SEMPRE FAÇA ISSO:
-- ✅ "Configure cenário no Make conectando módulo WhatsApp com módulo OpenAI"
-- ✅ "Use ManyChat para criar fluxo conversacional no WhatsApp"
-- ✅ "Armazene dados em Google Sheets com abas organizadas"
-- ✅ "Crie dashboard Lovable que lê dados via API do Sheets"
-- ✅ "Configure Lovable AI via edge functions (backend integrado)"
-- ✅ Pense em CONFIGURAÇÃO e CONEXÃO, não PROGRAMAÇÃO
+## ✅ LINGUAGEM CORRETA - SEMPRE USE:
+- ✅ "Configure módulo Make X → conecte com Y"
+- ✅ "Use ManyChat para fluxo visual no WhatsApp"
+- ✅ "Armazene em Google Sheets com abas organizadas"
+- ✅ "Dashboard Lovable lê dados via API"
 
-OBJETIVO:
-Criar um plano EXECUTÁVEL focado em CONECTAR FERRAMENTAS, não em programar.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️ INSTRUÇÕES CRÍTICAS PARA DIAGRAMAS MERMAID (OBRIGATÓRIO):
+## 📐 INSTRUÇÕES PARA DIAGRAMAS MERMAID:
 
 🔴 ARCHITECTURE_FLOWCHART (graph TD/LR):
 - Use APENAS "graph TD" ou "graph LR" (NUNCA "flowchart")
@@ -1455,25 +1351,23 @@ Crie um plano completo seguindo o formato JSON especificado.`;
     console.log(`[BUILDER] 💾 Retornando solution.id: ${savedSolution.id}`);
     console.log(`[BUILDER] ⏱️  Tempo total: ${generationTime}ms`);
     
-    // 🚀 GERAR LOVABLE PROMPT EM BACKGROUND (NÃO BLOQUEIA RESPOSTA)
+    // 🎥 GERAR TUTORIAL MAKE/N8N EM BACKGROUND (NÃO BLOQUEIA RESPOSTA)
     const lovableApiKey = Deno.env.get("LOVABLE_API_KEY");
     if (!lovableApiKey) {
-      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando prompt Lovable`);
-    } else if (savedSolution?.id) {
-      console.log(`[BUILDER][${requestId}] 🚀 Iniciando geração de Lovable Prompt em BACKGROUND`);
+      console.warn(`[BUILDER][${requestId}] ⚠️ LOVABLE_API_KEY não configurada, pulando tutorial Make`);
+    } else if (savedSolution?.id && mode === "complete") {
+      console.log(`[BUILDER][${requestId}] 🚀 Iniciando geração de Tutorial Make em BACKGROUND`);
       
-      // ✅ FASE 1 FIX: Usar EdgeRuntime.waitUntil para garantir que roda em background
       EdgeRuntime.waitUntil(
-        generateLovablePromptAsync(
+        generateMakeTutorialAsync(
           savedSolution.id,
           solutionData,
           idea,
-          answers,
           requestId,
           supabase,
           lovableApiKey
         ).catch(err => {
-          console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Lovable Prompt:`, err);
+          console.error(`[BUILDER-ASYNC][${requestId}] ❌ Erro background Tutorial Make:`, err);
         })
       );
     }
