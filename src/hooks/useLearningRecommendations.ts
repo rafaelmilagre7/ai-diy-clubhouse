@@ -108,8 +108,46 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
 
         console.log(`[RECOMMENDATIONS] ✅ ${generated.recommendations.length} recomendações geradas`);
         
-        // Mapear para o formato esperado
-        return generated.recommendations.map((rec: any) => ({
+        // Buscar dados completos das lessons no banco
+        const lessonIds = generated.recommendations.map((rec: any) => rec.lessonId);
+        
+        const { data: lessonsData, error: lessonsError } = await supabase
+          .from('learning_lessons')
+          .select(`
+            id,
+            title,
+            description,
+            cover_image_url,
+            learning_modules (
+              title,
+              learning_courses (
+                id,
+                title
+              )
+            )
+          `)
+          .in('id', lessonIds);
+
+        if (lessonsError) {
+          console.error('[RECOMMENDATIONS] ❌ Erro ao buscar lessons:', lessonsError);
+          // Retornar sem dados da lesson, o componente vai filtrar
+          return generated.recommendations.map((rec: any) => ({
+            id: rec.lessonId,
+            solution_id: solutionId,
+            lesson_id: rec.lessonId,
+            relevance_score: rec.relevanceScore,
+            justification: rec.justification,
+            key_topics: rec.keyTopics || [],
+            created_at: new Date().toISOString(),
+            lesson: undefined
+          })) as LearningRecommendation[];
+        }
+
+        // Criar mapa de lessons por ID
+        const lessonsMap = new Map(lessonsData?.map(l => [l.id, l]) || []);
+        
+        // Mapear recomendações com dados completos das lessons
+        const enrichedRecommendations = generated.recommendations.map((rec: any) => ({
           id: rec.lessonId,
           solution_id: solutionId,
           lesson_id: rec.lessonId,
@@ -117,8 +155,12 @@ export const useLearningRecommendations = (solutionId: string | undefined) => {
           justification: rec.justification,
           key_topics: rec.keyTopics || [],
           created_at: new Date().toISOString(),
-          lesson: rec.lesson
-        })) as LearningRecommendation[];
+          lesson: lessonsMap.get(rec.lessonId)
+        })).filter(rec => rec.lesson); // Remover recomendações sem lesson
+
+        console.log(`[RECOMMENDATIONS] ✅ ${enrichedRecommendations.length} recomendações enriquecidas com dados das lessons`);
+        
+        return enrichedRecommendations as LearningRecommendation[];
       } catch (err: any) {
         if (err.message?.includes('Timeout')) {
           console.error('[RECOMMENDATIONS] ⏰', err.message);
