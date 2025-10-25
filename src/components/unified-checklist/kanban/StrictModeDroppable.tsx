@@ -1,0 +1,25 @@
+import { useEffect, useState } from 'react';
+import { Droppable, DroppableProps } from '@hello-pangea/dnd';
+
+/**
+ * Wrapper para Droppable que resolve problemas com React Strict Mode
+ * @hello-pangea/dnd tem problemas conhecidos com double mounting
+ * Esta solução aguarda um frame antes de renderizar
+ */
+export const StrictModeDroppable = ({ children, ...props }: DroppableProps) => {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    const animation = requestAnimationFrame(() => setEnabled(true));
+    return () => {
+      cancelAnimationFrame(animation);
+      setEnabled(false);
+    };
+  }, []);
+
+  if (!enabled) {
+    return null;
+  }
+
+  return <Droppable {...props}>{children}</Droppable>;
+};

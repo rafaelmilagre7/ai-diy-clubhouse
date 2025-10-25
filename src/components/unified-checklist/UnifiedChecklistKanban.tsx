@@ -1,5 +1,6 @@
-import React, { useState, useMemo, useRef } from "react";
-import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import React, { useState, useMemo, useRef, useCallback } from "react";
+import { DragDropContext, Draggable, DropResult } from "@hello-pangea/dnd";
+import { StrictModeDroppable } from './kanban/StrictModeDroppable';
 import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -68,8 +69,6 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragInProgressRef = useRef(false);
-  const itemsSnapshotRef = useRef<UnifiedChecklistItem[]>([]);
-  const dragTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const updateMutation = useUpdateUnifiedChecklist();
   const queryClient = useQueryClient();
 
@@ -92,14 +91,8 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
   }, [checklistItems]);
 
-  // ✅ Snapshot REAL dos items durante drag usando ref imutável
-  const stableItems = useMemo(() => {
-    // Durante drag, usar snapshot congelado armazenado no ref
-    if (isDragging && dragInProgressRef.current && itemsSnapshotRef.current.length > 0) {
-      return itemsSnapshotRef.current;
-    }
-    return normalizedItems;
-  }, [normalizedItems, isDragging]);
+  // Usar normalizedItems diretamente - sem snapshot
+  const stableItems = normalizedItems;
 
   // Agrupar itens por coluna usando snapshot estável
   const itemsByColumn = useMemo(() => {
@@ -122,130 +115,109 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     return grouped;
   }, [stableItems]);
 
-  const handleDragStart = () => {
+  const handleDragStart = useCallback(() => {
+    console.log('🎬 handleDragStart CHAMADO');
     if (dragInProgressRef.current) return;
     dragInProgressRef.current = true;
     setIsDragging(true);
-    
-    // ✅ Criar snapshot IMUTÁVEL dos items no início do drag
-    itemsSnapshotRef.current = JSON.parse(JSON.stringify(normalizedItems));
-    console.log('🚀 Drag iniciado - Snapshot criado:', itemsSnapshotRef.current.length, 'items');
-  };
+  }, []);
 
-  const handleDragEnd = (result: DropResult) => {
-    // ✅ Cancelar drag anterior se existir
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
+  const handleDragEnd = useCallback((result: DropResult) => {
+    console.log('🎯 handleDragEnd CHAMADO IMEDIATAMENTE:', {
+      from: result.source?.droppableId,
+      to: result.destination?.droppableId,
+      itemId: result.draggableId
+    });
+
+    dragInProgressRef.current = false;
+    setIsDragging(false);
+    
+    if (!result.destination) {
+      console.log('❌ Sem destino válido');
+      return;
     }
+
+    const { source, destination } = result;
     
-    // ✅ Debounce de 50ms para evitar conflitos
-    dragTimeoutRef.current = setTimeout(() => {
-      try {
-        console.log('🎯 handleDragEnd CHAMADO:', {
-          from: result.source?.droppableId,
-          to: result.destination?.droppableId,
-          itemId: result.draggableId
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      console.log('⚠️ Mesma posição - nenhuma mudança');
+      return;
+    }
+
+    const sourceCol = source.droppableId as ColumnType;
+    const destCol = destination.droppableId as ColumnType;
+
+    // 1. Criar nova estrutura de colunas
+    const newColumns = {
+      todo: [...itemsByColumn.todo],
+      in_progress: [...itemsByColumn.in_progress],
+      done: [...itemsByColumn.done]
+    };
+
+    // 2. Mover item
+    const [movedItem] = newColumns[sourceCol].splice(source.index, 1);
+    
+    if (!movedItem) {
+      console.error('❌ Item não encontrado!');
+      return;
+    }
+
+    movedItem.column = destCol;
+    movedItem.completed = destCol === 'done';
+    if (destCol === 'done') {
+      movedItem.completedAt = new Date().toISOString();
+    }
+    newColumns[destCol].splice(destination.index, 0, movedItem);
+
+    // 3. Recalcular orders
+    const allItems: UnifiedChecklistItem[] = [];
+    (['todo', 'in_progress', 'done'] as ColumnType[]).forEach(col => {
+      newColumns[col].forEach((item, idx) => {
+        allItems.push({
+          ...item,
+          order: idx,
+          column: col
         });
+      });
+    });
 
-        dragInProgressRef.current = false;
-        setIsDragging(false);
-        
-        if (!result.destination) {
-          console.log('⚠️ Sem destino - drag cancelado');
-          return;
-        }
+    console.log('✅ Items atualizados, enviando mutation');
 
-        const { source, destination } = result;
-        
-        if (source.droppableId === destination.droppableId && source.index === destination.index) {
-          console.log('⚠️ Mesma posição - nenhuma mudança');
-          return;
-        }
-
-        const sourceCol = source.droppableId as ColumnType;
-        const destCol = destination.droppableId as ColumnType;
-
-        // 1. Criar nova estrutura de colunas
-        const newColumns = {
-          todo: [...itemsByColumn.todo],
-          in_progress: [...itemsByColumn.in_progress],
-          done: [...itemsByColumn.done]
-        };
-
-        // 2. Mover item
-        const [movedItem] = newColumns[sourceCol].splice(source.index, 1);
-        
-        if (!movedItem) {
-          console.error('❌ Item não encontrado!');
-          return;
-        }
-
-        movedItem.column = destCol;
-        movedItem.completed = destCol === 'done';
-        if (destCol === 'done') {
-          movedItem.completedAt = new Date().toISOString();
-        }
-        newColumns[destCol].splice(destination.index, 0, movedItem);
-
-        // 3. Recalcular orders
-        const allItems: UnifiedChecklistItem[] = [];
-        (['todo', 'in_progress', 'done'] as ColumnType[]).forEach(col => {
-          newColumns[col].forEach((item, idx) => {
-            allItems.push({
-              ...item,
-              order: idx,
-              column: col
-            });
-          });
-        });
-
-        const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
-
-        // 4. ✅ SALVAR DIRETAMENTE NO BANCO (sem update otimista duplicado)
-        console.log('💾 Salvando no banco...');
-        updateMutation.mutate(
-          {
-            checklistData: {
-              ...checklistData,
-              checklist_data: {
-                items: allItems,
-                lastUpdated: new Date().toISOString()
-              }
-            },
-            solutionId,
-            checklistType,
-            templateId,
-            silent: true
-          },
-          {
-            onSuccess: () => {
-              // ✅ Invalidar queries APENAS depois do sucesso
-              console.log('✅ Salvo com sucesso - invalidando cache');
-              queryClient.invalidateQueries({ queryKey });
-              
-              const columnNames = {
-                'done': 'Concluído',
-                'in_progress': 'Em Progresso',
-                'todo': 'A Fazer'
-              };
-              toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}!`);
-            },
-            onError: (error) => {
-              console.error('❌ ERRO ao salvar drag:', error);
-              queryClient.invalidateQueries({ queryKey });
-              toast.error('Erro ao mover card. Recarregando...');
-            }
+    updateMutation.mutate(
+      {
+        checklistData: {
+          ...checklistData,
+          checklist_data: {
+            items: allItems,
+            lastUpdated: new Date().toISOString()
           }
-        );
-        
-      } catch (error) {
-        console.error('❌ ERRO CRÍTICO no handleDragEnd:', error);
-        toast.error('Erro inesperado ao mover card');
-        dragInProgressRef.current = false;
-        setIsDragging(false);
+        },
+        solutionId,
+        checklistType,
+        templateId
+      },
+      {
+        onSuccess: () => {
+          console.log('✅ Mutation SUCCESS - Card movido com sucesso!');
+          const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
+          queryClient.invalidateQueries({ queryKey });
+          
+          const columnNames = {
+            'done': 'Concluído',
+            'in_progress': 'Em Progresso',
+            'todo': 'A Fazer'
+          };
+          toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}!`);
+        },
+        onError: (error) => {
+          console.error('❌ Erro ao salvar:', error);
+          const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
+          queryClient.invalidateQueries({ queryKey });
+          toast.error('Erro ao mover card. Por favor, recarregue.');
+        }
       }
-    }, 50); // ✅ 50ms de debounce
-  };
+    );
+  }, [itemsByColumn, checklistData, solutionId, checklistType, templateId, updateMutation, queryClient]);
 
   const handleCardClick = (item: UnifiedChecklistItem) => {
     setSelectedItem(item);
@@ -602,7 +574,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                 </div>
 
                 {/* Droppable Area - Design System */}
-                <Droppable droppableId={column.id}>
+                <StrictModeDroppable droppableId={column.id}>
                   {(provided, snapshot) => (
                       <div
                         ref={provided.innerRef}
@@ -669,7 +641,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                         {provided.placeholder}
                       </div>
                     )}
-                </Droppable>
+                </StrictModeDroppable>
               </div>
             );
           })}
