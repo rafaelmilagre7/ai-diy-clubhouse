@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode, Loader2 } from 'lucide-react';
+import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode, Loader2, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
+import { LearningRecommendationsCard } from '@/components/builder/LearningRecommendationsCard';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -402,6 +403,29 @@ export default function BuilderSolutionCover() {
               );
             })}
           </div>
+
+          {/* Card de Recomendações de Aprendizado */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8"
+          >
+            <LiquidGlassCard className="p-6">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
+                  <BookOpen className="h-6 w-6 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Conteúdos Recomendados</h2>
+                  <p className="text-sm text-muted-foreground">
+                    Aulas selecionadas por IA para implementar sua solução
+                  </p>
+                </div>
+              </div>
+              <LearningRecommendationsCard solutionId={solution.id} />
+            </LiquidGlassCard>
+          </motion.div>
 
           {/* Loading Modal */}
           {generatingSection && (
