@@ -164,7 +164,7 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
 
                 {/* Botão de ação */}
                 <Button
-                  onClick={() => navigate(`/formacao/aula/${lesson.id}`)}
+                  onClick={() => navigate(`/learning/lesson/${lesson.id}`)}
                   className="w-full group/btn"
                   size="sm"
                 >
