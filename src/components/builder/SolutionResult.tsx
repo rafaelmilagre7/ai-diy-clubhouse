@@ -22,6 +22,12 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   solution, 
   onNewIdea
 }) => {
+  console.log('🔍 [SOLUTION RESULT] Componente renderizado', { 
+    solutionId: solution?.id,
+    hasFramework: !!solution?.framework_mapping,
+    hasLovablePrompt: !!solution?.lovable_prompt
+  });
+
   // Estado para controlar expansão de seções on-demand
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
@@ -159,6 +165,27 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           <FrameworkQuadrants framework={solutionData.framework_mapping} />
         </LiquidGlassCard>
       </motion.div>
+
+      {/* 🔴 TESTE: Card Simplificado MOVIDO AQUI */}
+      <div style={{ 
+        border: '5px solid red', 
+        padding: '40px', 
+        margin: '40px 0',
+        backgroundColor: 'yellow',
+        minHeight: '200px',
+        zIndex: 9999,
+        position: 'relative'
+      }}>
+        <h1 style={{ fontSize: '32px', color: 'black' }}>
+          🎓 CARD MOVIDO PARA CIMA - VOCÊ VÊ AGORA?
+        </h1>
+        <p style={{ fontSize: '20px', color: 'black', marginTop: '20px' }}>
+          Este é o MESMO card, mas movido para logo após o Framework!
+        </p>
+        <p style={{ fontSize: '16px', color: 'black', marginTop: '10px' }}>
+          Solution ID: {solutionData?.id || 'N/A'}
+        </p>
+      </div>
 
       {/* Arquitetura Visual (Fluxograma) - 3º Bloco - ON DEMAND */}
       {(solutionData.architecture_flowchart || true) && (
@@ -304,25 +331,6 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           </AnimatePresence>
         </LiquidGlassCard>
       </motion.div>
-
-      {/* TESTE: Card Simplificado */}
-      <div style={{ 
-        border: '5px solid red', 
-        padding: '40px', 
-        margin: '40px 0',
-        backgroundColor: 'yellow',
-        minHeight: '200px'
-      }}>
-        <h1 style={{ fontSize: '32px', color: 'black' }}>
-          🎓 CARD DE RECOMENDAÇÕES - VOCÊ VÊ ISSO?
-        </h1>
-        <p style={{ fontSize: '20px', color: 'black', marginTop: '20px' }}>
-          Se você está vendo este texto amarelo com borda vermelha, o card ESTÁ sendo renderizado!
-        </p>
-        <p style={{ fontSize: '16px', color: 'black', marginTop: '10px' }}>
-          Solution ID: {solutionData?.id || 'N/A'}
-        </p>
-      </div>
 
       {/* Prompt Lovable - ON DEMAND */}
       {(solutionData.lovable_prompt || true) && (
