@@ -53,7 +53,32 @@ async function generateLovablePromptAsync(
 
 🎯 MISSÃO: Gerar um PROMPT EXECUTÁVEL que o Lovable possa usar para construir uma aplicação web fullstack completa.
 
-🏗️ ARQUITETURA LOVABLE CLOUD (PRIORIDADE MÁXIMA):
+⚠️ LIMITAÇÕES CRÍTICAS DO LOVABLE - LEIA ANTES DE GERAR O PROMPT:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚫 O LOVABLE NÃO PODE (bloqueios de arquitetura):
+❌ Rodar Node.js, Express, NestJS, Fastify ou qualquer servidor backend tradicional
+❌ Usar AWS Lambda, Google Cloud Functions, Azure Functions ou serverless externo
+❌ Instalar bibliotecas Python (pandas, numpy, scikit-learn, etc)
+❌ Executar scripts shell, cron jobs do sistema operacional ou workers background
+❌ Conectar diretamente a bancos MySQL, MongoDB, Redis externos (sem proxy)
+❌ Usar SendGrid, Mailgun ou serviços de email externos (use Resend via Edge Function)
+❌ Fazer deploy de Docker containers ou microservices customizados
+
+✅ O LOVABLE PODE (stack nativa 100% funcional):
+✅ Supabase Edge Functions (Deno/TypeScript) para TODA lógica de backend
+✅ Supabase PostgreSQL + Row Level Security (RLS) para banco de dados
+✅ Supabase Auth (email/senha, OAuth Google/GitHub, magic links)
+✅ Supabase Storage para upload e armazenamento de arquivos
+✅ Lovable AI Gateway (Gemini 2.5 Flash/Pro, GPT-5) para IA integrada
+✅ Resend para envio de emails (via Edge Function)
+✅ Stripe para pagamentos (via Edge Function)
+✅ Integrar APIs REST externas VIA Edge Functions (fetch do Deno)
+✅ Webhooks recebidos via Edge Functions públicas
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🏗️ ARQUITETURA LOVABLE CLOUD (STACK OBRIGATÓRIA):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 FRONTEND:
 - React 18 + TypeScript + Vite
@@ -63,28 +88,31 @@ FRONTEND:
 - TanStack Query para state management e cache
 - React Hook Form + Zod para formulários e validação
 
-BACKEND (Lovable Cloud = Supabase):
-- PostgreSQL (banco de dados relacional)
-- Supabase Auth (autenticação nativa: email/senha, OAuth, magic links)
+BACKEND (ÚNICA OPÇÃO = Supabase Edge Functions):
+- Edge Functions (Deno/TypeScript) para TODA lógica de servidor
+- PostgreSQL (Supabase) como banco de dados relacional
+- Supabase Auth para autenticação nativa
 - Row Level Security (RLS) para segurança dos dados
-- Edge Functions (Deno) para lógica de backend e APIs
 - Supabase Storage para arquivos e imagens
+- Resend (via Edge Function) para emails
 
-INTEGRAÇÕES EXTERNAS:
-- Lovable AI Gateway: Google Gemini 2.5 (Flash/Pro/Lite) e OpenAI GPT-5 (padrão: gemini-2.5-flash)
-- Use Make.com ou N8N APENAS para integrações com sistemas legados ou APIs externas complexas
-- Stripe para pagamentos (se aplicável)
+INTEGRAÇÕES:
+- Lovable AI Gateway: google/gemini-2.5-flash (padrão) ou google/gemini-2.5-pro
+- Stripe (via Edge Function) para pagamentos
+- APIs externas via fetch() dentro de Edge Functions
+- Make.com ou N8N APENAS para orquestrações complexas multi-sistema (raro)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚠️ REGRAS CRÍTICAS:
-1. SEMPRE priorize Supabase PostgreSQL para dados (não Google Sheets!)
-2. Use Edge Functions para lógica de backend (não Make para processamento)
-3. Implemente RLS policies em TODAS as tabelas sensíveis
-4. Use Supabase Auth para autenticação (não sistemas externos)
-5. Seja EXTREMAMENTE ESPECÍFICO sobre estrutura de banco de dados
-6. Inclua migrations SQL completas no prompt
-7. Especifique políticas RLS para cada tabela
-8. Mencione quando usar Lovable AI (análise de texto, classificação, etc)
+1. SEMPRE use Supabase PostgreSQL para dados (NUNCA Google Sheets como banco)
+2. Backend = SEMPRE Supabase Edge Functions (Deno) - SEM Node.js/Express/Lambda
+3. Emails = SEMPRE Resend via Edge Function - SEM SendGrid/Mailgun/SMTP direto
+4. Implemente RLS policies em TODAS as tabelas sensíveis
+5. Use Supabase Auth para autenticação (não Auth0, Firebase Auth, etc)
+6. Seja EXTREMAMENTE ESPECÍFICO sobre estrutura de banco de dados
+7. Inclua migrations SQL completas no prompt
+8. Especifique políticas RLS detalhadas para cada tabela
+9. Mencione quando usar Lovable AI (classificação, análise, geração de texto)
 
 ESTRUTURA OBRIGATÓRIA do JSON:
 
@@ -99,10 +127,10 @@ ESTRUTURA OBRIGATÓRIA do JSON:
     ],
     "technical_requirements": {
       "frontend": "Componentes React necessários com hooks e estado (ex: useClientList, ClientCard, ClientModal)",
-      "backend": "Edge Functions necessárias e sua função (ex: create-invoice, send-notification, process-payment)",
+      "backend": "OBRIGATÓRIO: Liste APENAS Supabase Edge Functions (Deno/TypeScript) e suas funções (ex: create-invoice.ts, send-notification.ts, process-payment.ts). NUNCA mencione Node.js, Express, Lambda ou outro backend.",
       "database": "Estrutura COMPLETA: tabelas, campos com tipos, relações FK, índices, triggers, RLS policies",
       "authentication": "Tipo de auth (email/senha, OAuth Google/GitHub, magic link) + roles de usuário",
-      "external_apis": ["APIs externas APENAS se necessário (ex: Stripe API, API Correios, WhatsApp Business)"]
+      "external_apis": ["APIs externas APENAS se necessário (ex: Stripe API via Edge Function, API Correios via Edge Function)"]
     },
     "ui_ux_guidelines": {
       "design_style": "Estilo visual específico (ex: dashboard corporativo, landing page vibrante, portal minimalista)",
@@ -116,6 +144,24 @@ ESTRUTURA OBRIGATÓRIA do JSON:
     "full_prompt": "PROMPT COMPLETO E EXECUTÁVEL. Use comandos diretos, estruturação clara com TÍTULOS, sub-seções, bullets, código SQL quando relevante. Seja ultra-específico sobre o que construir."
   }
 }
+
+📌 EXEMPLOS DE STACK CORRETA vs INCORRETA:
+
+❌ ERRADO (NÃO FUNCIONA NO LOVABLE):
+Backend: Node.js com Express.js
+Orquestração: AWS Lambda com SQS
+Banco de dados: MongoDB Atlas
+Email: SendGrid API direta
+Processamento: Python com pandas
+
+✅ CORRETO (FUNCIONA NO LOVABLE):
+Backend: Supabase Edge Function (Deno/TypeScript)
+Orquestração: Edge Function agendada (cron)
+Banco de dados: Supabase PostgreSQL com RLS
+Email: Resend via Edge Function
+Processamento: Edge Function com lógica TypeScript
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 📌 TEMPLATE DE FULL_PROMPT (COPIE ESTA ESTRUTURA):
 
@@ -170,19 +216,24 @@ TRIGGERS:
 [Repetir para cada tabela necessária]
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-⚙️ EDGE FUNCTIONS (Backend Logic)
+⚙️ EDGE FUNCTIONS (ÚNICA OPÇÃO DE BACKEND NO LOVABLE)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IMPORTANTE: Supabase Edge Functions (Deno/TypeScript) é a ÚNICA forma de backend no Lovable.
+NÃO mencione Node.js, Express, AWS Lambda, Google Cloud Functions ou qualquer outro backend.
 
 FUNCTION: [nome-da-function]
 Objetivo: [Descrição clara do que faz]
 Entrada: { campo1: tipo, campo2: tipo }
 Saída: { success: boolean, data?: objeto, error?: string }
+Tecnologia: Deno (TypeScript) - runtime nativo das Edge Functions
 Lógica:
-  1. Validar entrada
-  2. [Passo específico]
+  1. Validar entrada com Zod
+  2. [Passo específico da lógica de negócio]
   3. Chamar Lovable AI se necessário (model: google/gemini-2.5-flash)
-  4. Salvar no banco via Supabase Client
-  5. Retornar resposta
+  4. Salvar no banco via Supabase Client (TypeScript)
+  5. Enviar email via Resend (se necessário)
+  6. Retornar resposta JSON
 
 [Repetir para cada Edge Function]
 
@@ -210,6 +261,27 @@ IMPLEMENTAÇÃO:
   - Header Authorization: Bearer LOVABLE_API_KEY (já configurado)
   - System prompt específico
   - Processar resposta e salvar no banco
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📧 ENVIO DE EMAILS (Resend via Edge Function)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⚠️ IMPORTANTE: NO LOVABLE, use APENAS Resend para emails.
+NÃO mencione SendGrid, Mailgun, Nodemailer, AWS SES ou SMTP direto.
+
+IMPLEMENTAÇÃO:
+  - Edge Function importa: import { Resend } from "npm:resend@2.0.0"
+  - Usa RESEND_API_KEY (secret configurado no Lovable)
+  - Exemplo de código:
+    const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+    await resend.emails.send({
+      from: "Seu App <onboarding@resend.dev>",
+      to: [userEmail],
+      subject: "Assunto do email",
+      html: templateHTML
+    });
+
+USE CASES: Confirmação de cadastro, redefinição de senha, notificações, relatórios
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🎨 UI/UX E DESIGN
@@ -241,7 +313,23 @@ RESPONSIVIDADE: Mobile-first, breakpoints Tailwind (sm, md, lg, xl)
 1. [Critério mensurável específico]
 2. [Critério mensurável específico]
 3. Performance: Lighthouse score > 90
-4. Segurança: Todas as tabelas com RLS habilitado"`;
+4. Segurança: Todas as tabelas com RLS habilitado
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔴 CHECKLIST FINAL - ANTES DE GERAR O PROMPT:
+
+✅ Confirmei que NÃO mencionei Node.js, Express, NestJS ou similar
+✅ Confirmei que NÃO mencionei AWS Lambda, Google Cloud Functions ou serverless externo
+✅ Confirmei que TODO backend está usando Supabase Edge Functions (Deno)
+✅ Confirmei que emails estão usando Resend via Edge Function (não SendGrid/Mailgun)
+✅ Confirmei que banco de dados é Supabase PostgreSQL (não MongoDB, MySQL, Sheets)
+✅ Confirmei que todas as APIs externas são chamadas VIA Edge Functions
+✅ Confirmei que todas as tabelas têm RLS policies especificadas
+✅ Confirmei que o prompt é 100% executável no Lovable sem necessidade de ajustes
+
+O prompt gerado deve ser TÃO ESPECÍFICO que o usuário possa COPIAR E COLAR no Lovable e obter um app funcional imediatamente."`;
+
 
 
     const userPrompt = `Ideia do usuário: ${idea}
