@@ -211,21 +211,17 @@ export const useUpdateUnifiedChecklist = () => {
       }
     },
     onSuccess: (data, variables) => {
-      // ✅ Invalidar queries de forma assíncrona com delay para evitar conflito com drag
-      setTimeout(() => {
-        queryClient.invalidateQueries({ 
-          queryKey: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType] 
-        });
-        queryClient.invalidateQueries({ 
-          queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
-        });
-        console.log('✅ Caches invalidados:', { 
-          checklist: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType],
-          template: ['unified-checklist-template', variables.solutionId, variables.checklistType]
-        });
-      }, 100); // 100ms de delay para garantir que drag terminou
-      
+      // Só invalidar se NÃO for silencioso
       if (!variables.silent) {
+        setTimeout(() => {
+          queryClient.invalidateQueries({ 
+            queryKey: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType] 
+          });
+          queryClient.invalidateQueries({ 
+            queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
+          });
+        }, 100);
+        
         toast.success('Progresso salvo com sucesso!');
       }
     },

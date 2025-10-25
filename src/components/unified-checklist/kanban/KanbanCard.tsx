@@ -1,4 +1,4 @@
-import React from "react";
+import React, { memo } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Clock, FileText, Link2, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -116,3 +116,12 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
     </div>
   );
 };
+
+export default memo(KanbanCard, (prevProps, nextProps) => {
+  return (
+    prevProps.item.id === nextProps.item.id &&
+    prevProps.item.title === nextProps.item.title &&
+    prevProps.item.column === nextProps.item.column &&
+    prevProps.item.completed === nextProps.item.completed
+  );
+});

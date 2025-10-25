@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef } from "react";
 import { DragDropContext, Droppable, Draggable, DropResult } from "@hello-pangea/dnd";
+import { useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -64,26 +65,21 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
   const [showKanbanTip, setShowKanbanTip] = useState(() => {
     return !localStorage.getItem(`kanban-tip-seen-${solutionId}`);
   });
-  const [filteredItems, setFilteredItems] = useState<UnifiedChecklistItem[]>(checklistItems);
   const [selectedLabelItem, setSelectedLabelItem] = useState<UnifiedChecklistItem | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const dragInProgressRef = useRef(false);
   const updateMutation = useUpdateUnifiedChecklist();
+  const queryClient = useQueryClient();
 
-  // Normalizar itens (adicionar coluna se não existir) - VALIDAÇÃO ROBUSTA COM PRESERVAÇÃO DE IN_PROGRESS
+  // Normalizar itens (adicionar coluna se não existir)
   const normalizedItems = useMemo(() => {
-    const normalized = checklistItems.map((item, index) => {
+    return checklistItems.map((item, index) => {
       const validColumns: ColumnType[] = ['todo', 'in_progress', 'done'];
       let itemColumn = item.column as ColumnType;
       
-      // ✅ CRÍTICO: Preservar in_progress quando válido
-      if (itemColumn && validColumns.includes(itemColumn)) {
-        // Coluna válida, preservar exatamente como está
-        console.log(`✅ Item "${item.title}" tem coluna válida: "${itemColumn}"`);
-      } else {
-        // Coluna inválida, usar fallback baseado em completed
+      // Preservar in_progress quando válido
+      if (!itemColumn || !validColumns.includes(itemColumn)) {
         itemColumn = item.completed ? 'done' : 'todo';
-        console.warn(`⚠️ Item "${item.title}" tinha coluna inválida: "${item.column}". Corrigido para: "${itemColumn}"`);
       }
       
       return {
@@ -92,27 +88,9 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         order: item.order !== undefined ? item.order : index
       };
     });
-    
-    // Log detalhado para debug de persistência
-    console.log('📦 NORMALIZAÇÃO COMPLETA:', {
-      total: normalized.length,
-      todo: normalized.filter(i => i.column === 'todo').length,
-      in_progress: normalized.filter(i => i.column === 'in_progress').length,
-      done: normalized.filter(i => i.column === 'done').length,
-      detalhes: normalized.map(i => ({ 
-        id: i.id.slice(0, 8), 
-        title: i.title.slice(0, 30), 
-        column: i.column,
-        completed: i.completed 
-      }))
-    });
-    
-    // Atualizar filteredItems quando normalizedItems mudar
-    setFilteredItems(normalized);
-    return normalized;
   }, [checklistItems]);
 
-  // Agrupar itens por coluna (usar filteredItems ao invés de normalizedItems)
+  // Agrupar itens por coluna
   const itemsByColumn = useMemo(() => {
     const grouped: Record<ColumnType, UnifiedChecklistItem[]> = {
       todo: [],
@@ -120,7 +98,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       done: []
     };
 
-    filteredItems.forEach(item => {
+    normalizedItems.forEach(item => {
       const column = item.column as ColumnType;
       grouped[column].push(item);
     });
@@ -131,88 +109,46 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
     });
 
     return grouped;
-  }, [filteredItems]);
+  }, [normalizedItems]);
 
   const handleDragStart = () => {
-    if (dragInProgressRef.current) {
-      console.warn('⚠️ Drag já em progresso, ignorando...');
-      return;
-    }
+    if (dragInProgressRef.current) return;
     dragInProgressRef.current = true;
     setIsDragging(true);
-    console.log('🚀 DRAG INICIADO - Refetch bloqueado');
   };
 
   const handleDragEnd = (result: DropResult) => {
     dragInProgressRef.current = false;
     setIsDragging(false);
     
-    console.log('🎯 ========== DRAG END INICIADO ==========');
-    console.log('📋 Result completo:', {
-      draggableId: result.draggableId,
-      type: result.type,
-      source: result.source,
-      destination: result.destination,
-      reason: result.reason
-    });
-    
-    if (!result.destination) {
-      console.error('❌ DESTINATION É NULL - Possíveis causas:');
-      console.error('  1. Drop fora de área válida');
-      console.error('  2. Droppable não está recebendo eventos');
-      console.error('  3. pointer-events bloqueado');
-      console.error('  4. z-index ou position incorretos');
-      console.error('🔍 Detalhes do drop:', {
-        source: result.source,
-        draggableId: result.draggableId,
-        reason: result.reason,
-        mode: result.mode
-      });
-      return;
-    }
+    if (!result.destination) return;
 
     const { source, destination } = result;
     
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
-      console.log('ℹ️ Mesma posição, nada a fazer');
       return;
     }
 
     const sourceCol = source.droppableId as ColumnType;
     const destCol = destination.droppableId as ColumnType;
-    
-    console.log(`✅ DRAG VÁLIDO: ${sourceCol}[${source.index}] → ${destCol}[${destination.index}]`);
 
-    // 1. Criar cópia das colunas
+    // 1. Criar nova estrutura de colunas
     const newColumns = {
       todo: [...itemsByColumn.todo],
       in_progress: [...itemsByColumn.in_progress],
       done: [...itemsByColumn.done]
     };
 
-    console.log('📊 Estado inicial das colunas:', {
-      todo: newColumns.todo.length,
-      in_progress: newColumns.in_progress.length,
-      done: newColumns.done.length
-    });
-
-    // 2. Remover da coluna de origem
+    // 2. Mover item
     const [movedItem] = newColumns[sourceCol].splice(source.index, 1);
-    console.log('✂️ Item removido:', movedItem.title);
-
-    // 3. Atualizar propriedades do item
     movedItem.column = destCol;
     movedItem.completed = destCol === 'done';
     if (destCol === 'done') {
       movedItem.completedAt = new Date().toISOString();
     }
-    console.log('✏️ Item atualizado:', { column: destCol, completed: movedItem.completed });
-
-    // 4. Inserir na coluna de destino
     newColumns[destCol].splice(destination.index, 0, movedItem);
-    console.log('➕ Item inserido na posição:', destination.index);
 
-    // 5. Recalcular orders sequencialmente para TODAS as colunas
+    // 3. Recalcular orders
     const allItems: UnifiedChecklistItem[] = [];
     (['todo', 'in_progress', 'done'] as ColumnType[]).forEach(col => {
       newColumns[col].forEach((item, idx) => {
@@ -224,15 +160,23 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
       });
     });
 
-    console.log('💾 Salvando no banco:', {
-      totalItems: allItems.length,
-      todo: newColumns.todo.length,
-      in_progress: newColumns.in_progress.length,
-      done: newColumns.done.length,
-      items: allItems.map(i => ({ id: i.id.slice(0, 8), title: i.title, column: i.column, order: i.order }))
+    // 4. ATUALIZAÇÃO OTIMISTA NO CACHE
+    const queryKey = ['unified-checklist', solutionId, checklistData.user_id, checklistType];
+    
+    queryClient.setQueryData(queryKey, (oldData: UnifiedChecklistData | undefined) => {
+      if (!oldData) return oldData;
+      
+      return {
+        ...oldData,
+        checklist_data: {
+          items: allItems,
+          lastUpdated: new Date().toISOString()
+        },
+        updated_at: new Date().toISOString()
+      };
     });
 
-    // 6. Salvar no banco com callbacks de sucesso/erro
+    // 5. Salvar no banco SEM invalidar queries
     updateMutation.mutate(
       {
         checklistData: {
@@ -248,23 +192,22 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
         silent: true
       },
       {
-        onSuccess: (data) => {
-          console.log('✅ Drag salvo com sucesso no banco:', data);
-        },
         onError: (error) => {
-          console.error('❌ ERRO ao salvar drag:', error);
-          toast.error('Erro ao mover card. Por favor, recarregue a página.');
+          console.error('Erro ao salvar drag:', error);
+          // Rollback: invalidar cache para buscar do banco novamente
+          queryClient.invalidateQueries({ queryKey });
+          toast.error('Erro ao mover card. Recarregando...');
         }
       }
     );
 
-    // 7. Toast de confirmação
+    // 6. Toast de confirmação
     const columnNames = {
       'done': 'Concluído',
       'in_progress': 'Em Progresso',
       'todo': 'A Fazer'
     };
-    toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}! 🎉`);
+    toast.success(`"${movedItem.title}" movido para ${columnNames[destCol]}!`);
   };
 
   const handleCardClick = (item: UnifiedChecklistItem) => {
@@ -424,16 +367,10 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
   return (
     <div className="space-y-6">
-      {isDragging && (
-        <div className="fixed top-20 right-4 bg-yellow-500 text-black px-4 py-2 rounded-lg shadow-lg z-[9999] font-bold">
-          🚀 DRAG EM PROGRESSO - Refetch bloqueado
-        </div>
-      )}
-      
       {/* Filtros de Busca */}
       <KanbanFilters 
         items={normalizedItems} 
-        onFilterChange={setFilteredItems}
+        onFilterChange={() => {}}
       />
 
       {/* Tooltip Educativo - Design System Completo */}
