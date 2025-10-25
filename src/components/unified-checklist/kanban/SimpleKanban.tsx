@@ -138,6 +138,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         solutionId,
         checklistType,
         templateId: checklistData.template_id,
+        silent: true, // Não invalidar query, manter estado local
       }, {
         onError: (error) => {
           console.error("❌ Erro ao atualizar:", error);
