@@ -20,7 +20,16 @@ interface LearningRecommendation {
         id: string;
         title: string;
       }>;
-    }>;
+    }> | {
+      title: string;
+      learning_courses: Array<{
+        id: string;
+        title: string;
+      }> | {
+        id: string;
+        title: string;
+      };
+    };
   };
 }
 

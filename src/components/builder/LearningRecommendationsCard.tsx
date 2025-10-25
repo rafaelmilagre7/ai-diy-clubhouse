@@ -76,8 +76,16 @@ export const LearningRecommendationsCard: React.FC<LearningRecommendationsCardPr
           const lesson = rec.lesson;
           if (!lesson) return null;
 
-          const courseTitle = lesson.learning_modules?.[0]?.learning_courses?.[0]?.title || 'Curso';
-          const moduleTitle = lesson.learning_modules?.[0]?.title || '';
+          // learning_modules pode vir como objeto ou array dependendo da query
+          const modules = Array.isArray(lesson.learning_modules) 
+            ? lesson.learning_modules[0] 
+            : lesson.learning_modules;
+          
+          const courses = modules?.learning_courses;
+          const courseData = Array.isArray(courses) ? courses[0] : courses;
+          
+          const courseTitle = courseData?.title || 'Curso';
+          const moduleTitle = modules?.title || '';
 
           return (
             <motion.div
