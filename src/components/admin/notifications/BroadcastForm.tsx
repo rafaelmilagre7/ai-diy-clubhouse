@@ -33,8 +33,9 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import { Bell, Send, Users, AlertTriangle } from "lucide-react";
+import { Bell, Send, Users, AlertTriangle, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { BUILDER_ANNOUNCEMENT } from "./BuilderAnnouncementTemplate";
 
 const broadcastSchema = z.object({
   title: z.string().min(3, "Título deve ter no mínimo 3 caracteres").max(100),
@@ -133,6 +134,20 @@ export default function BroadcastForm() {
     setShowConfirmDialog(true);
   };
 
+  const applyBuilderTemplate = () => {
+    form.setValue("title", BUILDER_ANNOUNCEMENT.title);
+    form.setValue("message", BUILDER_ANNOUNCEMENT.message);
+    form.setValue("type", BUILDER_ANNOUNCEMENT.type);
+    form.setValue("category", BUILDER_ANNOUNCEMENT.category);
+    form.setValue("priority", BUILDER_ANNOUNCEMENT.priority);
+    form.setValue("action_url", BUILDER_ANNOUNCEMENT.action_url);
+    form.setValue("target_audience", "all");
+    
+    toast.success("Template aplicado!", {
+      description: "Campos preenchidos com o anúncio do Builder (Opção B)",
+    });
+  };
+
   const sendBroadcast = async () => {
     setIsSending(true);
     setProgress(0);
@@ -197,12 +212,21 @@ export default function BroadcastForm() {
         <div className="p-3 rounded-lg bg-primary/10">
           <Bell className="h-6 w-6 text-primary" />
         </div>
-        <div>
+        <div className="flex-1">
           <h2 className="text-2xl font-bold">Broadcast de Notificações</h2>
           <p className="text-muted-foreground">
             Envie notificações em massa para usuários da plataforma
           </p>
         </div>
+        <Button
+          type="button"
+          variant="outline"
+          onClick={applyBuilderTemplate}
+          className="gap-2"
+        >
+          <Sparkles className="h-4 w-4" />
+          Template Builder (Opção B)
+        </Button>
       </div>
 
       <Form {...form}>
