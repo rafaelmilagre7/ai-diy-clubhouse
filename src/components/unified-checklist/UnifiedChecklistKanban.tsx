@@ -552,7 +552,7 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
 
       {/* Kanban Board */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="dnd-safe-zone grid grid-cols-1 md:grid-cols-3 gap-6">
           {COLUMNS.map(column => {
             const Icon = column.icon;
             const items = itemsByColumn[column.id];
@@ -618,7 +618,9 @@ const UnifiedChecklistKanban: React.FC<UnifiedChecklistKanbanProps> = ({
                           minHeight: '600px',
                           backgroundColor: snapshot.isDraggingOver 
                             ? 'hsl(var(--primary) / 0.05)' 
-                            : 'transparent'
+                            : 'transparent',
+                          transform: 'none',
+                          willChange: 'background-color'
                         }}
                         className={cn(
                           "rounded-2xl border-2 p-6",

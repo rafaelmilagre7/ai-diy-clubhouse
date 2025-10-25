@@ -71,6 +71,32 @@
   cursor: grabbing !important;
 }
 
+/* ============================================
+   DND SAFE ZONE - Zero conflitos com @hello-pangea/dnd
+   ============================================ */
+
+.dnd-safe-zone {
+  /* Remover backdrop-filter para não criar stacking context */
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.dnd-safe-zone * {
+  /* Prevenir qualquer transform de hover em filhos durante drag */
+  transition: box-shadow 0.2s ease, opacity 0.2s ease, border-color 0.2s ease !important;
+}
+
+.dnd-safe-zone *:hover {
+  /* Permitir apenas efeitos seguros no hover - SEM transform */
+  transform: none !important;
+}
+
+/* Estado específico para elemento sendo arrastado */
+[data-rbd-draggable-context-id] {
+  /* Garantir que o transform inline do dnd nunca seja sobrescrito */
+  will-change: transform;
+}
+
 .liquid-glass-card-premium {
   background: linear-gradient(135deg, hsl(var(--glass-white-base) / 0.1) 0%, hsl(var(--glass-white-base) / 0.05) 100%);
   backdrop-filter: blur(var(--blur-2xl)) saturate(200%);

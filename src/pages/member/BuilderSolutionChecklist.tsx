@@ -3,7 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
 import ChecklistPreparationAnimation from '@/components/builder/ChecklistPreparationAnimation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -150,7 +149,7 @@ export default function BuilderSolutionChecklist() {
         <div 
           className="animate-fade-in"
         >
-          <LiquidGlassCard className="p-6 liquid-glass-kanban-container" hoverable={false}>
+          <div className="p-6 rounded-2xl border border-border bg-card/95 shadow-lg">
             <Button
               variant="ghost"
               size="sm"
@@ -217,7 +216,7 @@ export default function BuilderSolutionChecklist() {
                 }}
               />
             )}
-          </LiquidGlassCard>
+          </div>
         </div>
       </div>
     </div>

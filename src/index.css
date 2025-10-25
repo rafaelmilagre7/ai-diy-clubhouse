@@ -142,7 +142,8 @@
 /* ===== PROFILE & CARDS ===== */
 
 .glass-card {
-  @apply bg-card/50 backdrop-blur-sm border border-border/50 hover:border-border/80 transition-all duration-300;
+  @apply bg-card/50 backdrop-blur-sm border border-border/50 hover:border-border/80;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
 .glass-card:hover {
