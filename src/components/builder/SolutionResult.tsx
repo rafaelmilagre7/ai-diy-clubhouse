@@ -83,10 +83,22 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       if (error) throw error;
 
       if (data?.success) {
+        // A resposta da edge function tem estrutura diferente dependendo do sectionType
+        let contentToSave;
+        
+        if (mapping.type === 'lovable') {
+          // Para lovable, o content já é o objeto parseado com lovable_prompt
+          contentToSave = data.content.lovable_prompt || data.content;
+        } else if (mapping.type === 'framework') {
+          contentToSave = data.content.framework_quadrants || data.content;
+        } else {
+          contentToSave = data.content;
+        }
+        
         // Atualizar estado local
         setSolutionData((prev: any) => ({
           ...prev,
-          [mapping.field]: data.content
+          [mapping.field]: contentToSave
         }));
         
         // Expandir seção
@@ -360,8 +372,14 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
                   transition={{ duration: 0.3 }}
                 >
                   {isLoading('lovable') ? (
-                    <div className="flex items-center justify-center py-12">
+                    <div className="flex flex-col items-center justify-center py-12 space-y-3">
                       <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">
+                        Gerando prompt completo para Lovable... Isso pode levar até 30 segundos
+                      </p>
+                      <p className="text-xs text-muted-foreground/60">
+                        IA está criando contexto, stack, schema e workflows
+                      </p>
                     </div>
                   ) : (
                     <div className="relative">

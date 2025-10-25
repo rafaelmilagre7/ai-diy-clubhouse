@@ -269,11 +269,30 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
     // Parse do JSON retornado
     let parsedContent;
     try {
-      const cleanContent = content.replace(/```json\n?|\n?```/g, "").trim();
+      // Limpar markdown code blocks e whitespace
+      let cleanContent = content.trim();
+      
+      // Remover code blocks markdown se existir
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+      }
+      
       parsedContent = JSON.parse(cleanContent);
+      
+      // Validar que tem o campo esperado
+      if (sectionType === 'lovable' && !parsedContent.lovable_prompt) {
+        throw new Error('Campo lovable_prompt ausente na resposta');
+      }
+      if (sectionType === 'framework' && !parsedContent.framework_quadrants) {
+        throw new Error('Campo framework_quadrants ausente na resposta');
+      }
+      
     } catch (parseError) {
-      console.error("[SECTION-GEN] ❌ Erro ao fazer parse:", content.substring(0, 500));
-      throw new Error("JSON inválido retornado pela IA");
+      console.error("[SECTION-GEN] ❌ Erro ao fazer parse:", content.substring(0, 800));
+      console.error("[SECTION-GEN] ❌ Parse error:", parseError);
+      throw new Error(`JSON inválido retornado pela IA: ${parseError.message}`);
     }
 
     // Preparar update baseado no tipo de seção

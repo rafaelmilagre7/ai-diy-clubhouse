@@ -68,6 +68,7 @@ export default function BuilderSolutionResult() {
           .single();
         
         if (data?.lovable_prompt) {
+          console.log('✅ Lovable prompt detectado via polling!', data.lovable_prompt.substring(0, 100));
           setLovablePromptReady(true);
           setSolution((prev: any) => ({
             ...prev,
