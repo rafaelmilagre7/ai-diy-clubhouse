@@ -7977,6 +7977,18 @@ export type Database = {
       get_user_segmentation_secure: { Args: never; Returns: Json }
       get_user_share_stats: { Args: { user_uuid: string }; Returns: Json }
       get_user_stats_corrected: { Args: never; Returns: Json }
+      get_users_for_broadcast: {
+        Args: {
+          p_created_after?: string
+          p_roles?: string[]
+          p_status?: string
+        }
+        Returns: {
+          email: string
+          role_name: string
+          user_id: string
+        }[]
+      }
       get_users_paginated: {
         Args: {
           p_limit?: number
@@ -8364,6 +8376,17 @@ export type Database = {
           p_additional_data?: Json
           p_event_type: string
           p_user_id?: string
+        }
+        Returns: undefined
+      }
+      log_broadcast_event: {
+        Args: {
+          p_admin_id: string
+          p_duration_ms: number
+          p_filters?: Json
+          p_title: string
+          p_total_failed: number
+          p_total_sent: number
         }
         Returns: undefined
       }

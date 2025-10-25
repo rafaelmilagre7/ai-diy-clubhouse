@@ -43,6 +43,7 @@ const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications')
 const EmailDashboard = lazy(() => import('@/pages/admin/communications/EmailDashboard'));
 const EmailLogs = lazy(() => import('@/pages/admin/communications/EmailLogs'));
 const EmailSettings = lazy(() => import('@/pages/admin/communications/EmailSettings'));
+const AdminBroadcast = lazy(() => import('@/pages/admin/AdminBroadcast'));
 
 
 // Função helper para criar rotas protegidas com AdminLayout e lazy loading
@@ -92,6 +93,7 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/course-certificates", CourseCertificateManager),
   createAdminRoute("/admin/notifications", AdminNotifications),
   createAdminRoute("/admin/notifications/stats", NotificationsStats),
+  createAdminRoute("/admin/notifications/broadcast", AdminBroadcast),
   
   createAdminRoute("/admin/data-audit", DataAuditPage),
   createAdminRoute("/admin/hubla-webhooks", HublaWebhooks),
