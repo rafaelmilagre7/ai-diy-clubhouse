@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertTriangle, ExternalLink } from 'lucide-react';
-import type { PandaPlayer } from '@/types/pandavideo';
 
 interface PandaVideoPlayerProps {
   videoId: string;
@@ -15,6 +14,14 @@ interface PandaVideoPlayerProps {
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
   onLoadTimeout?: () => void;
+}
+
+// Estender window para incluir pandascripttag
+declare global {
+  interface Window {
+    pandascripttag?: any[];
+    PandaPlayer?: any;
+  }
 }
 
 export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
@@ -32,49 +39,14 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [loadingTime, setLoadingTime] = useState(0);
-  const [sdkReady, setSdkReady] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<PandaPlayer | null>(null);
+  const playerRef = useRef<any>(null);
   const timeoutRef = useRef<NodeJS.Timeout>();
-  const containerId = useRef(`panda-player-${Math.random().toString(36).substr(2, 9)}`);
+  const containerId = useRef(`panda-${videoId}`); // ID deve começar com "panda-"
   
   // URL para abrir diretamente (fallback)
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
-
-  // Verificar se SDK está disponível
-  useEffect(() => {
-    const checkSDK = () => {
-      if (typeof window !== 'undefined' && window.PandaPlayer) {
-        setSdkReady(true);
-        return true;
-      }
-      return false;
-    };
-
-    if (checkSDK()) return;
-
-    // Tentar novamente após um delay
-    const interval = setInterval(() => {
-      if (checkSDK()) {
-        clearInterval(interval);
-      }
-    }, 100);
-
-    // Timeout de 5s para SDK
-    const sdkTimeout = setTimeout(() => {
-      clearInterval(interval);
-      if (!sdkReady) {
-        setError("SDK do PandaVideo não carregou");
-        setLoading(false);
-      }
-    }, 5000);
-
-    return () => {
-      clearInterval(interval);
-      clearTimeout(sdkTimeout);
-    };
-  }, [sdkReady]);
 
   // Contador de tempo de carregamento
   useEffect(() => {
@@ -96,6 +68,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
 
     timeoutRef.current = setTimeout(() => {
       if (loading) {
+        console.error('[PandaVideoPlayer] Timeout ao carregar vídeo');
         setError("Timeout ao carregar vídeo");
         setLoading(false);
         onLoadTimeout?.();
@@ -109,86 +82,89 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
     };
   }, [loading, timeout, onLoadTimeout]);
 
-  // Inicializar player quando SDK estiver pronto
+  // Inicializar player usando o padrão oficial do PandaVideo
   useEffect(() => {
-    if (!sdkReady || !containerRef.current || playerRef.current) return;
+    if (!containerRef.current || playerRef.current) return;
 
-    try {
-      const player = new window.PandaPlayer(containerId.current, {
-        video_id: videoId,
-        responsive: true,
-        autoplay: false,
-        controls: true,
-      });
+    console.log('[PandaVideoPlayer] Inicializando player para videoId:', videoId);
+    console.log('[PandaVideoPlayer] Container ID:', containerId.current);
 
-      playerRef.current = player;
+    // Garantir que window.pandascripttag existe
+    window.pandascripttag = window.pandascripttag || [];
 
-      // Eventos do player
-      player.onReady(() => {
-        setLoading(false);
-        setError(null);
-      });
-
-      player.onError((err) => {
-        console.error('Erro no PandaVideo player:', err);
-        setError("Erro ao carregar vídeo");
-        setLoading(false);
-      });
-
-      if (onProgress) {
-        player.onProgress((progressData) => {
-          const progress = progressData.percent || 0;
-          const binaryProgress = progress >= 95 ? 100 : 0;
-          onProgress(binaryProgress);
+    // Adicionar callback de inicialização seguindo o padrão oficial
+    window.pandascripttag.push(function () {
+      try {
+        console.log('[PandaVideoPlayer] Criando player com PandaPlayer...');
+        
+        const player = new window.PandaPlayer(containerId.current, {
+          onReady: () => {
+            console.log('[PandaVideoPlayer] Player pronto!');
+            setLoading(false);
+            setError(null);
+            
+            // Configurar eventos de progresso
+            if (onProgress || onEnded) {
+              player.onEvent((event: any) => {
+                console.log('[PandaVideoPlayer] Evento:', event);
+                
+                if (event.message === 'panda_timeupdate' && onProgress) {
+                  const currentTime = player.getCurrentTime();
+                  const duration = player.getDuration();
+                  if (duration > 0) {
+                    const progress = (currentTime / duration) * 100;
+                    const binaryProgress = progress >= 95 ? 100 : 0;
+                    onProgress(binaryProgress);
+                  }
+                }
+                
+                if (event.message === 'panda_end' && onEnded) {
+                  onEnded();
+                }
+              });
+            }
+          },
+          onError: (err: any) => {
+            console.error('[PandaVideoPlayer] Erro no player:', err);
+            setError("Erro ao carregar vídeo");
+            setLoading(false);
+          }
         });
-      }
 
-      if (onEnded) {
-        player.onEnded(() => {
-          onEnded();
-        });
-      }
+        console.log('[PandaVideoPlayer] Player criado com sucesso');
+        playerRef.current = player;
 
-    } catch (err) {
-      console.error('Erro ao inicializar PandaVideo player:', err);
-      setError("Erro ao inicializar player");
-      setLoading(false);
-    }
+      } catch (err) {
+        console.error('[PandaVideoPlayer] ERRO ao criar player:', err);
+        setError(`Erro ao inicializar: ${err instanceof Error ? err.message : String(err)}`);
+        setLoading(false);
+      }
+    });
 
     return () => {
       if (playerRef.current) {
         try {
-          playerRef.current.destroy();
+          console.log('[PandaVideoPlayer] Destruindo player...');
+          // PandaPlayer não tem método destroy documentado, então apenas limpar referência
+          playerRef.current = null;
         } catch (err) {
-          console.error('Erro ao destruir player:', err);
+          console.error('[PandaVideoPlayer] Erro ao limpar player:', err);
         }
-        playerRef.current = null;
       }
     };
-  }, [sdkReady, videoId, onProgress, onEnded]);
+  }, [videoId, onProgress, onEnded]);
 
   const handleRetry = () => {
+    console.log('[PandaVideoPlayer] Tentando novamente...');
     setLoading(true);
     setError(null);
     setLoadingTime(0);
-    setSdkReady(false);
     
-    // Destruir player existente
-    if (playerRef.current) {
-      try {
-        playerRef.current.destroy();
-      } catch (err) {
-        console.error('Erro ao destruir player no retry:', err);
-      }
-      playerRef.current = null;
-    }
+    // Limpar player existente
+    playerRef.current = null;
     
-    // Forçar re-verificação do SDK
-    setTimeout(() => {
-      if (typeof window !== 'undefined' && window.PandaPlayer) {
-        setSdkReady(true);
-      }
-    }, 100);
+    // Recarregar a página para reinicializar o SDK
+    window.location.reload();
   };
 
   const openVideoDirectly = () => {
@@ -243,7 +219,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
             </div>
             {loadingTime > 5 && (
               <div className="text-muted-foreground text-xs">
-                Aguarde, inicializando player...
+                Inicializando player do PandaVideo...
               </div>
             )}
             <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
