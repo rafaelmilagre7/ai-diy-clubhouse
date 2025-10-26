@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LearningLessonVideo } from "@/lib/supabase";
 import { YoutubeEmbed } from "@/components/common/YoutubeEmbed";
 import { getYoutubeVideoId } from "@/lib/supabase/storage";
-import { PandaVideoScriptPlayer } from "@/components/formacao/comum/PandaVideoScriptPlayer";
+import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
 import { formatVideoTime } from "@/utils/timeUtils";
 
 interface VideoPlayerProps {
@@ -109,10 +109,11 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
       
       if (pandaVideoId) {
         return (
-          <PandaVideoScriptPlayer 
-            videoId={pandaVideoId} 
+          <PandaVideoPlayer 
+            videoId={pandaVideoId}
+            url={video.url}
             title={video.title}
-            timeout={30000}
+            timeout={15000}
             onProgress={(progress: number) => {
               if (onTimeUpdate) {
                 // Simular onTimeUpdate para manter compatibilidade
@@ -128,9 +129,8 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 onTimeUpdate(duration, duration);
               }
             }}
-            onError={() => {
-              console.error('❌ [VIDEO-PLAYER] Erro ao carregar vídeo do PandaVideo');
-              setError("Erro ao carregar o vídeo do PandaVideo. Tente novamente mais tarde.");
+            onLoadTimeout={() => {
+              console.error('❌ [VIDEO-PLAYER] Timeout ao carregar vídeo do PandaVideo');
             }}
           />
         );
