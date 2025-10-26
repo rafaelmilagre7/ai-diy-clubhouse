@@ -73,10 +73,12 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
           <p className="text-sm text-muted-foreground">
             Não foi possível carregar suas permissões. Por favor, tente novamente.
           </p>
-          <details className="text-xs bg-muted p-3 rounded">
-            <summary className="cursor-pointer font-medium">Debug Info</summary>
-            <pre className="mt-2 overflow-auto">{debugInfo}</pre>
-          </details>
+          {import.meta.env.DEV && (
+            <details className="text-xs bg-muted p-3 rounded">
+              <summary className="cursor-pointer font-medium">Debug Info</summary>
+              <pre className="mt-2 overflow-auto">{debugInfo}</pre>
+            </details>
+          )}
           <button 
             onClick={() => window.location.reload()} 
             className="w-full bg-primary text-primary-foreground py-sm rounded hover:bg-primary/90"
