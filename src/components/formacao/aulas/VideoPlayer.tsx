@@ -113,7 +113,7 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
             videoId={pandaVideoId} 
             url={video.url}
             title={video.title}
-            // Adaptar a propriedade onProgress para intermediar a chamada onTimeUpdate
+            timeout={30000}
             onProgress={(progress: number) => {
               if (onTimeUpdate) {
                 // Simular onTimeUpdate para manter compatibilidade
@@ -121,6 +121,9 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
                 const currentTime = (progress / 100) * duration;
                 onTimeUpdate(currentTime, duration);
               }
+            }}
+            onLoadTimeout={() => {
+              console.error('❌ [VIDEO-PLAYER] Timeout ao carregar vídeo do PandaVideo');
             }}
           />
         );

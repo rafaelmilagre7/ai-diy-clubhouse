@@ -11,8 +11,10 @@ interface PandaVideoPlayerProps {
   width?: string;
   height?: string;
   className?: string;
+  timeout?: number;
   onProgress?: (progress: number) => void;
   onEnded?: () => void;
+  onLoadTimeout?: () => void;
 }
 
 export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
@@ -22,12 +24,16 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   width = "100%",
   height = "100%",
   className,
+  timeout = 30000,
   onProgress,
-  onEnded
+  onEnded,
+  onLoadTimeout
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [loadingTime, setLoadingTime] = useState(0);
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
@@ -41,17 +47,48 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
     retryCount
   });
 
-  // Timeout simples para detectar problemas de carregamento
+  // Contador de tempo de carregamento
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      if (loading) {
-        setError("Erro ao carregar vídeo - tente novamente");
-        setLoading(false);
-      }
-    }, 15000);
+    if (!loading) {
+      setLoadingTime(0);
+      return;
+    }
 
-    return () => clearTimeout(timeout);
-  }, [loading, playerUrl]);
+    const interval = setInterval(() => {
+      setLoadingTime(prev => prev + 1);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [loading]);
+
+  // Timeout com retry automático
+  useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      if (loading && !iframeLoaded) {
+        devLog(`⏰ [PANDA-TIMEOUT] ${loadingTime}s decorridos, iframe loaded: ${iframeLoaded}`);
+        
+        // Se ainda não tentou retry, tentar novamente automaticamente
+        if (retryCount < 1) {
+          devLog('🔄 [PANDA-RETRY] Tentando novamente automaticamente...');
+          setRetryCount(prev => prev + 1);
+          setIframeLoaded(false);
+          setLoadingTime(0);
+          // Recarregar iframe
+          if (iframeRef.current) {
+            iframeRef.current.src = iframeRef.current.src;
+          }
+        } else {
+          // Após retry, mostrar erro
+          devLog('❌ [PANDA-ERROR] Timeout após retry');
+          setError("Erro ao carregar vídeo - tente novamente");
+          setLoading(false);
+          onLoadTimeout?.();
+        }
+      }
+    }, timeout);
+
+    return () => clearTimeout(timeoutId);
+  }, [loading, iframeLoaded, timeout, retryCount, loadingTime, onLoadTimeout]);
 
   // Handler de mensagens do player
   useEffect(() => {
@@ -88,7 +125,16 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
 
   const handleLoad = () => {
     devLog('✅ Iframe do Panda carregado');
+    setIframeLoaded(true);
     // Player irá enviar mensagens quando estiver pronto
+    // Considerar sucesso se iframe carregou (mesmo sem mensagem postMessage ainda)
+    setTimeout(() => {
+      if (loading) {
+        devLog('✅ [PANDA-SUCCESS] Iframe carregado, considerando sucesso');
+        setLoading(false);
+        setError(null);
+      }
+    }, 2000);
   };
 
   const handleError = (event: any) => {
@@ -98,9 +144,12 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   };
   
   const handleRetry = () => {
+    devLog('🔄 [PANDA-RETRY-MANUAL] Usuário solicitou retry');
     setLoading(true);
     setError(null);
-    setRetryCount(prev => prev + 1);
+    setLoadingTime(0);
+    setIframeLoaded(false);
+    setRetryCount(0);
   };
 
   const openVideoDirectly = () => {
@@ -151,7 +200,18 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
           <div className="flex flex-col items-center space-y-4">
             <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent"></div>
             <div className="text-foreground text-sm">
-              Carregando vídeo...
+              Carregando vídeo... {loadingTime}s
+            </div>
+            {loadingTime > 10 && (
+              <div className="text-muted-foreground text-xs">
+                {retryCount > 0 ? 'Tentando novamente...' : 'Aguarde, pode demorar em redes lentas'}
+              </div>
+            )}
+            <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-primary transition-all duration-1000"
+                style={{ width: `${Math.min((loadingTime / (timeout / 1000)) * 100, 100)}%` }}
+              />
             </div>
           </div>
         </div>
