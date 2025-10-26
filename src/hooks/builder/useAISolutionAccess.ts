@@ -41,10 +41,10 @@ export const useAISolutionAccess = () => {
   
   return {
     hasAccess,
-    canGenerate: usageData?.can_generate || false,
-    generationsUsed: usageData?.generations_used || 0,
-    monthlyLimit: usageData?.monthly_limit || 3,
-    remaining: usageData?.remaining || 0,
+    canGenerate: usageData?.can_generate ?? false,
+    generationsUsed: usageData?.generations_used ?? 0,
+    monthlyLimit: usageData?.monthly_limit ?? 3,
+    remaining: usageData?.remaining ?? 0,
     resetDate: usageData?.reset_date,
     isLoading,
     refetch

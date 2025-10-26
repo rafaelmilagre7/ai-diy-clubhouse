@@ -59,12 +59,27 @@ export const useBuilderAI = () => {
         return null;
       }
 
+      // 🔍 Logs detalhados antes da invocação
+      const startTime = Date.now();
+      console.log('[BUILDER-HOOK] 🚀 Iniciando geração:', {
+        timestamp: new Date().toISOString(),
+        ideaLength: idea.length,
+        answersCount: answers.length,
+        userId: user.id.substring(0, 8) + '***'
+      });
+
       const { data, error } = await supabase.functions.invoke('generate-builder-solution', {
         body: {
           idea,
           userId: user.id,
           answers
         }
+      });
+
+      const elapsedTime = Date.now() - startTime;
+      console.log('[BUILDER-HOOK] ⏱️ Tempo de resposta:', {
+        elapsedMs: elapsedTime,
+        elapsedSeconds: (elapsedTime / 1000).toFixed(1)
       });
 
       console.log('[BUILDER-HOOK] 📦 Resposta raw da edge function:', {

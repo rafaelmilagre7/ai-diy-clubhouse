@@ -70,6 +70,16 @@ export default function Builder() {
         return;
       }
       
+      // Verificar se geração acabou recentemente (últimos 30s)
+      const lastGenerationEnd = localStorage.getItem('builder_last_generation_end');
+      if (lastGenerationEnd) {
+        const timeSinceGeneration = Date.now() - parseInt(lastGenerationEnd);
+        if (timeSinceGeneration < 30000) {
+          console.log('[BUILDER-RECOVERY] ⏭️ Geração terminou há menos de 30s, pulando recovery');
+          return;
+        }
+      }
+      
       // Verificar tentativa incompleta no localStorage
       const lastAttemptStr = localStorage.getItem('builder_last_attempt');
       if (lastAttemptStr) {
@@ -124,7 +134,14 @@ export default function Builder() {
       if (diffMinutes < 5) {
         console.log('[BUILDER-RECOVERY] 🔄 Solução recente encontrada, redirecionando...');
         toast.info('Redirecionando para sua solução recente...');
-        navigate(`/ferramentas/builder/solution/${recentSolution.id}`);
+        
+        const targetUrl = `/ferramentas/builder/solution/${recentSolution.id}`;
+        try {
+          navigate(targetUrl);
+        } catch (navError) {
+          console.error('[BUILDER-RECOVERY] ❌ Erro no navigate, usando fallback:', navError);
+          window.location.href = targetUrl;
+        }
       }
     };
     
@@ -241,6 +258,9 @@ export default function Builder() {
         const targetUrl = `/ferramentas/builder/solution/${result.id}`;
         console.log('[BUILDER] ✅ ID válido! Redirecionando para:', targetUrl);
         
+        // Marcar que geração acabou
+        localStorage.setItem('builder_last_generation_end', Date.now().toString());
+        
         // Limpar flags antes de redirecionar
         localStorage.removeItem('builder_last_attempt');
         localStorage.removeItem(recoveryFlag);
@@ -253,10 +273,15 @@ export default function Builder() {
         // Aguardar um pouco para o usuário ver o toast
         await new Promise(resolve => setTimeout(resolve, 500));
         
-        // Redirecionar
+        // Redirecionar com fallback
         console.log('[BUILDER] 🔀 Executando navigate...');
-        navigate(targetUrl);
-        console.log('[BUILDER] ✅ Navigate executado');
+        try {
+          navigate(targetUrl);
+          console.log('[BUILDER] ✅ Navigate executado');
+        } catch (navError) {
+          console.error('[BUILDER] ❌ Erro no navigate, usando fallback:', navError);
+          window.location.href = targetUrl;
+        }
       } else {
         console.error('[BUILDER] ❌ Resultado sem ID:', result);
         throw new Error('ID da solução não foi retornado pela API');
