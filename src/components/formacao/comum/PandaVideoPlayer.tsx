@@ -38,9 +38,10 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // URL do player - usar URL fornecida ou construir com videoId
-  const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
-  
-  console.log('🐼 [PANDA] Componente renderizado:', { videoId, url, playerUrl });
+  // Adicionar parâmetros para embed: embedded=true indica embed legítimo, api=1 habilita postMessage
+  const playerUrl = url 
+    ? `${url}${url.includes('?') ? '&' : '?'}embedded=true&api=1`
+    : `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}&embedded=true&api=1`;
 
   // Contador de tempo de carregamento
   useEffect(() => {
@@ -210,11 +211,11 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         width={width}
         height={height}
         loading="eager"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
         allowFullScreen
+        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups"
         onLoad={handleLoad}
         onError={handleError}
-        referrerPolicy="strict-origin-when-cross-origin"
         className="w-full h-full rounded-md bg-surface-base border-0"
         style={{ 
           opacity: loading ? 0 : 1,

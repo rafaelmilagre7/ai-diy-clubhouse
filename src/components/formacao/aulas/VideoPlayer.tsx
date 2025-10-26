@@ -102,20 +102,10 @@ export const VideoPlayer: React.FC<VideoPlayerProps> = ({
   
   // Renderizar vídeo baseado no tipo
   const renderVideo = () => {
-    console.log('🎬 [VIDEO-PLAYER] Renderizando vídeo:', {
-      video_type: video?.video_type,
-      has_url: !!video?.url,
-      url: video?.url,
-      video_id: video?.video_id,
-      video_file_path: video?.video_file_path
-    });
-    
     // Vídeo do Panda
     if (video?.video_type === 'panda' && video.url) {
       // Usar o video_file_path (que contém o videoId) ou extrair da URL
       const pandaVideoId = video.video_file_path || video.video_id;
-      
-      console.log('🐼 [VIDEO-PLAYER] Renderizando PandaVideo:', { pandaVideoId, url: video.url });
       
       if (pandaVideoId) {
         return (
