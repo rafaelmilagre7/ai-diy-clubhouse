@@ -22,7 +22,7 @@ interface Notification {
   title: string;
   message: string;
   type: string;
-  status: 'read' | 'unread';
+  is_read: boolean;
   created_at: string;
 }
 
@@ -49,7 +49,7 @@ export function NotificationsPopover() {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('status', 'unread');
+        .eq('is_read', false);
 
       if (error) throw error;
       return count || 0;
@@ -82,7 +82,7 @@ export function NotificationsPopover() {
     mutationFn: async (notificationId: string) => {
       const { error } = await supabase
         .from('notifications')
-        .update({ status: 'read' })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('id', notificationId);
 
       if (error) throw error;
@@ -100,9 +100,9 @@ export function NotificationsPopover() {
 
       const { error } = await supabase
         .from('notifications')
-        .update({ status: 'read' })
+        .update({ is_read: true, read_at: new Date().toISOString() })
         .eq('user_id', user.id)
-        .eq('status', 'unread');
+        .eq('is_read', false);
 
       if (error) throw error;
     },
@@ -207,16 +207,16 @@ export function NotificationsPopover() {
                   key={notification.id}
                   className={cn(
                     'group relative p-4 hover:bg-accent/30 cursor-pointer transition-all duration-200',
-                    notification.status === 'read' && 'opacity-60'
+                    notification.is_read && 'opacity-60'
                   )}
                   onClick={() => {
-                    if (notification.status === 'unread') {
+                    if (!notification.is_read) {
                       markAsRead.mutate(notification.id);
                     }
                   }}
                 >
                   <div className="flex items-start gap-3">
-                    {notification.status === 'unread' && (
+                    {!notification.is_read && (
                       <div className="h-2 w-2 rounded-full bg-primary mt-2 animate-pulse" />
                     )}
                     <div className="flex-1 min-w-0">
@@ -236,7 +236,7 @@ export function NotificationsPopover() {
                       </p>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {notification.status === 'unread' && (
+                      {!notification.is_read && (
                         <Button
                           variant="ghost"
                           size="icon"
