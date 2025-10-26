@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { devLog } from '@/hooks/useOptimizedLogging';
 import { RefreshCw, AlertTriangle, ExternalLink } from 'lucide-react';
+import type { PandaPlayer } from '@/types/pandavideo';
 
 interface PandaVideoPlayerProps {
   videoId: string;
@@ -31,14 +31,50 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
 }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const [loadingTime, setLoadingTime] = useState(0);
-  const [iframeLoaded, setIframeLoaded] = useState(false);
+  const [sdkReady, setSdkReady] = useState(false);
   
-  const iframeRef = useRef<HTMLIFrameElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<PandaPlayer | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout>();
+  const containerId = useRef(`panda-player-${Math.random().toString(36).substr(2, 9)}`);
   
-  // URL do player - usar URL fornecida ou construir com videoId de forma simples
+  // URL para abrir diretamente (fallback)
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
+
+  // Verificar se SDK está disponível
+  useEffect(() => {
+    const checkSDK = () => {
+      if (typeof window !== 'undefined' && window.PandaPlayer) {
+        setSdkReady(true);
+        return true;
+      }
+      return false;
+    };
+
+    if (checkSDK()) return;
+
+    // Tentar novamente após um delay
+    const interval = setInterval(() => {
+      if (checkSDK()) {
+        clearInterval(interval);
+      }
+    }, 100);
+
+    // Timeout de 5s para SDK
+    const sdkTimeout = setTimeout(() => {
+      clearInterval(interval);
+      if (!sdkReady) {
+        setError("SDK do PandaVideo não carregou");
+        setLoading(false);
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(sdkTimeout);
+    };
+  }, [sdkReady]);
 
   // Contador de tempo de carregamento
   useEffect(() => {
@@ -54,86 +90,105 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
     return () => clearInterval(interval);
   }, [loading]);
 
-  // Timeout com retry automático
+  // Timeout geral
   useEffect(() => {
-    const timeoutId = setTimeout(() => {
-      if (loading && !iframeLoaded) {
-        // Se ainda não tentou retry, tentar novamente automaticamente
-        if (retryCount < 1) {
-          setRetryCount(prev => prev + 1);
-          setIframeLoaded(false);
-          setLoadingTime(0);
-          // Recarregar iframe
-          if (iframeRef.current) {
-            iframeRef.current.src = iframeRef.current.src;
-          }
-        } else {
-          // Após retry, mostrar erro
-          setError("Erro ao carregar vídeo - tente novamente");
-          setLoading(false);
-          onLoadTimeout?.();
-        }
+    if (!loading) return;
+
+    timeoutRef.current = setTimeout(() => {
+      if (loading) {
+        setError("Timeout ao carregar vídeo");
+        setLoading(false);
+        onLoadTimeout?.();
       }
     }, timeout);
 
-    return () => clearTimeout(timeoutId);
-  }, [loading, iframeLoaded, timeout, retryCount, loadingTime, onLoadTimeout]);
-
-  // Handler de mensagens do player
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (!event.origin.includes('pandavideo.com') && !event.origin.includes('player-vz')) return;
-      
-      if (loading) {
-        setLoading(false);
-        setError(null);
-      }
-
-      try {
-        const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        
-        if ((data.event === 'progress' || data.type === 'progress') && onProgress) {
-          const progress = data.percent || data.progress || 0;
-          const binaryProgress = progress >= 95 ? 100 : 0;
-          onProgress(binaryProgress);
-        }
-        
-        if ((data.event === 'ended' || data.type === 'ended') && onEnded) {
-          onEnded();
-        }
-      } catch (err) {
-        console.error('Erro ao processar mensagem do player:', err);
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
     };
-    
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, [loading, onProgress, onEnded]);
+  }, [loading, timeout, onLoadTimeout]);
 
-  const handleLoad = () => {
-    setIframeLoaded(true);
-    // Player irá enviar mensagens quando estiver pronto
-    // Considerar sucesso se iframe carregou (mesmo sem mensagem postMessage ainda)
-    setTimeout(() => {
-      if (loading) {
+  // Inicializar player quando SDK estiver pronto
+  useEffect(() => {
+    if (!sdkReady || !containerRef.current || playerRef.current) return;
+
+    try {
+      const player = new window.PandaPlayer(containerId.current, {
+        video_id: videoId,
+        responsive: true,
+        autoplay: false,
+        controls: true,
+      });
+
+      playerRef.current = player;
+
+      // Eventos do player
+      player.onReady(() => {
         setLoading(false);
         setError(null);
-      }
-    }, 2000);
-  };
+      });
 
-  const handleError = (event: any) => {
-    console.error('Erro ao carregar iframe do PandaVideo:', event);
-    setLoading(false);
-    setError("Erro ao carregar vídeo");
-  };
-  
+      player.onError((err) => {
+        console.error('Erro no PandaVideo player:', err);
+        setError("Erro ao carregar vídeo");
+        setLoading(false);
+      });
+
+      if (onProgress) {
+        player.onProgress((progressData) => {
+          const progress = progressData.percent || 0;
+          const binaryProgress = progress >= 95 ? 100 : 0;
+          onProgress(binaryProgress);
+        });
+      }
+
+      if (onEnded) {
+        player.onEnded(() => {
+          onEnded();
+        });
+      }
+
+    } catch (err) {
+      console.error('Erro ao inicializar PandaVideo player:', err);
+      setError("Erro ao inicializar player");
+      setLoading(false);
+    }
+
+    return () => {
+      if (playerRef.current) {
+        try {
+          playerRef.current.destroy();
+        } catch (err) {
+          console.error('Erro ao destruir player:', err);
+        }
+        playerRef.current = null;
+      }
+    };
+  }, [sdkReady, videoId, onProgress, onEnded]);
+
   const handleRetry = () => {
     setLoading(true);
     setError(null);
     setLoadingTime(0);
-    setIframeLoaded(false);
-    setRetryCount(0);
+    setSdkReady(false);
+    
+    // Destruir player existente
+    if (playerRef.current) {
+      try {
+        playerRef.current.destroy();
+      } catch (err) {
+        console.error('Erro ao destruir player no retry:', err);
+      }
+      playerRef.current = null;
+    }
+    
+    // Forçar re-verificação do SDK
+    setTimeout(() => {
+      if (typeof window !== 'undefined' && window.PandaPlayer) {
+        setSdkReady(true);
+      }
+    }, 100);
   };
 
   const openVideoDirectly = () => {
@@ -186,9 +241,9 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
             <div className="text-foreground text-sm">
               Carregando vídeo... {loadingTime}s
             </div>
-            {loadingTime > 10 && (
+            {loadingTime > 5 && (
               <div className="text-muted-foreground text-xs">
-                {retryCount > 0 ? 'Tentando novamente...' : 'Aguarde, pode demorar em redes lentas'}
+                Aguarde, inicializando player...
               </div>
             )}
             <div className="w-48 h-1 bg-muted rounded-full overflow-hidden">
@@ -201,18 +256,10 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         </div>
       )}
       
-      <iframe
-        ref={iframeRef}
-        src={playerUrl}
-        title={title}
-        width={width}
-        height={height}
-        loading="eager"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
-        allowFullScreen
-        onLoad={handleLoad}
-        onError={handleError}
-        className="w-full h-full rounded-md bg-surface-base border-0"
+      <div 
+        ref={containerRef}
+        id={containerId.current}
+        className="w-full h-full rounded-md bg-surface-base"
         style={{ 
           opacity: loading ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out'
