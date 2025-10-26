@@ -38,7 +38,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
   // URL do player - usar URL fornecida ou construir com videoId
-  const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}&autoplay=0&preload=metadata`;
+  const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
   
   devLog('🐼 Carregando vídeo Panda:', { 
     videoId, 
