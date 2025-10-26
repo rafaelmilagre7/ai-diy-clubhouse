@@ -9,7 +9,7 @@ import { FrameworkQuadrants } from '@/components/builder/FrameworkQuadrants';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { BuilderSectionLoader, FRAMEWORK_MESSAGES } from '@/components/builder/BuilderSectionLoader';
 
 export default function BuilderSolutionFramework() {
   const { id } = useParams();
@@ -161,16 +161,19 @@ export default function BuilderSolutionFramework() {
   }, [solution, isGenerating]);
 
   if (isLoading) {
-    return <LoadingScreen message="Carregando framework..." />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   if (isGenerating || !solution?.framework_mapping) {
     return (
       <div className="relative">
-        <LoadingScreen 
-          message="Gerando Framework de Implementação" 
-          description="A IA está mapeando os 4 pilares da sua solução. Aguarde..."
-          showProgress={true}
+        <BuilderSectionLoader 
+          title="Gerando Framework de Implementação..."
+          messages={FRAMEWORK_MESSAGES}
           estimatedSeconds={45}
         />
         {showRetryOption && (

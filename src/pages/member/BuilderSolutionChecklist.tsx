@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
-import ChecklistPreparationAnimation from '@/components/builder/ChecklistPreparationAnimation';
+import { BuilderSectionLoader, CHECKLIST_MESSAGES } from '@/components/builder/BuilderSectionLoader';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -205,7 +205,11 @@ export default function BuilderSolutionChecklist() {
                   </div>
                 </div>
               ) : (
-                <ChecklistPreparationAnimation />
+                <BuilderSectionLoader 
+                  title="Gerando Plano de Ação..."
+                  messages={CHECKLIST_MESSAGES}
+                  estimatedSeconds={35}
+                />
               )
             ) : (
               <UnifiedChecklistTab

@@ -9,7 +9,7 @@ import { useLearningRecommendations } from '@/hooks/useLearningRecommendations';
 import { supabase } from '@/lib/supabase';
 import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import LoadingScreen from '@/components/common/LoadingScreen';
+import { BuilderSectionLoader, RECOMMENDATIONS_MESSAGES } from '@/components/builder/BuilderSectionLoader';
 
 export default function BuilderSolutionRecommendations() {
   const { id } = useParams();
@@ -54,11 +54,10 @@ export default function BuilderSolutionRecommendations() {
 
   if (isLoading || isManuallyGenerating) {
     return (
-      <LoadingScreen 
-        message="Buscando Conteúdos Recomendados" 
-        description="A IA está analisando milhares de aulas para encontrar as mais relevantes para sua solução..."
-        showProgress={true}
-        estimatedSeconds={45}
+      <BuilderSectionLoader 
+        title="Buscando Conteúdos Recomendados..."
+        messages={RECOMMENDATIONS_MESSAGES}
+        estimatedSeconds={30}
       />
     );
   }
