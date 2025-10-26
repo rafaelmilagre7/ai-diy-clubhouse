@@ -39,20 +39,6 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   
   // URL do player - usar URL fornecida ou construir com videoId
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
-  
-  console.log('🐼 [PANDA-DEBUG] URL recebida:', url);
-  console.log('🐼 [PANDA-DEBUG] VideoId recebido:', videoId);
-  console.log('🐼 [PANDA-DEBUG] URL final do player:', playerUrl);
-  console.log('🐼 [PANDA-DEBUG] Domínio atual:', window.location.hostname);
-  
-  devLog('🐼 Carregando vídeo Panda:', { 
-    videoId, 
-    url: playerUrl, 
-    title,
-    retryCount,
-    receivedUrl: url,
-    currentDomain: window.location.hostname
-  });
 
   // Contador de tempo de carregamento
   useEffect(() => {
@@ -72,11 +58,8 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (loading && !iframeLoaded) {
-        devLog(`⏰ [PANDA-TIMEOUT] ${loadingTime}s decorridos, iframe loaded: ${iframeLoaded}`);
-        
         // Se ainda não tentou retry, tentar novamente automaticamente
         if (retryCount < 1) {
-          devLog('🔄 [PANDA-RETRY] Tentando novamente automaticamente...');
           setRetryCount(prev => prev + 1);
           setIframeLoaded(false);
           setLoadingTime(0);
@@ -86,7 +69,6 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
           }
         } else {
           // Após retry, mostrar erro
-          devLog('❌ [PANDA-ERROR] Timeout após retry');
           setError("Erro ao carregar vídeo - tente novamente");
           setLoading(false);
           onLoadTimeout?.();
@@ -101,8 +83,6 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
       if (!event.origin.includes('pandavideo.com') && !event.origin.includes('player-vz')) return;
-      
-      devLog('🐼 Mensagem recebida do player:', event.data);
       
       if (loading) {
         setLoading(false);
@@ -122,7 +102,7 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
           onEnded();
         }
       } catch (err) {
-        devLog('Erro ao processar mensagem:', err);
+        console.error('Erro ao processar mensagem do player:', err);
       }
     };
     
@@ -131,13 +111,11 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   }, [loading, onProgress, onEnded]);
 
   const handleLoad = () => {
-    devLog('✅ Iframe do Panda carregado');
     setIframeLoaded(true);
     // Player irá enviar mensagens quando estiver pronto
     // Considerar sucesso se iframe carregou (mesmo sem mensagem postMessage ainda)
     setTimeout(() => {
       if (loading) {
-        devLog('✅ [PANDA-SUCCESS] Iframe carregado, considerando sucesso');
         setLoading(false);
         setError(null);
       }
@@ -145,13 +123,12 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   };
 
   const handleError = (event: any) => {
-    devLog('❌ Erro no iframe:', event);
+    console.error('Erro ao carregar iframe do PandaVideo:', event);
     setLoading(false);
     setError("Erro ao carregar vídeo");
   };
   
   const handleRetry = () => {
-    devLog('🔄 [PANDA-RETRY-MANUAL] Usuário solicitou retry');
     setLoading(true);
     setError(null);
     setLoadingTime(0);
@@ -231,13 +208,12 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         width={width}
         height={height}
         loading="eager"
-        frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowFullScreen
         onLoad={handleLoad}
         onError={handleError}
         referrerPolicy="strict-origin-when-cross-origin"
-        className="w-full h-full rounded-md bg-surface-base"
+        className="w-full h-full rounded-md bg-surface-base border-0"
         style={{ 
           opacity: loading ? 0 : 1,
           transition: 'opacity 0.3s ease-in-out'
