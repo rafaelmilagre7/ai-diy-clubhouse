@@ -8,7 +8,8 @@ import { Button } from '@/components/ui/button';
 import { useVideoProgress } from '@/hooks/useVideoProgress';
 import { useRobustVideoQuery } from '@/hooks/learning/useRobustVideoQuery';
 import { useClearLearningCache } from '@/hooks/learning/useClearLearningCache';
-import { devLog } from '@/hooks/useOptimizedLogging';
+import { devLog, devWarn } from '@/hooks/useOptimizedLogging';
+import { validateVideoData } from '@/utils/videoConsistencyValidator';
 import { RefreshCw, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -79,15 +80,18 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
     
     try {
       await clearAllLearningCache();
-      await refetchVideos();
       
-      toast.success('Cache limpo', {
-        description: 'Cache foi limpo e dados recarregados'
-      });
+      // Aguardar um pouco para garantir limpeza
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Recarregar página para forçar fetch fresco
+      window.location.reload();
+      
     } catch (error) {
       devLog('❌ [LESSON-PLAYER] Erro na limpeza:', error);
+      toast.error('Erro ao limpar cache');
     }
-  }, [clearAllLearningCache, refetchVideos]);
+  }, [clearAllLearningCache]);
 
   // Se está carregando dados robustos
   if (loadingRobustVideos && effectiveVideos.length === 0) {
@@ -134,13 +138,21 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
     return (
       <Card>
         <CardContent className="p-8 text-center">
+          <AlertTriangle className="w-12 h-12 text-amber-500 mx-auto mb-4" />
+          <h3 className="font-semibold mb-2">Nenhum Vídeo Encontrado</h3>
           <p className="text-muted-foreground mb-4">
-            Nenhum vídeo disponível para esta aula.
+            Esta aula não possui vídeos ou houve um problema ao carregá-los.
           </p>
-          <Button onClick={handleForceReload} variant="outline" size="sm">
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Tentar Recarregar
-          </Button>
+          <div className="flex gap-2 justify-center">
+            <Button onClick={handleForceReload} variant="outline" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Recarregar
+            </Button>
+            <Button onClick={handleClearCache} variant="default" size="sm">
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Limpar Cache e Recarregar
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
@@ -148,11 +160,21 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
 
   const currentVideo = effectiveVideos[currentVideoIndex];
   
+  // Validar vídeo atual em modo dev
+  if (import.meta.env.DEV && currentVideo) {
+    const validation = validateVideoData(currentVideo, 'LessonVideoPlayer');
+    if (!validation.isValid) {
+      devWarn('⚠️ [LESSON-PLAYER] Vídeo atual com problemas:', validation.issues);
+    }
+  }
+  
   devLog('🎬 [LESSON-PLAYER] Vídeo atual:', {
     currentVideo: currentVideo?.id || 'none',
     title: currentVideo?.title,
     url: currentVideo?.url,
-    videoType: currentVideo?.video_type
+    videoType: currentVideo?.video_type,
+    hasVideoUrl: !!(currentVideo as any)?.video_url, // Detectar campo antigo
+    hasUrl: !!currentVideo?.url
   });
 
   // Hook para gerenciar progresso do vídeo

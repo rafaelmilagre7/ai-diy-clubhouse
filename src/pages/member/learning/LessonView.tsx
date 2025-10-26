@@ -2,6 +2,7 @@
 import { useEffect, Suspense } from "react";
 import { useParams, useLocation } from "react-router-dom";
 import { useLearningRedirect } from '@/hooks/learning/useLearningRedirect';
+import { useAutoVideoCacheCleanup } from '@/hooks/learning/useAutoVideoCacheCleanup';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { AlertCircle, ArrowLeft } from "lucide-react";
@@ -17,6 +18,9 @@ import { supabase } from "@/lib/supabase";
 const LessonView = () => {
   const { courseId, lessonId } = useParams<{ courseId: string; lessonId: string }>();
   const location = useLocation();
+  
+  // Limpeza automática de cache corrompido (executa uma vez por sessão)
+  const { cleanupExecuted } = useAutoVideoCacheCleanup();
   
   // Sistema de validação e redirecionamento automático
   useLearningRedirect({

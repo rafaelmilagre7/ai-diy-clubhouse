@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import { LearningLessonVideo, LearningResource } from "@/lib/supabase/types";
 import { LearningLessonWithRelations } from "@/lib/supabase/types/extended";
 import { sortLessonsByNumber } from "@/components/learning/member/course-modules/CourseModulesHelpers";
+import { sanitizeVideoData, validateVideoArray } from "@/utils/videoConsistencyValidator";
 
 interface UseLessonDataProps {
   lessonId?: string;
@@ -87,7 +88,7 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
     enabled: !!lessonId
   });
   
-  // Buscar vídeos da lição
+  // Buscar vídeos da lição com sanitização automática
   const { 
     data: videos = [], 
     isLoading: isLoadingVideos 
@@ -103,9 +104,21 @@ export function useLessonData({ lessonId, courseId }: UseLessonDataProps) {
         .order("order_index", { ascending: true });
         
       if (error) return [];
-      return data || [];
+      
+      const rawVideos = data || [];
+      
+      // Validar e sanitizar vídeos
+      if (import.meta.env.DEV) {
+        validateVideoArray(rawVideos, 'useLessonData');
+      }
+      
+      // Sanitizar cada vídeo (remover video_url antigo, migrar para url)
+      const sanitizedVideos = rawVideos.map(video => sanitizeVideoData(video));
+      
+      return sanitizedVideos;
     },
-    enabled: !!lessonId
+    enabled: !!lessonId,
+    staleTime: 5 * 60 * 1000, // 5 minutos
   });
   
   // Buscar informações do curso
