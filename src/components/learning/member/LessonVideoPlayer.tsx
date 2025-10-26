@@ -219,18 +219,6 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
           />
         </div>
       )}
-      
-      {/* Debug info (apenas em desenvolvimento) */}
-      {import.meta.env.DEV && (
-        <div className="mt-4 p-2 bg-muted rounded text-xs">
-          <strong>Debug Info:</strong><br/>
-          Vídeos Props: {safeVideos.length} | 
-          Vídeos Robust: {robustVideos?.length || 0} | 
-          Efetivos: {effectiveVideos.length} | 
-          Atual: {currentVideoIndex} | 
-          Loading: {loadingRobustVideos ? 'Sim' : 'Não'}
-        </div>
-      )}
     </div>
   );
 };
