@@ -39,6 +39,8 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   
   // URL do player - usar URL fornecida ou construir com videoId
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
+  
+  console.log('🐼 [PANDA] Componente renderizado:', { videoId, url, playerUrl });
 
   // Contador de tempo de carregamento
   useEffect(() => {
