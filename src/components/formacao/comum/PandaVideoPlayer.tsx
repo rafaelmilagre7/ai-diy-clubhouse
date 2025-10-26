@@ -213,7 +213,6 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
         loading="eager"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share; fullscreen"
         allowFullScreen
-        sandbox="allow-scripts allow-same-origin allow-presentation allow-forms allow-popups"
         onLoad={handleLoad}
         onError={handleError}
         className="w-full h-full rounded-md bg-surface-base border-0"
