@@ -37,11 +37,8 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
-  // URL do player - usar URL fornecida ou construir com videoId
-  // Adicionar parâmetros para embed: embedded=true indica embed legítimo, api=1 habilita postMessage
-  const playerUrl = url 
-    ? `${url}${url.includes('?') ? '&' : '?'}embedded=true&api=1`
-    : `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}&embedded=true&api=1`;
+  // URL do player - usar URL fornecida ou construir com videoId de forma simples
+  const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
 
   // Contador de tempo de carregamento
   useEffect(() => {
