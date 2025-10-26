@@ -40,11 +40,18 @@ export const PandaVideoPlayer: React.FC<PandaVideoPlayerProps> = ({
   // URL do player - usar URL fornecida ou construir com videoId
   const playerUrl = url || `https://player-vz-d6ebf577-797.tv.pandavideo.com.br/embed/?v=${videoId}`;
   
+  console.log('🐼 [PANDA-DEBUG] URL recebida:', url);
+  console.log('🐼 [PANDA-DEBUG] VideoId recebido:', videoId);
+  console.log('🐼 [PANDA-DEBUG] URL final do player:', playerUrl);
+  console.log('🐼 [PANDA-DEBUG] Domínio atual:', window.location.hostname);
+  
   devLog('🐼 Carregando vídeo Panda:', { 
     videoId, 
     url: playerUrl, 
     title,
-    retryCount
+    retryCount,
+    receivedUrl: url,
+    currentDomain: window.location.hostname
   });
 
   // Contador de tempo de carregamento
