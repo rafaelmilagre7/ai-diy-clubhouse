@@ -49,7 +49,7 @@ export const useRateLimit = () => {
           .select('attempt_count')
           .eq('identifier', identifier)
           .eq('action_type', actionType)
-          .single();
+          .maybeSingle();
 
         if (rateData) {
           setRemainingAttempts(maxAttempts - rateData.attempt_count);
