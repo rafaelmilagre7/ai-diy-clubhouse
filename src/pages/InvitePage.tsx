@@ -71,9 +71,18 @@ const InvitePage = () => {
       const result = await validateToken(token, user?.email);
       setValidationResult(result);
       
-      // 🎯 NOVO FLUXO: Mostrar dados pré-carregados do perfil
+      // 🎯 Mostrar formulário de registro para convites válidos
       if (result.valid && !user) {
+        console.log('✅ [INVITE] Convite válido - mostrando formulário de registro', {
+          email: result.invite?.email,
+          role: result.role?.name
+        });
         setShowRegisterForm(true);
+      } else if (result.valid && user) {
+        console.log('✅ [INVITE] Usuário já autenticado com email do convite', {
+          userEmail: user.email,
+          inviteEmail: result.invite?.email
+        });
       }
     } catch (error) {
       console.error('Erro na validação:', error);

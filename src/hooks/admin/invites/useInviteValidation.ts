@@ -73,20 +73,11 @@ export const useInviteValidation = () => {
         return result;
       }
 
-      // Buscar dados do perfil pré-existente
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('name, whatsapp_number, status')
-        .eq('email', validationResult.invite.email)
-        .eq('status', 'invited')
-        .single();
-
+      // 🎯 Retornar diretamente dados do convite sem buscar perfil pré-existente
+      // O perfil só será criado após o registro do usuário
       const result: InviteValidationResult = {
         valid: true,
-        invite: {
-          ...validationResult.invite,
-          profile_data: profileData || undefined
-        },
+        invite: validationResult.invite,
         role: validationResult.role,
         message: 'Convite válido'
       };
