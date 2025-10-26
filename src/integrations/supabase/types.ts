@@ -8610,6 +8610,15 @@ export type Database = {
           tool_name: string
         }[]
       }
+      recover_missing_whatsapp_numbers: {
+        Args: never
+        Returns: {
+          email: string
+          updated: boolean
+          user_id: string
+          whatsapp_recovered: string
+        }[]
+      }
       regenerate_recurring_event_dates: { Args: never; Returns: Json }
       register_with_invite: {
         Args: { p_name: string; p_password: string; p_token: string }
