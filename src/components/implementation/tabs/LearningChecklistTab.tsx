@@ -270,11 +270,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
           Faça login para começar a usar o checklist.
         </div>
       )}
-
-      <ChecklistProgress
-        completedItems={completedCount}
-        totalItems={checklistItems.length}
-      />
     </div>
   );
 };
