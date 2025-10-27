@@ -57,7 +57,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     const sourceItems = template.checklist_data.items;
     const progressItems = userProgress?.checklist_data?.items || [];
     
-    return sourceItems.map((sourceItem: any) => {
+    const mergedItems = sourceItems.map((sourceItem: any) => {
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
       return {
@@ -67,11 +67,23 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         completed: progressItem?.completed || false,
         notes: progressItem?.notes || '',
         completedAt: progressItem?.completedAt,
-        column: progressItem?.column || sourceItem.column || 'todo',
+        column: progressItem?.column ?? (sourceItem.column || 'todo'),
         order: progressItem?.order ?? sourceItem.order,
         metadata: sourceItem.metadata
       };
     });
+
+    console.log('[UnifiedChecklist] Merge concluído:', {
+      templateItems: sourceItems.length,
+      progressItems: progressItems.length,
+      mergedItems: mergedItems.length,
+      columnsDistribution: mergedItems.reduce((acc: Record<string, number>, item) => {
+        acc[item.column || 'todo'] = (acc[item.column || 'todo'] || 0) + 1;
+        return acc;
+      }, {})
+    });
+
+    return mergedItems;
   }, [template, userProgress]);
 
   // Função para atualizar item
