@@ -35,9 +35,25 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       if (rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
         const template = rpcData[0];
         if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
-          return template.checklist_data.items as ChecklistItemData[];
+          const items = template.checklist_data.items as ChecklistItemData[];
+          
+          console.log('🎯 [LearningChecklistTab] Template carregado:', {
+            solutionId,
+            templateFound: true,
+            itemsCount: items.length,
+            firstItem: items[0]?.title || items[0]?.description || 'N/A'
+          });
+          
+          return items;
         }
       }
+      
+      console.log('🎯 [LearningChecklistTab] Template carregado:', {
+        solutionId,
+        templateFound: false,
+        itemsCount: 0,
+        firstItem: 'N/A'
+      });
       
       return [];
     },
@@ -92,7 +108,13 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
 
   // Criar checklist pessoal se não existir
   useEffect(() => {
-    if (!user?.id || !checklistItems || userChecklist !== null || loadingChecklist) return;
+    // Validação crítica: não criar se não tiver items válidos
+    if (!user?.id || !checklistItems || checklistItems.length === 0 || userChecklist !== null || loadingChecklist) {
+      if (checklistItems && checklistItems.length === 0) {
+        console.warn('⚠️ [LearningChecklistTab] Template vazio - não será criado checklist pessoal');
+      }
+      return;
+    }
     
     const createUserChecklist = async () => {
       console.log('🆕 [LearningChecklistTab] Criando checklist pessoal...', {
@@ -206,6 +228,25 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   // Mostrar loading enquanto cria o checklist pessoal
   if (!userChecklist && user?.id) {
     return <ChecklistLoading />;
+  }
+
+  // Verificar se o checklist pessoal está vazio (erro de sincronização)
+  if (userChecklist && (!userChecklist.checklist_data?.items || userChecklist.checklist_data.items.length === 0)) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Checklist Vazio</h3>
+        <p className="text-muted-foreground mb-4">
+          Seu checklist foi criado, mas está sem itens. Isso pode ser um erro de sincronização.
+        </p>
+        <button 
+          onClick={() => refetchUserChecklist()}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          Recarregar Checklist
+        </button>
+      </div>
+    );
   }
 
   return (
