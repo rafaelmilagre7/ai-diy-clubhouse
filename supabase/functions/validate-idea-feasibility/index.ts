@@ -30,8 +30,8 @@ serve(async (req) => {
     // 🆕 FASE 2: Implementar cache de validações (MD5 hash da ideia normalizada)
     const normalizedIdea = idea.trim().toLowerCase().replace(/\s+/g, ' ');
     const encoder = new TextEncoder();
-    const data = encoder.encode(normalizedIdea);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const encodedData = encoder.encode(normalizedIdea);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', encodedData);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const cacheKey = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
@@ -75,6 +75,9 @@ serve(async (req) => {
     }
 
     console.log('[VALIDATE-FEASIBILITY] ❌ Cache miss, chamando IA...');
+    console.log('[VALIDATE-FEASIBILITY] 📝 Ideia:', idea.substring(0, 100) + '...');
+    
+    const startTime = Date.now();
 
     const systemPrompt = `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
 
@@ -114,6 +117,34 @@ Você conhece profundamente estas ferramentas no-code:
 - Calendly, Cal.com (agendamento)
 - OCR: Tesseract, Google Cloud Vision
 
+## CASOS SEMPRE VIÁVEIS (EXEMPLOS PRÁTICOS)
+
+Estes casos são SEMPRE viáveis e devem ter score 70-95:
+
+✅ **Automação com WhatsApp + Planilhas:**
+- "Sistema para receber pedidos via WhatsApp e salvar em Google Sheets"
+- "Bot de WhatsApp que consulta estoque em planilha e responde cliente"
+
+✅ **Dashboards e Relatórios:**
+- "Dashboard que mostra vendas do Stripe + dados do Google Analytics"
+- "Relatório automático diário enviado por email com dados de vendas"
+
+✅ **Chatbots com IA:**
+- "Chatbot com IA para responder dúvidas sobre produtos baseado em catálogo"
+- "Assistente virtual que qualifica leads fazendo perguntas"
+
+✅ **Automação de Email/SMS:**
+- "Enviar email personalizado quando lead preenche formulário"
+- "SMS automático de confirmação após compra"
+
+✅ **Integrações e Sincronização:**
+- "Sincronizar contatos do Typeform com Mailchimp"
+- "Atualizar Airtable quando recebe pagamento no Stripe"
+
+✅ **Análise com IA:**
+- "Analisar sentimento de reviews de clientes automaticamente"
+- "Extrair dados de notas fiscais em PDF e salvar em planilha"
+
 ## SEU PROCESSO DE ANÁLISE INTERNA
 
 Para cada ideia que receber, você deve analisar mentalmente:
@@ -151,6 +182,7 @@ Para cada ideia que receber, você deve analisar mentalmente:
 - A lógica pode ser implementada com automações e condicionais simples
 - Pequenos ajustes no escopo original tornam viável
 - É possível com webhooks, Zapier/Make e ferramentas de IA
+- **Se parece com os exemplos de "Casos Sempre Viáveis", é VIÁVEL!**
 
 **Marque como NÃO VIÁVEL (viable: false) quando:**
 - Requer processamento de baixo nível (drivers, hardware específico)
@@ -162,11 +194,20 @@ Para cada ideia que receber, você deve analisar mentalmente:
 
 ## PRINCÍPIOS IMPORTANTES
 
-- Seja pragmático: se 90% da ideia funciona, responda SIM
+- **SEJA PRAGMÁTICO**: Make + API + IA = VIÁVEL na maioria dos casos!
+- **SEJA GENEROSO**: Se 80%+ da ideia funciona com no-code, marque como VIÁVEL
 - Seja honesto: se realmente não dá, diga NÃO sem rodeios
 - Seja direto: evite "talvez", "depende", "parcialmente"
 - Pense em workarounds criativos antes de dizer NÃO
 - Considere MVP (produto mínimo viável) ao avaliar
+
+## ESCALA DE SCORE (AJUSTADA)
+
+- **80-100**: Muito simples, ferramentas prontas + conectores nativos
+- **60-79**: Viável, precisa configuração/customização mas é direto
+- **40-59**: Complexo mas possível com workarounds criativos
+- **20-39**: Muito difícil, requer muitas adaptações
+- **0-19**: Tecnicamente inviável com no-code atual
 
 ## FORMATO DE RESPOSTA OBRIGATÓRIO
 
@@ -202,6 +243,7 @@ IMPORTANTE:
 - limitations deve ter NO MÍNIMO 2 itens e NO MÁXIMO 4`;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando Lovable AI...');
+    console.log('[VALIDATE-FEASIBILITY] 🤖 Modelo: google/gemini-2.5-pro');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -243,6 +285,9 @@ IMPORTANTE:
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content;
+    
+    const processingTime = Date.now() - startTime;
+    console.log('[VALIDATE-FEASIBILITY] ⏱️ Tempo de processamento:', processingTime + 'ms');
 
     if (!content) {
       throw new Error('Resposta vazia da IA');
@@ -260,8 +305,8 @@ IMPORTANTE:
 
     console.log('[VALIDATE-FEASIBILITY] 🧹 Depois de limpar:', cleanContent.slice(0, 200));
 
-    // Extrair JSON com regex mais robusto - busca o objeto completo com viable, reason, confidence e tools
-    const jsonMatch = cleanContent.match(/\{[\s\S]*?"viable"[\s\S]*?"reason"[\s\S]*?"confidence"[\s\S]*?"tools"[\s\S]*?\]/);
+    // Extrair JSON com regex mais robusto - busca o objeto completo com viable, reason, confidence e required_stack
+    const jsonMatch = cleanContent.match(/\{[\s\S]*?"viable"[\s\S]*?"reason"[\s\S]*?"confidence"[\s\S]*?"required_stack"[\s\S]*?\]/);
     
     if (!jsonMatch) {
       console.error('[VALIDATE-FEASIBILITY] ❌ JSON não encontrado na resposta');
@@ -312,9 +357,15 @@ IMPORTANTE:
       throw new Error('Resposta da IA não contém todos os campos obrigatórios ou valores inválidos');
     }
 
+    const totalTime = Date.now() - startTime;
     console.log('[VALIDATE-FEASIBILITY] ✅ Resultado validado:', {
-      ...validationResult,
-      technical_explanation: validationResult.technical_explanation.substring(0, 100) + '...'
+      viable: validationResult.viable,
+      score: validationResult.score,
+      confidence: validationResult.confidence,
+      complexity: validationResult.estimated_complexity,
+      time: validationResult.estimated_time,
+      tools_count: validationResult.required_stack.length,
+      total_processing_time: totalTime + 'ms'
     });
 
     // 🆕 FASE 2: Salvar no cache
@@ -341,15 +392,23 @@ IMPORTANTE:
     );
 
   } catch (error: any) {
-    console.error('[VALIDATE-FEASIBILITY] ❌ Erro:', error);
+    console.error('[VALIDATE-FEASIBILITY] ❌ Erro fatal:', error);
+    console.error('[VALIDATE-FEASIBILITY] 📚 Stack:', error.stack);
     
     const errorMessage = error.message || 'Erro desconhecido';
     
-    // Mensagem amigável sem expor detalhes técnicos ao usuário
-    const userMessage = errorMessage.includes('Resposta inválida') || 
-                       errorMessage.includes('campos inválidos')
-      ? 'Não conseguimos analisar sua ideia no momento. Tente descrever de forma mais detalhada.'
-      : errorMessage;
+    // Mensagens mais específicas baseadas no tipo de erro
+    let userMessage = errorMessage;
+    
+    if (errorMessage.includes('boot error') || errorMessage.includes('SyntaxError')) {
+      userMessage = 'Serviço temporariamente indisponível. Tente novamente em alguns instantes.';
+    } else if (errorMessage.includes('Resposta inválida') || errorMessage.includes('campos inválidos')) {
+      userMessage = 'Não conseguimos analisar sua ideia. Tente descrever com mais detalhes o que você quer automatizar.';
+    } else if (errorMessage.includes('JSON')) {
+      userMessage = 'Erro ao processar resposta. Tentando novamente pode resolver.';
+    } else if (errorMessage.includes('API error')) {
+      userMessage = 'Erro de comunicação com IA. Tente novamente.';
+    }
     
     return new Response(
       JSON.stringify({ 
