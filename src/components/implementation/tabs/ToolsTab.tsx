@@ -161,6 +161,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
                 toolName={tool.tool_name}
                 toolUrl={tool.tool_url}
                 toolId={tool.tool_id}
+                logoUrl={tool.tool_logo_url}
                 isRequired={tool.is_required}
                 hasBenefit={tool.tool_has_member_benefit}
                 benefitType={tool.tool_benefit_type as "discount" | "free" | "special"}
