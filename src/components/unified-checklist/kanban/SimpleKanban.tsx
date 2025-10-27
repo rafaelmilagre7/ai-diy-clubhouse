@@ -49,11 +49,11 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     checklistDataRef.current = checklistData;
   }, [checklistData]);
 
-  // Configurar sensores para drag
+  // Configurar sensores para drag com menor distância (mais responsivo)
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Requer mover 8px antes de iniciar drag
+        distance: 3, // Menor distância = mais responsivo (estilo Trello)
       },
     })
   );
@@ -225,21 +225,21 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           ))}
         </div>
 
-        {/* Drag Overlay */}
+        {/* Drag Overlay - Card seguindo o cursor */}
         <DragOverlay 
           adjustScale={false}
-          dropAnimation={null}
+          dropAnimation={{
+            duration: 250,
+            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+          }}
         >
           {activeItem ? (
-            <div style={{ 
-              cursor: 'grabbing',
-              transform: 'rotate(3deg)',
-              opacity: 0.95,
-            }}>
+            <div className="animate-in fade-in duration-150">
               <SimpleKanbanCard
                 item={activeItem}
                 onViewDetails={() => {}}
                 isDragging={false}
+                isOverlay={true}
               />
             </div>
           ) : null}

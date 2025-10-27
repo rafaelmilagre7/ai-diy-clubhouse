@@ -9,21 +9,24 @@ interface SimpleKanbanCardProps {
   item: UnifiedChecklistItem;
   onViewDetails: (item: UnifiedChecklistItem) => void;
   isDragging?: boolean;
+  isOverlay?: boolean;
 }
 
 const SimpleKanbanCard: React.FC<SimpleKanbanCardProps> = ({
   item,
   onViewDetails,
   isDragging = false,
+  isOverlay = false,
 }) => {
   return (
     <Card 
       className={`
-        p-3 mb-2 bg-card border border-border
-        hover:bg-accent/30 hover:border-primary/50 hover:shadow-md
-        transition-all duration-200 cursor-grab active:cursor-grabbing
+        p-3 bg-card border border-border
+        transition-all duration-200
         group relative
-        ${isDragging ? 'opacity-50' : ''}
+        ${!isOverlay ? 'mb-2 cursor-grab active:cursor-grabbing hover:bg-accent/30 hover:border-primary/50 hover:shadow-md' : ''}
+        ${isDragging && !isOverlay ? 'opacity-30 scale-95' : ''}
+        ${isOverlay ? 'shadow-2xl ring-2 ring-primary/50 rotate-2 cursor-grabbing' : ''}
       `}
     >
         <div className="flex items-start gap-3">
@@ -62,23 +65,25 @@ const SimpleKanbanCard: React.FC<SimpleKanbanCardProps> = ({
             )}
           </div>
 
-          {/* View Details Button - Sempre visível */}
-          <Button
-            variant="ghost"
-            size="sm"
-            title="Ver detalhes da tarefa"
-            className="h-8 w-8 p-0 opacity-60 hover:opacity-100 hover:bg-accent shrink-0 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              e.preventDefault();
-              onViewDetails(item);
-            }}
-            onPointerDown={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <Eye className="h-4 w-4" />
-          </Button>
+          {/* View Details Button - Visível apenas quando não está em overlay */}
+          {!isOverlay && (
+            <Button
+              variant="ghost"
+              size="sm"
+              title="Ver detalhes da tarefa"
+              className="h-8 w-8 p-0 opacity-60 hover:opacity-100 hover:bg-accent shrink-0 transition-all"
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                onViewDetails(item);
+              }}
+              onPointerDown={(e) => {
+                e.stopPropagation();
+              }}
+            >
+              <Eye className="h-4 w-4" />
+            </Button>
+          )}
         </div>
     </Card>
   );

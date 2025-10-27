@@ -23,7 +23,12 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ item, onViewDetails }) =>
   });
 
   return (
-    <div ref={setNodeRef} {...listeners} {...attributes}>
+    <div 
+      ref={setNodeRef} 
+      {...listeners} 
+      {...attributes}
+      className="transition-all duration-200"
+    >
       <SimpleKanbanCard 
         item={item} 
         onViewDetails={onViewDetails}
@@ -43,9 +48,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
 
   return (
     <Card
-      className={`flex flex-col h-full transition-colors ${
-        isOver ? "bg-accent/30 border-primary" : "bg-card/50"
-      }`}
+      className={`
+        flex flex-col h-full 
+        transition-all duration-300 ease-out
+        ${isOver 
+          ? "bg-accent/40 border-2 border-primary shadow-lg ring-2 ring-primary/20" 
+          : "bg-card/50 border border-border"
+        }
+      `}
     >
       {/* Column Header */}
       <div className="p-4 border-b border-border">
@@ -58,11 +68,23 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
       {/* Column Content */}
       <div
         ref={setNodeRef}
-        className="flex-1 p-4 overflow-y-auto min-h-[200px]"
+        className={`
+          flex-1 p-4 overflow-y-auto min-h-[200px]
+          transition-all duration-200
+          ${isOver ? 'bg-accent/10' : ''}
+        `}
       >
         {items.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-            Nenhuma tarefa
+          <div className={`
+            flex items-center justify-center h-full 
+            text-muted-foreground text-sm
+            transition-all duration-200
+            ${isOver 
+              ? 'text-primary font-medium scale-105' 
+              : ''
+            }
+          `}>
+            {isOver ? '↓ Solte aqui' : 'Nenhuma tarefa'}
           </div>
         ) : (
           items.map((item) => (
