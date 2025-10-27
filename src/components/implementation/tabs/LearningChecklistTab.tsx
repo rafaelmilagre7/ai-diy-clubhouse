@@ -25,14 +25,9 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
 }) => {
   const { user } = useAuth();
 
-  // Buscar checklist template da solução
   const { data: checklistItems, isLoading: loadingChecklist, error: checklistError } = useQuery({
     queryKey: ['learning-checklist-template', solutionId],
     queryFn: async () => {
-      console.log('🔍 [LearningChecklist] Buscando template para:', solutionId);
-      console.log('🔍 [LearningChecklist] User autenticado:', !!user?.id);
-      
-      // Buscar template em unified_checklists (cadastrado no admin)
       const { data: template, error } = await supabase
         .from('unified_checklists')
         .select('checklist_data')
@@ -42,32 +37,18 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         .maybeSingle();
 
       if (error) {
-        console.error('❌ [LearningChecklist] Erro ao buscar template:', error);
+        console.error('Erro ao buscar template:', error);
         throw error;
       }
 
-      console.log('📦 [LearningChecklist] Resposta da query:', { 
-        hasTemplate: !!template, 
-        hasItems: !!template?.checklist_data?.items,
-        itemCount: template?.checklist_data?.items?.length || 0 
-      });
-
       if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
-        console.log('✅ [LearningChecklist] Template encontrado:', template.checklist_data.items.length, 'itens');
         return template.checklist_data.items as ChecklistItemData[];
       }
 
-      console.log('⚠️ [LearningChecklist] Nenhum template encontrado');
       return [];
     },
   });
 
-  // Log de erro se houver
-  if (checklistError) {
-    console.error('❌ [LearningChecklist] Erro na query:', checklistError);
-  }
-
-  // Buscar progresso do usuário (não é template)
   const { data: userProgress, refetch: refetchProgress } = useQuery({
     queryKey: ['learning-user-progress', solutionId, user?.id],
     queryFn: async () => {
@@ -88,7 +69,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         progress[item.id] = item.checked || false;
       });
 
-      console.log('📊 [LearningChecklist] Progresso do usuário:', progress);
       return progress;
     },
     enabled: !!user?.id,
@@ -111,7 +91,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       .eq('is_template', false)
       .maybeSingle();
 
-    // Atualizar os itens com o novo estado
     const updatedItems = checklistItems?.map(item => ({
       id: item.id,
       description: item.description,
@@ -119,9 +98,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       checked: item.id === itemId ? checked : (userProgress?.[item.id] || false)
     }));
 
-    console.log('💾 [LearningChecklist] Salvando progresso:', { itemId, checked });
-
-    // Salvar no banco
     const { error } = await supabase
       .from('unified_checklists')
       .upsert({
@@ -137,17 +113,15 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       });
 
     if (error) {
-      console.error('❌ [LearningChecklist] Erro ao salvar:', error);
+      console.error('Erro ao salvar progresso:', error);
       toast.error("Erro ao salvar progresso");
       return;
     }
 
     refetchProgress();
     
-    // Verificar se completou tudo
     const allChecked = updatedItems?.every(item => item.checked);
     if (allChecked && onComplete) {
-      console.log('🎉 [LearningChecklist] Checklist completo!');
       onComplete();
       toast.success("Parabéns! Você completou o checklist!");
     }

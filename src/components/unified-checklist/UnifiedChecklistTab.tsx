@@ -36,50 +36,14 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(solutionId, checklistType);
   const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(solutionId, checklistType);
   
-  console.log('📋 UnifiedChecklistTab - MOUNT:', {
-    solutionId,
-    checklistType,
-    hasTemplate: !!template,
-    templateId: template?.id,
-    templateIsTemplate: template?.is_template,
-    templateItems: template?.checklist_data?.items?.length || 0,
-    hasUserProgress: !!userProgress,
-    userProgressId: userProgress?.id,
-    userProgressUpdatedAt: userProgress?.updated_at,
-    userProgressItems: userProgress?.checklist_data?.items?.length || 0,
-    isLoadingTemplate,
-    isLoadingProgress
-  });
-  
-  // Log detalhado dos primeiros itens
-  if (template?.checklist_data?.items?.[0]) {
-    console.log('📋 Template FIRST ITEM:', template.checklist_data.items[0]);
-  }
-  if (userProgress?.checklist_data?.items?.[0]) {
-    console.log('📋 UserProgress FIRST ITEM:', userProgress.checklist_data.items[0]);
-  }
-  
   const updateMutation = useUpdateUnifiedChecklist();
 
-  // ✅ LÓGICA SIMPLIFICADA: Se tem progresso do usuário, usar APENAS ele
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    console.log('🔀 [UnifiedChecklistTab] ========== DECISÃO DE DADOS ==========');
-    
-    // CASO 1: Tem progresso próprio? Usar APENAS ele!
     if (userProgress?.checklist_data?.items?.length > 0) {
-      console.log('✅ [UnifiedChecklistTab] Usando PROGRESSO do usuário (id:', userProgress.id, ')');
-      console.log('📊 Distribuição:', {
-        todo: userProgress.checklist_data.items.filter((i: any) => i.column === 'todo').length,
-        in_progress: userProgress.checklist_data.items.filter((i: any) => i.column === 'in_progress').length,
-        done: userProgress.checklist_data.items.filter((i: any) => i.column === 'done').length
-      });
-      
       return userProgress.checklist_data.items;
     }
     
-    // CASO 2: Não tem progresso? Usar template oficial (se existir)
     if (template?.checklist_data?.items) {
-      console.log('🆕 [UnifiedChecklistTab] Usando TEMPLATE (id:', template.id, ', is_template:', template.is_template, ')');
       return template.checklist_data.items.map((item: any) => ({
         ...item,
         column: item.column || 'todo',
@@ -88,7 +52,6 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       }));
     }
     
-    console.log('❌ [UnifiedChecklistTab] Sem dados disponíveis');
     return [];
   }, [template, userProgress]);
 
@@ -195,10 +158,9 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   };
 
-  // Preparar checklistData com garantia de consistência
   const checklistDataForKanban: UnifiedChecklistData = React.useMemo(() => {
-    const data: UnifiedChecklistData = {
-      id: userProgress?.id, // ✅ Se tem progresso, usar o ID dele
+    return {
+      id: userProgress?.id,
       user_id: userProgress?.user_id || '', 
       solution_id: solutionId,
       template_id: template?.id,
@@ -213,17 +175,6 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       is_completed: allCompleted,
       is_template: false
     };
-    
-    console.log('📦 [UnifiedChecklistTab] checklistDataForKanban preparado:', {
-      hasId: !!data.id,
-      id: data.id,
-      userId: data.user_id,
-      templateId: data.template_id,
-      itemsCount: data.checklist_data.items.length,
-      source: userProgress ? 'USER_PROGRESS' : 'TEMPLATE'
-    });
-    
-    return data;
   }, [userProgress, solutionId, template, checklistType, checklistItems, completedItems.length, progressPercentage, allCompleted]);
 
   return (
