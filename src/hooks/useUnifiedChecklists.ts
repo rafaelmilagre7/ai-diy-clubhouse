@@ -135,38 +135,12 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
 
       if (templateData) {
         console.log('✅ Template oficial encontrado:', templateData.id);
+        console.log('📋 Itens no template:', templateData.checklist_data?.items?.length || 0);
         return templateData as UnifiedChecklistData;
       }
 
-      // 2️⃣ FALLBACK: Se não há template, buscar checklist de OUTRO usuário
-      console.log('⚠️ Template não encontrado, buscando checklist de outro usuário como referência...');
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      const { data: anyChecklist, error: anyError } = await supabase
-        .from('unified_checklists')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .eq('checklist_type', checklistType)
-        .neq('user_id', user?.id || '') // ✅ NUNCA usar progresso do próprio usuário
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (anyError) {
-        console.error('❌ Erro ao buscar checklist alternativo:', anyError);
-        return null;
-      }
-
-      if (anyChecklist) {
-        console.log('🔄 Usando checklist de outro usuário como template:', anyChecklist.id);
-        console.log('📋 Items encontrados:', anyChecklist.checklist_data?.items?.length || 0);
-      } else {
-        console.log('⚠️ Nenhum template ou checklist de outro usuário encontrado, retornando null');
-      }
-
-      // ❌ NÃO USAR CHECKLIST DE OUTROS USUÁRIOS! Isso causa o bug de posições erradas
-      console.log('❌ [useUnifiedChecklistTemplate] REMOVIDO FALLBACK - retornando null');
+      // Se não encontrou template oficial, retornar null
+      console.log('⚠️ Nenhum template oficial encontrado para esta solução');
       return null;
     },
     enabled: !!solutionId,
