@@ -90,6 +90,9 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
     enabled: !!user?.id && !!solutionId,
     staleTime: 0, // SEMPRE buscar dados frescos do banco
     gcTime: 0, // Não manter em cache
+    refetchOnMount: 'always', // SEMPRE refetch ao montar o componente
+    refetchOnWindowFocus: true, // Refetch quando a janela recebe foco
+    refetchOnReconnect: true, // Refetch quando reconectar
   });
 };
 
