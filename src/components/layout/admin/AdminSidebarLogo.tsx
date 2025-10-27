@@ -18,6 +18,7 @@ export const AdminSidebarLogo = ({ sidebarOpen, setSidebarOpen }: AdminSidebarLo
         <img
           src="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
           alt="VIVER DE IA"
+          fetchPriority="high"
           className={cn(
             "transition-all duration-300 object-contain",
             sidebarOpen 

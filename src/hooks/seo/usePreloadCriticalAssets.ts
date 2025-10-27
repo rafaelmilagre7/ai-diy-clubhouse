@@ -27,7 +27,8 @@ export const usePreloadCriticalAssets = () => {
       document.head.appendChild(link);
     };
 
-    // Route-specific preloading can be added here in the future if needed
+    // Preload critical logo image for LCP optimization
+    preloadImage('/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png', 'high');
 
     // Preload next likely navigation targets based on current route
     const preloadNextRoute = (href: string) => {
