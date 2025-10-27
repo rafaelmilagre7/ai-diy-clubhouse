@@ -36,7 +36,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(solutionId, checklistType);
   const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(solutionId, checklistType);
   
-  console.log('📋 UnifiedChecklistTab:', {
+  console.log('📋 UnifiedChecklistTab - MOUNT:', {
     solutionId,
     checklistType,
     hasTemplate: !!template,
@@ -44,9 +44,20 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     templateIsTemplate: template?.is_template,
     templateItems: template?.checklist_data?.items?.length || 0,
     hasUserProgress: !!userProgress,
+    userProgressId: userProgress?.id,
+    userProgressUpdatedAt: userProgress?.updated_at,
+    userProgressItems: userProgress?.checklist_data?.items?.length || 0,
     isLoadingTemplate,
     isLoadingProgress
   });
+  
+  // Log detalhado dos primeiros itens
+  if (template?.checklist_data?.items?.[0]) {
+    console.log('📋 Template FIRST ITEM:', template.checklist_data.items[0]);
+  }
+  if (userProgress?.checklist_data?.items?.[0]) {
+    console.log('📋 UserProgress FIRST ITEM:', userProgress.checklist_data.items[0]);
+  }
   
   const updateMutation = useUpdateUnifiedChecklist();
 
@@ -83,10 +94,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       };
     });
 
-    console.log('[UnifiedChecklist] Merge concluído:', {
+    console.log('🔀 [UnifiedChecklist] Merge concluído:', {
       templateItems: sourceItems.length,
       progressItems: progressItems.length,
       mergedItems: mergedItems.length,
+      firstSourceItem: sourceItems[0],
+      firstProgressItem: progressItems[0],
+      firstMergedItem: mergedItems[0],
       columnsDistribution: mergedItems.reduce((acc: Record<string, number>, item) => {
         acc[item.column || 'todo'] = (acc[item.column || 'todo'] || 0) + 1;
         return acc;

@@ -54,7 +54,7 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
       if (!user?.id) return null;
 
-      console.log('🔍 Buscando checklist unificado:', { userId: user.id, solutionId, checklistType });
+      console.log('🔍 Buscando userProgress (is_template: false):', { userId: user.id, solutionId, checklistType });
 
       const { data, error } = await supabase
         .from('unified_checklists')
@@ -72,7 +72,13 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
         return null;
       }
 
-      console.log('✅ Checklist encontrado:', data);
+      console.log('✅ UserProgress encontrado:', {
+        id: data?.id,
+        updated_at: data?.updated_at,
+        itemsCount: data?.checklist_data?.items?.length,
+        firstItemColumn: data?.checklist_data?.items?.[0]?.column,
+        firstItemTitle: data?.checklist_data?.items?.[0]?.title
+      });
       return data as UnifiedChecklistData;
     },
     enabled: !!user?.id && !!solutionId
