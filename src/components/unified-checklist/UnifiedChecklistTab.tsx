@@ -63,76 +63,47 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
 
   // Combinar template com progresso para obter lista de items
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    console.log('🔀 [UnifiedChecklistTab] Iniciando merge:', {
+    console.log('🔀 [UnifiedChecklistTab] ========== INÍCIO ==========');
+    console.log('🔀 [UnifiedChecklistTab] Verificando dados:', {
       hasTemplate: !!template,
       hasUserProgress: !!userProgress,
-      templateItems: template?.checklist_data?.items?.length,
-      userProgressItems: userProgress?.checklist_data?.items?.length,
+      userProgressItemsCount: userProgress?.checklist_data?.items?.length,
+      templateItemsCount: template?.checklist_data?.items?.length,
       userProgressUpdatedAt: userProgress?.updated_at
     });
     
-    if (!template?.checklist_data?.items) return [];
-    
-    const sourceItems = template.checklist_data.items;
-    const progressItems = userProgress?.checklist_data?.items || [];
-    
-    console.log('🔀 [UnifiedChecklistTab] Source e Progress:', {
-      sourceCount: sourceItems.length,
-      progressCount: progressItems.length,
-      progressAllColumns: progressItems.map((p: any) => ({ id: p.id, title: p.title, column: p.column }))
-    });
-    
-    console.log('🔀 [UnifiedChecklistTab] Iniciando mapeamento de', sourceItems.length, 'items...');
-    
-    const mergedItems = sourceItems.map((sourceItem: any) => {
-      const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
+    // 🎯 SOLUÇÃO DEFINITIVA: Se usuário TEM progresso, usar APENAS o progresso!
+    if (userProgress?.checklist_data?.items?.length > 0) {
+      console.log('✅ [UnifiedChecklistTab] ✨ PROGRESSO ENCONTRADO! Usando progresso DIRETO (SEM merge com template)');
+      const progressItems = userProgress.checklist_data.items;
       
-      if (progressItem) {
-        // ✅ PRIORIDADE ABSOLUTA: Se existe progresso, usar APENAS o progresso
-        // O template só serve para fornecer metadata técnico (não posição/status)
-        console.log(`🔀 [UnifiedChecklistTab] Item ${sourceItem.id}:`, {
-          progressColumn: progressItem.column,
-          progressCompleted: progressItem.completed,
-          progressTitle: progressItem.title,
-          willUse: 'PROGRESS_ONLY'
-        });
-        
-        // Extrair APENAS metadata técnico do template (sem column/completed/notes)
-        const { column, completed, notes, completedAt, order, ...templateTechnicalData } = sourceItem.metadata || {};
-        
-        return {
-          ...progressItem, // ✅ Usar progresso como base ABSOLUTA
-          metadata: {
-            ...templateTechnicalData, // Apenas dados técnicos do template
-            ...(progressItem.metadata || {}) // Permitir override
-          }
-        };
-      }
+      console.log('📋 [UnifiedChecklistTab] Distribuição das colunas do PROGRESSO:', {
+        todo: progressItems.filter((i: any) => i.column === 'todo').length,
+        in_progress: progressItems.filter((i: any) => i.column === 'in_progress').length,
+        done: progressItems.filter((i: any) => i.column === 'done').length,
+        primeiros3: progressItems.slice(0, 3).map((i: any) => ({ 
+          id: i.id, 
+          title: i.title?.substring(0, 35), 
+          column: i.column 
+        }))
+      });
       
-      // Se não tem progresso, usar template
-      return {
-        id: sourceItem.id,
-        title: sourceItem.title,
-        description: sourceItem.description,
+      return progressItems; // ✅ RETORNAR DIRETO! Zero merge!
+    }
+    
+    // 🆕 CASO 2: Usuário NÃO tem progresso → usar template como base (primeira vez)
+    if (template?.checklist_data?.items) {
+      console.log('🆕 [UnifiedChecklistTab] Usuário SEM progresso. Usando template (primeira vez)');
+      return template.checklist_data.items.map((item: any) => ({
+        ...item,
+        column: item.column || 'todo',
         completed: false,
-        notes: '',
-        column: sourceItem.column || 'todo',
-        order: sourceItem.order,
-        metadata: sourceItem.metadata
-      };
-    });
-
-    console.log('✅ [UnifiedChecklistTab] ========== FIM DO MERGE ==========');
-    console.log('✅ [UnifiedChecklistTab] Merge concluído:', {
-      mergedCount: mergedItems.length,
-      columnsDistribution: mergedItems.reduce((acc: Record<string, number>, item) => {
-        acc[item.column || 'todo'] = (acc[item.column || 'todo'] || 0) + 1;
-        return acc;
-      }, {}),
-      allMergedColumns: mergedItems.map(i => ({ id: i.id, title: i.title?.substring(0, 30), column: i.column }))
-    });
-
-    return mergedItems;
+        notes: ''
+      }));
+    }
+    
+    console.log('❌ [UnifiedChecklistTab] Nem progresso nem template disponível');
+    return [];
   }, [template, userProgress]);
 
   // Função para atualizar item
