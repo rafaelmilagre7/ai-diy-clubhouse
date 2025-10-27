@@ -101,16 +101,37 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
 
       if (!templateData) return null;
 
-      // Normalizar dados para garantir que items sempre seja um array válido
-      const normalizedData = {
+      // Normalizar dados para garantir estrutura completa
+      const items = Array.isArray(templateData.checklist_data?.items) 
+        ? templateData.checklist_data.items 
+        : [];
+
+      const normalizedData: UnifiedChecklistData = {
         ...templateData,
+        user_id: templateData.user_id || '', // Template pode não ter user
+        solution_id: templateData.solution_id,
+        template_id: templateData.id,
+        checklist_type: templateData.checklist_type,
+        is_template: true,
         checklist_data: {
-          items: Array.isArray(templateData.checklist_data?.items) 
-            ? templateData.checklist_data.items 
-            : [],
+          items: items,
           lastUpdated: templateData.checklist_data?.lastUpdated || templateData.updated_at || new Date().toISOString()
-        }
-      } as UnifiedChecklistData;
+        },
+        // ✅ CAMPOS CALCULADOS (necessários pela interface)
+        total_items: items.length,
+        completed_items: 0, // Templates começam zerados
+        progress_percentage: 0,
+        is_completed: false,
+        created_at: templateData.created_at,
+        updated_at: templateData.updated_at,
+        completed_at: null
+      };
+
+      console.log('🔧 [Hook] Template normalizado:', {
+        hasItems: items.length > 0,
+        itemsCount: items.length,
+        hasAllRequiredFields: !!(normalizedData.user_id !== undefined && normalizedData.total_items !== undefined)
+      });
 
       return normalizedData;
     },

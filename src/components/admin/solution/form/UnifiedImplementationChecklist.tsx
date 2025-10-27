@@ -62,24 +62,47 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   }, [template, isLoading, solutionId, error]);
 
   useEffect(() => {
-    // Só processar quando NÃO estiver loading
-    if (isLoading) return;
+    console.log('🔄 [useEffect População] INÍCIO', {
+      isLoading,
+      hasTemplate: !!template,
+      templateValid: template ? {
+        hasChecklistData: !!template.checklist_data,
+        hasItems: !!template.checklist_data?.items,
+        itemsCount: template.checklist_data?.items?.length || 0,
+        totalItems: template.total_items,
+        isArray: Array.isArray(template.checklist_data?.items)
+      } : null
+    });
 
-    // Se tiver erro OU não tiver template, limpa
+    if (isLoading) {
+      console.log('⏳ [useEffect População] Ainda carregando, aguardando...');
+      return;
+    }
+
     if (error || !template) {
+      console.warn('⚠️ [useEffect População] Sem template ou com erro, limpando itens');
       setChecklistItems([]);
       return;
     }
 
-    // Pegar items (já vem normalizado do hook)
+    // ✅ VALIDAÇÃO COMPLETA
     const items = template.checklist_data?.items;
     
-    // SEMPRE setar, mesmo se for array vazio
-    if (Array.isArray(items)) {
-      setChecklistItems(items);
-    } else {
+    if (!Array.isArray(items)) {
+      console.error('❌ [useEffect População] Items não é array:', items);
       setChecklistItems([]);
+      return;
     }
+
+    if (items.length === 0) {
+      console.warn('⚠️ [useEffect População] Template existe mas não tem itens');
+      setChecklistItems([]);
+      return;
+    }
+
+    console.log(`✅ [useEffect População] Setando ${items.length} itens`);
+    setChecklistItems(items);
+    
   }, [template, isLoading, error]);
 
   const saveCheckpoints = async () => {
