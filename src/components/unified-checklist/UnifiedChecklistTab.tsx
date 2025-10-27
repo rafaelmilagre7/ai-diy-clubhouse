@@ -67,6 +67,8 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         completed: progressItem?.completed || false,
         notes: progressItem?.notes || '',
         completedAt: progressItem?.completedAt,
+        column: progressItem?.column || sourceItem.column || 'todo',
+        order: progressItem?.order ?? sourceItem.order,
         metadata: sourceItem.metadata
       };
     });
