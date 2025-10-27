@@ -49,7 +49,8 @@ export const useBuilderAI = () => {
 
   const generateSolution = async (
     idea: string,
-    answers: Array<{ question: string; answer: string }>
+    answers: Array<{ question: string; answer: string }>,
+    questions: string[] = []
   ): Promise<any | null> => {
     setIsGenerating(true);
     try {
@@ -72,7 +73,8 @@ export const useBuilderAI = () => {
         body: {
           idea,
           userId: user.id,
-          answers
+          answers,
+          questions
         }
       });
 

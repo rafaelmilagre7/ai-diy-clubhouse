@@ -1637,7 +1637,9 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       generation_model: "google/gemini-2.5-flash",
       generation_time_ms: generationTime,
       generation_status: mode === "quick" ? "quick" : "complete",
-      is_complete: mode === "complete"
+      is_complete: mode === "complete",
+      questions_asked: body.questions || [],
+      user_answers: body.answers || []
     };
 
     // Campos opcionais (mode complete = todos os campos, mode quick = apenas required_tools)

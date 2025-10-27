@@ -139,12 +139,14 @@ export type Database = {
           mind_map: Json | null
           original_idea: string
           prompt_tokens: number | null
+          questions_asked: Json | null
           required_tools: Json | null
           short_description: string | null
           tags: string[] | null
           technical_stack_diagram: Json | null
           title: string | null
           updated_at: string | null
+          user_answers: Json | null
           user_id: string
           user_journey_map: Json | null
           user_notes: Json | null
@@ -177,12 +179,14 @@ export type Database = {
           mind_map?: Json | null
           original_idea: string
           prompt_tokens?: number | null
+          questions_asked?: Json | null
           required_tools?: Json | null
           short_description?: string | null
           tags?: string[] | null
           technical_stack_diagram?: Json | null
           title?: string | null
           updated_at?: string | null
+          user_answers?: Json | null
           user_id: string
           user_journey_map?: Json | null
           user_notes?: Json | null
@@ -215,12 +219,14 @@ export type Database = {
           mind_map?: Json | null
           original_idea?: string
           prompt_tokens?: number | null
+          questions_asked?: Json | null
           required_tools?: Json | null
           short_description?: string | null
           tags?: string[] | null
           technical_stack_diagram?: Json | null
           title?: string | null
           updated_at?: string | null
+          user_answers?: Json | null
           user_id?: string
           user_journey_map?: Json | null
           user_notes?: Json | null

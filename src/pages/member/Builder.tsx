@@ -252,7 +252,8 @@ export default function Builder() {
     
     try {
       console.log('[BUILDER] 📞 Chamando generateSolution...');
-      const result = await generateSolution(currentIdea, answers);
+      const questionTexts = answers.map(a => a.question);
+      const result = await generateSolution(currentIdea, answers, questionTexts);
       
       console.log('[BUILDER] 📦 Resultado recebido:', {
         hasResult: !!result,
