@@ -160,10 +160,11 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         console.log('📋 Items encontrados:', anyChecklist.checklist_data?.items?.length || 0);
       } else {
         console.log('⚠️ Nenhum template ou checklist de outro usuário encontrado, retornando null');
-        return null;
       }
 
-      return anyChecklist as UnifiedChecklistData;
+      // ❌ NÃO USAR CHECKLIST DE OUTROS USUÁRIOS! Isso causa o bug de posições erradas
+      console.log('❌ [useUnifiedChecklistTemplate] REMOVIDO FALLBACK - retornando null');
+      return null;
     },
     enabled: !!solutionId,
     staleTime: Infinity, // Template não muda durante uso normal

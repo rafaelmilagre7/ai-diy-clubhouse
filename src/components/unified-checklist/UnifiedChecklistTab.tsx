@@ -61,39 +61,25 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   
   const updateMutation = useUpdateUnifiedChecklist();
 
-  // Combinar template com progresso para obter lista de items
+  // ✅ LÓGICA SIMPLIFICADA: Se tem progresso do usuário, usar APENAS ele
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    console.log('🔀 [UnifiedChecklistTab] ========== INÍCIO ==========');
-    console.log('🔀 [UnifiedChecklistTab] Verificando dados:', {
-      hasTemplate: !!template,
-      hasUserProgress: !!userProgress,
-      userProgressItemsCount: userProgress?.checklist_data?.items?.length,
-      templateItemsCount: template?.checklist_data?.items?.length,
-      userProgressUpdatedAt: userProgress?.updated_at
-    });
+    console.log('🔀 [UnifiedChecklistTab] ========== DECISÃO DE DADOS ==========');
     
-    // 🎯 SOLUÇÃO DEFINITIVA: Se usuário TEM progresso, usar APENAS o progresso!
+    // CASO 1: Tem progresso próprio? Usar APENAS ele!
     if (userProgress?.checklist_data?.items?.length > 0) {
-      console.log('✅ [UnifiedChecklistTab] ✨ PROGRESSO ENCONTRADO! Usando progresso DIRETO (SEM merge com template)');
-      const progressItems = userProgress.checklist_data.items;
-      
-      console.log('📋 [UnifiedChecklistTab] Distribuição das colunas do PROGRESSO:', {
-        todo: progressItems.filter((i: any) => i.column === 'todo').length,
-        in_progress: progressItems.filter((i: any) => i.column === 'in_progress').length,
-        done: progressItems.filter((i: any) => i.column === 'done').length,
-        primeiros3: progressItems.slice(0, 3).map((i: any) => ({ 
-          id: i.id, 
-          title: i.title?.substring(0, 35), 
-          column: i.column 
-        }))
+      console.log('✅ [UnifiedChecklistTab] Usando PROGRESSO do usuário (id:', userProgress.id, ')');
+      console.log('📊 Distribuição:', {
+        todo: userProgress.checklist_data.items.filter((i: any) => i.column === 'todo').length,
+        in_progress: userProgress.checklist_data.items.filter((i: any) => i.column === 'in_progress').length,
+        done: userProgress.checklist_data.items.filter((i: any) => i.column === 'done').length
       });
       
-      return progressItems; // ✅ RETORNAR DIRETO! Zero merge!
+      return userProgress.checklist_data.items;
     }
     
-    // 🆕 CASO 2: Usuário NÃO tem progresso → usar template como base (primeira vez)
+    // CASO 2: Não tem progresso? Usar template oficial (se existir)
     if (template?.checklist_data?.items) {
-      console.log('🆕 [UnifiedChecklistTab] Usuário SEM progresso. Usando template (primeira vez)');
+      console.log('🆕 [UnifiedChecklistTab] Usando TEMPLATE (id:', template.id, ', is_template:', template.is_template, ')');
       return template.checklist_data.items.map((item: any) => ({
         ...item,
         column: item.column || 'todo',
@@ -102,7 +88,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       }));
     }
     
-    console.log('❌ [UnifiedChecklistTab] Nem progresso nem template disponível');
+    console.log('❌ [UnifiedChecklistTab] Sem dados disponíveis');
     return [];
   }, [template, userProgress]);
 
