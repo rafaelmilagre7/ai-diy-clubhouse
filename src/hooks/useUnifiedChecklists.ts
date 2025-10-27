@@ -260,6 +260,14 @@ export const useUpdateUnifiedChecklist = () => {
         
         if (error) {
           console.error('❌ [UPDATE] Erro:', error);
+          console.error('❌ [UPDATE] RLS Debug:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            user_id: user.id,
+            checklist_id: checklistData.id
+          });
         } else {
           console.log('✅ [UPDATE] Sucesso:', data?.id);
         }
@@ -300,6 +308,14 @@ export const useUpdateUnifiedChecklist = () => {
         if (error) {
           console.error('❌ [INSERT] Erro ao inserir:', error);
           console.error('❌ [INSERT] Error details:', JSON.stringify(error, null, 2));
+          console.error('❌ [INSERT] RLS Debug:', {
+            code: error.code,
+            message: error.message,
+            details: error.details,
+            hint: error.hint,
+            user_id: user.id,
+            auth_uid_available: !!user.id
+          });
         } else {
           console.log('✅ [INSERT] Sucesso! Novo ID:', data?.id);
           console.log('✅ [INSERT] Dados salvos:', {

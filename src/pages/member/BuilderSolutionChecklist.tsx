@@ -29,6 +29,64 @@ export default function BuilderSolutionChecklist() {
     });
   }, [id, queryClient]);
 
+  // 🔐 VERIFICAÇÃO DE PERMISSÕES (DEBUG RLS)
+  useEffect(() => {
+    const verifyPermissions = async () => {
+      try {
+        console.log('🔐 [Verificação RLS] Iniciando...');
+        
+        // 1. Verificar auth.uid()
+        const { data: { user }, error: authError } = await supabase.auth.getUser();
+        console.log('🔐 [Verificação RLS] Auth user:', {
+          userId: user?.id,
+          email: user?.email,
+          authError: authError?.message
+        });
+
+        if (!user?.id) {
+          console.error('❌ [Verificação RLS] Usuário não autenticado!');
+          return;
+        }
+
+        // 2. Testar SELECT simples
+        const { data: testData, error: testError } = await supabase
+          .from('unified_checklists')
+          .select('id, user_id, checklist_type, is_template')
+          .eq('solution_id', id)
+          .limit(5);
+
+        console.log('🔐 [Verificação RLS] Teste SELECT:', {
+          success: !testError,
+          recordsFound: testData?.length || 0,
+          error: testError ? {
+            code: testError.code,
+            message: testError.message,
+            details: testError.details,
+            hint: testError.hint
+          } : null
+        });
+
+        // 3. Verificar se pode ler templates
+        const { data: templatesData, error: templatesError } = await supabase
+          .from('unified_checklists')
+          .select('id')
+          .eq('is_template', true)
+          .limit(1);
+
+        console.log('🔐 [Verificação RLS] Templates públicos:', {
+          canReadTemplates: !templatesError,
+          templatesFound: templatesData?.length || 0,
+          error: templatesError?.message
+        });
+
+      } catch (err) {
+        console.error('❌ [Verificação RLS] Erro inesperado:', err);
+      }
+    };
+
+    verifyPermissions();
+  }, [id]);
+
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
     queryFn: async () => {
