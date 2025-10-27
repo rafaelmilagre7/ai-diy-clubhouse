@@ -97,7 +97,7 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         checklistType
       });
 
-      const { data: templateData, error: templateError } = await supabase
+      let { data: templateData, error: templateError } = await supabase
         .from('unified_checklists')
         .select('*')
         .eq('solution_id', solutionId)
@@ -114,11 +114,37 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
       });
 
       if (templateError) {
-        console.error('Erro ao buscar template:', templateError);
-        return null;
+        console.error('❌ [ERRO] Erro ao buscar template:', templateError);
+        
+        // 🔄 FALLBACK: Tentar busca alternativa sem is_template
+        console.log('🔄 [FALLBACK] Tentando busca alternativa...');
+        
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('unified_checklists')
+          .select('*')
+          .eq('solution_id', solutionId)
+          .eq('checklist_type', checklistType)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (fallbackError) {
+          console.error('❌ [FALLBACK] Erro na busca alternativa:', fallbackError);
+          return null;
+        }
+        
+        if (fallbackData) {
+          console.log('✅ [FALLBACK] Dados encontrados via fallback!');
+          templateData = fallbackData;
+        } else {
+          return null;
+        }
       }
 
-      if (!templateData) return null;
+      if (!templateData) {
+        console.warn('⚠️ [VAZIO] Nenhum template encontrado');
+        return null;
+      }
 
       // Normalizar dados para garantir estrutura completa
       const items = Array.isArray(templateData.checklist_data?.items) 
@@ -155,9 +181,12 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
       return normalizedData;
     },
     enabled: !!solutionId,
-    staleTime: 0,
-    gcTime: 1000 * 60 * 10,
-    refetchOnMount: 'always',
+    staleTime: 0, // ✅ Nunca usar cache
+    gcTime: 0, // ✅ Não guardar em cache
+    refetchOnMount: 'always', // ✅ Sempre buscar ao montar
+    refetchOnWindowFocus: false, // Evitar refetch excessivo
+    retry: 2, // ✅ Tentar 2 vezes se falhar
+    retryDelay: 1000, // 1 segundo entre tentativas
   });
 };
 

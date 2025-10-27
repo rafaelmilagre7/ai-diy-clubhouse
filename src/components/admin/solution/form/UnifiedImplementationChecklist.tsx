@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Trash2, Save, CheckCircle, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, Trash2, Save, CheckCircle, ChevronUp, ChevronDown, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
+import { useQueryClient } from "@tanstack/react-query";
 import { 
   useUnifiedChecklistTemplate, 
   useCreateUnifiedChecklistTemplate,
@@ -32,13 +33,14 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
 
   const [checklistItems, setChecklistItems] = useState<UnifiedChecklistItem[]>([]);
   const { user } = useAuth();
+  const queryClient = useQueryClient();
 
   console.log('📞 [UnifiedImplementationChecklist] Chamando hook com:', {
     solutionId,
     checklistType: 'implementation'
   });
 
-  const { data: template, isLoading, error } = useUnifiedChecklistTemplate(
+  const { data: template, isLoading, error, refetch } = useUnifiedChecklistTemplate(
     solutionId,
     'implementation'
   );
@@ -122,6 +124,24 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     setChecklistItems(items);
     
   }, [template, isLoading, error]);
+
+  const handleForceReload = async () => {
+    console.log('🔄 [FORCE-RELOAD] Limpando cache e recarregando...');
+    
+    // Limpar todos os caches relacionados
+    await queryClient.invalidateQueries({ 
+      queryKey: ['unified-checklist-template']
+    });
+    
+    // Forçar refetch
+    const result = await refetch();
+    
+    if (result.data) {
+      toast.success('Checklist recarregado!');
+    } else {
+      toast.error('Não foi possível recarregar');
+    }
+  };
 
   const saveCheckpoints = async () => {
     if (!user) return;
@@ -235,12 +255,24 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   return (
     <div className="space-y-6">
 
-      <div>
-        <h3 className="text-lg font-medium">Checklist de Implementação (Unificado)</h3>
-        <p className="text-sm text-muted-foreground">
-          Defina os itens que devem ser verificados durante a implementação desta solução.
-          Este sistema unificado substitui as tabelas antigas.
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-medium">Checklist de Implementação (Unificado)</h3>
+          <p className="text-sm text-muted-foreground">
+            Defina os itens que devem ser verificados durante a implementação desta solução.
+            Este sistema unificado substitui as tabelas antigas.
+          </p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleForceReload}
+          disabled={isLoading}
+          className="gap-2"
+        >
+          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          Recarregar
+        </Button>
       </div>
 
       {checklistItems.length > 0 && (
