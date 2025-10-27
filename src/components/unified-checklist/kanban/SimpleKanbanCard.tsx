@@ -3,7 +3,8 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { GripVertical, Eye } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { GripVertical, Eye, Clock, StickyNote } from "lucide-react";
 import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
 
 interface SimpleKanbanCardProps {
@@ -32,37 +33,66 @@ const SimpleKanbanCard: React.FC<SimpleKanbanCardProps> = ({
 
   return (
     <div ref={setNodeRef} style={style}>
-      <Card className="p-3 mb-2 bg-card hover:bg-accent/50 transition-colors cursor-pointer group">
-        <div className="flex items-start gap-2">
-          {/* Drag Handle */}
-          <div
-            {...attributes}
-            {...listeners}
-            className="cursor-grab active:cursor-grabbing mt-1 opacity-50 group-hover:opacity-100 transition-opacity"
-          >
+      <Card 
+        {...attributes}
+        {...listeners}
+        className={`
+          p-3 mb-2 bg-card border border-border
+          hover:bg-accent/30 hover:border-primary/50 hover:shadow-md
+          transition-all duration-200 cursor-grab active:cursor-grabbing
+          group relative
+          ${isDragging ? 'scale-105 shadow-lg' : ''}
+        `}
+      >
+        <div className="flex items-start gap-3">
+          {/* Drag Handle - Apenas visual */}
+          <div className="mt-1 opacity-40 group-hover:opacity-70 transition-opacity pointer-events-none">
             <GripVertical className="h-4 w-4 text-muted-foreground" />
           </div>
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground line-clamp-2">
+            <p className="text-sm font-medium text-foreground line-clamp-2 leading-snug">
               {item.title || "Sem título"}
             </p>
             {item.description && (
-              <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+              <p className="text-xs text-muted-foreground mt-1.5 line-clamp-2 leading-relaxed">
                 {item.description}
               </p>
             )}
+            
+            {/* Metadata badges */}
+            {(item.metadata?.estimated_time || item.notes) && (
+              <div className="flex gap-1.5 mt-2">
+                {item.metadata?.estimated_time && (
+                  <Badge variant="outline" className="text-xs">
+                    <Clock className="h-3 w-3 mr-1" />
+                    {item.metadata.estimated_time}
+                  </Badge>
+                )}
+                {item.notes && (
+                  <Badge variant="outline" className="text-xs">
+                    <StickyNote className="h-3 w-3 mr-1" />
+                    Notas
+                  </Badge>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* View Details Button */}
+          {/* View Details Button - Sempre visível */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+            title="Ver detalhes da tarefa"
+            className="h-8 w-8 p-0 opacity-60 hover:opacity-100 hover:bg-accent shrink-0 transition-all"
             onClick={(e) => {
               e.stopPropagation();
+              e.preventDefault();
               onViewDetails(item);
+            }}
+            onPointerDown={(e) => {
+              e.stopPropagation();
             }}
           >
             <Eye className="h-4 w-4" />
