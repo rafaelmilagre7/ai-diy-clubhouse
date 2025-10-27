@@ -110,12 +110,8 @@ export const useNetworkingAnalytics = () => {
   const stats = {
     totalMatches: currentMetrics?.total_matches || 0,
     totalConnections: currentMetrics?.active_connections || 0,
-    totalMessages: 0, // Não disponível na estrutura atual
-    totalMeetings: 0, // Não disponível na estrutura atual
     avgCompatibility: currentMetrics?.compatibility_score || 0,
-    successRate: 0, // Não disponível na estrutura atual
     
-    // Comparação com mês anterior
     matchesGrowth: currentMetrics && previousMetrics 
       ? ((currentMetrics.total_matches - previousMetrics.total_matches) / Math.max(previousMetrics.total_matches, 1) * 100)
       : 0,

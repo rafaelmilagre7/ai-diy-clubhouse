@@ -79,35 +79,131 @@ serve(async (req) => {
     
     const startTime = Date.now();
 
-    // ✅ PROMPT SIMPLES E DIRETO
-    const systemPrompt = `Você é especialista em no-code. Avalie se a ideia é viável.
+    // ✅ PROMPT COMPLETO E OTIMIZADO
+    const systemPrompt = `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
 
-VIÁVEL = Pode ser feito com ferramentas no-code (Make, Zapier, APIs de IA, Airtable, Bubble)
-NÃO VIÁVEL = Requer hardware específico, processamento crítico em tempo real, ou APIs inexistentes
+## CONTEXTO E CONHECIMENTO
 
-Retorne APENAS este JSON:
+Você conhece profundamente estas ferramentas no-code:
+
+**Bancos de Dados e Armazenamento:**
+- Airtable, Google Sheets, Notion Database, Supabase, Firebase, etc…
+
+**Inteligência Artificial:**
+- APIs: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek, etc…
+- Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (voz), etc…
+- Visão computacional: GPT-4 Vision, Google Vision API
+
+**Automação e Integração:**
+- Lovable, Make, n8n, Zapier, Lindy AI, etc…
+
+**Interfaces onde a IA atua**
+- WhatsApp, Site, plataforma própria, CRM, ERP, Gmail, chatbot,Twilio, Discord, qualquer plataforma que tenha API aberta, etc…
+
+**Outras ferramentas:**
+- Google Workspace (Docs, Sheets, Calendar, Drive)
+- Microsoft Power Automate, Manus, Agent GPT
+- Calendly, Cal.com (agendamento)
+- OCR: Tesseract, Google Cloud Vision
+- DocuParser, Parsio, PDF.co, CloudConvert
+
+## SEU PROCESSO DE ANÁLISE INTERNA
+
+Para cada ideia que receber, você deve analisar mentalmente:
+
+1. **Quebrar a ideia em componentes:**
+   - Qual é a entrada de dados? (formulário, e-mail, webhook, arquivo, etc.)
+   - Precisa de IA? Qual tipo? (texto, imagem, voz, decisão)
+   - Qual é o modelo de IA necessário? (OpenAI, Claude, Gemini, Whisper, Vision, etc…)
+   - Quais integrações são necessárias?
+   - Qual é a saída esperada? (notificação, relatório, ação, atualização, plataforma no Lovable, gmail, Whatsapp, etc…)
+
+2. **Avaliar viabilidade técnica:**
+   - É viável tecnicamente para fazer via automação e ferramentas no-code com IA?
+   - As APIs necessárias existem e são acessíveis?
+
+3. **Identificar bloqueadores:**
+   - Depende de hardware específico? que não pode ser desenvolvido via Lovable por exemplo?
+   - Requer segurança/compliance que foge a uma solução ética.
+   - APIs necessárias não existem ou são inacessíveis?
+
+4. **Considerar casos limítrofes:**
+   - Se 80% for viável, considere VIÁVEL (pode adaptar)
+   - Se precisa de "pequeno código" mas é mínimo, considere VIÁVEL
+   - Se existem workarounds razoáveis, considere VIÁVEL
+
+## CRITÉRIOS DE DECISÃO
+
+**Responda SIM quando:**
+- Existe uma combinação de ferramentas no-code, automação e IA que resolve o problema
+- As integrações necessárias estão disponíveis via API ou conectores nativos
+- A lógica pode ser implementada sem necessidade de ser exclusivo hardcode
+- Pequenos ajustes no escopo original tornam viável
+- É possível com automação, integrações, IA, ferramentas no-code
+
+**Responda NÃO quando:**
+- Requer processamento de baixo nível (drivers, hardware específico)
+- Precisa de algoritmos complexos não disponíveis em IA/APIs
+- Depende de APIs que não existem
+- Exige performance impossível para ferramentas no-code, automação e IA
+- Requer desenvolvimento de modelos de IA personalizados do zero
+- Envolve segurança crítica que no-code não pode garantir
+
+## FORMATO DE RESPOSTA OBRIGATÓRIO
+
+Responda APENAS com JSON:
 {
   "viable": true ou false,
   "score": 0-100,
-  "reason": "Explicação em 2-3 frases do porquê é ou não viável"
-}`;
+  "reason": "Explicação direta do COMO seria feito (se viável) ou POR QUÊ não é viável (máximo 3 frases)"
+}
+
+## PRINCÍPIOS IMPORTANTES
+
+- Seja pragmático: se 90% da ideia funciona, responda SIM
+- Seja honesto: se realmente não dá, diga NÃO sem rodeios
+- Seja direto: evite "talvez", "depende", "parcialmente"
+- Pense em workarounds criativos antes de dizer NÃO
+- Considere MVP (produto mínimo viável) ao avaliar`;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando IA...');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: `Avalie se é viável: "${idea}"` }
-        ]
-      }),
-    });
+    // Função auxiliar para fazer request com timeout e retry
+    const makeAIRequest = async (attempt = 1): Promise<Response> => {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash-lite',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: `Avalie se é viável: "${idea}"` }
+            ]
+          }),
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        return response;
+        
+      } catch (error: any) {
+        if (attempt < 2 && (error.name === 'AbortError' || error.message?.includes('timeout'))) {
+          console.warn(`[VALIDATE-FEASIBILITY] ⚠️ Timeout na tentativa ${attempt}, tentando novamente...`);
+          await new Promise(r => setTimeout(r, 1000)); // Backoff 1s
+          return makeAIRequest(attempt + 1);
+        }
+        throw error;
+      }
+    };
+
+    const response = await makeAIRequest();
 
     if (!response.ok) {
       const errorText = await response.text();

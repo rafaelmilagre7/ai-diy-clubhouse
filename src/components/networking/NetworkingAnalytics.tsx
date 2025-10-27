@@ -38,22 +38,6 @@ export const NetworkingAnalytics = () => {
       icon: Users,
       color: 'text-operational',
       bgColor: 'bg-operational/10'
-    },
-    {
-      title: 'Mensagens Enviadas',
-      value: stats.totalMessages,
-      growth: 0,
-      icon: MessageCircle,
-      color: 'text-aurora-primary',
-      bgColor: 'bg-aurora-primary/10'
-    },
-    {
-      title: 'Reuniões Agendadas',
-      value: stats.totalMeetings,
-      growth: 0,
-      icon: Calendar,
-      color: 'text-warning',
-      bgColor: 'bg-warning/10'
     }
   ];
 
@@ -80,7 +64,7 @@ export const NetworkingAnalytics = () => {
       </div>
 
       {/* Cards de Estatísticas */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {statCards.map((stat, index) => {
           const Icon = stat.icon;
           const isPositiveGrowth = stat.growth > 0;
@@ -158,29 +142,16 @@ export const NetworkingAnalytics = () => {
             <div className="space-y-3">
               <div>
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-foreground">Taxa de Sucesso</span>
-                  <span className="text-white">{stats.successRate.toFixed(1)}%</span>
+                  <span className="text-foreground">Compatibilidade Média</span>
+                  <span className="text-white">{stats.avgCompatibility.toFixed(1)}%</span>
                 </div>
                 <div className="w-full bg-muted rounded-full h-2">
                   <div 
-                    className="bg-operational h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${Math.min(stats.successRate, 100)}%` }}
+                    className="bg-aurora-primary h-2 rounded-full transition-all duration-300"
+                    style={{ width: `${stats.avgCompatibility}%` }}
                   />
                 </div>
               </div>
-
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-foreground">Compatibilidade Média</span>
-                    <span className="text-white">{stats.avgCompatibility.toFixed(1)}%</span>
-                  </div>
-                  <div className="w-full bg-muted rounded-full h-2">
-                    <div 
-                      className="bg-aurora-primary h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${stats.avgCompatibility}%` }}
-                    />
-                  </div>
-                </div>
 
               <div className="pt-2 border-t border-border">
                 <h4 className="text-sm font-medium text-foreground mb-2">Resumo do Mês</h4>
@@ -190,14 +161,6 @@ export const NetworkingAnalytics = () => {
                     <span className="text-operational">
                       {stats.totalConnections}/{stats.totalMatches}
                     </span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Conversas Ativas</span>
-                    <span className="text-aurora-primary">{stats.totalMessages} msgs</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-muted-foreground">Reuniões Marcadas</span>
-                    <span className="text-warning">{stats.totalMeetings}</span>
                   </div>
                 </div>
               </div>
