@@ -61,8 +61,14 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   // Atualizar localItems quando checklistItems mudar
   useEffect(() => {
+    console.log("🔄 [SimpleKanban] checklistItems mudou, atualizando localItems:", {
+      itemsCount: checklistItems.length,
+      firstItemColumn: checklistItems[0]?.column,
+      firstItemTitle: checklistItems[0]?.title,
+      checklistId: checklistData.id
+    });
     setLocalItems(checklistItems);
-  }, [checklistItems]);
+  }, [checklistItems, checklistData.id]);
 
   // Agrupar items por coluna
   const itemsByColumn = useMemo(() => {
@@ -100,13 +106,22 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     const itemId = active.id as string;
     const newColumn = over.id as ("todo" | "in_progress" | "done");
     
-    console.log("🎯 handleDragEnd:", { itemId, newColumn });
+    const oldItem = localItems.find(i => i.id === itemId);
+    console.log("🎯 [SimpleKanban] handleDragEnd:", { 
+      itemId, 
+      itemTitle: oldItem?.title,
+      oldColumn: oldItem?.column,
+      newColumn,
+      checklistId: checklistData.id
+    });
 
     // Atualizar estado local IMEDIATAMENTE para feedback visual
     setLocalItems((prevItems) => {
-      return prevItems.map((item) =>
+      const updated = prevItems.map((item) =>
         item.id === itemId ? { ...item, column: newColumn } : item
       );
+      console.log("✅ [SimpleKanban] Local state atualizado imediatamente");
+      return updated;
     });
 
     // Cancelar timeout anterior (debounce)
@@ -116,23 +131,25 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
     // Debounce: salvar após 500ms
     saveTimeoutRef.current = setTimeout(() => {
+      console.log("⏰ [SimpleKanban] Timeout acionado, iniciando salvamento...");
+      
       // Pegar os dados ATUALIZADOS diretamente do estado
       setLocalItems((currentItems) => {
         const currentChecklistData = checklistDataRef.current;
         const itemToSave = currentItems.find(i => i.id === itemId);
         
         if (!currentChecklistData.id) {
-          console.error("❌ Checklist ID não encontrado");
+          console.error("❌ [SimpleKanban] Checklist ID não encontrado");
           toast.error("Erro: checklist não inicializado");
           return currentItems;
         }
 
-        console.log("💾 Preparando para salvar:", {
+        console.log("💾 [SimpleKanban] Preparando para salvar:", {
           itemId,
           itemTitle: itemToSave?.title,
-          oldColumn: checklistItems.find(i => i.id === itemId)?.column,
-          newColumn: itemToSave?.column,
-          checklistId: currentChecklistData.id
+          currentColumn: itemToSave?.column,
+          checklistId: currentChecklistData.id,
+          allItemsColumns: currentItems.map(i => ({ id: i.id, title: i.title, column: i.column }))
         });
 
         // Calcular progresso
