@@ -2,7 +2,6 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
-  DragMoveEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -39,14 +38,12 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   const [selectedItem, setSelectedItem] = useState<UnifiedChecklistItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [localItems, setLocalItems] = useState<UnifiedChecklistItem[]>(checklistItems);
-  const [isDragging, setIsDragging] = useState(false);
 
   const updateMutation = useUpdateUnifiedChecklist();
 
   // Refs para evitar stale closures
   const checklistDataRef = useRef(checklistData);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
-  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Atualizar ref quando checklistData mudar
   useEffect(() => {
@@ -90,70 +87,18 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-    setIsDragging(false); // Reset
-    
-    // Capturar posição inicial do mouse/touch
-    const activatorEvent = event.activatorEvent as MouseEvent | TouchEvent;
-    if ('clientX' in activatorEvent) {
-      dragStartPosRef.current = { x: activatorEvent.clientX, y: activatorEvent.clientY };
-    } else if ('touches' in activatorEvent && activatorEvent.touches[0]) {
-      dragStartPosRef.current = { 
-        x: activatorEvent.touches[0].clientX, 
-        y: activatorEvent.touches[0].clientY 
-      };
-    }
-    
-    console.log("🟢 DRAG START:", { 
-      id: event.active.id, 
-      isDragging: false,
-      pos: dragStartPosRef.current 
-    });
-  };
-
-  const handleDragMove = (event: DragMoveEvent) => {
-    // Marcar que houve movimento real (não é apenas um clique)
-    const moved = event.delta.x !== 0 || event.delta.y !== 0;
-    if (!isDragging && moved) {
-      console.log("🔄 MOVEMENT DETECTED:", event.delta);
-      setIsDragging(true);
-    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    console.log("🔵 DRAG END:", { 
-      activeId: active.id, 
-      overId: over?.id,
-      wasDragging: isDragging,
-      hasOver: !!over
-    });
-    
-    const itemId = active.id as string;
-    
-    // SE NÃO HOUVE DRAG REAL (clique simples)
-    if (!isDragging) {
-      console.log("👆 CLIQUE DETECTADO - Abrindo modal");
-      const clickedItem = localItems.find(item => item.id === itemId);
-      if (clickedItem) {
-        console.log("✅ Item encontrado:", clickedItem.title);
-        handleViewDetails(clickedItem);
-      } else {
-        console.log("❌ Item não encontrado:", itemId);
-      }
-      setActiveId(null);
-      setIsDragging(false);
-      return; // NÃO processar como drag
-    }
-    
-    console.log("🎯 PROCESSANDO DRAG - movendo card");
     setActiveId(null);
-    setIsDragging(false);
 
     if (!over) {
-      console.log("⚠️ No drop target");
       return;
     }
+    
+    const itemId = active.id as string;
     const newColumn = over.id as string;
 
     // Mapear colunas para o formato correto
@@ -166,7 +111,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     const mappedColumn = columnMap[newColumn];
     
     if (!mappedColumn) {
-      console.log("⚠️ Invalid column:", newColumn);
       return;
     }
 
@@ -188,7 +132,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       const currentChecklistData = checklistDataRef.current;
       
       if (!currentChecklistData.id) {
-        console.error("❌ Checklist ID não encontrado, não é possível salvar");
         toast.error("Erro: checklist não inicializado");
         return;
       }
@@ -213,12 +156,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           is_completed: completedCount === totalCount && totalCount > 0,
         };
 
-        console.log("💾 Salvando mudança de coluna:", {
-          itemId,
-          newColumn: mappedColumn,
-          checklistId: currentChecklistData.id
-        });
-
         // Salvar no banco (FORA do setState)
         updateMutation.mutate({
           checklistData: updatedChecklistData,
@@ -226,14 +163,10 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           checklistType,
           templateId: currentChecklistData.template_id,
         }, {
-          onError: (error) => {
-            console.error("❌ Erro ao salvar:", error);
+          onError: () => {
             toast.error("Erro ao salvar alteração");
             // Reverter para dados originais
             setLocalItems(checklistItems);
-          },
-          onSuccess: () => {
-            console.log("✅ Alteração salva com sucesso");
           },
         });
 
@@ -263,7 +196,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
-        onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         modifiers={[snapCenterToCursor]}
       >
