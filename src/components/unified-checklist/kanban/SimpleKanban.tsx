@@ -65,10 +65,11 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       itemsCount: checklistItems.length,
       firstItemColumn: checklistItems[0]?.column,
       firstItemTitle: checklistItems[0]?.title,
-      checklistId: checklistData.id
+      checklistId: checklistData.id,
+      checklistUpdatedAt: checklistData.updated_at
     });
     setLocalItems(checklistItems);
-  }, [checklistItems, checklistData.id]);
+  }, [checklistItems, checklistData.id, checklistData.updated_at]);
 
   // Agrupar items por coluna
   const itemsByColumn = useMemo(() => {

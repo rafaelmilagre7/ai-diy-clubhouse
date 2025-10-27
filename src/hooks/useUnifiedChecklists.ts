@@ -238,6 +238,25 @@ export const useUpdateUnifiedChecklist = () => {
       });
       return data;
     },
+    onMutate: async (variables) => {
+      const queryKey = ['unified-checklist', variables.solutionId, user?.id, variables.checklistType];
+      
+      // Cancelar queries em andamento
+      await queryClient.cancelQueries({ queryKey });
+      
+      // Snapshot do estado anterior (para rollback)
+      const previousData = queryClient.getQueryData(queryKey);
+      
+      // Atualizar cache otimisticamente
+      queryClient.setQueryData(queryKey, variables.checklistData);
+      
+      console.log('⚡ [useUpdateUnifiedChecklist] Cache atualizado otimisticamente:', {
+        checklistId: variables.checklistData.id,
+        itemsColumns: variables.checklistData.checklist_data?.items?.map((i: any) => ({ id: i.id, column: i.column }))
+      });
+      
+      return { previousData, queryKey };
+    },
     onSuccess: (data, variables) => {
       console.log('✅ [useUpdateUnifiedChecklist] onSuccess - Invalidando cache:', {
         checklistId: data.id,
@@ -260,8 +279,15 @@ export const useUpdateUnifiedChecklist = () => {
         queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType]
       });
     },
-    onError: (error) => {
+    onError: (error, variables, context) => {
       console.error('❌ Erro ao salvar checklist:', error);
+      
+      // Rollback em caso de erro
+      if (context?.previousData) {
+        queryClient.setQueryData(context.queryKey, context.previousData);
+        console.log('↩️  Rollback aplicado ao cache');
+      }
+      
       toast.error('Erro ao salvar progresso');
     }
   });

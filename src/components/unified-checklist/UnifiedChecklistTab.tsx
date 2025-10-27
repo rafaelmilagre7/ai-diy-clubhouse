@@ -85,30 +85,23 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     const mergedItems = sourceItems.map((sourceItem: any) => {
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
-      // Se existe progressItem, SEUS DADOS TÊM PRIORIDADE ABSOLUTA
       if (progressItem) {
-        const merged = {
-          // Primeiro: estrutura base do template (metadata, etc)
-          id: sourceItem.id,
-          title: progressItem.title || sourceItem.title,
-          description: progressItem.description || sourceItem.description,
-          metadata: sourceItem.metadata, // Metadata vem do template
-          
-          // Segundo: TODOS os dados de progresso têm prioridade
-          completed: progressItem.completed ?? false,
-          notes: progressItem.notes || '',
-          column: progressItem.column || 'todo', // ✅ PRIORIDADE ABSOLUTA ao progresso
-          order: progressItem.order ?? sourceItem.order,
-          
-          // Preservar completedAt se existir
-          ...(progressItem.completedAt && { completedAt: progressItem.completedAt })
-        };
+        // ✅ Usar Object.assign para garantir que progressItem sobrescreve TUDO
+        const merged = Object.assign(
+          {},
+          sourceItem,      // Base: template
+          {
+            metadata: sourceItem.metadata // Manter metadata do template
+          },
+          progressItem    // Sobrescrever com progresso (PRIORIDADE MÁXIMA)
+        );
         
         console.log(`🔀 [UnifiedChecklistTab] Item ${sourceItem.id} merged:`, {
           sourceColumn: sourceItem.column,
           progressColumn: progressItem.column,
           mergedColumn: merged.column,
-          priorityFrom: 'userProgress'
+          priorityFrom: 'userProgress',
+          progressItem: progressItem
         });
         
         return merged;
