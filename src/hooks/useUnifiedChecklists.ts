@@ -201,18 +201,23 @@ export const useUpdateUnifiedChecklist = () => {
         solutionId,
         checklistType,
         hasId: !!checklistData.id,
-        checklistId: checklistData.id
+        checklistId: checklistData.id,
+        templateId,
+        isCreatingNew: !checklistData.id || checklistData.id === templateId
       });
-      
+
+      // 🔥 FIX: Não usar o ID do template ao criar progresso do usuário
+      const shouldUseExistingId = checklistData.id && checklistData.id !== templateId;
+
       const { data, error } = await supabase
         .from('unified_checklists')
         .upsert({
-          ...(checklistData.id && { id: checklistData.id }), // Manter ID se existir
+          ...(shouldUseExistingId && { id: checklistData.id }), // ✅ Só usar ID se for progresso existente
           user_id: user.id,
           solution_id: solutionId,
-          template_id: templateId,
+          template_id: templateId, // ✅ Sempre salvar referência ao template
           checklist_type: checklistType,
-          is_template: false,
+          is_template: false, // ✅ SEMPRE false para progresso de usuário
           ...updateData
         }, {
           onConflict: 'user_id,solution_id,checklist_type,is_template',
