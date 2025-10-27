@@ -53,6 +53,13 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
     queryKey: ['unified-checklist', solutionId, user?.id, checklistType],
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
       if (!user?.id) return null;
+      
+      console.log('🔍 [useUnifiedChecklist] EXECUTANDO queryFn (buscando do banco):', {
+        userId: user.id,
+        solutionId,
+        checklistType,
+        timestamp: new Date().toISOString()
+      });
 
       console.log('🔍 [useUnifiedChecklist] Buscando userProgress (is_template: false):', { userId: user.id, solutionId, checklistType });
 
@@ -80,7 +87,9 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
       });
       return data as UnifiedChecklistData;
     },
-    enabled: !!user?.id && !!solutionId
+    enabled: !!user?.id && !!solutionId,
+    staleTime: 0, // SEMPRE buscar dados frescos do banco
+    gcTime: 0, // Não manter em cache
   });
 };
 

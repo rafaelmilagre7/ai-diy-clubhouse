@@ -63,22 +63,44 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
 
   // Combinar template com progresso para obter lista de items
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
+    console.log('🔀 [UnifiedChecklistTab] Iniciando merge:', {
+      hasTemplate: !!template,
+      hasUserProgress: !!userProgress,
+      templateItems: template?.checklist_data?.items?.length,
+      userProgressItems: userProgress?.checklist_data?.items?.length,
+      userProgressUpdatedAt: userProgress?.updated_at
+    });
+    
     if (!template?.checklist_data?.items) return [];
     
     const sourceItems = template.checklist_data.items;
     const progressItems = userProgress?.checklist_data?.items || [];
+    
+    console.log('🔀 [UnifiedChecklistTab] Source e Progress:', {
+      sourceCount: sourceItems.length,
+      progressCount: progressItems.length,
+      progressAllColumns: progressItems.map((p: any) => ({ id: p.id, title: p.title, column: p.column }))
+    });
     
     const mergedItems = sourceItems.map((sourceItem: any) => {
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
       // Se existe progressItem, usar TODOS os seus dados
       if (progressItem) {
-        return {
+        const merged = {
           ...sourceItem, // Pegar metadata e estrutura do template
           ...progressItem, // SOBRESCREVER com dados do progresso (column, completed, notes, etc)
           column: progressItem.column || 'todo', // Garantir que column existe
           order: progressItem.order ?? sourceItem.order
         };
+        
+        console.log(`🔀 [UnifiedChecklistTab] Item ${sourceItem.id} merged:`, {
+          sourceColumn: sourceItem.column,
+          progressColumn: progressItem.column,
+          mergedColumn: merged.column
+        });
+        
+        return merged;
       }
       
       // Se não tem progresso, usar template
@@ -94,17 +116,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       };
     });
 
-    console.log('🔀 [UnifiedChecklist] Merge concluído:', {
-      templateItems: sourceItems.length,
-      progressItems: progressItems.length,
-      mergedItems: mergedItems.length,
-      firstSourceItem: sourceItems[0],
-      firstProgressItem: progressItems[0],
-      firstMergedItem: mergedItems[0],
+    console.log('✅ [UnifiedChecklistTab] Merge concluído:', {
+      mergedCount: mergedItems.length,
       columnsDistribution: mergedItems.reduce((acc: Record<string, number>, item) => {
         acc[item.column || 'todo'] = (acc[item.column || 'todo'] || 0) + 1;
         return acc;
-      }, {})
+      }, {}),
+      allMergedColumns: mergedItems.map(i => ({ id: i.id, title: i.title, column: i.column }))
     });
 
     return mergedItems;
