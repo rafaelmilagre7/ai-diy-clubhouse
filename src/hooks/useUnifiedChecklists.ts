@@ -52,7 +52,10 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
   return useQuery({
     queryKey: ['unified-checklist', solutionId, user?.id, checklistType],
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
-      if (!user?.id) return null;
+      if (!user?.id) {
+        console.log('⚠️ [useUnifiedChecklist] User ID não disponível');
+        return null;
+      }
       
       console.log('🔍 [useUnifiedChecklist] ========== BUSCANDO DO BANCO ==========');
       console.log('🔍 [useUnifiedChecklist] Params:', {
@@ -115,7 +118,7 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
   return useQuery({
     queryKey: ['unified-checklist-template', solutionId, checklistType],
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
-      console.log('🔍 Buscando template de checklist:', { solutionId, checklistType });
+      console.log('🔍 [useUnifiedChecklistTemplate] Buscando template:', { solutionId, checklistType });
 
       // 1️⃣ PRIMEIRO: Tentar buscar template oficial
       const { data: templateData, error: templateError } = await supabase
@@ -167,7 +170,8 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
       return null;
     },
     enabled: !!solutionId,
-    staleTime: Infinity, // Template não muda durante uso normal
+    staleTime: 1000 * 60 * 5, // 5 minutos (reduzido de Infinity para evitar cache eterno)
+    gcTime: 1000 * 60 * 10, // 10 minutos
   });
 };
 

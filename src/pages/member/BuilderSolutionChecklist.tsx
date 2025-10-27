@@ -59,18 +59,28 @@ export default function BuilderSolutionChecklist() {
   // Se tem progresso do usuário, usar ele. Senão, usar template
   const existingChecklist = userProgress || template;
   
-  console.log('🔍 [BuilderSolutionChecklist] Dados carregados:', {
+  console.log('🔍 [BuilderSolutionChecklist] Estado atual:', {
+    isLoading,
+    isLoadingTemplate,
+    isLoadingProgress,
+    isLoadingChecklists,
     hasTemplate: !!template,
     hasUserProgress: !!userProgress,
-    usingData: userProgress ? 'USER_PROGRESS' : 'TEMPLATE',
+    hasExistingChecklist: !!existingChecklist,
+    usingData: userProgress ? 'USER_PROGRESS' : template ? 'TEMPLATE' : 'NENHUM',
     checklistId: existingChecklist?.id,
+    solutionId: id,
     userProgressItemsCount: userProgress?.checklist_data?.items?.length,
     templateItemsCount: template?.checklist_data?.items?.length
   });
 
   // ⏱️ FASE 1: Timeout de 5 minutos (margem segura)
   useEffect(() => {
+    // Se já tem checklist OU já atingiu timeout, não fazer nada
     if (existingChecklist || hasTimeout) return;
+    
+    // Se ainda está carregando, não iniciar timeout
+    if (isLoadingChecklists) return;
 
     const timeout = setTimeout(() => {
       console.error('[CHECKLIST] ⏱️ Timeout de 5 minutos atingido');
@@ -82,7 +92,7 @@ export default function BuilderSolutionChecklist() {
     }, 300000); // 🛡️ FASE 1: 5 minutos
 
     return () => clearTimeout(timeout);
-  }, [existingChecklist, hasTimeout]);
+  }, [existingChecklist, hasTimeout, isLoadingChecklists]);
 
   // 🔄 FASE 3: Retry automático com backoff
   useEffect(() => {
@@ -168,8 +178,9 @@ export default function BuilderSolutionChecklist() {
     );
   }
 
-  // Se não existe checklist, mostrar animação de preparação
-  const showPreparation = !existingChecklist;
+  // Se não existe checklist E não está carregando, mostrar erro
+  const showPreparation = !existingChecklist && (isLoadingChecklists || hasTimeout);
+  const showError = !existingChecklist && !isLoadingChecklists && !hasTimeout;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-surface-elevated/20">
@@ -202,7 +213,52 @@ export default function BuilderSolutionChecklist() {
               </p>
             </div>
 
-            {showPreparation ? (
+            {showError ? (
+              <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6">
+                <div className="text-center space-y-4 max-w-md">
+                  <div className="text-6xl">📋</div>
+                  <h3 className="text-2xl font-bold">Plano de Ação não disponível</h3>
+                  <p className="text-muted-foreground">
+                    O plano de ação para esta solução ainda não foi criado. 
+                    Clique no botão abaixo para gerar um novo plano.
+                  </p>
+                  <div className="flex gap-3 justify-center pt-4">
+                    <Button
+                      onClick={() => {
+                        console.log('[CHECKLIST] Gerando novo plano via edge function');
+                        supabase.functions.invoke('generate-section-content', {
+                          body: {
+                            solutionId: id,
+                            sectionType: 'checklist',
+                            userId: solution?.user_id
+                          }
+                        }).then(() => {
+                          toast.success('Geração iniciada! Aguarde alguns segundos...');
+                          setTimeout(() => {
+                            queryClient.invalidateQueries({ 
+                              queryKey: ['unified-checklist-template', id, 'implementation'] 
+                            });
+                          }, 3000);
+                        }).catch(err => {
+                          console.error('[CHECKLIST] Erro ao gerar:', err);
+                          toast.error('Erro ao iniciar geração');
+                        });
+                      }}
+                      size="lg"
+                    >
+                      Gerar Plano de Ação
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => navigate(`/ferramentas/builder/solution/${id}`)}
+                      size="lg"
+                    >
+                      Voltar
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            ) : showPreparation ? (
               hasTimeout ? (
                 <div className="flex flex-col items-center justify-center min-h-[500px] space-y-6">
                   <div className="text-center space-y-4 max-w-md">
