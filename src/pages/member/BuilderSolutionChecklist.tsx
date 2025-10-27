@@ -4,7 +4,8 @@ import { motion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
-import { BuilderSectionLoader, CHECKLIST_MESSAGES } from '@/components/builder/BuilderSectionLoader';
+import { UnifiedLoadingScreen } from '@/components/common/UnifiedLoadingScreen';
+import { getLoadingMessages } from '@/lib/loadingMessages';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -222,9 +223,11 @@ export default function BuilderSolutionChecklist() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
+      <UnifiedLoadingScreen
+        title="Carregando solução..."
+        messages={getLoadingMessages('solutions')}
+        estimatedSeconds={10}
+      />
     );
   }
 
@@ -237,7 +240,7 @@ export default function BuilderSolutionChecklist() {
   }
 
   // Se não existe checklist E não está carregando, mostrar erro
-  const showPreparation = !existingChecklist && (isLoadingChecklists || hasTimeout);
+  const showPreparation = !existingChecklist && isLoadingChecklists;
   const showError = !existingChecklist && !isLoadingChecklists && !hasTimeout;
 
   return (
@@ -347,9 +350,9 @@ export default function BuilderSolutionChecklist() {
                   </div>
                 </div>
               ) : (
-                <BuilderSectionLoader 
+                <UnifiedLoadingScreen 
                   title="Gerando Plano de Ação..."
-                  messages={CHECKLIST_MESSAGES}
+                  messages={getLoadingMessages('builder_checklist')}
                   estimatedSeconds={35}
                 />
               )

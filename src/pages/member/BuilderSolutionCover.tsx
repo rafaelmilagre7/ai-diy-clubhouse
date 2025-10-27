@@ -144,9 +144,14 @@ export default function BuilderSolutionCover() {
           console.log('[COVER] ✅ Checklist gerado com sucesso!');
           toast.success('Plano de ação gerado com sucesso! 🎉');
           
-          // Invalidar cache e navegar
+          // Invalidar cache
           await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
           await queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
+          
+          // Aguardar 2s para garantir que o banco foi atualizado
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          // Navegar para a página do checklist
           navigate(cardPath);
         } else {
           throw new Error(data?.error || 'Falha ao gerar plano de ação');
