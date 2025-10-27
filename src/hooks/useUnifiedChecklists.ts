@@ -170,8 +170,9 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
       return null;
     },
     enabled: !!solutionId,
-    staleTime: 1000 * 60 * 5, // 5 minutos (reduzido de Infinity para evitar cache eterno)
+    staleTime: 0, // ✅ Sem cache para sempre buscar dados atualizados
     gcTime: 1000 * 60 * 10, // 10 minutos
+    refetchOnMount: 'always', // ✅ Forçar reload ao montar componente
   });
 };
 
@@ -460,7 +461,8 @@ export const useCreateUnifiedChecklistTemplate = () => {
     },
     onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ 
-        queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
+        queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType],
+        refetchType: 'active' // ✅ Forçar refetch ativo
       });
       toast.success('Template salvo com sucesso!');
     },

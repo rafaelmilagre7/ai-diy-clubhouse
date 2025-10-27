@@ -36,12 +36,22 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
   useEffect(() => {
+    console.log('🎨 [Admin] Template carregado:', {
+      hasTemplate: !!template,
+      itemCount: template?.checklist_data?.items?.length,
+      isLoading,
+      hasError: !!error,
+      solutionId
+    });
+    
     if (template?.checklist_data?.items) {
+      console.log('✅ [Admin] Definindo', template.checklist_data.items.length, 'itens no estado');
       setChecklistItems(template.checklist_data.items);
     } else if (!isLoading && !template) {
+      console.log('⚠️ [Admin] Nenhum template encontrado, limpando estado');
       setChecklistItems([]);
     }
-  }, [template, isLoading]);
+  }, [template, isLoading, error, solutionId]);
 
   const saveCheckpoints = async () => {
     if (!solutionId || !user) return;
