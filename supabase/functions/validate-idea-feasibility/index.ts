@@ -27,6 +27,55 @@ serve(async (req) => {
       throw new Error('LOVABLE_API_KEY não configurada');
     }
 
+    // 🆕 FASE 2: Implementar cache de validações (MD5 hash da ideia normalizada)
+    const normalizedIdea = idea.trim().toLowerCase().replace(/\s+/g, ' ');
+    const encoder = new TextEncoder();
+    const data = encoder.encode(normalizedIdea);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const cacheKey = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    console.log('[VALIDATE-FEASIBILITY] 🔑 Cache key:', cacheKey.substring(0, 16) + '...');
+
+    // Verificar cache (válido por 30 dias)
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    
+    const { createClient } = await import('https://esm.sh/@supabase/supabase-js@2.39.3');
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const { data: cachedValidation, error: cacheError } = await supabase
+      .from('idea_validations_cache')
+      .select('validation_result, created_at, accessed_count')
+      .eq('cache_key', cacheKey)
+      .gte('created_at', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
+      .maybeSingle();
+
+    if (cachedValidation && !cacheError) {
+      console.log('[VALIDATE-FEASIBILITY] ✅ CACHE HIT! Retornando validação existente');
+      console.log('[VALIDATE-FEASIBILITY] 📊 Acessos:', cachedValidation.accessed_count + 1);
+      
+      // Incrementar contador de acessos
+      await supabase
+        .from('idea_validations_cache')
+        .update({
+          accessed_count: cachedValidation.accessed_count + 1,
+          last_accessed_at: new Date().toISOString()
+        })
+        .eq('cache_key', cacheKey);
+      
+      return new Response(
+        JSON.stringify({
+          ...cachedValidation.validation_result,
+          from_cache: true,
+          cached_at: cachedValidation.created_at
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    console.log('[VALIDATE-FEASIBILITY] ❌ Cache miss, chamando IA...');
+
     const systemPrompt = `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
 
 ## CONTEXTO E CONHECIMENTO
@@ -125,12 +174,32 @@ Você DEVE responder APENAS com um objeto JSON no seguinte formato (sem emojis, 
 
 {
   "viable": true ou false,
-  "reason": "Explicação detalhada de 100-300 palavras sobre COMO seria feito (se viável) ou POR QUÊ não é viável (se inviável). Seja específico e mencione as ferramentas que seriam usadas.",
+  "score": 0-100 (número inteiro - quanto mais viável, maior o score. Considere: viabilidade técnica 40%, facilidade de implementação 30%, custo-benefício 20%, escalabilidade 10%),
+  "reason": "Resumo executivo em 1-2 frases (max 100 palavras) explicando a viabilidade",
+  "technical_explanation": "Explicação técnica DETALHADA de 200-400 palavras sobre COMO seria implementado. Mencione: fluxo de dados, integrações necessárias, lógica de processamento, estrutura de dados, APIs envolvidas, e estimativa de requisições/mês. Seja específico como um manual de implementação.",
+  "suggestions": [
+    "3-5 sugestões CONCRETAS e ACIONÁVEIS para melhorar a viabilidade ou reduzir complexidade",
+    "Cada sugestão deve ser específica e mencionar ferramentas/técnicas",
+    "Evite sugestões genéricas - seja prático e técnico"
+  ],
   "confidence": "high", "medium" ou "low",
-  "tools": ["lista", "de", "3-5", "ferramentas", "principais"]
+  "estimated_complexity": "low", "medium" ou "high",
+  "estimated_time": "1-2 semanas", "2-4 semanas", "1-2 meses", ou "2-3 meses",
+  "required_stack": ["lista", "de", "3-8", "tecnologias/ferramentas", "principais", "necessárias"],
+  "limitations": [
+    "2-4 limitações técnicas CONHECIDAS desta abordagem",
+    "Seja honesto sobre o que não funciona bem ou tem restrições",
+    "Exemplo: 'Processamento limitado a 100 requisições/min', 'Não suporta arquivos maiores que 10MB'"
+  ],
+  "cost_estimate": "Estimativa de custo mensal realista (ex: 'R$ 50-200/mês', 'Gratuito até 1000 usuários', 'R$ 500+ dependendo do volume')"
 }
 
-IMPORTANTE: Retorne APENAS o JSON puro, sem texto adicional, sem markdown, sem code blocks, sem emojis.`;
+IMPORTANTE: 
+- Retorne APENAS o JSON puro, sem texto adicional, sem markdown, sem code blocks, sem emojis
+- Todos os campos são obrigatórios
+- technical_explanation deve ter NO MÍNIMO 200 palavras (conte!)
+- suggestions deve ter NO MÍNIMO 3 itens e NO MÁXIMO 5
+- limitations deve ter NO MÍNIMO 2 itens e NO MÁXIMO 4`;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando Lovable AI...');
 
@@ -206,26 +275,68 @@ IMPORTANTE: Retorne APENAS o JSON puro, sem texto adicional, sem markdown, sem c
     // Parse e validação rigorosa
     const validationResult = JSON.parse(jsonStr);
     
-    // Validar campos obrigatórios
+    // 🆕 FASE 2: Validar TODOS os novos campos obrigatórios
+    const technicalExplanationWords = validationResult.technical_explanation?.split(/\s+/).length || 0;
+    
     if (typeof validationResult.viable !== 'boolean' ||
+        typeof validationResult.score !== 'number' ||
+        validationResult.score < 0 || validationResult.score > 100 ||
         typeof validationResult.reason !== 'string' ||
         !validationResult.reason.trim() ||
+        typeof validationResult.technical_explanation !== 'string' ||
+        technicalExplanationWords < 50 || // Mínimo 50 palavras (200-400 palavras seria ideal)
+        !Array.isArray(validationResult.suggestions) ||
+        validationResult.suggestions.length < 3 ||
+        validationResult.suggestions.length > 5 ||
         !['high', 'medium', 'low'].includes(validationResult.confidence) ||
-        !Array.isArray(validationResult.tools) ||
-        validationResult.tools.length === 0) {
-      console.error('[VALIDATE-FEASIBILITY] ❌ Campos inválidos:', {
+        !['low', 'medium', 'high'].includes(validationResult.estimated_complexity) ||
+        typeof validationResult.estimated_time !== 'string' ||
+        !Array.isArray(validationResult.required_stack) ||
+        validationResult.required_stack.length < 3 ||
+        !Array.isArray(validationResult.limitations) ||
+        validationResult.limitations.length < 2 ||
+        validationResult.limitations.length > 4 ||
+        typeof validationResult.cost_estimate !== 'string') {
+      
+      console.error('[VALIDATE-FEASIBILITY] ❌ Campos inválidos ou incompletos:', {
         viable: typeof validationResult.viable,
+        score: validationResult.score,
         reason: typeof validationResult.reason,
+        technical_explanation_words: technicalExplanationWords,
+        suggestions_count: Array.isArray(validationResult.suggestions) ? validationResult.suggestions.length : 0,
         confidence: validationResult.confidence,
-        tools: Array.isArray(validationResult.tools) ? validationResult.tools.length : 'não é array'
+        estimated_complexity: validationResult.estimated_complexity,
+        required_stack_count: Array.isArray(validationResult.required_stack) ? validationResult.required_stack.length : 0,
+        limitations_count: Array.isArray(validationResult.limitations) ? validationResult.limitations.length : 0,
       });
-      throw new Error('JSON com campos inválidos ou incompletos');
+      throw new Error('Resposta da IA não contém todos os campos obrigatórios ou valores inválidos');
     }
 
-    console.log('[VALIDATE-FEASIBILITY] ✅ Resultado validado:', validationResult);
+    console.log('[VALIDATE-FEASIBILITY] ✅ Resultado validado:', {
+      ...validationResult,
+      technical_explanation: validationResult.technical_explanation.substring(0, 100) + '...'
+    });
+
+    // 🆕 FASE 2: Salvar no cache
+    try {
+      await supabase
+        .from('idea_validations_cache')
+        .insert({
+          cache_key: cacheKey,
+          idea_summary: idea.substring(0, 200),
+          validation_result: validationResult
+        });
+      
+      console.log('[VALIDATE-FEASIBILITY] 💾 Resultado salvo no cache');
+    } catch (cacheInsertError) {
+      console.warn('[VALIDATE-FEASIBILITY] ⚠️ Erro ao salvar cache (não crítico):', cacheInsertError);
+    }
 
     return new Response(
-      JSON.stringify(validationResult),
+      JSON.stringify({
+        ...validationResult,
+        from_cache: false
+      }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 

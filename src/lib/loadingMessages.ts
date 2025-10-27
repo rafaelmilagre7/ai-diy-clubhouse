@@ -64,6 +64,35 @@ export const LOADING_MESSAGES = {
     "Simplificando sem perder a profundidade...",
   ],
 
+  // 🆕 FASE 2: Novos contextos específicos do Builder
+  builder_lovable_prompt: [
+    "Extraindo padrões de código campeões...",
+    "Traduzindo sua visão em linguagem Lovable...",
+    "Gerando prompt otimizado para IA...",
+    "Estruturando documentação técnica...",
+    "Preparando instruções de implementação...",
+    "Montando blueprint de desenvolvimento...",
+    "Criando roadmap de execução...",
+    "Organizando especificações técnicas...",
+  ],
+
+  builder_tools_validation: [
+    "Validando ferramentas sugeridas...",
+    "Consultando catálogo de integrações...",
+    "Verificando compatibilidades...",
+    "Buscando alternativas inteligentes...",
+    "Confirmando disponibilidade de APIs...",
+  ],
+
+  feasibility_validation: [
+    "Analisando viabilidade técnica...",
+    "Consultando especialistas virtuais...",
+    "Avaliando complexidade de implementação...",
+    "Verificando limitações conhecidas...",
+    "Estimando esforço necessário...",
+    "Calculando custo-benefício...",
+  ],
+
   builder_recommendations: [
     "Vasculhando +10 mil horas de conteúdo...",
     "Garimpando pérolas no oceano de conhecimento...",

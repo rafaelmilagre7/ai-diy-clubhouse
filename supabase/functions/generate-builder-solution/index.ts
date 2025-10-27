@@ -1433,6 +1433,25 @@ Crie um plano completo seguindo o formato JSON especificado.`;
       
       console.log('[BUILDER-TOOLS] 🔍 Iniciando validação de ferramentas...');
       
+      // 🆕 FASE 2: Mapeamento de aliases conhecidos
+      const TOOL_ALIASES: Record<string, string> = {
+        'integromat': 'Make',
+        'make.com': 'Make',
+        'chatgpt': 'OpenAI GPT-4',
+        'gpt4': 'OpenAI GPT-4',
+        'gpt-4': 'OpenAI GPT-4',
+        'claude': 'Anthropic Claude',
+        'gemini': 'Google Gemini',
+        'bubble.io': 'Bubble',
+        'lovable.dev': 'Lovable',
+        'supabase db': 'Supabase',
+        'planilhas': 'Google Sheets',
+        'sheets': 'Google Sheets',
+        'whatsapp': 'WhatsApp Business API',
+        'zapier.com': 'Zapier',
+        'zap': 'Zapier'
+      };
+      
       const validateToolsList = async (toolsList: any[], category: 'essential' | 'optional') => {
         if (!toolsList || !Array.isArray(toolsList)) return [];
         
@@ -1448,12 +1467,17 @@ Crie um plano completo seguindo o formato JSON especificado.`;
             continue;
           }
           
+          // 🆕 FASE 2: Aplicar alias antes de buscar
+          const normalizedName = TOOL_ALIASES[suggestedName.toLowerCase()] || suggestedName;
+          
+          console.log(`[BUILDER-TOOLS] 🔎 Buscando: "${suggestedName}" → "${normalizedName}"`);
+          
           // Buscar ferramenta cadastrada (case-insensitive, fuzzy match)
           const { data: matchedTools, error } = await supabase
             .from('tools')
             .select('*')
             .eq('status', true)
-            .or(`name.ilike.%${suggestedName}%,name.ilike.%${suggestedName.replace(/\s+/g, '%')}%`);
+            .or(`name.ilike.%${normalizedName}%,name.ilike.%${normalizedName.replace(/\s+/g, '%')}%`);
           
           if (error) {
             console.error('[BUILDER-TOOLS] ❌ Erro ao buscar ferramenta:', error);
@@ -1474,8 +1498,41 @@ Crie um plano completo seguindo o formato JSON especificado.`;
             
             console.log(`[BUILDER-TOOLS] ✅ ${category}: "${suggestedName}" → "${matchedTool.name}" (VALIDADO)`);
           } else {
+            // 🆕 FASE 2: Registrar ferramenta não encontrada para análise futura
+            const { data: existingSuggestion, error: suggestionCheckError } = await supabase
+              .from('tools_suggestions')
+              .select('id, occurrences, solution_ids')
+              .eq('suggested_name', suggestedName)
+              .maybeSingle();
+            
+            if (existingSuggestion && !suggestionCheckError) {
+              // Incrementar contador e adicionar solution_id
+              await supabase
+                .from('tools_suggestions')
+                .update({
+                  occurrences: existingSuggestion.occurrences + 1,
+                  solution_ids: [...new Set([...(existingSuggestion.solution_ids || []), userId])]
+                })
+                .eq('id', existingSuggestion.id);
+              
+              console.log(`[BUILDER-TOOLS] 📊 Sugestão existente atualizada: "${suggestedName}" (${existingSuggestion.occurrences + 1}x)`);
+            } else {
+              // Primeira vez que a IA sugere esta ferramenta
+              await supabase
+                .from('tools_suggestions')
+                .insert({
+                  suggested_name: suggestedName,
+                  category: tool.category || 'unknown',
+                  reason: tool.reason || '',
+                  setup_complexity: tool.setup_complexity || 'medium',
+                  solution_ids: [userId]
+                });
+              
+              console.log(`[BUILDER-TOOLS] 🆕 Nova sugestão registrada: "${suggestedName}"`);
+            }
+            
             invalidTools.push(suggestedName);
-            console.warn(`[BUILDER-TOOLS] ❌ ${category}: "${suggestedName}" NÃO ENCONTRADO na plataforma (ignorado)`);
+            console.warn(`[BUILDER-TOOLS] ❌ ${category}: "${suggestedName}" NÃO ENCONTRADO (registrado para revisão)`);
           }
         }
         

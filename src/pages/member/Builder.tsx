@@ -180,7 +180,20 @@ export default function Builder() {
         return;
       }
 
-      const { viable, reason, tools } = data;
+      // 🆕 FASE 2: Dados enriquecidos de viabilidade
+      const { 
+        viable, 
+        score,
+        reason, 
+        technical_explanation,
+        suggestions,
+        estimated_complexity,
+        estimated_time,
+        required_stack,
+        limitations,
+        cost_estimate,
+        from_cache
+      } = data;
 
       if (!viable) {
         // Não é viável
@@ -194,12 +207,29 @@ export default function Builder() {
         return;
       }
 
-      // É viável! Mostrar sucesso e continuar
+      // É viável! Mostrar sucesso com informações ricas
       setValidationStatus('success');
-      const toolsList = tools && Array.isArray(tools) && tools.length > 0 
-        ? `\n\nFerramentas sugeridas: ${tools.join(', ')}` 
-        : '';
-      setValidationMessage((reason || 'Sua ideia é viável e pode ser implementada!') + toolsList);
+      
+      // Formatar mensagem com score e informações adicionais
+      let enrichedMessage = `✅ Score de Viabilidade: ${score}/100\n\n${reason}`;
+      
+      if (estimated_complexity && estimated_time) {
+        enrichedMessage += `\n\n📊 Complexidade: ${estimated_complexity.toUpperCase()} • Tempo estimado: ${estimated_time}`;
+      }
+      
+      if (cost_estimate) {
+        enrichedMessage += `\n💰 Custo estimado: ${cost_estimate}`;
+      }
+      
+      if (required_stack && Array.isArray(required_stack) && required_stack.length > 0) {
+        enrichedMessage += `\n\n🛠️ Stack necessário: ${required_stack.slice(0, 5).join(', ')}`;
+      }
+      
+      if (from_cache) {
+        enrichedMessage += `\n\n⚡ (Resultado do cache - processamento instantâneo)`;
+      }
+      
+      setValidationMessage(enrichedMessage);
 
       // Aguardar 1s para mostrar sucesso e então carregar perguntas
       setTimeout(async () => {
