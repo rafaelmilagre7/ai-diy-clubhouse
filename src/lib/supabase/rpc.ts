@@ -159,3 +159,17 @@ export const adminRemoveTeamMember = async (memberId: string, organizationId: st
   
   return data;
 };
+
+export const getChecklistTemplate = async (solutionId: string, checklistType: string = 'implementation') => {
+  const { data, error } = await supabase.rpc('get_checklist_template', {
+    p_solution_id: solutionId,
+    p_checklist_type: checklistType
+  });
+  
+  if (error) {
+    console.error('Erro ao buscar template de checklist:', error);
+    throw error;
+  }
+  
+  return data;
+};

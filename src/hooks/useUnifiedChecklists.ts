@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { getChecklistTemplate } from '@/lib/supabase/rpc';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
 
@@ -103,101 +104,116 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
   return useQuery({
     queryKey: ['unified-checklist-template', solutionId, checklistType],
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
-      console.log('🌐 [useUnifiedChecklistTemplate] Executando query no Supabase:', {
-        solutionId,
-        checklistType
-      });
+      console.log('🔄 [QUERY] Iniciando busca do template via RPC SECURITY DEFINER...');
+      
+      try {
+        // 🎯 NOVA ABORDAGEM: Usar função RPC SECURITY DEFINER (bypassa RLS)
+        const rpcData = await getChecklistTemplate(solutionId, checklistType);
 
-      let { data: templateData, error: templateError } = await supabase
-        .from('unified_checklists')
-        .select('*')
-        .eq('solution_id', solutionId)
-        .eq('checklist_type', checklistType)
-        .eq('is_template', true)
-        .maybeSingle();
+        console.log('📥 [RPC] Resposta da função get_checklist_template:', {
+          hasData: !!rpcData,
+          isArray: Array.isArray(rpcData),
+          length: Array.isArray(rpcData) ? rpcData.length : 0,
+          firstItem: Array.isArray(rpcData) && rpcData.length > 0 ? rpcData[0] : null
+        });
 
-      console.log('📥 [useUnifiedChecklistTemplate] Resposta do Supabase:', {
-        hasData: !!templateData,
-        hasError: !!templateError,
-        errorMessage: templateError?.message,
-        dataId: templateData?.id,
-        itemsCount: templateData?.checklist_data?.items?.length
-      });
+        // RPC retorna array, pegar primeiro item
+        if (rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
+          const templateData = rpcData[0];
+          console.log('✅ [RPC] Template encontrado via SECURITY DEFINER!', {
+            id: templateData.id,
+            itemsCount: templateData.checklist_data?.items?.length || 0
+          });
 
-      if (templateError) {
-        console.error('❌ [ERRO] Erro ao buscar template:', templateError);
+          // Normalizar dados
+          const items = Array.isArray(templateData.checklist_data?.items) 
+            ? templateData.checklist_data.items 
+            : [];
+
+          return {
+            ...templateData,
+            user_id: templateData.user_id || '',
+            solution_id: templateData.solution_id,
+            template_id: templateData.id,
+            checklist_type: templateData.checklist_type,
+            is_template: true,
+            checklist_data: {
+              items: items,
+              lastUpdated: templateData.checklist_data?.lastUpdated || templateData.updated_at || new Date().toISOString()
+            },
+            total_items: items.length,
+            completed_items: 0,
+            progress_percentage: 0,
+            is_completed: false,
+            created_at: templateData.created_at,
+            updated_at: templateData.updated_at,
+            completed_at: null
+          };
+        }
+
+        console.log('📭 [RPC] Nenhum template encontrado via RPC, tentando fallback...');
         
-        // 🔄 FALLBACK: Tentar busca alternativa sem is_template
-        console.log('🔄 [FALLBACK] Tentando busca alternativa...');
-        
+        // 🔄 FALLBACK: Query direta simplificada
         const { data: fallbackData, error: fallbackError } = await supabase
           .from('unified_checklists')
           .select('*')
           .eq('solution_id', solutionId)
           .eq('checklist_type', checklistType)
           .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
+          .limit(10);
+
         if (fallbackError) {
-          console.error('❌ [FALLBACK] Erro na busca alternativa:', fallbackError);
-          return null;
+          console.error('❌ [FALLBACK] Erro na query direta:', fallbackError);
+          throw fallbackError;
         }
+
+        console.log('📥 [FALLBACK] Resultados da query direta:', {
+          count: fallbackData?.length || 0
+        });
+
+        // Filtrar templates no lado do cliente
+        const template = fallbackData?.find(item => item.is_template === true);
         
-        if (fallbackData) {
-          console.log('✅ [FALLBACK] Dados encontrados via fallback!');
-          templateData = fallbackData;
-        } else {
-          return null;
+        if (template) {
+          console.log('✅ [FALLBACK] Template encontrado via query direta!');
+          
+          const items = Array.isArray(template.checklist_data?.items) 
+            ? template.checklist_data.items 
+            : [];
+
+          return {
+            ...template,
+            user_id: template.user_id || '',
+            solution_id: template.solution_id,
+            template_id: template.id,
+            checklist_type: template.checklist_type,
+            is_template: true,
+            checklist_data: {
+              items: items,
+              lastUpdated: template.checklist_data?.lastUpdated || template.updated_at || new Date().toISOString()
+            },
+            total_items: items.length,
+            completed_items: 0,
+            progress_percentage: 0,
+            is_completed: false,
+            created_at: template.created_at,
+            updated_at: template.updated_at,
+            completed_at: null
+          };
         }
-      }
 
-      if (!templateData) {
-        console.warn('⚠️ [VAZIO] Nenhum template encontrado');
+        console.log('📭 [FINAL] Nenhum template encontrado em nenhuma abordagem');
         return null;
+      } catch (err) {
+        console.error('❌ [CRITICAL] Erro crítico ao buscar template:', err);
+        throw err;
       }
-
-      // Normalizar dados para garantir estrutura completa
-      const items = Array.isArray(templateData.checklist_data?.items) 
-        ? templateData.checklist_data.items 
-        : [];
-
-      const normalizedData: UnifiedChecklistData = {
-        ...templateData,
-        user_id: templateData.user_id || '', // Template pode não ter user
-        solution_id: templateData.solution_id,
-        template_id: templateData.id,
-        checklist_type: templateData.checklist_type,
-        is_template: true,
-        checklist_data: {
-          items: items,
-          lastUpdated: templateData.checklist_data?.lastUpdated || templateData.updated_at || new Date().toISOString()
-        },
-        // ✅ CAMPOS CALCULADOS (necessários pela interface)
-        total_items: items.length,
-        completed_items: 0, // Templates começam zerados
-        progress_percentage: 0,
-        is_completed: false,
-        created_at: templateData.created_at,
-        updated_at: templateData.updated_at,
-        completed_at: null
-      };
-
-      console.log('🔧 [Hook] Template normalizado:', {
-        hasItems: items.length > 0,
-        itemsCount: items.length,
-        hasAllRequiredFields: !!(normalizedData.user_id !== undefined && normalizedData.total_items !== undefined)
-      });
-
-      return normalizedData;
     },
     enabled: !!solutionId,
-    staleTime: 0, // ✅ Nunca usar cache
-    gcTime: 0, // ✅ Não guardar em cache
-    refetchOnMount: 'always', // ✅ Sempre buscar ao montar
-    refetchOnWindowFocus: false, // Evitar refetch excessivo
-    retry: 2, // ✅ Tentar 2 vezes se falhar
-    retryDelay: 1000, // 1 segundo entre tentativas
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+    retry: 2,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000)
   });
 };
 

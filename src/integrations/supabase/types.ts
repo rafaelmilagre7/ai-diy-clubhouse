@@ -7582,6 +7582,18 @@ export type Database = {
         }[]
       }
       get_cached_profile: { Args: { target_user_id: string }; Returns: Json }
+      get_checklist_template: {
+        Args: { p_checklist_type?: string; p_solution_id: string }
+        Returns: {
+          checklist_data: Json
+          checklist_type: string
+          created_at: string
+          id: string
+          is_template: boolean
+          solution_id: string
+          updated_at: string
+        }[]
+      }
       get_completion_rate_by_solution: {
         Args: { time_range?: string }
         Returns: {
