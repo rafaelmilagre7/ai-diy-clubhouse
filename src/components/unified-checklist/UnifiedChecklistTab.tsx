@@ -86,14 +86,14 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
       if (progressItem) {
-        // ✅ Usar Object.assign para garantir que progressItem sobrescreve TUDO
+        // ✅ Ordem correta: progressItem por último para ter prioridade absoluta
         const merged = Object.assign(
           {},
-          sourceItem,      // Base: template
+          sourceItem,           // 1. Base do template (com metadata)
+          progressItem,         // 2. Sobrescrever TUDO com progresso
           {
-            metadata: sourceItem.metadata // Manter metadata do template
-          },
-          progressItem    // Sobrescrever com progresso (PRIORIDADE MÁXIMA)
+            metadata: sourceItem.metadata  // 3. Restaurar APENAS metadata do template
+          }
         );
         
         console.log(`🔀 [UnifiedChecklistTab] Item ${sourceItem.id} merged:`, {

@@ -121,14 +121,17 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         return templateData as UnifiedChecklistData;
       }
 
-      // 2️⃣ FALLBACK: Se não há template, buscar qualquer checklist da solução
-      console.log('⚠️ Template não encontrado, buscando checklist gerado...');
+      // 2️⃣ FALLBACK: Se não há template, buscar checklist de OUTRO usuário
+      console.log('⚠️ Template não encontrado, buscando checklist de outro usuário como referência...');
+      
+      const { data: { user } } = await supabase.auth.getUser();
       
       const { data: anyChecklist, error: anyError } = await supabase
         .from('unified_checklists')
         .select('*')
         .eq('solution_id', solutionId)
         .eq('checklist_type', checklistType)
+        .neq('user_id', user?.id || '') // ✅ NUNCA usar progresso do próprio usuário
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -139,8 +142,11 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
       }
 
       if (anyChecklist) {
-        console.log('🔄 Usando checklist gerado como template:', anyChecklist.id);
+        console.log('🔄 Usando checklist de outro usuário como template:', anyChecklist.id);
         console.log('📋 Items encontrados:', anyChecklist.checklist_data?.items?.length || 0);
+      } else {
+        console.log('⚠️ Nenhum template ou checklist de outro usuário encontrado, retornando null');
+        return null;
       }
 
       return anyChecklist as UnifiedChecklistData;
