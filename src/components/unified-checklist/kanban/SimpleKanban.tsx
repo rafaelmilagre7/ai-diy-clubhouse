@@ -103,12 +103,18 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       };
     }
     
-    console.log("🟢 Drag Start:", event.active.id);
+    console.log("🟢 DRAG START:", { 
+      id: event.active.id, 
+      isDragging: false,
+      pos: dragStartPosRef.current 
+    });
   };
 
   const handleDragMove = (event: DragMoveEvent) => {
     // Marcar que houve movimento real (não é apenas um clique)
-    if (!isDragging && (event.delta.x !== 0 || event.delta.y !== 0)) {
+    const moved = event.delta.x !== 0 || event.delta.y !== 0;
+    if (!isDragging && moved) {
+      console.log("🔄 MOVEMENT DETECTED:", event.delta);
       setIsDragging(true);
     }
   };
@@ -116,26 +122,31 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    console.log("🔵 Drag End:", { 
+    console.log("🔵 DRAG END:", { 
       activeId: active.id, 
       overId: over?.id,
-      wasDragging: isDragging 
+      wasDragging: isDragging,
+      hasOver: !!over
     });
     
     const itemId = active.id as string;
     
     // SE NÃO HOUVE DRAG REAL (clique simples)
     if (!isDragging) {
-      console.log("👆 Clique detectado - abrindo detalhes");
+      console.log("👆 CLIQUE DETECTADO - Abrindo modal");
       const clickedItem = localItems.find(item => item.id === itemId);
       if (clickedItem) {
+        console.log("✅ Item encontrado:", clickedItem.title);
         handleViewDetails(clickedItem);
+      } else {
+        console.log("❌ Item não encontrado:", itemId);
       }
       setActiveId(null);
       setIsDragging(false);
       return; // NÃO processar como drag
     }
     
+    console.log("🎯 PROCESSANDO DRAG - movendo card");
     setActiveId(null);
     setIsDragging(false);
 
