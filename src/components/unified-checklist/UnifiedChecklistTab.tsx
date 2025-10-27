@@ -60,15 +60,25 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     const mergedItems = sourceItems.map((sourceItem: any) => {
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
+      // Se existe progressItem, usar TODOS os seus dados
+      if (progressItem) {
+        return {
+          ...sourceItem, // Pegar metadata e estrutura do template
+          ...progressItem, // SOBRESCREVER com dados do progresso (column, completed, notes, etc)
+          column: progressItem.column || 'todo', // Garantir que column existe
+          order: progressItem.order ?? sourceItem.order
+        };
+      }
+      
+      // Se não tem progresso, usar template
       return {
         id: sourceItem.id,
         title: sourceItem.title,
         description: sourceItem.description,
-        completed: progressItem?.completed || false,
-        notes: progressItem?.notes || '',
-        completedAt: progressItem?.completedAt,
-        column: progressItem?.column ?? (sourceItem.column || 'todo'),
-        order: progressItem?.order ?? sourceItem.order,
+        completed: false,
+        notes: '',
+        column: sourceItem.column || 'todo',
+        order: sourceItem.order,
         metadata: sourceItem.metadata
       };
     });

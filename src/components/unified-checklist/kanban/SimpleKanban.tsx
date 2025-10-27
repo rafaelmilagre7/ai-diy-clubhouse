@@ -165,7 +165,12 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         console.log("💾 Salvando mudança de coluna:", {
           itemId,
           newColumn: mappedColumn,
-          checklistId: currentChecklistData.id
+          checklistId: currentChecklistData.id,
+          totalItems: currentItems.length,
+          itemsDistribution: currentItems.reduce((acc: Record<string, number>, item) => {
+            acc[item.column || 'unknown'] = (acc[item.column || 'unknown'] || 0) + 1;
+            return acc;
+          }, {})
         });
 
         // Salvar no banco (FORA do setState)
