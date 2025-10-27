@@ -8,7 +8,7 @@ import { BuilderSectionLoader, CHECKLIST_MESSAGES } from '@/components/builder/B
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
-import { useUnifiedChecklistTemplate } from '@/hooks/useUnifiedChecklists';
+import { useUnifiedChecklistTemplate, useUnifiedChecklist } from '@/hooks/useUnifiedChecklists';
 
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
@@ -32,13 +32,30 @@ export default function BuilderSolutionChecklist() {
     },
   });
 
-  // ✅ Usar hook unificado com fallback inteligente
+  // ✅ Buscar AMBOS: template E progresso do usuário
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(
     id || '', 
     'implementation'
   );
   
-  const existingChecklist = template;
+  const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(
+    id || '',
+    'implementation'
+  );
+
+  const isLoadingChecklists = isLoadingTemplate || isLoadingProgress;
+  
+  // Se tem progresso do usuário, usar ele. Senão, usar template
+  const existingChecklist = userProgress || template;
+  
+  console.log('🔍 [BuilderSolutionChecklist] Dados carregados:', {
+    hasTemplate: !!template,
+    hasUserProgress: !!userProgress,
+    usingData: userProgress ? 'USER_PROGRESS' : 'TEMPLATE',
+    checklistId: existingChecklist?.id,
+    userProgressItemsCount: userProgress?.checklist_data?.items?.length,
+    templateItemsCount: template?.checklist_data?.items?.length
+  });
 
   // ⏱️ FASE 1: Timeout de 5 minutos (margem segura)
   useEffect(() => {
@@ -100,14 +117,14 @@ export default function BuilderSolutionChecklist() {
         solutionId: id,
         retryCount,
         timeout: hasTimeout,
-        isLoadingTemplate
+        isLoadingChecklists
       });
     }
-  }, [existingChecklist, hasTimeout, id, retryCount, isLoadingTemplate]);
+  }, [existingChecklist, hasTimeout, id, retryCount, isLoadingChecklists]);
 
   // 🔄 FASE 2: Polling inteligente - refetch a cada 3s até encontrar checklist
   useEffect(() => {
-    if (!existingChecklist && !hasTimeout && !isLoadingTemplate) {
+    if (!existingChecklist && !hasTimeout && !isLoadingChecklists) {
       console.log('[CHECKLIST] 🔄 Iniciando polling (refetch a cada 3s)...');
       
       const intervalId = setInterval(() => {
@@ -122,7 +139,7 @@ export default function BuilderSolutionChecklist() {
         clearInterval(intervalId);
       };
     }
-  }, [existingChecklist, hasTimeout, isLoadingTemplate, queryClient, id]);
+  }, [existingChecklist, hasTimeout, isLoadingChecklists, queryClient, id]);
 
   if (isLoading) {
     return (
