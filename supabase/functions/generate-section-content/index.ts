@@ -176,36 +176,143 @@ Retorne JSON:
 }`;
       maxTokens = 20000;
     } else if (sectionType === "lovable") {
-      systemPrompt = `Você é tech lead especializado em criar prompts para desenvolvimento.
+      systemPrompt = `Você é o LOVABLE, a plataforma de desenvolvimento AI-first. Você está gerando um prompt para VOCÊ MESMO implementar uma solução.
 
-Gere um PROMPT COMPLETO para o Lovable implementar a solução.
+🎯 MISSÃO:
+Criar um PROMPT INICIAL COMPLETO que permita implementar essa solução no Lovable de forma eficiente, usando as melhores práticas e funcionalidades nativas da plataforma.
 
-Inclua:
-- Contexto do projeto (2-3 parágrafos)
-- Stack tecnológica (React, Supabase, etc)
-- Schema de banco detalhado
-- Funcionalidades core (passo-a-passo)
-- Workflows e integrações
-- Design e UX
-- Autenticação e segurança
-- Critérios de aceite
+📋 ESTRUTURA DO PROMPT (use TODOS os tópicos):
 
-Use formatação Markdown.
+## 1. CONTEXTO E OBJETIVO (2-3 parágrafos)
+- Descreva o problema de negócio
+- Explique a solução proposta
+- Defina o público-alvo
+
+## 2. STACK TECNOLÓGICA RECOMENDADA
+- Frontend: React + TypeScript + shadcn/ui (componentes prontos)
+- Backend: Supabase (database, auth, edge functions, storage)
+- Integrações: Liste APIs necessárias (Lovable AI, Stripe, Twilio, etc)
+- Mencione Lovable Cloud se precisar de backend escalável
+
+## 3. FUNCIONALIDADES PRINCIPAIS
+Liste cada feature detalhadamente:
+- Nome da funcionalidade
+- Comportamento esperado (passo-a-passo do usuário)
+- Regras de negócio
+- Validações necessárias
+
+## 4. ESTRUTURA DE DADOS (Database Schema)
+Defina tabelas com:
+- Nome da tabela
+- Colunas (tipo, nullable, defaults)
+- Relacionamentos
+- Políticas RLS (Row Level Security)
+- Índices para performance
+
+## 5. AUTENTICAÇÃO E PERMISSÕES
+- Tipo de auth (email/senha, Google, etc)
+- Níveis de acesso (admin, user)
+- Fluxos de onboarding
+
+## 6. INTEGRAÇÕES EXTERNAS
+Para cada integração:
+- API/Serviço necessário
+- Endpoint específico
+- Autenticação (API keys via Supabase secrets)
+- Exemplo de payload/resposta
+- Edge function necessária para segurança
+
+## 7. DESIGN E UX
+- Estilo visual (moderno, minimalista, etc)
+- Cores principais (use semantic tokens)
+- Layout responsivo (mobile-first)
+- Componentes UI necessários
+
+## 8. FLUXOS CRÍTICOS
+Descreva os 2-3 fluxos mais importantes:
+- Fluxo de cadastro/onboarding
+- Fluxo principal da aplicação
+- Fluxo de pagamento/conversão (se aplicável)
+
+## 9. CRITÉRIOS DE ACEITE
+Liste 8-12 critérios mensuráveis:
+- [ ] Funcionalidade X está operacional
+- [ ] Performance < 2s para ação Y
+- [ ] Mobile responsivo em telas 320px+
+
+## 10. OBSERVAÇÕES TÉCNICAS
+- Mencione se precisa de rate limiting
+- Considere caching para queries pesadas
+- Sugira otimizações de performance
+- Alerte sobre possíveis gargalos
+
+🚀 DIFERENCIAIS LOVABLE:
+- Use Lovable AI (google/gemini-2.5-flash por padrão) para features de IA
+- Mencione edge functions para lógica backend
+- Configure RLS policies para segurança
+- Use shadcn/ui para UI consistente e profissional
+- Integre Supabase Realtime se precisar de updates em tempo real
+
+⚠️ IMPORTANTE:
+- Seja ESPECÍFICO: evite "criar dashboard", diga "dashboard com cards de métricas X, Y, Z"
+- Seja EXECUTÁVEL: cada instrução deve ser clara o suficiente para implementação direta
+- Seja COMPLETO: não deixe funcionalidades críticas implícitas
 
 Retorne JSON:
 {
-  "lovable_prompt": "# Título...",
+  "lovable_prompt": "# [Título da Solução]\n\n## 1. Contexto...",
   "complexity": "low/medium/high",
-  "estimated_time": "..."
+  "estimated_time": "1-2 semanas / 2-4 semanas / 1-2 meses"
 }`;
-      maxTokens = 30000;
+      maxTokens = 40000; // 🚀 Aumentado para suportar prompts mais completos
+    }
+
+    // 🎯 Para Lovable, incluir CONTEXTO COMPLETO (perguntas + respostas)
+    let contextualInfo = '';
+    
+    if (sectionType === 'lovable') {
+      // Buscar perguntas e respostas da validação
+      const questionsAsked = solution.questions_asked || [];
+      const userAnswers = solution.user_answers || [];
+      
+      if (questionsAsked.length > 0 && userAnswers.length > 0) {
+        contextualInfo = '\n\n📝 CONTEXTO ADICIONAL (Validação Técnica):\n';
+        questionsAsked.forEach((q: string, idx: number) => {
+          const answer = userAnswers[idx] || 'Não respondido';
+          contextualInfo += `\nPergunta ${idx + 1}: ${q}\nResposta: ${answer}\n`;
+        });
+      }
+      
+      // Adicionar dados estruturados da solução se existirem
+      if (solution.required_tools) {
+        contextualInfo += '\n\n🛠️ FERRAMENTAS IDENTIFICADAS:\n';
+        const tools = solution.required_tools;
+        if (tools.essential) {
+          contextualInfo += `Essential: ${tools.essential.map((t: any) => t.name).join(', ')}\n`;
+        }
+        if (tools.optional) {
+          contextualInfo += `Optional: ${tools.optional.map((t: any) => t.name).join(', ')}\n`;
+        }
+      }
+      
+      if (solution.framework_mapping) {
+        contextualInfo += '\n\n🏗️ FRAMEWORK JÁ MAPEADO:\n';
+        const fw = solution.framework_mapping;
+        Object.keys(fw).forEach(key => {
+          if (fw[key]?.title) {
+            contextualInfo += `- ${fw[key].title}: ${fw[key].tool_names?.join(', ') || 'N/A'}\n`;
+          }
+        });
+      }
     }
 
     const userPrompt = `Analise esta solução e gere o conteúdo solicitado:
 
-IDEIA: ${solution.original_idea}
+IDEIA ORIGINAL: ${solution.original_idea}
 TÍTULO: ${solution.title}
 DESCRIÇÃO: ${solution.short_description || 'Não especificada'}
+PÚBLICO-ALVO: ${solution.target_audience || 'Não especificado'}
+${contextualInfo}
 
 Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
 
