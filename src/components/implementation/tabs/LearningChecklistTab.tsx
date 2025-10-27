@@ -1,13 +1,14 @@
-import React from "react";
+import React, { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
-import { ChecklistItem } from "../content/checklist/ChecklistItem";
 import { ChecklistProgress } from "../content/checklist/ChecklistProgress";
 import { ChecklistLoading } from "../content/checklist/ChecklistLoading";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getChecklistTemplate } from "@/lib/supabase/rpc";
+import SimpleKanban from "@/components/unified-checklist/kanban/SimpleKanban";
+import { UnifiedChecklistData } from "@/hooks/useUnifiedChecklists";
 
 interface LearningChecklistTabProps {
   solutionId: string;
@@ -42,83 +43,81 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     },
   });
 
-  const { data: userProgress, refetch: refetchProgress } = useQuery({
-    queryKey: ['learning-user-progress', solutionId, user?.id],
+  // Buscar checklist pessoal do usuário
+  const { data: userChecklist, refetch: refetchUserChecklist } = useQuery({
+    queryKey: ['user-checklist', solutionId, user?.id],
     queryFn: async () => {
-      if (!user?.id) return {};
-
+      if (!user?.id) return null;
+      
       const { data } = await supabase
         .from('unified_checklists')
-        .select('checklist_data')
+        .select('*')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
         .eq('checklist_type', 'implementation')
         .eq('is_template', false)
         .maybeSingle();
-
-      const items = data?.checklist_data?.items || [];
-      const progress: Record<string, boolean> = {};
-      items.forEach((item: any) => {
-        progress[item.id] = item.checked || false;
-      });
-
-      return progress;
+      
+      return data as UnifiedChecklistData | null;
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!checklistItems,
   });
 
-  // Função para atualizar item
-  const handleCheckChange = async (itemId: string, checked: boolean) => {
-    if (!user?.id) {
-      toast.error("Você precisa estar logado para marcar itens");
-      return;
-    }
-
-    // Buscar checklist atual do usuário
-    const { data: currentData } = await supabase
-      .from('unified_checklists')
-      .select('checklist_data')
-      .eq('user_id', user.id)
-      .eq('solution_id', solutionId)
-      .eq('checklist_type', 'implementation')
-      .eq('is_template', false)
-      .maybeSingle();
-
-    const updatedItems = checklistItems?.map(item => ({
-      id: item.id,
-      description: item.description,
-      title: item.title,
-      checked: item.id === itemId ? checked : (userProgress?.[item.id] || false)
-    }));
-
-    const { error } = await supabase
-      .from('unified_checklists')
-      .upsert({
-        user_id: user.id,
-        solution_id: solutionId,
-        checklist_type: 'implementation',
-        is_template: false,
-        checklist_data: {
-          items: updatedItems,
-          lastUpdated: new Date().toISOString()
-        },
-        updated_at: new Date().toISOString(),
-      });
-
-    if (error) {
-      console.error('Erro ao salvar progresso:', error);
-      toast.error("Erro ao salvar progresso");
-      return;
-    }
-
-    refetchProgress();
+  // Criar checklist pessoal se não existir
+  useEffect(() => {
+    if (!user?.id || !checklistItems || userChecklist !== null || loadingChecklist) return;
     
-    const allChecked = updatedItems?.every(item => item.checked);
-    if (allChecked && onComplete) {
+    const createUserChecklist = async () => {
+      const itemsWithColumns = checklistItems.map(item => ({
+        ...item,
+        column: 'todo',
+        completed: false,
+        checked: false,
+        notes: ''
+      }));
+      
+      const { error } = await supabase
+        .from('unified_checklists')
+        .insert({
+          user_id: user.id,
+          solution_id: solutionId,
+          checklist_type: 'implementation',
+          is_template: false,
+          checklist_data: {
+            items: itemsWithColumns,
+            lastUpdated: new Date().toISOString()
+          },
+          completed_items: 0,
+          total_items: itemsWithColumns.length,
+          progress_percentage: 0,
+          is_completed: false,
+        });
+      
+      if (!error) {
+        refetchUserChecklist();
+      }
+    };
+    
+    createUserChecklist();
+  }, [user?.id, checklistItems, userChecklist, loadingChecklist, solutionId, refetchUserChecklist]);
+
+  // Calcular progresso baseado em items completos
+  const completedCount = useMemo(() => {
+    if (!userChecklist?.checklist_data?.items) return 0;
+    return userChecklist.checklist_data.items.filter(item => item.completed).length;
+  }, [userChecklist]);
+
+  // Verificar conclusão total
+  useEffect(() => {
+    if (!userChecklist?.checklist_data?.items) return;
+    
+    const allDone = userChecklist.checklist_data.items.every(item => item.completed);
+    
+    if (allDone && onComplete) {
       onComplete();
-      toast.success("Parabéns! Você completou o checklist!");
+      toast.success("🎉 Parabéns! Você completou todas as tarefas!");
     }
-  };
+  }, [userChecklist, onComplete]);
 
   if (loadingChecklist) {
     return <ChecklistLoading />;
@@ -136,28 +135,32 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     );
   }
 
-  const completedCount = checklistItems.filter(item => userProgress?.[item.id]).length;
+  // Mostrar loading enquanto cria o checklist pessoal
+  if (!userChecklist && user?.id) {
+    return <ChecklistLoading />;
+  }
 
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="text-lg font-semibold mb-2">Lista de Verificação</h3>
+        <h3 className="text-lg font-semibold mb-2">Checklist de Implementação</h3>
         <p className="text-muted-foreground">
-          Marque os itens conforme você implementa a solução.
+          Arraste os cards entre as colunas para organizar suas tarefas.
         </p>
       </div>
 
-      <div className="space-y-3">
-        {checklistItems.map((item) => (
-          <ChecklistItem
-            key={item.id}
-            item={item}
-            isChecked={userProgress?.[item.id] || false}
-            onChange={(checked) => handleCheckChange(item.id, checked)}
-            disabled={!user}
-          />
-        ))}
-      </div>
+      {userChecklist ? (
+        <SimpleKanban
+          checklistItems={userChecklist.checklist_data?.items || []}
+          checklistData={userChecklist}
+          solutionId={solutionId}
+          checklistType="implementation"
+        />
+      ) : (
+        <div className="text-center py-8 text-muted-foreground">
+          Faça login para começar a usar o checklist.
+        </div>
+      )}
 
       <ChecklistProgress
         completedItems={completedCount}
