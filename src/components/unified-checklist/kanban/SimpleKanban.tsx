@@ -93,8 +93,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    console.log("🔵 Drag End:", { activeId: active.id, overId: over?.id });
-    
     setActiveId(null);
 
     if (!over) {
@@ -119,9 +117,9 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       return;
     }
 
-    // Atualizar estado local imediatamente (UI otimista)
-    setLocalItems((prev) => {
-      return prev.map((item) =>
+    // Atualizar estado local IMEDIATAMENTE para feedback visual
+    setLocalItems((prevItems) => {
+      return prevItems.map((item) =>
         item.id === itemId ? { ...item, column: mappedColumn } : item
       );
     });
@@ -131,29 +129,37 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       clearTimeout(saveTimeoutRef.current);
     }
 
-    // Debounce: salvar após 300ms (permite múltiplos drags rápidos)
+    // Debounce: salvar após 500ms
     saveTimeoutRef.current = setTimeout(() => {
-      // Usar dados mais recentes da ref
-      const currentChecklistData = checklistDataRef.current;
-      
-      if (!currentChecklistData.id) {
-        console.error("❌ Checklist ID não encontrado, não é possível salvar");
-        toast.error("Erro: checklist não inicializado");
-        return;
-      }
-
-      // Pegar estado atualizado dos items
+      // Pegar os dados ATUALIZADOS diretamente do estado
       setLocalItems((currentItems) => {
-        // Calcular progresso baseado no estado atual
+        const currentChecklistData = checklistDataRef.current;
+        const itemToSave = currentItems.find(i => i.id === itemId);
+        
+        if (!currentChecklistData.id) {
+          console.error("❌ Checklist ID não encontrado");
+          toast.error("Erro: checklist não inicializado");
+          return currentItems;
+        }
+
+        console.log("💾 Preparando para salvar:", {
+          itemId,
+          itemTitle: itemToSave?.title,
+          oldColumn: checklistItems.find(i => i.id === itemId)?.column,
+          newColumn: itemToSave?.column,
+          checklistId: currentChecklistData.id
+        });
+
+        // Calcular progresso
         const completedCount = currentItems.filter(item => item.completed).length;
         const totalCount = currentItems.length;
         const progressPercent = Math.round((completedCount / totalCount) * 100);
 
-        // Preparar dados para salvar
+        // Preparar dados com items ATUALIZADOS
         const updatedChecklistData: UnifiedChecklistData = {
           ...currentChecklistData,
           checklist_data: {
-            items: currentItems,
+            items: currentItems, // ✅ Usar items atualizados
             lastUpdated: new Date().toISOString()
           },
           completed_items: completedCount,
@@ -162,18 +168,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           is_completed: completedCount === totalCount && totalCount > 0,
         };
 
-        console.log("💾 Salvando mudança de coluna:", {
-          itemId,
-          newColumn: mappedColumn,
-          checklistId: currentChecklistData.id,
-          totalItems: currentItems.length,
-          itemsDistribution: currentItems.reduce((acc: Record<string, number>, item) => {
-            acc[item.column || 'unknown'] = (acc[item.column || 'unknown'] || 0) + 1;
-            return acc;
-          }, {})
-        });
-
-        // Salvar no banco (FORA do setState)
+        // Salvar no banco
         updateMutation.mutate({
           checklistData: updatedChecklistData,
           solutionId,
@@ -183,18 +178,17 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           onError: (error) => {
             console.error("❌ Erro ao salvar:", error);
             toast.error("Erro ao salvar alteração");
-            // Reverter para dados originais
             setLocalItems(checklistItems);
           },
           onSuccess: () => {
             console.log("✅ Alteração salva com sucesso");
+            toast.success("Card movido com sucesso!");
           },
         });
 
-        // Retornar estado atual (sem modificar)
-        return currentItems;
+        return currentItems; // Não modifica o estado
       });
-    }, 300);
+    }, 500);
   };
 
   const activeItem = useMemo(() => {
