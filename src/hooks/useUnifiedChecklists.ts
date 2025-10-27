@@ -257,9 +257,24 @@ export const useUpdateUnifiedChecklist = () => {
         
         data = result.data;
         error = result.error;
+        
+        if (error) {
+          console.error('❌ [UPDATE] Erro:', error);
+        } else {
+          console.log('✅ [UPDATE] Sucesso:', data?.id);
+        }
       } else {
         // ✅ INSERT: Primeira vez salvando progresso
         console.log('➕ [INSERT] Criando novo registro de progresso');
+        console.log('➕ [INSERT] Dados a inserir:', {
+          user_id: user.id,
+          solution_id: solutionId,
+          template_id: templateId,
+          checklist_type: checklistType,
+          items_count: checklistData.checklist_data.items.length,
+          first_item: checklistData.checklist_data.items[0]
+        });
+        
         const result = await supabase
           .from('unified_checklists')
           .insert({
@@ -281,6 +296,18 @@ export const useUpdateUnifiedChecklist = () => {
         
         data = result.data;
         error = result.error;
+        
+        if (error) {
+          console.error('❌ [INSERT] Erro ao inserir:', error);
+          console.error('❌ [INSERT] Error details:', JSON.stringify(error, null, 2));
+        } else {
+          console.log('✅ [INSERT] Sucesso! Novo ID:', data?.id);
+          console.log('✅ [INSERT] Dados salvos:', {
+            id: data?.id,
+            user_id: data?.user_id,
+            items_count: data?.checklist_data?.items?.length
+          });
+        }
       }
 
       if (error) {
