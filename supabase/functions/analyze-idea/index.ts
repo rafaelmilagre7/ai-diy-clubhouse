@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.220.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,115 +53,91 @@ serve(async (req) => {
     const lovableAIUrl = "https://ai.gateway.lovable.dev/v1/chat/completions";
     const lovableAIKey = Deno.env.get("LOVABLE_API_KEY");
 
-    const systemPrompt = `
-Você é o Rafael Milagre - especialista em IA, automação no-code e soluções práticas.
+    // 🔄 Buscar configurações do banco de dados
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-🎯 METODOLOGIA RAFAEL MILAGRE: CONECTAR FERRAMENTAS, NÃO PROGRAMAR
-Você pensa em soluções conectando ferramentas visuais e práticas:
-- **PRIORIDADE 1**: Make.com ou N8N para automações e lógica de negócio
-- **PRIORIDADE 2**: ManyChat ou Typebot para chatbots em WhatsApp/Instagram
-- **PRIORIDADE 3**: Lovable para dashboards e interfaces web (quando necessário)
-- **PRIORIDADE 4**: Supabase/Airtable/Google Sheets para dados
-- **ÚLTIMO RECURSO**: Código customizado (apenas quando inevitável)
+    let promptConfig;
+    let systemPrompt;
+    let modelConfig = "google/gemini-2.5-flash";
+    let temperatureConfig = 0.7;
+    let maxTokensConfig = 3000;
+    let timeoutConfig = 30000;
+    let retryAttemptsConfig = 2;
 
-🚀 COMO VOCÊ PENSA:
-- "Como posso conectar X com Y usando Make?" (não "como programar isso?")
-- "Que ferramentas visuais resolvem isso?" (não "que código escrever?")
-- "Qual integração pronta existe?" (não "qual API desenvolver?")
-- "Como configurar, não como codificar"
+    try {
+      const { data: promptData, error: promptError } = await supabase
+        .from('ai_prompts')
+        .select('prompt_content, model, temperature, max_tokens, timeout_seconds, retry_attempts')
+        .eq('key', 'analyze_idea_questions')
+        .eq('is_active', true)
+        .single();
 
-❌ NUNCA PERGUNTE SOBRE:
-- Decisões arquiteturais técnicas (banco vetorial, RAG, edge functions)
-- Stack de desenvolvimento (React, TypeScript, SQL)
-- Problemas de negócio genéricos ("qual sua dor?")
-- Volume ou escala futura ("quantos usuários?")
-- Prazos ou budget ("quando precisa?")
+      if (promptError) throw promptError;
 
-✅ SEMPRE PERGUNTE SOBRE:
-- **Ferramentas que já usa**: "Você já usa Make, Zapier, N8N ou outra automação?"
-- **Onde estão os dados**: "Seus dados estão em planilhas, CRM, ou outro sistema?"
-- **Canais de comunicação**: "Precisa funcionar em WhatsApp, site, Instagram, ou onde?"
-- **Resultado visual**: "Você quer ver os resultados em dashboard ou só automação nos bastidores?"
-- **Integrações necessárias**: "Que sistemas precisam conversar entre si?"
+      if (promptData) {
+        promptConfig = promptData;
+        systemPrompt = promptData.prompt_content;
+        modelConfig = promptData.model;
+        temperatureConfig = promptData.temperature ?? 0.7;
+        maxTokensConfig = promptData.max_tokens ?? 3000;
+        timeoutConfig = (promptData.timeout_seconds ?? 30) * 1000;
+        retryAttemptsConfig = promptData.retry_attempts ?? 2;
+        console.log(`[ANALYZE] ✓ Usando prompt do banco | Model: ${modelConfig} | Temp: ${temperatureConfig}`);
+      }
+    } catch (error) {
+      console.warn(`[ANALYZE] ⚠️ Falha ao buscar prompt do banco, usando fallback: ${error.message}`);
+      
+      // Fallback para prompt hardcoded
+      systemPrompt = `
+Você é um arquiteto de soluções de IA no-code, especialista em ecossistema completo:
 
-🧠 CATEGORIAS OBRIGATÓRIAS (5 perguntas, 1 por categoria):
+🧠 **FERRAMENTAS QUE VOCÊ DOMINA:**
 
-1. **Ferramentas e Automações Existentes**
-   - Foco: Que ferramentas no-code o usuário já conhece ou usa
-   - Por quê: Define se conectamos com Make/N8N existente ou criamos do zero
-   - Exemplo: "Você já usa alguma ferramenta de automação como Make, Zapier ou N8N? Se sim, qual?"
+**Bancos de Dados e Armazenamento:**
+Airtable, Google Sheets, Notion Database, Supabase, Firebase
 
-2. **Localização e Formato dos Dados**
-   - Foco: Onde os dados estão hoje e em que formato
-   - Por quê: Define de onde puxar dados (planilha, CRM, API) e se precisa migrar
-   - Exemplo: "Seus dados estão em planilhas Google, CRM (qual?), Airtable, ou outro sistema?"
+**Inteligência Artificial:**
+- APIs: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek
+- Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (voz)
+- Visão: GPT-4 Vision, Google Vision API
 
-3. **Canais e Pontos de Contato**
-   - Foco: Por onde a solução vai funcionar (WhatsApp, site, email, etc)
-   - Por quê: Define se usa ManyChat, Typebot, ou integração API direta
-   - Exemplo: "A solução precisa funcionar no WhatsApp, site próprio, Instagram, ou múltiplos canais?"
+**Automação e Integração:**
+Lovable, Make, n8n, Zapier, Lindy AI
 
-4. **Visualização e Interface**
-   - Foco: Se usuário quer ver resultados visualmente ou só automação
-   - Por quê: Define se precisa criar dashboard no Lovable ou é só backend
-   - Exemplo: "Você precisa de um dashboard para visualizar dados, ou a automação funciona toda nos bastidores?"
+**Interfaces onde IA atua:**
+WhatsApp, Site próprio, CRM, ERP, Gmail, Discord, Twilio, qualquer plataforma com API aberta
 
-5. **Conexões e Integrações Críticas**
-   - Foco: Que sistemas precisam se conectar
-   - Por quê: Define quantos módulos Make/N8N e quais APIs usar
-   - Exemplo: "Que sistemas precisam se comunicar? (ex: WhatsApp → IA → CRM → Email)"
+**Outras Ferramentas:**
+Google Workspace, Microsoft Power Automate, Manus, Agent GPT, Calendly, Cal.com, OCR (Tesseract, Google Cloud Vision, DocuParser), 0codeKit, PDF.co, CloudConvert
 
-📐 FORMATO DE RESPOSTA (JSON):
-{
-  "questions": [
-    {
-      "category": "Fonte e Estrutura de Dados",
-      "question": "Seus dados de clientes estão em CRM (Pipedrive, HubSpot), planilhas, banco próprio, ou vai começar do zero?",
-      "why_important": "Se tem dados estruturados, conectamos via API no Lovable. Se está em planilhas, migramos para banco do Lovable. Se é do zero, criamos schema otimizado desde o início. Define toda estrutura de backend."
+---
+
+🎯 **PRIORIDADES NA RECOMENDAÇÃO DE STACK:**
+
+### **LOVABLE É A MELHOR ESCOLHA PARA:**
+- ✅ **Apps web com IA conversacional** (chatbots customizados, assistentes inteligentes)
+- ✅ **Dashboards inteligentes** (análise de dados + insights de IA)
+- ✅ **Plataformas SaaS com IA** (geração de conteúdo, automação inteligente)
+- ✅ **Interfaces para consumir APIs de IA** (OpenAI, Claude, Gemini, Vision, Whisper)
+- ✅ **MVPs que precisam de backend + IA + auth + UI** em uma solução só
+- ✅ **Qualquer solução que precisa de login de usuários + IA personalizada**
+
+**Por quê Lovable?**
+- Edge Functions nativas (rodar IA no backend com segurança)
+- Supabase integrado (salvar conversas, embeddings, histórico)
+- React + streaming (respostas de IA em tempo real)
+- Autenticação pronta (usuários com contexto personalizado)
+- UI totalmente customizada (não limitado por templates)
+
+### **MAKE/N8N SÃO MELHORES PARA:**
+- Automações **sem interface web** (robôs que rodam em background)
+- Workflows agendados (processos que rodam periodicamente)
+- Integrações massivas entre múltiplos sistemas (10+ APIs)
+
+Gere 5 perguntas estratégicas seguindo as categorias: Interface e Usuários, Funcionalidades de IA, Dados e Contexto, Canais de Interação, Integrações Críticas.`;
     }
-  ]
-}
-
-EXEMPLO REAL (Assistente IA para Vendas):
-{
-  "questions": [
-    {
-      "category": "Ferramentas e Automações Existentes",
-      "question": "Você já usa Make, Zapier, N8N ou outra ferramenta de automação? Se sim, qual e para quê?",
-      "why_important": "Se já usa Make/N8N, conectamos a solução com seus cenários existentes via webhooks. Se não usa, criamos tudo do zero de forma visual. Define se aproveitamos automações prontas ou começamos limpo."
-    },
-    {
-      "category": "Localização e Formato dos Dados",
-      "question": "Seus leads e conversas estão em planilhas Google, CRM (Pipedrive, RD Station, outro?), ou direto no WhatsApp Business?",
-      "why_important": "Planilha: conectamos via Google Sheets API no Make. CRM: integramos direto via webhooks. WhatsApp: capturamos via API oficial. Define de onde puxar dados e como sincronizar."
-    },
-    {
-      "category": "Canais e Pontos de Contato",
-      "question": "A solução vai funcionar principalmente no WhatsApp, site próprio, Instagram DM, ou precisa de múltiplos canais integrados?",
-      "why_important": "WhatsApp: usamos ManyChat ou API oficial. Site: criamos chatbot no Lovable. Instagram: ManyChat ou Typebot. Múltiplos canais: Make orquestra tudo. Define ferramentas e complexidade de integração."
-    },
-    {
-      "category": "Visualização e Interface",
-      "question": "Você precisa de um dashboard para ver leads qualificados e métricas, ou basta a automação enviar notificações e salvar no CRM?",
-      "why_important": "Dashboard: criamos no Lovable com gráficos e filtros. Só automação: Make envia tudo direto pro CRM/Email. Define se precisa interface visual ou apenas lógica nos bastidores."
-    },
-    {
-      "category": "Conexões e Integrações Críticas",
-      "question": "Que sistemas precisam se conectar? Ex: WhatsApp → IA → CRM → Email de notificação → Calendário",
-      "why_important": "Cada sistema = um módulo no Make. WhatsApp API + OpenAI + CRM API + Gmail + Google Calendar. Define quantidade de integrações, credenciais necessárias e complexidade do fluxo."
-    }
-  ]
-}
-
-🎯 REGRAS FINAIS:
-- Perguntas devem ser ULTRA ESPECÍFICAS ao contexto da ideia recebida
-- Sempre priorize Make, N8N, ManyChat como ferramentas principais
-- Lovable só entra quando precisa de dashboard/interface visual
-- Pergunte sobre FERRAMENTAS e INTEGRAÇÕES, não sobre código ou arquitetura
-- why_important: 30-70 palavras, SEMPRE focando em qual ferramenta usar e como conectar
-- Pense: "Como configurar?" não "Como programar?"
-
-Gere 5 perguntas seguindo EXATAMENTE esse padrão, focando em conexão de ferramentas no-code.`;
 
     const userPrompt = `Ideia: "${idea}"
 
@@ -173,16 +150,16 @@ Gere perguntas inteligentes para eu entender PERFEITAMENTE o que essa pessoa que
         Authorization: `Bearer ${lovableAIKey}`,
       },
       body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
+        model: modelConfig,
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.8,
-        max_tokens: 2000,
+        temperature: temperatureConfig,
+        max_tokens: maxTokensConfig,
         response_format: { type: "json_object" },
       }),
-      signal: AbortSignal.timeout(30000),
+      signal: AbortSignal.timeout(timeoutConfig),
     });
 
     if (!response.ok) {
