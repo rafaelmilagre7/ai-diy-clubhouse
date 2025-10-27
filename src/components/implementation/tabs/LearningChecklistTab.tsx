@@ -91,19 +91,22 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     enabled: !!user?.id && !!checklistItems,
   });
 
-  // Log do estado geral
-  console.log('🔍 [LearningChecklistTab] Estado geral:', {
+  // Log do estado geral (CRÍTICO para debug)
+  console.log('🎯 [LearningChecklistTab] Estado atual:', {
     hasUser: !!user?.id,
     userId: user?.id,
     solutionId,
     checklistItemsCount: checklistItems?.length,
     userChecklistExists: !!userChecklist,
-    userChecklistId: userChecklist?.id,
+    userChecklistId: userChecklist?.id, // ← DEVE ter UUID válido
+    hasUserId: !!userChecklist?.user_id, // ← DEVE ser true
     userChecklistItemsCount: userChecklist?.checklist_data?.items?.length,
     userChecklistItemsWithColumn: userChecklist?.checklist_data?.items?.filter(i => i.column)?.length,
+    firstItemColumn: userChecklist?.checklist_data?.items?.[0]?.column,
     loadingChecklist,
     hasError: !!userChecklistError,
-    errorMessage: userChecklistError?.message
+    errorMessage: userChecklistError?.message,
+    isTemplate: userChecklist?.is_template // ← DEVE ser false
   });
 
   // Criar checklist pessoal se não existir
@@ -259,12 +262,17 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       </div>
 
       {userChecklist ? (
-        <SimpleKanban
-          checklistItems={userChecklist.checklist_data?.items || []}
-          checklistData={userChecklist}
-          solutionId={solutionId}
-          checklistType="implementation"
-        />
+        <>
+          <div className="text-xs text-muted-foreground mb-2 font-mono bg-muted/50 p-2 rounded">
+            🔍 Debug: Checklist ID = {userChecklist.id || 'UNDEFINED'} | User ID = {userChecklist.user_id || 'UNDEFINED'} | Items = {userChecklist.checklist_data?.items?.length || 0}
+          </div>
+          <SimpleKanban
+            checklistItems={userChecklist.checklist_data?.items || []}
+            checklistData={userChecklist}
+            solutionId={solutionId}
+            checklistType="implementation"
+          />
+        </>
       ) : (
         <div className="text-center py-8 text-muted-foreground">
           Faça login para começar a usar o checklist.

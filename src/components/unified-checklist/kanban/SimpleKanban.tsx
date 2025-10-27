@@ -152,6 +152,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           itemTitle: itemToSave?.title,
           currentColumn: itemToSave?.column,
           checklistId: currentChecklistData.id,
+          isUpdate: !!currentChecklistData.id, // ← CRÍTICO: deve ser true após primeira criação
           userId: currentChecklistData.user_id,
           solutionId: currentSolutionId,
           templateId: currentChecklistData.template_id,
