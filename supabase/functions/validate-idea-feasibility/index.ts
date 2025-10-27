@@ -244,9 +244,10 @@ Você DEVE responder APENAS com um objeto JSON no seguinte formato (sem emojis, 
   "estimated_time": "1-2 semanas", "2-4 semanas", "1-2 meses", ou "2-3 meses",
   "required_stack": ["lista", "de", "3-8", "tecnologias/ferramentas", "principais", "necessárias"],
   "limitations": [
-    "2-4 limitações técnicas CONHECIDAS desta abordagem",
-    "Seja honesto sobre o que não funciona bem ou tem restrições",
-    "Exemplo: 'Processamento limitado a 100 requisições/min', 'Não suporta arquivos maiores que 10MB'"
+    "Liste 1-3 limitações técnicas CONHECIDAS desta abordagem",
+    "Seja honesto sobre o que não funciona perfeitamente",
+    "Exemplo: 'Processamento limitado a 100 requisições/min', 'Custo pode escalar com volume alto'",
+    "IMPORTANTE: Se for muito viável e sem grandes limitações, liste pelo menos 1 limitação técnica realista"
   ],
   "cost_estimate": "Estimativa de custo mensal realista (ex: 'R$ 50-200/mês', 'Gratuito até 1000 usuários', 'R$ 500+ dependendo do volume')"
 }
@@ -256,10 +257,10 @@ IMPORTANTE:
 - Todos os campos são obrigatórios
 - technical_explanation deve ter NO MÍNIMO 200 palavras (conte!)
 - suggestions deve ter NO MÍNIMO 3 itens e NO MÁXIMO 5
-- limitations deve ter NO MÍNIMO 2 itens e NO MÁXIMO 4`;
+- limitations deve ter NO MÍNIMO 1 item e NO MÁXIMO 3 (sempre liste pelo menos 1 limitação realista)`;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando Lovable AI...');
-    console.log('[VALIDATE-FEASIBILITY] 🤖 Modelo: google/gemini-2.5-pro');
+    console.log('[VALIDATE-FEASIBILITY] 🤖 Modelo: google/gemini-2.5-flash');
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
@@ -345,7 +346,7 @@ IMPORTANTE:
         typeof validationResult.reason !== 'string' ||
         !validationResult.reason.trim() ||
         typeof validationResult.technical_explanation !== 'string' ||
-        technicalExplanationWords < 50 || // Mínimo 50 palavras (200-400 palavras seria ideal)
+        technicalExplanationWords < 50 ||
         !Array.isArray(validationResult.suggestions) ||
         validationResult.suggestions.length < 3 ||
         validationResult.suggestions.length > 5 ||
@@ -355,7 +356,6 @@ IMPORTANTE:
         !Array.isArray(validationResult.required_stack) ||
         validationResult.required_stack.length < 3 ||
         !Array.isArray(validationResult.limitations) ||
-        validationResult.limitations.length < 2 ||
         validationResult.limitations.length > 4 ||
         typeof validationResult.cost_estimate !== 'string') {
       

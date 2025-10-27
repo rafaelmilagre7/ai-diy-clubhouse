@@ -176,7 +176,7 @@ export default function Builder() {
         console.error('[BUILDER] Erro na validação:', error);
         setValidationStatus('error');
         setValidationMessage('Erro ao validar ideia. Tente novamente.');
-        setTimeout(() => setValidationStatus('idle'), 3000);
+        // Não limpar automaticamente - usuário deve clicar no botão
         return;
       }
 
