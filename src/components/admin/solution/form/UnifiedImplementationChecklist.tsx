@@ -48,14 +48,14 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
       return;
     }
 
-    const items = template.checklist_data?.items;
+    // Normalizar e validar items do template
+    const items = template.checklist_data?.items || [];
     
-    if (!items || !Array.isArray(items)) {
+    if (Array.isArray(items) && items.length > 0) {
+      setChecklistItems(items);
+    } else {
       setChecklistItems([]);
-      return;
     }
-    
-    setChecklistItems(items);
   }, [template, isLoading, error, solutionId]);
 
   const saveCheckpoints = async () => {

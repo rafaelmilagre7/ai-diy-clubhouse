@@ -99,12 +99,25 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         return null;
       }
 
-      return templateData as UnifiedChecklistData;
+      if (!templateData) return null;
+
+      // Normalizar dados para garantir que items sempre seja um array válido
+      const normalizedData = {
+        ...templateData,
+        checklist_data: {
+          items: Array.isArray(templateData.checklist_data?.items) 
+            ? templateData.checklist_data.items 
+            : [],
+          lastUpdated: templateData.checklist_data?.lastUpdated || templateData.updated_at || new Date().toISOString()
+        }
+      } as UnifiedChecklistData;
+
+      return normalizedData;
     },
     enabled: !!solutionId,
-    staleTime: 0, // ✅ Sem cache para sempre buscar dados atualizados
-    gcTime: 1000 * 60 * 10, // 10 minutos
-    refetchOnMount: 'always', // ✅ Forçar reload ao montar componente
+    staleTime: 0,
+    gcTime: 1000 * 60 * 10,
+    refetchOnMount: 'always',
   });
 };
 
