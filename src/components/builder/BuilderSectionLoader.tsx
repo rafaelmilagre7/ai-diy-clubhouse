@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { getLoadingMessages } from '@/lib/loadingMessages';
 
 interface BuilderSectionLoaderProps {
   title: string;
@@ -107,39 +108,7 @@ export const BuilderSectionLoader: React.FC<BuilderSectionLoaderProps> = ({
   );
 };
 
-// Mensagens específicas por seção
-export const FRAMEWORK_MESSAGES = [
-  "Extraindo o cérebro do Rafael Milagre...",
-  "Pegando emprestado a experiência de design do Steve Jobs...",
-  "Consultando os sábios do Vale do Silício...",
-  "Roubando insights dos unicórnios de startup...",
-  "Telepatiando com os fundadores da OpenAI...",
-  "Decodificando padrões de sucessos bilionários...",
-  "Invocando o espírito empreendedor de Elon Musk...",
-  "Canalizando a sabedoria dos mestres da IA...",
-  "Destilando décadas de experiência em minutos...",
-];
-
-export const CHECKLIST_MESSAGES = [
-  "Quebrando pedras grandes em pedrinhas...",
-  "Transformando caos em ordem cronológica...",
-  "Criando atalhos para o seu sucesso...",
-  "Cortando gordura, ficando só com músculo...",
-  "Descomplicando o complicado...",
-  "Montando seu GPS para o sucesso...",
-  "Eliminando armadilhas ocultas do caminho...",
-  "Traduzindo teoria em ação prática...",
-  "Simplificando sem perder a profundidade...",
-];
-
-export const RECOMMENDATIONS_MESSAGES = [
-  "Vasculhando +10 mil horas de conteúdo...",
-  "Garimpando pérolas no oceano de conhecimento...",
-  "Filtrando ouro do que é só pirita...",
-  "Conectando pontos que você nem via...",
-  "Encurtando sua curva de aprendizado...",
-  "Montando seu atalho para a maestria...",
-  "Evitando que você perca tempo com fluff...",
-  "Selecionando só o que realmente funciona...",
-  "Criando sua trilha personalizada de sucesso...",
-];
+// Re-exportando mensagens da biblioteca centralizada
+export const FRAMEWORK_MESSAGES = getLoadingMessages('builder_framework');
+export const CHECKLIST_MESSAGES = getLoadingMessages('builder_checklist');
+export const RECOMMENDATIONS_MESSAGES = getLoadingMessages('builder_recommendations');

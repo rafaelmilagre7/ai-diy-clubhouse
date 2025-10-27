@@ -2,7 +2,8 @@
 import { Navigate, useLocation } from "react-router-dom";
 import { ReactNode, useEffect, useState } from "react";
 import { useAuth } from "@/contexts/auth";
-import LoadingScreen from "@/components/common/LoadingScreen";
+import { UnifiedLoadingScreen } from "@/components/common/UnifiedLoadingScreen";
+import { getLoadingMessages } from "@/lib/loadingMessages";
 
 interface ProtectedRoutesProps {
   children: ReactNode;
@@ -37,7 +38,13 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Ainda carregando (dentro do tempo limite)
   if (isLoading && !showTimeout) {
-    return <LoadingScreen message="Carregando sua área..." />;
+    return (
+      <UnifiedLoadingScreen 
+        title="Carregando sua área..."
+        messages={getLoadingMessages('auth')}
+        estimatedSeconds={5}
+      />
+    );
   }
 
   // Timeout atingido - permitir acesso mesmo sem perfil completo se houver usuário
