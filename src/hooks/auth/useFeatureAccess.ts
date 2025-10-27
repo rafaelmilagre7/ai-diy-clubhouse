@@ -3,45 +3,28 @@ import { useAuth } from '@/contexts/auth';
 import { isFeatureEnabledForUser, APP_FEATURES } from '@/config/features';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { usePermissionListener } from './usePermissionListener';
-import { usePermissions } from './usePermissions';
 
 export const useFeatureAccess = () => {
   const { profile } = useAuth();
   const userRole = getUserRoleName(profile);
+  
+  // ✅ CORREÇÃO FASE 1: Usar APENAS as permissões do JSON do role (configuradas no admin)
+  // Não mais combinar com sistema antigo que pode estar vazio
   const roleJsonPermissions = profile?.user_roles?.permissions || {};
-  const { userPermissions: permissionCodes = [], hasPermission } = usePermissions();
-
-  // Mapear permission codes (ex: 'tools.access') para flags de features
-  const permsFromCodes = permissionCodes.reduce<Record<string, boolean>>((acc, code) => {
-    const normalized = String(code).toLowerCase();
-    if (normalized.includes('.access')) {
-      const featureKey = normalized.replace('.access', '').trim();
-      // mapear nomes que não batem 1:1
-      if (featureKey === 'certificados') acc['certificates'] = true;
-      else acc[featureKey] = true;
-    }
-    return acc;
-  }, {});
-
-  // Combinar permissões do JSON do role com os codes atribuídos
-  const effectivePermissions = { ...roleJsonPermissions, ...permsFromCodes } as Record<string, any>;
 
   // 🔄 Detectar mudanças de permissões em tempo real
   usePermissionListener();
 
   const hasFeatureAccess = (featureName: string) => {
-    // Para networking, usar o sistema mais direto de permissões
-    if (featureName === 'networking') {
-      return hasPermission('networking.access');
-    }
-    
-    return isFeatureEnabledForUser(featureName, userRole, effectivePermissions);
+    // ✅ CORREÇÃO FASE 4: Remover exceção especial para networking
+    // Usar mesma lógica unificada para todas as features
+    return isFeatureEnabledForUser(featureName, userRole, roleJsonPermissions);
   };
 
   return {
     hasFeatureAccess,
     isAdmin: userRole === 'admin',
     userRole,
-    userPermissions: effectivePermissions,
+    userPermissions: roleJsonPermissions,
   };
 };

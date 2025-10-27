@@ -99,12 +99,16 @@ export const isFeatureEnabledForUser = (
     return true;
   }
 
-  // SEMPRE usar permissões específicas do banco (configuradas no admin)
-  // Não fazer fallback para roles hardcoded - forçar uso do sistema de permissões
-  if (!userPermissions || Object.keys(userPermissions).length === 0) {
-    return false; // Se não tem permissões configuradas, negar acesso
+  // ✅ CORREÇÃO FASE 2: Não negar acesso apenas porque userPermissions está vazio
+  // Pode ser que o objeto esteja vazio mas o role tenha as permissões corretas
+  // Se não tiver permissões E não tiver role conhecido, aí sim negar
+  if ((!userPermissions || Object.keys(userPermissions).length === 0) && !userRole) {
+    return false;
   }
 
+  // Se userPermissions estiver vazio mas temos um role, ainda verificar
+  // (o sistema de fallback abaixo vai lidar com isso)
+  
   // Usar permissões específicas do banco (configuradas no admin)
   switch (featureName) {
     case 'solutions':

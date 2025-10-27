@@ -3,6 +3,17 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 
+/**
+ * ⚠️ CORREÇÃO FASE 3: Hook para gerenciamento de permissões APENAS NA ÁREA ADMIN
+ * 
+ * Este hook NÃO deve ser usado para verificar acesso de features do usuário.
+ * Para verificação de acesso, use: useFeatureAccess() 
+ * 
+ * Este hook é mantido apenas para:
+ * - Interface de administração de permissões (/admin/roles)
+ * - Gerenciamento de roles e permissões granulares
+ */
+
 export interface Permission {
   id: string;
   code: string;
