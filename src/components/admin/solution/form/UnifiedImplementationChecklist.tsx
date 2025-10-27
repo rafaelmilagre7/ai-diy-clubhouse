@@ -14,7 +14,7 @@ import {
 } from "@/hooks/useUnifiedChecklists";
 
 interface UnifiedImplementationChecklistProps {
-  solutionId: string | null;
+  solutionId: string;
   onSave: () => void;
   saving: boolean;
 }
@@ -69,7 +69,7 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   }, [template, isLoading, error, solutionId]);
 
   const saveCheckpoints = async () => {
-    if (!solutionId || !user) return;
+    if (!user) return;
     
     createTemplateMutation.mutate(
       {
