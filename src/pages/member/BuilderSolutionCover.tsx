@@ -17,6 +17,7 @@ export default function BuilderSolutionCover() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
+  const [generatingLovablePrompt, setGeneratingLovablePrompt] = useState(false);
 
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
@@ -31,6 +32,43 @@ export default function BuilderSolutionCover() {
       return data;
     },
   });
+
+  // 🚀 POLLING para Lovable Prompt quando não existe ainda
+  React.useEffect(() => {
+    if (!solution?.lovable_prompt && solution?.id && !generatingLovablePrompt) {
+      console.log('[COVER] 🔄 Iniciando polling para lovable_prompt...');
+      setGeneratingLovablePrompt(true);
+      
+      const pollInterval = setInterval(async () => {
+        console.log('[COVER] 🔍 Verificando se lovable_prompt foi gerado...');
+        
+        const { data } = await supabase
+          .from('ai_generated_solutions')
+          .select('lovable_prompt')
+          .eq('id', solution.id)
+          .single();
+        
+        if (data?.lovable_prompt) {
+          console.log('[COVER] ✅ Lovable prompt gerado com sucesso!');
+          setGeneratingLovablePrompt(false);
+          queryClient.invalidateQueries({ queryKey: ['builder-solution', solution.id] });
+          clearInterval(pollInterval);
+        }
+      }, 5000); // Verificar a cada 5s
+      
+      // Timeout após 90s
+      const timeout = setTimeout(() => {
+        console.log('[COVER] ⏱️ Timeout do polling de lovable_prompt (90s)');
+        clearInterval(pollInterval);
+        setGeneratingLovablePrompt(false);
+      }, 90000);
+      
+      return () => {
+        clearInterval(pollInterval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [solution?.id, solution?.lovable_prompt, generatingLovablePrompt, queryClient]);
 
   // Mapear cards para campos do banco e tipos de seção
   const sectionMapping: Record<string, { field: string; type: string; label: string }> = {
@@ -149,10 +187,34 @@ export default function BuilderSolutionCover() {
           await queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
           await queryClient.invalidateQueries({ queryKey: ['unified-checklist-template', id, 'implementation'] });
           
-          console.log('[COVER] ⏳ Aguardando 5s para garantir sincronização do banco...');
+          console.log('[COVER] 🔄 Aguardando checklist ser criado no banco...');
           
-          // Aguardar 5s para garantir que o banco foi atualizado
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          // 🆕 POLLING INTELIGENTE: Aguardar até checklist existir (máximo 30s)
+          const startWait = Date.now();
+          const maxWait = 30000; // 30 segundos
+          let checklistExists = false;
+          
+          while (!checklistExists && (Date.now() - startWait) < maxWait) {
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Verificar a cada 2s
+            
+            const { data: check } = await supabase
+              .from('unified_checklists')
+              .select('id')
+              .eq('solution_id', solution.id)
+              .eq('checklist_type', 'implementation')
+              .maybeSingle();
+            
+            if (check) {
+              checklistExists = true;
+              console.log('[COVER] ✅ Checklist confirmado no banco!');
+            } else {
+              console.log('[COVER] ⏳ Ainda aguardando checklist...');
+            }
+          }
+          
+          if (!checklistExists) {
+            throw new Error('Checklist não foi criado no tempo esperado');
+          }
           
           console.log('[COVER] ➡️ Navegando para checklist...');
           
@@ -294,7 +356,7 @@ export default function BuilderSolutionCover() {
       title: "Prompt Lovable",
       subtitle: "Cole e comece seu projeto agora",
       icon: FileCode,
-      badge: "Copy & Paste",
+      badge: generatingLovablePrompt ? "Gerando..." : "Copy & Paste",
       color: "from-violet-500/20 to-purple-400/20",
       borderColor: "border-violet-400/30",
       path: `/ferramentas/builder/solution/${id}/prompt`,
@@ -424,12 +486,19 @@ export default function BuilderSolutionCover() {
 
                   {/* Conteúdo do card */}
                   <div className="relative z-10">
-                    {/* Ícone grande + Badge */}
+                  {/* Ícone grande + Badge */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="p-4 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-400/10 text-cyan-400 group-hover:scale-110 transition-transform duration-300">
                         <IconComponent className="h-8 w-8" />
                       </div>
-                      <Badge variant="secondary" className="text-xs px-3">
+                      <Badge 
+                        variant="secondary" 
+                        className={`text-xs px-3 ${
+                          card.path.includes('prompt') && generatingLovablePrompt 
+                            ? 'bg-yellow-500/20 text-yellow-500 animate-pulse' 
+                            : ''
+                        }`}
+                      >
                         {card.badge}
                       </Badge>
                     </div>

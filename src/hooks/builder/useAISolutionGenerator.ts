@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/auth/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAISolutionAccess } from './useAISolutionAccess';
+import { isValidTitle, generateSmartTitle } from '@/utils/builderRecovery';
 
 export const useAISolutionGenerator = () => {
   const { user } = useAuth();
@@ -68,6 +69,21 @@ export const useAISolutionGenerator = () => {
           description: data?.error || 'Resposta inesperada do servidor.'
         });
         return null;
+      }
+
+      // 🔍 VALIDAÇÃO FRONTEND DO TÍTULO
+      if (data.solution && !isValidTitle(data.solution.title, idea)) {
+        console.warn('[BUILDER-GENERATOR] ⚠️ Título inválido detectado no frontend:', data.solution.title);
+        const smartTitle = generateSmartTitle(idea);
+        
+        // Corrigir no banco
+        await supabase
+          .from('ai_generated_solutions')
+          .update({ title: smartTitle })
+          .eq('id', data.solution.id);
+        
+        data.solution.title = smartTitle;
+        console.log('[BUILDER-GENERATOR] ✅ Título corrigido para:', smartTitle);
       }
 
       // Atualizar contador de uso

@@ -17,6 +17,8 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { useAuth } from '@/contexts/auth/AuthContext';
+import { recoverBrokenSolutions } from '@/utils/builderRecovery';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,8 +33,21 @@ import {
 
 export default function SolutionHistory() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { solutions, isLoading, refetch } = useAISolutionHistory();
   const [deletingId, setDeletingId] = React.useState<string | null>(null);
+
+  // 🔧 Recovery automático ao montar
+  React.useEffect(() => {
+    if (user?.id) {
+      console.log('[HISTORY] 🔄 Executando recovery de títulos quebrados...');
+      recoverBrokenSolutions(user.id).then(() => {
+        refetch(); // Atualizar lista após recovery
+      }).catch(err => {
+        console.error('[HISTORY] ❌ Erro no recovery:', err);
+      });
+    }
+  }, [user?.id, refetch]);
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);

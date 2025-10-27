@@ -4,7 +4,7 @@ import { toast } from 'sonner';
 /**
  * Validar se um título é válido
  */
-function isValidTitle(title: string, originalIdea: string): boolean {
+export function isValidTitle(title: string, originalIdea: string): boolean {
   const invalidTitles = [undefined, null, 'undefined', 'null', ''];
   const titleString = title ? String(title).trim() : '';
   
@@ -34,7 +34,7 @@ function isValidTitle(title: string, originalIdea: string): boolean {
 /**
  * Gerar título inteligente a partir da ideia original
  */
-function generateSmartTitle(idea: string): string {
+export function generateSmartTitle(idea: string): string {
   // Remover palavras comuns (stopwords)
   const stopwords = ['o', 'a', 'os', 'as', 'de', 'do', 'da', 'dos', 'das', 'em', 'no', 'na', 'nos', 'nas', 
                      'para', 'com', 'por', 'que', 'e', 'um', 'uma', 'eu', 'meu', 'minha',

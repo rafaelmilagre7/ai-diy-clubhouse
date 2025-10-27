@@ -384,6 +384,7 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
         // Não falhar a requisição por isso, apenas logar
       } else {
         console.log('[SECTION-GEN] ✅ Checklist salvo em unified_checklists com sucesso!');
+        console.log('[SECTION-GEN] 📝 Timestamp de criação:', new Date().toISOString());
       }
     } else if (sectionType === "architecture") {
       updateData.implementation_flows = parsedContent.implementation_flows;
@@ -407,6 +408,7 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
     console.log(`[SECTION-GEN] 📊 Tamanho do conteúdo: ${JSON.stringify(parsedContent).length} caracteres`);
     console.log(`[SECTION-GEN] 🎯 Solution ID: ${solutionId}`);
     console.log(`[SECTION-GEN] 📤 Retornando resposta de sucesso ao cliente`);
+    console.log(`[SECTION-GEN] ⏰ Timestamp: ${new Date().toISOString()}`);
 
     return new Response(
       JSON.stringify({ 
@@ -414,7 +416,8 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
         cached: false,
         content: parsedContent,
         solutionId: solutionId,
-        sectionType: sectionType
+        sectionType: sectionType,
+        timestamp: new Date().toISOString()
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

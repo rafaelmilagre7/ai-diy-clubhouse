@@ -1032,7 +1032,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
           parameters: {
             type: "object",
             properties: {
-              title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (20-60 chars). NUNCA copie literalmente. EXTRAIA essência. Formato: [Tecnologia] + [Resultado]. PROIBIDO: Implementar, Criar, Fazer" },
+              title: { type: "string", description: "Título SINTÉTICO e PROFISSIONAL (OBRIGATÓRIO: 20-60 chars). NUNCA copie literalmente. NUNCA truncar no meio de palavra. NUNCA começar com verbos (Criar, Implementar, Fazer). EXTRAIA essência. Formato: [Tecnologia] + [Resultado]. PROIBIDO: undefined, null, vazio, cópia literal da ideia, verbos infinitivos, truncamento." },
               short_description: { type: "string", description: "Descrição objetiva em 3-5 frases sobre O QUE é e COMO funciona" },
               tags: { type: "array", items: { type: "string" }, description: "3-5 tags relevantes (ex: IA Generativa, Automação, WhatsApp)" },
               required_tools: {
@@ -1083,7 +1083,7 @@ Crie um plano completo seguindo o formato JSON especificado.`;
           parameters: {
             type: "object",
             properties: {
-              title: { type: "string", description: "Título SINTÉTICO, PROFISSIONAL e CURTO (20-60 chars)" },
+              title: { type: "string", description: "Título SINTÉTICO, PROFISSIONAL e COMPLETO (OBRIGATÓRIO: 20-60 chars). NUNCA truncar no meio de palavra. NUNCA copiar ideia literalmente." },
               short_description: { type: "string", description: "Descrição em 3-5 frases" },
               tags: { type: "array", items: { type: "string" } },
               technical_overview: {
