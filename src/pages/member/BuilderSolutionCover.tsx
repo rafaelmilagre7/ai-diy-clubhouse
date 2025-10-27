@@ -147,9 +147,14 @@ export default function BuilderSolutionCover() {
           // Invalidar cache
           await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
           await queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
+          await queryClient.invalidateQueries({ queryKey: ['unified-checklist-template', id, 'implementation'] });
           
-          // Aguardar 2s para garantir que o banco foi atualizado
-          await new Promise(resolve => setTimeout(resolve, 2000));
+          console.log('[COVER] ⏳ Aguardando 5s para garantir sincronização do banco...');
+          
+          // Aguardar 5s para garantir que o banco foi atualizado
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          
+          console.log('[COVER] ➡️ Navegando para checklist...');
           
           // Navegar para a página do checklist
           navigate(cardPath);

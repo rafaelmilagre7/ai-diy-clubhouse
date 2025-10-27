@@ -17,6 +17,7 @@ export default function BuilderSolutionChecklist() {
   const queryClient = useQueryClient();
   const [hasTimeout, setHasTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const MAX_RETRIES = 2;
 
   // 🔥 INVALIDAR CACHE ao montar o componente (forçar reload)
@@ -221,12 +222,31 @@ export default function BuilderSolutionChecklist() {
     }
   }, [existingChecklist, hasTimeout, isLoadingChecklists, queryClient, id]);
 
-  if (isLoading) {
+  // Desativar loading inicial após 2 segundos OU quando checklist carregar
+  useEffect(() => {
+    if (existingChecklist || !isLoadingChecklists) {
+      const timer = setTimeout(() => {
+        console.log('[CHECKLIST] 🏁 Desativando loading inicial');
+        setIsInitialLoad(false);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [existingChecklist, isLoadingChecklists]);
+
+  // Mostrar loading se está carregando a solution OU se é o load inicial e está carregando checklist
+  if (isLoading || (isInitialLoad && isLoadingChecklists)) {
+    console.log('[CHECKLIST] 🔄 Estado de loading:', {
+      isLoading,
+      isInitialLoad,
+      isLoadingChecklists,
+      hasChecklist: !!existingChecklist
+    });
+    
     return (
       <UnifiedLoadingScreen
-        title="Carregando solução..."
-        messages={getLoadingMessages('solutions')}
-        estimatedSeconds={10}
+        title={isLoading ? "Carregando solução..." : "Carregando plano de ação..."}
+        messages={getLoadingMessages(isLoading ? 'solutions' : 'builder_checklist')}
+        estimatedSeconds={isLoading ? 10 : 15}
       />
     );
   }
