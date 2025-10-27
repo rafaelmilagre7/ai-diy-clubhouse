@@ -44,6 +44,7 @@ const EmailDashboard = lazy(() => import('@/pages/admin/communications/EmailDash
 const EmailLogs = lazy(() => import('@/pages/admin/communications/EmailLogs'));
 const EmailSettings = lazy(() => import('@/pages/admin/communications/EmailSettings'));
 const AdminBroadcast = lazy(() => import('@/pages/admin/AdminBroadcast'));
+const PromptsManager = lazy(() => import('@/pages/admin/PromptsManager'));
 
 
 // Função helper para criar rotas protegidas com AdminLayout e lazy loading
@@ -104,4 +105,5 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/style-guide", StyleGuidePage),
   createAdminRoute("/admin/networking", AdminNetworking),
   createAdminRoute("/admin/builder", AdminBuilder),
+  createAdminRoute("/admin/prompts", PromptsManager),
 ];

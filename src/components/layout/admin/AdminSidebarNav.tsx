@@ -25,7 +25,8 @@ import {
   Palette,
   Layout,
   Bell,
-  Send
+  Send,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -106,6 +107,11 @@ const navigationItems: NavigationItem[] = [
     title: "Builder",
     href: "/admin/builder",
     icon: Layout,
+  },
+  {
+    title: "Prompts de IA",
+    href: "/admin/prompts",
+    icon: Sparkles,
   },
   {
     title: "Mentorias",

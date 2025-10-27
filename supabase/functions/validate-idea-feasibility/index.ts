@@ -79,8 +79,16 @@ serve(async (req) => {
     
     const startTime = Date.now();
 
-    // ✅ PROMPT COMPLETO E OTIMIZADO
-    const systemPrompt = `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
+    // 🆕 Buscar configurações do prompt no banco de dados
+    const { data: promptConfig, error: promptError } = await supabase
+      .from('ai_prompts')
+      .select('*')
+      .eq('key', 'validate_idea_feasibility')
+      .eq('is_active', true)
+      .single();
+
+    // Fallback para prompt hardcoded se não encontrar no banco
+    const systemPrompt = promptConfig?.prompt_content || `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
 
 ## CONTEXTO E CONHECIMENTO
 
@@ -168,11 +176,42 @@ Responda APENAS com JSON:
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando IA...');
 
+    // Usar configurações do banco ou defaults
+    const model = promptConfig?.model || 'google/gemini-2.5-flash-lite';
+    const timeoutMs = (promptConfig?.timeout_seconds || 15) * 1000;
+    const maxRetries = promptConfig?.retry_attempts || 2;
+    
+    console.log('[VALIDATE-FEASIBILITY] 🎯 Configurações:', { 
+      model, 
+      timeout: timeoutMs + 'ms', 
+      retries: maxRetries,
+      fromDB: !!promptConfig 
+    });
+
     // Função auxiliar para fazer request com timeout e retry
     const makeAIRequest = async (attempt = 1): Promise<Response> => {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+        
+        const bodyPayload: any = {
+          model,
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Avalie se é viável: "${idea}"` }
+          ]
+        };
+
+        // Adicionar configurações opcionais se disponíveis
+        if (promptConfig?.temperature !== null && promptConfig?.temperature !== undefined) {
+          bodyPayload.temperature = promptConfig.temperature;
+        }
+        if (promptConfig?.max_tokens) {
+          bodyPayload.max_tokens = promptConfig.max_tokens;
+        }
+        if (promptConfig?.response_format) {
+          bodyPayload.response_format = promptConfig.response_format;
+        }
         
         const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
           method: 'POST',
@@ -180,13 +219,7 @@ Responda APENAS com JSON:
             'Authorization': `Bearer ${LOVABLE_API_KEY}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash-lite',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: `Avalie se é viável: "${idea}"` }
-            ]
-          }),
+          body: JSON.stringify(bodyPayload),
           signal: controller.signal
         });
         
@@ -194,9 +227,9 @@ Responda APENAS com JSON:
         return response;
         
       } catch (error: any) {
-        if (attempt < 2 && (error.name === 'AbortError' || error.message?.includes('timeout'))) {
-          console.warn(`[VALIDATE-FEASIBILITY] ⚠️ Timeout na tentativa ${attempt}, tentando novamente...`);
-          await new Promise(r => setTimeout(r, 1000)); // Backoff 1s
+        if (attempt < maxRetries && (error.name === 'AbortError' || error.message?.includes('timeout'))) {
+          console.warn(`[VALIDATE-FEASIBILITY] ⚠️ Timeout na tentativa ${attempt}/${maxRetries}, tentando novamente...`);
+          await new Promise(r => setTimeout(r, 1000 * attempt)); // Backoff progressivo
           return makeAIRequest(attempt + 1);
         }
         throw error;
