@@ -216,36 +216,68 @@ export const useUpdateUnifiedChecklist = () => {
         updated_at: new Date().toISOString()
       };
 
-      // USAR UPSERT para evitar duplicatas
-      console.log('💾 Upsert checklist:', {
+      // 🎯 SOLUÇÃO DEFINITIVA: UPDATE vs INSERT explícitos
+      const isUpdate = checklistData.id && checklistData.id !== templateId;
+      
+      console.log('💾 [useUpdateUnifiedChecklist] Operação:', {
+        type: isUpdate ? 'UPDATE' : 'INSERT',
         userId: user.id,
         solutionId,
         checklistType,
-        hasId: !!checklistData.id,
         checklistId: checklistData.id,
         templateId,
-        isCreatingNew: !checklistData.id || checklistData.id === templateId
+        itemsToSave: checklistData.checklist_data.items.length,
+        firstItemColumn: checklistData.checklist_data.items[0]?.column
       });
 
-      // 🔥 FIX: Não usar o ID do template ao criar progresso do usuário
-      const shouldUseExistingId = checklistData.id && checklistData.id !== templateId;
+      let data, error;
 
-      const { data, error } = await supabase
-        .from('unified_checklists')
-        .upsert({
-          ...(shouldUseExistingId && { id: checklistData.id }), // ✅ Só usar ID se for progresso existente
-          user_id: user.id,
-          solution_id: solutionId,
-          template_id: templateId, // ✅ Sempre salvar referência ao template
-          checklist_type: checklistType,
-          is_template: false, // ✅ SEMPRE false para progresso de usuário
-          ...updateData
-        }, {
-          onConflict: 'user_id,solution_id,checklist_type,is_template',
-          ignoreDuplicates: false // Sempre atualizar se já existir
-        })
-        .select()
-        .single();
+      if (isUpdate) {
+        // ✅ UPDATE: Já existe progresso do usuário
+        console.log('🔄 [UPDATE] Atualizando registro existente:', checklistData.id);
+        const result = await supabase
+          .from('unified_checklists')
+          .update({
+            checklist_data: updateData.checklist_data,
+            completed_items: updateData.completed_items,
+            total_items: updateData.total_items,
+            progress_percentage: updateData.progress_percentage,
+            is_completed: updateData.is_completed,
+            completed_at: updateData.completed_at,
+            updated_at: updateData.updated_at
+          })
+          .eq('id', checklistData.id)
+          .eq('user_id', user.id) // Segurança adicional
+          .select()
+          .single();
+        
+        data = result.data;
+        error = result.error;
+      } else {
+        // ✅ INSERT: Primeira vez salvando progresso
+        console.log('➕ [INSERT] Criando novo registro de progresso');
+        const result = await supabase
+          .from('unified_checklists')
+          .insert({
+            user_id: user.id,
+            solution_id: solutionId,
+            template_id: templateId,
+            checklist_type: checklistType,
+            is_template: false,
+            checklist_data: updateData.checklist_data,
+            completed_items: updateData.completed_items,
+            total_items: updateData.total_items,
+            progress_percentage: updateData.progress_percentage,
+            is_completed: updateData.is_completed,
+            completed_at: updateData.completed_at,
+            updated_at: updateData.updated_at
+          })
+          .select()
+          .single();
+        
+        data = result.data;
+        error = result.error;
+      }
 
       if (error) {
         console.error('❌ Erro ao upsert:', error);
@@ -279,25 +311,26 @@ export const useUpdateUnifiedChecklist = () => {
       return { previousData, queryKey };
     },
     onSuccess: (data, variables) => {
-      console.log('✅ [useUpdateUnifiedChecklist] onSuccess - Invalidando cache:', {
-        checklistId: data.id,
-        queryKey: ['unified-checklist', variables.solutionId, data.user_id, variables.checklistType]
+      console.log('✅ [useUpdateUnifiedChecklist] onSuccess:', {
+        savedId: data.id,
+        savedItemsCount: data.checklist_data?.items?.length,
+        distribution: {
+          todo: data.checklist_data?.items?.filter((i: any) => i.column === 'todo').length,
+          in_progress: data.checklist_data?.items?.filter((i: any) => i.column === 'in_progress').length,
+          done: data.checklist_data?.items?.filter((i: any) => i.column === 'done').length,
+        }
       });
       
       const queryKey = ['unified-checklist', variables.solutionId, data.user_id, variables.checklistType];
       
-      // Invalidar IMEDIATAMENTE para forçar refetch
+      // ✅ Atualizar cache diretamente com os dados salvos (mais confiável que invalidar)
+      queryClient.setQueryData(queryKey, data);
+      console.log('✅ [useUpdateUnifiedChecklist] Cache ATUALIZADO diretamente com dados do banco');
+      
+      // Invalidar também para garantir sincronização em background
       queryClient.invalidateQueries({ 
         queryKey,
-        exact: true,
-        refetchType: 'active'
-      });
-      
-      console.log('✅ [useUpdateUnifiedChecklist] Cache invalidado, refetch será acionado');
-      
-      // Também invalidar o template (caso tenha mudado)
-      queryClient.invalidateQueries({ 
-        queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType]
+        refetchType: 'none' // Não refetch imediatamente, acabamos de atualizar
       });
     },
     onError: (error, variables, context) => {

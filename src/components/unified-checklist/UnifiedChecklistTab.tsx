@@ -195,26 +195,42 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   };
 
+  // Preparar checklistData com garantia de consistência
+  const checklistDataForKanban: UnifiedChecklistData = React.useMemo(() => {
+    const data: UnifiedChecklistData = {
+      id: userProgress?.id, // ✅ Se tem progresso, usar o ID dele
+      user_id: userProgress?.user_id || '', 
+      solution_id: solutionId,
+      template_id: template?.id,
+      checklist_type: checklistType,
+      checklist_data: {
+        items: checklistItems,
+        lastUpdated: new Date().toISOString()
+      },
+      completed_items: completedItems.length,
+      total_items: checklistItems.length,
+      progress_percentage: progressPercentage,
+      is_completed: allCompleted,
+      is_template: false
+    };
+    
+    console.log('📦 [UnifiedChecklistTab] checklistDataForKanban preparado:', {
+      hasId: !!data.id,
+      id: data.id,
+      userId: data.user_id,
+      templateId: data.template_id,
+      itemsCount: data.checklist_data.items.length,
+      source: userProgress ? 'USER_PROGRESS' : 'TEMPLATE'
+    });
+    
+    return data;
+  }, [userProgress, solutionId, template, checklistType, checklistItems, completedItems.length, progressPercentage, allCompleted]);
+
   return (
     <div className="space-y-6">
       <SimpleKanban
         checklistItems={checklistItems}
-        checklistData={{
-          id: userProgress?.id,
-          user_id: userProgress?.user_id || '',
-          solution_id: solutionId,
-          template_id: template?.id,
-          checklist_type: checklistType,
-          checklist_data: {
-            items: checklistItems,
-            lastUpdated: new Date().toISOString()
-          },
-          completed_items: completedItems.length,
-          total_items: checklistItems.length,
-          progress_percentage: progressPercentage,
-          is_completed: allCompleted,
-          is_template: false
-        }}
+        checklistData={checklistDataForKanban}
         solutionId={solutionId}
         checklistType={checklistType}
       />

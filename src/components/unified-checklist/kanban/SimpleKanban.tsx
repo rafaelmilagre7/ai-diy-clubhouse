@@ -14,6 +14,7 @@ import KanbanColumn from "./KanbanColumn";
 import SimpleKanbanCard from "./SimpleKanbanCard";
 import { ChecklistCardModal } from "../ChecklistCardModal";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/auth";
 
 interface SimpleKanbanProps {
   checklistItems: UnifiedChecklistItem[];
@@ -34,6 +35,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   solutionId,
   checklistType,
 }) => {
+  const { user } = useAuth(); // ✅ Garantir acesso ao user_id
   const [activeId, setActiveId] = useState<string | null>(null);
   const [selectedItem, setSelectedItem] = useState<UnifiedChecklistItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -44,11 +46,15 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   // Refs para evitar stale closures
   const checklistDataRef = useRef(checklistData);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const solutionIdRef = useRef(solutionId);
+  const checklistTypeRef = useRef(checklistType);
 
-  // Atualizar ref quando checklistData mudar
+  // Atualizar refs quando valores mudarem
   useEffect(() => {
     checklistDataRef.current = checklistData;
-  }, [checklistData]);
+    solutionIdRef.current = solutionId;
+    checklistTypeRef.current = checklistType;
+  }, [checklistData, solutionId, checklistType]);
 
   // Configurar sensores para drag com menor distância (mais responsivo)
   const sensors = useSensors(
@@ -137,20 +143,19 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       // Pegar os dados ATUALIZADOS diretamente do estado
       setLocalItems((currentItems) => {
         const currentChecklistData = checklistDataRef.current;
+        const currentSolutionId = solutionIdRef.current;
+        const currentChecklistType = checklistTypeRef.current;
         const itemToSave = currentItems.find(i => i.id === itemId);
         
-        if (!currentChecklistData.id) {
-          console.error("❌ [SimpleKanban] Checklist ID não encontrado");
-          toast.error("Erro: checklist não inicializado");
-          return currentItems;
-        }
-
         console.log("💾 [SimpleKanban] Preparando para salvar:", {
           itemId,
           itemTitle: itemToSave?.title,
           currentColumn: itemToSave?.column,
           checklistId: currentChecklistData.id,
-          allItemsColumns: currentItems.map(i => ({ id: i.id, title: i.title, column: i.column }))
+          userId: currentChecklistData.user_id,
+          solutionId: currentSolutionId,
+          templateId: currentChecklistData.template_id,
+          allItemsColumns: currentItems.map(i => ({ id: i.id, title: i.title?.substring(0, 25), column: i.column }))
         });
 
         // Calcular progresso
@@ -161,6 +166,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         // Preparar dados com items ATUALIZADOS
         const updatedChecklistData: UnifiedChecklistData = {
           ...currentChecklistData,
+          user_id: currentChecklistData.user_id || user?.id || '', // ✅ Garantir user_id sempre presente
           checklist_data: {
             items: currentItems, // ✅ Usar items atualizados
             lastUpdated: new Date().toISOString()
@@ -171,21 +177,43 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           is_completed: completedCount === totalCount && totalCount > 0,
         };
 
+        console.log("🚀 [SimpleKanban] Chamando updateMutation.mutate com:", {
+          checklistId: updatedChecklistData.id,
+          userId: updatedChecklistData.user_id,
+          itemsCount: updatedChecklistData.checklist_data.items.length,
+          solutionId: currentSolutionId,
+          checklistType: currentChecklistType
+        });
+
         // Salvar no banco
         updateMutation.mutate({
           checklistData: updatedChecklistData,
-          solutionId,
-          checklistType,
+          solutionId: currentSolutionId,
+          checklistType: currentChecklistType,
           templateId: currentChecklistData.template_id,
         }, {
           onError: (error) => {
-            console.error("❌ Erro ao salvar:", error);
+            console.error("❌ [SimpleKanban] Erro ao salvar:", error);
             toast.error("Erro ao salvar alteração");
+            // Reverter para o estado anterior
             setLocalItems(checklistItems);
           },
-          onSuccess: () => {
-            console.log("✅ Alteração salva com sucesso");
-            toast.success("Card movido com sucesso!");
+          onSuccess: (savedData) => {
+            console.log("✅ [SimpleKanban] Salvo com SUCESSO!");
+            console.log("✅ Saved ID:", savedData.id);
+            console.log("✅ Saved user_id:", savedData.user_id);
+            console.log("✅ Items salvos:", savedData.checklist_data?.items?.map((i: any) => ({ 
+              id: i.id, 
+              title: i.title?.substring(0, 30), 
+              column: i.column 
+            })));
+            toast.success("Posição salva!");
+            
+            // ✅ Atualizar checklistDataRef com o novo ID (caso seja INSERT)
+            if (!currentChecklistData.id && savedData.id) {
+              console.log("🆕 [SimpleKanban] Primeira vez salvo, atualizando ref com novo ID:", savedData.id);
+              checklistDataRef.current = { ...checklistDataRef.current, id: savedData.id };
+            }
           },
         });
 
