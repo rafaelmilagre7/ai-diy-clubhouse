@@ -175,49 +175,38 @@ export const useUpdateUnifiedChecklist = () => {
         updated_at: new Date().toISOString()
       };
 
-      if (checklistData.id) {
-        // Atualizar existente
-        console.log('📝 Atualizando checklist existente:', checklistData.id);
-        
-        const { data, error } = await supabase
-          .from('unified_checklists')
-          .update(updateData)
-          .eq('id', checklistData.id)
-          .select()
-          .single();
+      // USAR UPSERT para evitar duplicatas
+      console.log('💾 Upsert checklist:', {
+        userId: user.id,
+        solutionId,
+        checklistType,
+        hasId: !!checklistData.id
+      });
+      
+      const { data, error } = await supabase
+        .from('unified_checklists')
+        .upsert({
+          ...(checklistData.id && { id: checklistData.id }), // Manter ID se existir
+          user_id: user.id,
+          solution_id: solutionId,
+          template_id: templateId,
+          checklist_type: checklistType,
+          is_template: false,
+          ...updateData
+        }, {
+          onConflict: 'user_id,solution_id,checklist_type,is_template',
+          ignoreDuplicates: false // Sempre atualizar se já existir
+        })
+        .select()
+        .single();
 
-        if (error) {
-          console.error('❌ Erro ao atualizar:', error);
-          throw error;
-        }
-        
-        console.log('✅ Checklist atualizado com sucesso');
-        return data;
-      } else {
-        // Criar novo
-        console.log('✨ Criando novo checklist');
-        
-        const { data, error } = await supabase
-          .from('unified_checklists')
-          .insert({
-            user_id: user.id,
-            solution_id: solutionId,
-            template_id: templateId,
-            checklist_type: checklistType,
-            is_template: false,
-            ...updateData
-          })
-          .select()
-          .single();
-
-        if (error) {
-          console.error('❌ Erro ao criar:', error);
-          throw error;
-        }
-        
-        console.log('✅ Checklist criado com sucesso:', data.id);
-        return data;
+      if (error) {
+        console.error('❌ Erro ao upsert:', error);
+        throw error;
       }
+      
+      console.log('✅ Checklist salvo com sucesso:', data.id);
+      return data;
     },
     onSuccess: (data, variables) => {
       console.log('🔄 Invalidando queries após sucesso');

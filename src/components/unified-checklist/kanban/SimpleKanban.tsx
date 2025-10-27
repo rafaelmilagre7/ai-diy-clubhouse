@@ -8,6 +8,7 @@ import {
   useSensor,
   useSensors,
 } from "@dnd-kit/core";
+import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import { UnifiedChecklistItem, UnifiedChecklistData, useUpdateUnifiedChecklist } from "@/hooks/useUnifiedChecklists";
 import KanbanColumn from "./KanbanColumn";
 import SimpleKanbanCard from "./SimpleKanbanCard";
@@ -212,6 +213,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         sensors={sensors}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        modifiers={[snapCenterToCursor]}
       >
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-300px)]">
           {COLUMNS.map((column) => (
