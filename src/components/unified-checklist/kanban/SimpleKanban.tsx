@@ -24,7 +24,7 @@ interface SimpleKanbanProps {
 
 const COLUMNS = [
   { id: "todo", title: "A Fazer" },
-  { id: "doing", title: "Em Progresso" },
+  { id: "in_progress", title: "Em Progresso" },
   { id: "done", title: "Concluído" },
 ];
 
@@ -68,16 +68,13 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   const itemsByColumn = useMemo(() => {
     const grouped: Record<string, UnifiedChecklistItem[]> = {
       todo: [],
-      doing: [],
+      in_progress: [],
       done: [],
     };
 
     localItems.forEach((item) => {
       const column = item.column || "todo";
-      // Mapear in_progress para doing para compatibilidade com as colunas
-      if (column === "in_progress") {
-        grouped.doing.push(item);
-      } else if (grouped[column]) {
+      if (grouped[column]) {
         grouped[column].push(item);
       }
     });
@@ -101,26 +98,14 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     }
 
     const itemId = active.id as string;
-    const newColumn = over.id as string;
-
-    // Mapear colunas para o formato correto
-    const columnMap: Record<string, "todo" | "in_progress" | "done"> = {
-      todo: "todo",
-      doing: "in_progress",
-      done: "done",
-    };
-
-    const mappedColumn = columnMap[newColumn];
+    const newColumn = over.id as ("todo" | "in_progress" | "done");
     
-    if (!mappedColumn) {
-      console.log("⚠️ Invalid column:", newColumn);
-      return;
-    }
+    console.log("🎯 handleDragEnd:", { itemId, newColumn });
 
     // Atualizar estado local IMEDIATAMENTE para feedback visual
     setLocalItems((prevItems) => {
       return prevItems.map((item) =>
-        item.id === itemId ? { ...item, column: mappedColumn } : item
+        item.id === itemId ? { ...item, column: newColumn } : item
       );
     });
 

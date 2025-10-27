@@ -218,18 +218,20 @@ export const useUpdateUnifiedChecklist = () => {
       return data;
     },
     onSuccess: (data, variables) => {
-      console.log('🔄 Invalidando queries após sucesso');
+      console.log('✅ onSuccess - Checklist atualizado:', data.id);
       
-      // Atualizar cache e forçar refetch
-      const queryKey = ['unified-checklist', variables.solutionId, user?.id, variables.checklistType];
+      const queryKey = ['unified-checklist', variables.solutionId, data.user_id, variables.checklistType];
       
-      // Atualizar cache com dados retornados
-      queryClient.setQueryData(queryKey, data);
-      
-      // Forçar refetch para garantir sincronização
+      // Invalidar IMEDIATAMENTE para forçar refetch
       queryClient.invalidateQueries({ 
         queryKey,
+        exact: true,
         refetchType: 'active'
+      });
+      
+      // Também invalidar o template (caso tenha mudado)
+      queryClient.invalidateQueries({ 
+        queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType]
       });
     },
     onError: (error) => {
