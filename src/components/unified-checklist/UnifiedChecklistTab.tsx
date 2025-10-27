@@ -180,7 +180,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   return (
     <div className="space-y-6">
       <SimpleKanban
-        checklistItems={normalizeChecklistItems(checklistItems)}
+        checklistItems={checklistItems}
         checklistData={{
           id: userProgress?.id,
           user_id: userProgress?.user_id || '',
