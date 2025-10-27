@@ -33,15 +33,6 @@ const TabContent: React.FC<TabContentProps> = ({
 }) => {
   const isValid = solution && solution.id;
 
-  // 🔍 DEBUG: Verificar se solution está carregando
-  console.log('📋 [TabContent] Renderizando:', {
-    currentStep,
-    activeTab,
-    solutionId: solution?.id,
-    isValid,
-    solutionLoaded: !!solution
-  });
-
   // Verificar se a solução existe para exibir as abas que exigem ID
   if (!isValid && currentStep > 0) {
     return <Alert variant="destructive">
@@ -84,10 +75,7 @@ const TabContent: React.FC<TabContentProps> = ({
         break;
       case "checklist":
         if (isValid && solution?.id) {
-          console.log('✅ [TabContent] Renderizando ChecklistTab com solutionId:', solution.id);
           return <ChecklistTab solutionId={solution.id} onSave={() => onSubmit(currentValues)} saving={saving} />;
-        } else {
-          console.warn('⚠️ [TabContent] ChecklistTab não renderizado - solution inválida:', { isValid, solutionId: solution?.id });
         }
         break;
       case "publish":

@@ -24,7 +24,9 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   
   // Funções de logging independentes de auth
   const log = useCallback((action: string, data: LogData = {}) => {
-    console.log(`[Log] ${action}:`, data);
+    if (import.meta.env.DEV) {
+      console.log(`[Log] ${action}:`, data);
+    }
     
     // Armazenar logs críticos apenas se tivermos um user_id
     if (data.critical && data.user_id) {
@@ -33,7 +35,9 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, []);
   
   const logWarning = useCallback((action: string, data: LogData = {}) => {
-    console.warn(`[Warning] ${action}:`, data);
+    if (import.meta.env.DEV) {
+      console.warn(`[Warning] ${action}:`, data);
+    }
     
     // Armazenar avisos apenas se tivermos um user_id
     if (data.user_id) {
@@ -51,7 +55,9 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
   }, [toast]);
   
   const logError = useCallback((action: string, error: any) => {
-    console.error(`[Error] ${action}:`, error);
+    if (import.meta.env.DEV) {
+      console.error(`[Error] ${action}:`, error);
+    }
     setLastError(error);
     
     // Verificar se o erro deve mostrar um toast (padrão é mostrar)
@@ -104,11 +110,13 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
           event_data: logEntry
         });
         
-      if (error) {
+      if (error && import.meta.env.DEV) {
         console.error("Failed to store log:", error);
       }
     } catch (e) {
-      console.error("Error in logging system:", e);
+      if (import.meta.env.DEV) {
+        console.error("Error in logging system:", e);
+      }
     }
   };
   

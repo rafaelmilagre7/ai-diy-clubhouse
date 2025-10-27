@@ -26,115 +26,40 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   onSave,
   saving
 }) => {
-  console.log('🚀 [UnifiedImplementationChecklist] COMPONENTE INICIADO:', {
-    solutionId,
-    saving,
-    timestamp: new Date().toISOString()
-  });
-
   const [checklistItems, setChecklistItems] = useState<UnifiedChecklistItem[]>([]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
-
-  console.log('📞 [UnifiedImplementationChecklist] Chamando hook com:', {
-    solutionId,
-    checklistType: 'implementation'
-  });
 
   const { data: template, isLoading, error, refetch } = useUnifiedChecklistTemplate(
     solutionId,
     'implementation'
   );
-
-  console.log('📊 [UnifiedImplementationChecklist] Estado do hook imediatamente após chamada:', {
-    hasTemplate: !!template,
-    isLoading,
-    hasError: !!error,
-    errorMessage: error?.message
-  });
   
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
-  // 🔍 DEBUG: Logs detalhados do carregamento
   useEffect(() => {
-    console.log('🔄 [UnifiedImplementationChecklist] Estado do hook:', {
-      solutionId,
-      isLoading,
-      hasTemplate: !!template,
-      hasError: !!error,
-      itemsCount: template?.checklist_data?.items?.length || 0
-    });
-
-    if (!isLoading && template) {
-      console.log('✅ [UnifiedImplementationChecklist] Template carregado com sucesso:', {
-        items: template.checklist_data?.items?.length || 0,
-        solutionId,
-        data: template.checklist_data
-      });
-    }
-
-    if (!isLoading && !template && !error) {
-      console.warn('⚠️ [UnifiedImplementationChecklist] Template não encontrado para solutionId:', solutionId);
-    }
-
-    if (error) {
-      console.error('❌ [UnifiedImplementationChecklist] Erro ao carregar template:', error);
-    }
-  }, [template, isLoading, solutionId, error]);
-
-  useEffect(() => {
-    console.log('🔄 [useEffect População] INÍCIO', {
-      isLoading,
-      hasTemplate: !!template,
-      templateValid: template ? {
-        hasChecklistData: !!template.checklist_data,
-        hasItems: !!template.checklist_data?.items,
-        itemsCount: template.checklist_data?.items?.length || 0,
-        totalItems: template.total_items,
-        isArray: Array.isArray(template.checklist_data?.items)
-      } : null
-    });
-
-    if (isLoading) {
-      console.log('⏳ [useEffect População] Ainda carregando, aguardando...');
-      return;
-    }
-
+    if (isLoading) return;
+    
     if (error || !template) {
-      console.warn('⚠️ [useEffect População] Sem template ou com erro, limpando itens');
       setChecklistItems([]);
       return;
     }
 
-    // ✅ VALIDAÇÃO COMPLETA
     const items = template.checklist_data?.items;
     
-    if (!Array.isArray(items)) {
-      console.error('❌ [useEffect População] Items não é array:', items);
+    if (!Array.isArray(items) || items.length === 0) {
       setChecklistItems([]);
       return;
     }
 
-    if (items.length === 0) {
-      console.warn('⚠️ [useEffect População] Template existe mas não tem itens');
-      setChecklistItems([]);
-      return;
-    }
-
-    console.log(`✅ [useEffect População] Setando ${items.length} itens`);
     setChecklistItems(items);
-    
   }, [template, isLoading, error]);
 
   const handleForceReload = async () => {
-    console.log('🔄 [FORCE-RELOAD] Limpando cache e recarregando...');
-    
-    // Limpar todos os caches relacionados
     await queryClient.invalidateQueries({ 
       queryKey: ['unified-checklist-template']
     });
     
-    // Forçar refetch
     const result = await refetch();
     
     if (result.data) {
@@ -145,8 +70,6 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   };
 
   const handleDirectFetch = async () => {
-    console.log('🔧 [DEBUG] Executando query DIRETA no Supabase...');
-    
     try {
       const { data, error } = await supabase
         .from('unified_checklists')
@@ -155,13 +78,6 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
         .eq('checklist_type', 'implementation')
         .eq('is_template', true)
         .maybeSingle();
-
-      console.log('📥 [DEBUG] Resposta DIRETA do Supabase:', {
-        hasData: !!data,
-        hasError: !!error,
-        data,
-        error
-      });
 
       if (data) {
         const items = data.checklist_data?.items || [];
@@ -173,7 +89,6 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
         toast.error('Nenhum dado encontrado');
       }
     } catch (err) {
-      console.error('❌ [DEBUG] Erro ao buscar direto:', err);
       toast.error('Erro na busca direta');
     }
   };

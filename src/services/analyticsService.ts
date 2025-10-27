@@ -24,10 +24,7 @@ class AnalyticsService {
     user_agent: string;
     page_url: string;
   }): void {
-    if (!this.isEnabled()) {
-      console.log('[Analytics] gtag não disponível, pulando evento de certificado');
-      return;
-    }
+    if (!this.isEnabled()) return;
 
     try {
       window.gtag!('event', 'certificate_url_usage', {
@@ -36,10 +33,10 @@ class AnalyticsService {
         value: data.cached ? 1 : 0,
         custom_map: data
       });
-      
-      console.log('[Analytics] Evento de certificado registrado:', data);
     } catch (error) {
-      console.warn('[Analytics] Erro ao registrar evento de certificado:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[Analytics] Erro ao registrar evento de certificado:', error);
+      }
     }
   }
 
@@ -52,10 +49,7 @@ class AnalyticsService {
     transformed: string;
     timestamp: string;
   }): void {
-    if (!this.isEnabled()) {
-      console.log('[Analytics] gtag não disponível, pulando transformação de URL');
-      return;
-    }
+    if (!this.isEnabled()) return;
 
     try {
       window.gtag!('event', 'url_transformation', {
@@ -63,10 +57,10 @@ class AnalyticsService {
         event_label: data.type,
         custom_map: { transformation_type: data.type }
       });
-      
-      console.log('[Analytics] Transformação de URL registrada:', data);
     } catch (error) {
-      console.warn('[Analytics] Erro ao registrar transformação:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[Analytics] Erro ao registrar transformação:', error);
+      }
     }
   }
 
@@ -74,10 +68,7 @@ class AnalyticsService {
    * Registra evento genérico
    */
   trackEvent(event: AnalyticsEvent): void {
-    if (!this.isEnabled()) {
-      console.log('[Analytics] gtag não disponível, pulando evento:', event);
-      return;
-    }
+    if (!this.isEnabled()) return;
 
     try {
       window.gtag!('event', event.action, {
@@ -86,10 +77,10 @@ class AnalyticsService {
         value: event.value,
         custom_map: event.customData
       });
-      
-      console.log('[Analytics] Evento registrado:', event);
     } catch (error) {
-      console.warn('[Analytics] Erro ao registrar evento:', error);
+      if (import.meta.env.DEV) {
+        console.warn('[Analytics] Erro ao registrar evento:', error);
+      }
     }
   }
 }

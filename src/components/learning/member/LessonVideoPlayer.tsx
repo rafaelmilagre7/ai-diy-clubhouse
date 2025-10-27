@@ -47,19 +47,7 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   // Determinar quais vídeos usar (props ou fallback robust query)
   const effectiveVideos = safeVideos.length > 0 ? safeVideos : (robustVideos || []);
   
-  devLog('🎬 [LESSON-PLAYER] Estado dos vídeos:', {
-    propsVideos: safeVideos.length,
-    robustVideos: robustVideos?.length || 0,
-    effectiveVideos: effectiveVideos.length,
-    currentIndex: currentVideoIndex,
-    lessonId,
-    loadingRobustVideos,
-    hasError: !!robustVideosError
-  });
-  
   const handleForceReload = useCallback(async () => {
-    devLog('🔄 [LESSON-PLAYER] Forçando reload dos dados...');
-    
     try {
       await forceVideoDataReload();
       await refetchVideos();
@@ -68,7 +56,6 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
         description: 'Vídeos foram atualizados com sucesso'
       });
     } catch (error) {
-      devLog('❌ [LESSON-PLAYER] Erro no reload:', error);
       toast.error('Erro ao recarregar', {
         description: 'Não foi possível atualizar os vídeos'
       });
@@ -76,8 +63,6 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   }, [forceVideoDataReload, refetchVideos]);
 
   const handleClearCache = useCallback(async () => {
-    devLog('🧹 [LESSON-PLAYER] Limpando todo o cache...');
-    
     try {
       await clearAllLearningCache();
       
@@ -88,7 +73,6 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       window.location.reload();
       
     } catch (error) {
-      devLog('❌ [LESSON-PLAYER] Erro na limpeza:', error);
       toast.error('Erro ao limpar cache');
     }
   }, [clearAllLearningCache]);
@@ -134,7 +118,6 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
 
   // Se não houver vídeos após todas as tentativas
   if (effectiveVideos.length === 0) {
-    devLog('⚠️ [LESSON-PLAYER] Nenhum vídeo disponível', { lessonId, videos, robustVideos });
     return (
       <Card>
         <CardContent className="p-8 text-center">
@@ -167,21 +150,11 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
       devWarn('⚠️ [LESSON-PLAYER] Vídeo atual com problemas:', validation.issues);
     }
   }
-  
-  devLog('🎬 [LESSON-PLAYER] Vídeo atual:', {
-    currentVideo: currentVideo?.id || 'none',
-    title: currentVideo?.title,
-    url: currentVideo?.url,
-    videoType: currentVideo?.video_type,
-    hasVideoUrl: !!(currentVideo as any)?.video_url, // Detectar campo antigo
-    hasUrl: !!currentVideo?.url
-  });
 
   // Hook para gerenciar progresso do vídeo
   const { updateVideoProgress } = useVideoProgress(lessonId);
 
   const handleVideoSelect = (index: number) => {
-    devLog('🎬 [LESSON-PLAYER] Selecionando vídeo:', { index, total: effectiveVideos.length });
     setCurrentVideoIndex(index);
   };
 

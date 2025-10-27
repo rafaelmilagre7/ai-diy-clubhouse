@@ -4,8 +4,6 @@ import { devLog } from '@/hooks/useOptimizedLogging';
 
 // Loading Fallback otimizado
 const RouteFallback = ({ routeName }: { routeName: string }) => {
-  devLog(`[LAZY-ROUTE] Carregando ${routeName}...`);
-  
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="text-center space-y-4">

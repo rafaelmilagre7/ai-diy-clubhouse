@@ -51,10 +51,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
         .eq('type', 'video')
         .is('module_id', null);
 
-      if (error) {
-        console.error('VideoTab: Erro ao buscar vídeos:', error);
-        throw error;
-      }
+      if (error) throw error;
       
       // Transformar os dados para o formato esperado
       const transformedData = data?.map(resource => ({

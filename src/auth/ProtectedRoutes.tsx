@@ -14,9 +14,9 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   const { user, profile, isLoading } = useAuth();
   const [showTimeout, setShowTimeout] = useState(false);
 
-  // Log para debug de navegação via notificações
+  // Log para debug de navegação via notificações (apenas em dev)
   useEffect(() => {
-    if (location.state?.from === 'notification') {
+    if (import.meta.env.DEV && location.state?.from === 'notification') {
       console.log('🔔 [PROTECTED ROUTE] Navegação via notificação', {
         user: user?.id,
         profile: profile?.id,
@@ -30,8 +30,7 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
   useEffect(() => {
     const timeout = setTimeout(() => {
       setShowTimeout(true);
-      console.warn('⏱️ [PROTECTED ROUTE] Timeout atingido - carregamento lento');
-    }, 5000); // 5 segundos máximo (reduzido de 10s)
+    }, 5000);
 
     return () => clearTimeout(timeout);
   }, []);
@@ -49,17 +48,14 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
 
   // Timeout atingido - permitir acesso mesmo sem perfil completo se houver usuário
   if (showTimeout && user) {
-    console.log('✅ [PROTECTED ROUTE] Permitindo acesso após timeout (usuário presente)');
     return <>{children}</>;
   }
 
   // Sem usuário = login
   if (!user) {
-    console.log('🔒 [PROTECTED ROUTE] Sem usuário - redirecionando para login');
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
   // Usuário autenticado - renderizar conteúdo
-  console.log('✅ [PROTECTED ROUTE] Usuário autenticado - renderizando conteúdo');
   return <>{children}</>;
 };

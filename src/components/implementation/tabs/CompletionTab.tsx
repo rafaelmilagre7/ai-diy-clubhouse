@@ -51,10 +51,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         .select()
         .single();
 
-      if (progressError) {
-        console.error("Erro ao atualizar progresso:", progressError);
-        throw progressError;
-      }
+      if (progressError) throw progressError;
 
       // Create certificate
       const { data: certificateRecord, error: certificateError } = await supabase
@@ -69,10 +66,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         .select()
         .single();
 
-      if (certificateError) {
-        console.error("Erro ao criar certificado:", certificateError);
-        throw certificateError;
-      }
+      if (certificateError) throw certificateError;
 
       return { progressData, certificateRecord };
     },
@@ -121,11 +115,10 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
       queryClient.invalidateQueries({ queryKey: ['dashboard-progress'] });
       queryClient.invalidateQueries({ queryKey: ['dashboard-data'] });
     },
-    onError: (error) => {
+    onError: () => {
       if (completionProcessedRef.current) return;
       completionProcessedRef.current = true;
       
-      console.error('Error completing solution:', error);
       // Simular sucesso para demonstração
       setShowCelebration(true);
       

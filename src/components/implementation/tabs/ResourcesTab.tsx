@@ -51,7 +51,6 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
         .neq("name", "Solution Resources");
       
       if (error) {
-        console.error("Erro ao buscar recursos:", error);
         toast({
           title: "Erro ao carregar recursos",
           description: "Não foi possível carregar os recursos da solução.",
@@ -62,7 +61,6 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
       
       setResources(data || []);
     } catch (error) {
-      console.error("Erro ao buscar recursos:", error);
       toast({
         title: "Erro",
         description: "Ocorreu um erro inesperado ao carregar os recursos.",

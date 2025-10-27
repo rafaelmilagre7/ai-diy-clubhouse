@@ -52,10 +52,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
         .eq('solution_id', solutionId)
         .order('created_at');
 
-      if (error) {
-        console.error('Erro ao buscar ferramentas:', error);
-        throw error;
-      }
+      if (error) throw error;
 
       // Transformar dados para o formato esperado
       return data.map((item: any) => {
@@ -105,7 +102,6 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   }
 
   if (error) {
-    console.error('Erro na query:', error);
     return (
       <div className="text-center py-12">
         <Wrench className="mx-auto h-12 w-12 text-muted-foreground mb-4" />

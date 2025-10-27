@@ -31,12 +31,9 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
     
     // Verificar se o script já existe
     if (document.getElementById(scriptId)) {
-      devLog('✅ [PANDA-SCRIPT] Script já carregado');
       setScriptLoaded(true);
       return;
     }
-    
-    devLog('📥 [PANDA-SCRIPT] Carregando script da API...');
     
     const script = document.createElement('script');
     script.id = scriptId;
@@ -44,12 +41,10 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
     script.async = true;
     
     script.onload = () => {
-      devLog('✅ [PANDA-SCRIPT] Script carregado com sucesso');
       setScriptLoaded(true);
     };
     
     script.onerror = () => {
-      devLog('❌ [PANDA-SCRIPT] Erro ao carregar script');
       setErrorState(true);
       setLoading(false);
       onError?.();
@@ -60,7 +55,6 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
     // Timeout de segurança
     const timeoutId = setTimeout(() => {
       if (!scriptLoaded) {
-        devLog('⏱️ [PANDA-SCRIPT] Timeout ao carregar script');
         setErrorState(true);
         setLoading(false);
         onError?.();
@@ -78,8 +72,6 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
     
     const containerId = `panda-${videoId}`;
     
-    devLog(`🎬 [PANDA-SCRIPT] Inicializando player para videoId: ${videoId}`);
-    
     try {
       // Garantir que pandascripttag existe
       (window as any).pandascripttag = (window as any).pandascripttag || [];
@@ -90,7 +82,6 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
           const PandaPlayer = (window as any).PandaPlayer;
           
           if (!PandaPlayer) {
-            devLog('❌ [PANDA-SCRIPT] PandaPlayer não encontrado');
             setErrorState(true);
             setLoading(false);
             onError?.();
@@ -99,7 +90,6 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
           
           const player = new PandaPlayer(containerId, {
             onReady: () => {
-              devLog('✅ [PANDA-SCRIPT] Player pronto');
               setLoading(false);
               playerRef.current = player;
               
@@ -116,13 +106,12 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
                       });
                     });
                   } catch (error) {
-                    devLog('⚠️ [PANDA-SCRIPT] Erro ao obter progresso:', error);
+                    // Silencioso
                   }
                 }
               }, 5000);
             },
-            onError: (error: any) => {
-              devLog('❌ [PANDA-SCRIPT] Erro no player:', error);
+            onError: () => {
               setErrorState(true);
               setLoading(false);
               onError?.();
@@ -132,21 +121,17 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
           // Escutar eventos do player
           if (player.onEvent) {
             player.onEvent((event: any) => {
-              devLog(`📺 [PANDA-SCRIPT] Evento: ${event.message}`);
-              
               if (event.message === 'panda_timeupdate') {
                 const progress = (event.currentTime / event.duration) * 100;
                 onProgress?.(progress);
               }
               
               if (event.message === 'panda_ended') {
-                devLog('✅ [PANDA-SCRIPT] Vídeo finalizado');
                 onEnded?.();
               }
             });
           }
         } catch (error) {
-          devLog('❌ [PANDA-SCRIPT] Erro ao inicializar player:', error);
           setErrorState(true);
           setLoading(false);
           onError?.();
@@ -154,7 +139,6 @@ export const PandaVideoScriptPlayer: React.FC<PandaVideoScriptPlayerProps> = ({
       });
       
     } catch (error) {
-      devLog('❌ [PANDA-SCRIPT] Erro crítico:', error);
       setErrorState(true);
       setLoading(false);
       onError?.();

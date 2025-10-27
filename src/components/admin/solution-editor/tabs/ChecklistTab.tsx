@@ -13,18 +13,7 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({
   onSave,
   saving,
 }) => {
-  console.log('🎯 [ChecklistTab] MONTADO:', {
-    solutionId,
-    saving,
-    timestamp: new Date().toISOString()
-  });
-
-  React.useEffect(() => {
-    console.log('🔄 [ChecklistTab] useEffect disparado, solutionId:', solutionId);
-  }, [solutionId]);
-
   if (!solutionId) {
-    console.error('❌ [ChecklistTab] solutionId é undefined/null!');
     return <div>Erro: ID da solução não fornecido</div>;
   }
 

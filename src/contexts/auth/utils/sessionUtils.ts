@@ -5,8 +5,6 @@ import { toast } from '@/hooks/use-toast';
 // Sign out user
 export const signOutUser = async (): Promise<void> => {
   try {
-    console.log('🚪 [AUTH] Iniciando logout seguro');
-    
     // 1. Limpar todos os dados de auth do localStorage
     const authKeys = Object.keys(localStorage).filter(key => 
       key.startsWith('sb-') || key.includes('auth') || key.includes('supabase')
@@ -16,16 +14,15 @@ export const signOutUser = async (): Promise<void> => {
       try {
         localStorage.removeItem(key);
       } catch (e) {
-        console.warn(`Erro ao limpar ${key}:`, e);
+        // Silencioso
       }
     });
     
     // 2. Realizar logout no Supabase
     const { error } = await supabase.auth.signOut({ scope: 'global' });
     
-    if (error) {
+    if (error && import.meta.env.DEV) {
       console.error('Erro no logout do Supabase:', error);
-      // Continuar mesmo com erro, pois já limpamos o localStorage
     }
     
     // 3. Aguardar um pouco para garantir limpeza
@@ -40,14 +37,16 @@ export const signOutUser = async (): Promise<void> => {
     });
     
   } catch (error) {
-    console.error('Erro crítico no logout:', error);
+    if (import.meta.env.DEV) {
+      console.error('Erro crítico no logout:', error);
+    }
     
     // Fallback: limpeza forçada e redirecionamento
     try {
       localStorage.clear();
       sessionStorage.clear();
     } catch (e) {
-      console.warn('Erro ao limpar storage:', e);
+      // Silencioso
     }
     
     window.location.href = '/login';

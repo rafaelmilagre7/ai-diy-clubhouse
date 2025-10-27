@@ -22,12 +22,6 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   solution, 
   onNewIdea
 }) => {
-  console.log('🔍 [SOLUTION RESULT] Componente renderizado', { 
-    solutionId: solution?.id,
-    hasFramework: !!solution?.framework_mapping,
-    hasLovablePrompt: !!solution?.lovable_prompt
-  });
-
   // Estado para controlar expansão de seções on-demand
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
@@ -105,8 +99,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         setExpandedSections(prev => new Set([...prev, sectionId]));
         toast.success('Conteúdo gerado com sucesso! 🎉');
       }
-    } catch (err: any) {
-      console.error('Erro ao gerar seção:', err);
+    } catch (err) {
       toast.error('Erro ao gerar conteúdo', {
         description: 'Tente novamente em instantes.'
       });

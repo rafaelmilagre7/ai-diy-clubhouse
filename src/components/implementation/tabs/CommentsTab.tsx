@@ -93,9 +93,8 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
       setRatingFeedback("");
       toast.success('Avaliação enviada!');
     },
-    onError: (error) => {
+    onError: () => {
       toast.error('Erro ao enviar avaliação');
-      console.error('Error adding rating:', error);
     }
   });
 
