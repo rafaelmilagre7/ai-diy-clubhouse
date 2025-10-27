@@ -7,6 +7,7 @@ import { ChecklistProgress } from "../content/checklist/ChecklistProgress";
 import { ChecklistLoading } from "../content/checklist/ChecklistLoading";
 import { AlertCircle } from "lucide-react";
 import { toast } from "sonner";
+import { getChecklistTemplate } from "@/lib/supabase/rpc";
 
 interface LearningChecklistTabProps {
   solutionId: string;
@@ -28,23 +29,15 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   const { data: checklistItems, isLoading: loadingChecklist, error: checklistError } = useQuery({
     queryKey: ['learning-checklist-template', solutionId],
     queryFn: async () => {
-      const { data: template, error } = await supabase
-        .from('unified_checklists')
-        .select('checklist_data')
-        .eq('solution_id', solutionId)
-        .eq('checklist_type', 'implementation')
-        .eq('is_template', true)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Erro ao buscar template:', error);
-        throw error;
+      const rpcData = await getChecklistTemplate(solutionId, 'implementation');
+      
+      if (rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
+        const template = rpcData[0];
+        if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
+          return template.checklist_data.items as ChecklistItemData[];
+        }
       }
-
-      if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
-        return template.checklist_data.items as ChecklistItemData[];
-      }
-
+      
       return [];
     },
   });
