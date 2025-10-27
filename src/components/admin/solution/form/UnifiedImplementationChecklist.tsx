@@ -34,29 +34,37 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
+  // Log temporário para debug
   useEffect(() => {
+    if (!isLoading && template) {
+      console.log('✅ Template carregado:', {
+        items: template.checklist_data?.items?.length || 0,
+        solutionId,
+        data: template.checklist_data
+      });
+    }
+  }, [template, isLoading, solutionId]);
+
+  useEffect(() => {
+    // Só processar quando NÃO estiver loading
     if (isLoading) return;
 
-    if (error) {
-      console.error('Erro ao carregar template:', error);
+    // Se tiver erro OU não tiver template, limpa
+    if (error || !template) {
       setChecklistItems([]);
       return;
     }
 
-    if (!template) {
-      setChecklistItems([]);
-      return;
-    }
-
-    // Normalizar e validar items do template
-    const items = template.checklist_data?.items || [];
+    // Pegar items (já vem normalizado do hook)
+    const items = template.checklist_data?.items;
     
-    if (Array.isArray(items) && items.length > 0) {
+    // SEMPRE setar, mesmo se for array vazio
+    if (Array.isArray(items)) {
       setChecklistItems(items);
     } else {
       setChecklistItems([]);
     }
-  }, [template, isLoading, error, solutionId]);
+  }, [template, isLoading, error]);
 
   const saveCheckpoints = async () => {
     if (!user) return;
