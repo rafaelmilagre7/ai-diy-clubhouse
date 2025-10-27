@@ -150,17 +150,20 @@ export const useUpdateUnifiedChecklist = () => {
       solutionId, 
       checklistType = 'implementation',
       templateId,
-      silent = false
     }: {
       checklistData: UnifiedChecklistData;
       solutionId: string;
       checklistType?: string;
       templateId?: string;
-      silent?: boolean;
     }) => {
       if (!user?.id) throw new Error('Usuário não autenticado');
 
-      console.log('💾 Salvando checklist:', { checklistData, solutionId, checklistType });
+      console.log('💾 Salvando checklist:', { 
+        checklistId: checklistData.id,
+        solutionId, 
+        checklistType,
+        itemsCount: checklistData.checklist_data.items.length 
+      });
 
       const completedItems = checklistData.checklist_data.items.filter(item => item.completed).length;
       const totalItems = checklistData.checklist_data.items.length;
@@ -182,6 +185,8 @@ export const useUpdateUnifiedChecklist = () => {
 
       if (checklistData.id) {
         // Atualizar existente
+        console.log('📝 Atualizando checklist existente:', checklistData.id);
+        
         const { data, error } = await supabase
           .from('unified_checklists')
           .update(updateData)
@@ -189,10 +194,17 @@ export const useUpdateUnifiedChecklist = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao atualizar:', error);
+          throw error;
+        }
+        
+        console.log('✅ Checklist atualizado com sucesso');
         return data;
       } else {
         // Criar novo
+        console.log('✨ Criando novo checklist');
+        
         const { data, error } = await supabase
           .from('unified_checklists')
           .insert({
@@ -206,27 +218,28 @@ export const useUpdateUnifiedChecklist = () => {
           .select()
           .single();
 
-        if (error) throw error;
+        if (error) {
+          console.error('❌ Erro ao criar:', error);
+          throw error;
+        }
+        
+        console.log('✅ Checklist criado com sucesso:', data.id);
         return data;
       }
     },
     onSuccess: (data, variables) => {
-      // Só invalidar se NÃO for silencioso
-      if (!variables.silent) {
-        setTimeout(() => {
-          queryClient.invalidateQueries({ 
-            queryKey: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType] 
-          });
-          queryClient.invalidateQueries({ 
-            queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
-          });
-        }, 100);
-        
-        toast.success('Progresso salvo com sucesso!');
-      }
+      console.log('🔄 Invalidando queries após sucesso');
+      
+      // Sempre invalidar queries para garantir sincronização
+      queryClient.invalidateQueries({ 
+        queryKey: ['unified-checklist', variables.solutionId, user?.id, variables.checklistType] 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ['unified-checklist-template', variables.solutionId, variables.checklistType] 
+      });
     },
     onError: (error) => {
-      console.error('Erro ao salvar checklist:', error);
+      console.error('❌ Erro ao salvar checklist:', error);
       toast.error('Erro ao salvar progresso');
     }
   });

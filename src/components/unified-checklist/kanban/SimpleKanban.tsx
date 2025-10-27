@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -40,6 +40,15 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   const updateMutation = useUpdateUnifiedChecklist();
 
+  // Refs para evitar stale closures
+  const checklistDataRef = useRef(checklistData);
+  const saveTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // Atualizar ref quando checklistData mudar
+  useEffect(() => {
+    checklistDataRef.current = checklistData;
+  }, [checklistData]);
+
   // Configurar sensores para drag
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -50,7 +59,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   );
 
   // Atualizar localItems quando checklistItems mudar
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalItems(checklistItems);
   }, [checklistItems]);
 
@@ -109,50 +118,77 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       return;
     }
 
-    // Atualizar estado local imediatamente
+    // Atualizar estado local imediatamente (UI otimista)
     setLocalItems((prev) => {
-      const updated = prev.map((item) =>
+      return prev.map((item) =>
         item.id === itemId ? { ...item, column: mappedColumn } : item
       );
-      
-      // Calcular progresso
-      const completedCount = updated.filter(item => item.completed).length;
-      const totalCount = updated.length;
-      const progressPercent = Math.round((completedCount / totalCount) * 100);
-
-      // Salvar no banco
-      const updatedChecklistData: UnifiedChecklistData = {
-        ...checklistData,
-        checklist_data: {
-          items: updated,
-          lastUpdated: new Date().toISOString()
-        },
-        completed_items: completedCount,
-        total_items: totalCount,
-        progress_percentage: progressPercent,
-        is_completed: completedCount === totalCount,
-      };
-
-      updateMutation.mutate({
-        checklistData: updatedChecklistData,
-        solutionId,
-        checklistType,
-        templateId: checklistData.template_id,
-        silent: true, // Não invalidar query, manter estado local
-      }, {
-        onError: (error) => {
-          console.error("❌ Erro ao atualizar:", error);
-          toast.error("Erro ao mover tarefa");
-          // Reverter em caso de erro
-          setLocalItems(checklistItems);
-        },
-        onSuccess: () => {
-          console.log("✅ Tarefa movida com sucesso");
-        },
-      });
-
-      return updated;
     });
+
+    // Cancelar timeout anterior (debounce)
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+    }
+
+    // Debounce: salvar após 300ms (permite múltiplos drags rápidos)
+    saveTimeoutRef.current = setTimeout(() => {
+      // Usar dados mais recentes da ref
+      const currentChecklistData = checklistDataRef.current;
+      
+      if (!currentChecklistData.id) {
+        console.error("❌ Checklist ID não encontrado, não é possível salvar");
+        toast.error("Erro: checklist não inicializado");
+        return;
+      }
+
+      // Pegar estado atualizado dos items
+      setLocalItems((currentItems) => {
+        // Calcular progresso baseado no estado atual
+        const completedCount = currentItems.filter(item => item.completed).length;
+        const totalCount = currentItems.length;
+        const progressPercent = Math.round((completedCount / totalCount) * 100);
+
+        // Preparar dados para salvar
+        const updatedChecklistData: UnifiedChecklistData = {
+          ...currentChecklistData,
+          checklist_data: {
+            items: currentItems,
+            lastUpdated: new Date().toISOString()
+          },
+          completed_items: completedCount,
+          total_items: totalCount,
+          progress_percentage: progressPercent,
+          is_completed: completedCount === totalCount && totalCount > 0,
+        };
+
+        console.log("💾 Salvando mudança de coluna:", {
+          itemId,
+          newColumn: mappedColumn,
+          checklistId: currentChecklistData.id
+        });
+
+        // Salvar no banco (FORA do setState)
+        updateMutation.mutate({
+          checklistData: updatedChecklistData,
+          solutionId,
+          checklistType,
+          templateId: currentChecklistData.template_id,
+        }, {
+          onError: (error) => {
+            console.error("❌ Erro ao salvar:", error);
+            toast.error("Erro ao salvar alteração");
+            // Reverter para dados originais
+            setLocalItems(checklistItems);
+          },
+          onSuccess: () => {
+            console.log("✅ Alteração salva com sucesso");
+          },
+        });
+
+        // Retornar estado atual (sem modificar)
+        return currentItems;
+      });
+    }, 300);
   };
 
   const activeItem = useMemo(() => {
