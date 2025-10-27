@@ -1,4 +1,4 @@
-import { getSupabaseServiceClient } from '../_shared/supabase-client.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,7 +27,10 @@ Deno.serve(async (req) => {
 
   try {
     // Get Supabase service client with elevated permissions
-    const supabase = getSupabaseServiceClient();
+    const supabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    );
     
     // Parse request body
     const { email }: DeleteInviteRequest = await req.json();
