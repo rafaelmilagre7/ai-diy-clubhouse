@@ -1,6 +1,6 @@
 import React from "react";
 import { useDroppable } from "@dnd-kit/core";
-import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { useDraggable } from "@dnd-kit/core";
 import { Card } from "@/components/ui/card";
 import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
 import SimpleKanbanCard from "./SimpleKanbanCard";
@@ -11,6 +11,27 @@ interface KanbanColumnProps {
   items: UnifiedChecklistItem[];
   onViewDetails: (item: UnifiedChecklistItem) => void;
 }
+
+interface DraggableCardProps {
+  item: UnifiedChecklistItem;
+  onViewDetails: (item: UnifiedChecklistItem) => void;
+}
+
+const DraggableCard: React.FC<DraggableCardProps> = ({ item, onViewDetails }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: item.id,
+  });
+
+  return (
+    <div ref={setNodeRef} {...listeners} {...attributes}>
+      <SimpleKanbanCard 
+        item={item} 
+        onViewDetails={onViewDetails}
+        isDragging={isDragging}
+      />
+    </div>
+  );
+};
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
   id,
@@ -39,21 +60,19 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
         ref={setNodeRef}
         className="flex-1 p-4 overflow-y-auto min-h-[200px]"
       >
-        <SortableContext items={items.map((item) => item.id)} strategy={verticalListSortingStrategy}>
-          {items.length === 0 ? (
-            <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
-              Nenhuma tarefa
-            </div>
-          ) : (
-            items.map((item) => (
-              <SimpleKanbanCard
-                key={item.id}
-                item={item}
-                onViewDetails={onViewDetails}
-              />
-            ))
-          )}
-        </SortableContext>
+        {items.length === 0 ? (
+          <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+            Nenhuma tarefa
+          </div>
+        ) : (
+          items.map((item) => (
+            <DraggableCard
+              key={item.id}
+              item={item}
+              onViewDetails={onViewDetails}
+            />
+          ))
+        )}
       </div>
     </Card>
   );

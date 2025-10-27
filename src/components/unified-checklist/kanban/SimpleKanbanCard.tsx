@@ -1,6 +1,4 @@
-import React, { useState } from "react";
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -10,40 +8,24 @@ import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
 interface SimpleKanbanCardProps {
   item: UnifiedChecklistItem;
   onViewDetails: (item: UnifiedChecklistItem) => void;
+  isDragging?: boolean;
 }
 
 const SimpleKanbanCard: React.FC<SimpleKanbanCardProps> = ({
   item,
   onViewDetails,
+  isDragging = false,
 }) => {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: item.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-    opacity: isDragging ? 0.5 : 1,
-  };
-
   return (
-    <div ref={setNodeRef} style={style}>
-      <Card 
-        {...attributes}
-        {...listeners}
-        className={`
-          p-3 mb-2 bg-card border border-border
-          hover:bg-accent/30 hover:border-primary/50 hover:shadow-md
-          transition-all duration-200 cursor-grab active:cursor-grabbing
-          group relative
-          ${isDragging ? 'scale-105 shadow-lg' : ''}
-        `}
-      >
+    <Card 
+      className={`
+        p-3 mb-2 bg-card border border-border
+        hover:bg-accent/30 hover:border-primary/50 hover:shadow-md
+        transition-all duration-200 cursor-grab active:cursor-grabbing
+        group relative
+        ${isDragging ? 'opacity-50' : ''}
+      `}
+    >
         <div className="flex items-start gap-3">
           {/* Drag Handle - Apenas visual */}
           <div className="mt-1 opacity-40 group-hover:opacity-70 transition-opacity pointer-events-none">
@@ -98,8 +80,7 @@ const SimpleKanbanCard: React.FC<SimpleKanbanCardProps> = ({
             <Eye className="h-4 w-4" />
           </Button>
         </div>
-      </Card>
-    </div>
+    </Card>
   );
 };
 

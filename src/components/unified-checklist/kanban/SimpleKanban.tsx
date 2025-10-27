@@ -227,19 +227,19 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
         {/* Drag Overlay */}
         <DragOverlay 
-          dropAnimation={{
-            duration: 200,
-            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
-          }}
-          style={{
-            cursor: 'grabbing',
-          }}
+          adjustScale={false}
+          dropAnimation={null}
         >
           {activeItem ? (
-            <div style={{ cursor: 'grabbing' }}>
+            <div style={{ 
+              cursor: 'grabbing',
+              transform: 'rotate(3deg)',
+              opacity: 0.95,
+            }}>
               <SimpleKanbanCard
                 item={activeItem}
                 onViewDetails={() => {}}
+                isDragging={false}
               />
             </div>
           ) : null}
