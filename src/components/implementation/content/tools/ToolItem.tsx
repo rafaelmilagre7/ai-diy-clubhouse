@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { ExternalLink, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { BenefitBadge } from "@/components/tools/BenefitBadge";
 
 interface ToolItemProps {
   toolName: string;
@@ -64,16 +65,17 @@ export const ToolItem = ({
     );
   };
 
-  const getBenefitLabel = () => {
-    switch (benefitType) {
+  // Mapear benefitType para BenefitType
+  const mapBenefitType = (type?: "discount" | "free" | "special"): "discount" | "exclusive" | "free" | "trial" | "other" => {
+    switch (type) {
       case "discount":
-        return "Desconto exclusivo";
+        return "discount";
       case "free":
-        return "Versão gratuita";
+        return "free";
       case "special":
-        return "Oferta especial";
+        return "exclusive";
       default:
-        return "Benefício exclusivo";
+        return "other";
     }
   };
 
@@ -89,10 +91,8 @@ export const ToolItem = ({
                 Necessário
               </Badge>
             )}
-            {hasBenefit && (
-              <Badge variant="outline" className="bg-secondary/10 text-secondary border-secondary/20 text-xs">
-                {getBenefitLabel()}
-              </Badge>
+            {hasBenefit && benefitType && (
+              <BenefitBadge type={mapBenefitType(benefitType)} />
             )}
           </div>
         </div>
