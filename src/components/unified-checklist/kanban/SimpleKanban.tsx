@@ -226,12 +226,22 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         </div>
 
         {/* Drag Overlay */}
-        <DragOverlay>
+        <DragOverlay 
+          dropAnimation={{
+            duration: 200,
+            easing: 'cubic-bezier(0.18, 0.67, 0.6, 1.22)',
+          }}
+          style={{
+            cursor: 'grabbing',
+          }}
+        >
           {activeItem ? (
-            <SimpleKanbanCard
-              item={activeItem}
-              onViewDetails={() => {}}
-            />
+            <div style={{ cursor: 'grabbing' }}>
+              <SimpleKanbanCard
+                item={activeItem}
+                onViewDetails={() => {}}
+              />
+            </div>
           ) : null}
         </DragOverlay>
       </DndContext>
