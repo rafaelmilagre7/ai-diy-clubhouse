@@ -82,36 +82,31 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       progressAllColumns: progressItems.map((p: any) => ({ id: p.id, title: p.title, column: p.column }))
     });
     
+    console.log('🔀 [UnifiedChecklistTab] Iniciando mapeamento de', sourceItems.length, 'items...');
+    
     const mergedItems = sourceItems.map((sourceItem: any) => {
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
       if (progressItem) {
-        // Extrair metadata do template sem o campo 'column'
-        const { column: _, ...safeMetadata } = sourceItem.metadata || {};
-        
-        // ✅ Merge correto: progressItem tem prioridade absoluta
-        const merged = Object.assign(
-          {},
-          sourceItem,           // 1. Base do template
-          progressItem,         // 2. Progresso sobrescreve TUDO
-          {
-            metadata: {         // 3. Restaurar metadata SEM column
-              ...safeMetadata,
-              ...(progressItem.metadata || {}) // Permitir override de metadata pelo progresso
-            }
-          }
-        );
-        
-        console.log(`🔀 [UnifiedChecklistTab] Item ${sourceItem.id} merged:`, {
-          sourceColumn: sourceItem.column,
+        // ✅ PRIORIDADE ABSOLUTA: Se existe progresso, usar APENAS o progresso
+        // O template só serve para fornecer metadata técnico (não posição/status)
+        console.log(`🔀 [UnifiedChecklistTab] Item ${sourceItem.id}:`, {
           progressColumn: progressItem.column,
-          mergedColumn: merged.column,
-          sourceMetadata: sourceItem.metadata,
-          safeMetadata,
-          finalMetadata: merged.metadata
+          progressCompleted: progressItem.completed,
+          progressTitle: progressItem.title,
+          willUse: 'PROGRESS_ONLY'
         });
         
-        return merged;
+        // Extrair APENAS metadata técnico do template (sem column/completed/notes)
+        const { column, completed, notes, completedAt, order, ...templateTechnicalData } = sourceItem.metadata || {};
+        
+        return {
+          ...progressItem, // ✅ Usar progresso como base ABSOLUTA
+          metadata: {
+            ...templateTechnicalData, // Apenas dados técnicos do template
+            ...(progressItem.metadata || {}) // Permitir override
+          }
+        };
       }
       
       // Se não tem progresso, usar template
@@ -127,13 +122,14 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       };
     });
 
+    console.log('✅ [UnifiedChecklistTab] ========== FIM DO MERGE ==========');
     console.log('✅ [UnifiedChecklistTab] Merge concluído:', {
       mergedCount: mergedItems.length,
       columnsDistribution: mergedItems.reduce((acc: Record<string, number>, item) => {
         acc[item.column || 'todo'] = (acc[item.column || 'todo'] || 0) + 1;
         return acc;
       }, {}),
-      allMergedColumns: mergedItems.map(i => ({ id: i.id, title: i.title, column: i.column }))
+      allMergedColumns: mergedItems.map(i => ({ id: i.id, title: i.title?.substring(0, 30), column: i.column }))
     });
 
     return mergedItems;
