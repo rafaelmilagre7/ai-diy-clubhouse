@@ -109,28 +109,40 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         notes: ''
       }));
       
-      const { error } = await supabase
+      const payload = {
+        user_id: user.id,
+        solution_id: solutionId,
+        checklist_type: 'implementation',
+        is_template: false,
+        checklist_data: {
+          items: itemsWithColumns,
+          lastUpdated: new Date().toISOString()
+        },
+        completed_items: 0,
+        total_items: itemsWithColumns.length,
+        progress_percentage: 0,
+        is_completed: false,
+      };
+
+      console.log('📤 [LearningChecklistTab] Payload INSERT:', JSON.stringify(payload, null, 2));
+
+      const { data, error } = await supabase
         .from('unified_checklists')
-        .insert({
-          user_id: user.id,
-          solution_id: solutionId,
-          checklist_type: 'implementation',
-          is_template: false,
-          checklist_data: {
-            items: itemsWithColumns,
-            lastUpdated: new Date().toISOString()
-          },
-          completed_items: 0,
-          total_items: itemsWithColumns.length,
-          progress_percentage: 0,
-          is_completed: false,
-        });
+        .insert(payload)
+        .select()
+        .single();
       
       if (error) {
-        console.error('❌ [LearningChecklistTab] Erro ao criar checklist:', error);
+        console.error('❌ [LearningChecklistTab] Erro COMPLETO ao criar checklist:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code,
+          errorFull: JSON.stringify(error, null, 2)
+        });
         toast.error(`Erro ao criar checklist: ${error.message}`);
       } else {
-        console.log('✅ [LearningChecklistTab] Checklist criado com sucesso!');
+        console.log('✅ [LearningChecklistTab] Checklist criado com SUCESSO!', data);
         refetchUserChecklist();
       }
     };

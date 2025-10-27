@@ -10,15 +10,27 @@ interface ChecklistTabProps {
 }
 
 const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) => {
+  console.log('🎯 [ChecklistTab] Renderizando com solutionId:', solutionId);
+
   // Verificar se é uma solução do Builder (ai_generated_solutions)
   const { data: isBuilderSolution, isLoading } = useQuery({
     queryKey: ['is-builder-solution', solutionId],
     queryFn: async () => {
-      const { data } = await supabase
+      console.log('🔍 [ChecklistTab] Verificando tipo de solução...');
+      
+      // ✅ CORRIGIDO: ai_generated_solutions não tem solution_id, usa id diretamente
+      const { data, error } = await supabase
         .from('ai_generated_solutions')
         .select('id')
-        .eq('solution_id', solutionId)
+        .eq('id', solutionId) // ← CORRIGIDO DE solution_id PARA id
         .maybeSingle();
+
+      console.log('🔍 [ChecklistTab] Resultado da verificação:', {
+        solutionId,
+        foundInBuilder: !!data,
+        builderId: data?.id,
+        error: error?.message
+      });
 
       return !!data; // true = Builder, false = Learning
     },
