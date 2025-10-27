@@ -79,300 +79,201 @@ serve(async (req) => {
     
     const startTime = Date.now();
 
-    const systemPrompt = `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
+    // 🆕 PROMPT SIMPLIFICADO (~800 chars) - Foco em JSON válido
+    const systemPrompt = `Você é especialista em no-code. Avalie se a ideia é viável com ferramentas como Make, Zapier, APIs de IA (OpenAI, Gemini), Airtable, Bubble, e webhooks.
 
-## CONTEXTO E CONHECIMENTO
-
-Você conhece profundamente estas ferramentas no-code:
-
-**Automação e Integração:**
-- Make (Integromat), Zapier, n8n, Activepieces, Integrately, Pabbly Connect
-
-**Inteligência Artificial:**
-- APIs: OpenAI (GPT-4, DALL-E), Anthropic (Claude), Google (Gemini)
-- Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (voz)
-- Visão computacional: GPT-4 Vision, Google Vision API
-
-**Bancos de Dados e Armazenamento:**
-- Airtable, Google Sheets, Notion Database, Supabase, Firebase, Xano
-
-**Construção de Interfaces:**
-- Bubble, Softr, FlutterFlow, Webflow, Glide, AppSheet, Adalo
-
-**Chatbots e Conversação:**
-- Voiceflow, Botpress, ManyChat, Landbot, Typebot, ChatBase
-
-**Comunicação:**
-- Mailchimp, SendGrid, Twilio (SMS/WhatsApp), Slack API, Discord API
-
-**Pagamentos:**
-- Stripe, PayPal, Mercado Pago (via APIs)
-
-**Documentos e PDFs:**
-- DocuParser, Parsio, PDF.co, CloudConvert
-
-**Outras ferramentas:**
-- Google Workspace (Docs, Sheets, Calendar, Drive)
-- Microsoft Power Automate
-- Calendly, Cal.com (agendamento)
-- OCR: Tesseract, Google Cloud Vision
-
-## ⚠️ CASOS SEMPRE VIÁVEIS (EXEMPLOS PRÁTICOS) - MARQUE SCORE 75-95
-
-**CRITÉRIO SUPER IMPORTANTE**: Se a ideia menciona qualquer combinação de:
-- WhatsApp + IA/Automação
-- Chatbot + IA 
-- Email/SMS + Automação
-- Planilha/CRM + Integração
+**SEMPRE VIÁVEL (score 75-90):**
+- WhatsApp/Chatbot + IA
+- Instagram/Redes Sociais + Automação
+- CRM/Vendas + Integração
 - Dashboard + APIs
-→ É VIÁVEL! Score mínimo 75!
+- Análise de dados com IA
 
-✅ **WhatsApp + IA/Automação (SEMPRE VIÁVEL - Score 80-95):**
-- "Agente inteligente que automatiza vendas via WhatsApp"
-- "Bot de WhatsApp com IA que qualifica leads"
-- "Assistente virtual no WhatsApp para atendimento"
-- "Sistema que recebe pedidos via WhatsApp e processa automaticamente"
-- "WhatsApp bot que acompanha clientes e envia follow-ups"
-- **QUALQUER ideia com "WhatsApp + IA" = VIÁVEL!**
+**NÃO VIÁVEL (score 0-40):**
+- Hardware específico/IoT industrial
+- Processamento em tempo real crítico
+- Treinar modelo de IA do zero
+- APIs inexistentes
 
-✅ **Redes Sociais + IA (SEMPRE VIÁVEL - Score 70-85):**
-- "Sistema de IA que monitora Instagram e recomenda posts"
-- "Analisar tendências do TikTok e sugerir conteúdo"
-- "Bot que acompanha Twitter e gera insights"
-- "Monitoramento de LinkedIn para identificar oportunidades"
-- **IMPORTANTE: APIs de redes sociais têm limitações, mas são acessíveis!**
-
-✅ **Chatbots e Agentes de IA (SEMPRE VIÁVEL - Score 80-95):**
-- "Chatbot com IA para responder dúvidas sobre produtos"
-- "Assistente virtual que qualifica leads fazendo perguntas"
-- "Agente de IA que automatiza atendimento ao cliente"
-- "Bot inteligente que agenda reuniões e acompanha pipeline"
-
-✅ **Automações CRM/Vendas (SEMPRE VIÁVEL - Score 75-90):**
-- "Automação de follow-up de vendas por email"
-- "Sistema que qualifica leads automaticamente"
-- "Pipeline de vendas automatizado com IA"
-- "Acompanhamento automático de clientes após compra"
-
-✅ **Integrações e Dashboards (SEMPRE VIÁVEL - Score 70-85):**
-- "Dashboard que mostra vendas do Stripe + Google Analytics"
-- "Sincronizar dados entre Typeform e Mailchimp"
-- "Relatórios automáticos por email"
-
-✅ **Análise com IA (SEMPRE VIÁVEL - Score 75-90):**
-- "Analisar sentimento de reviews automaticamente"
-- "Extrair dados de PDFs/documentos com IA"
-- "Classificar leads por pontuação automática"
-
-## SEU PROCESSO DE ANÁLISE INTERNA
-
-Para cada ideia que receber, você deve analisar mentalmente:
-
-1. **Quebrar a ideia em componentes:**
-   - Qual é a entrada de dados? (formulário, e-mail, webhook, arquivo, etc.)
-   - Qual processamento é necessário? (análise, cálculo, extração, classificação)
-   - Precisa de IA? Qual tipo? (texto, imagem, voz, decisão)
-   - Quais integrações são necessárias?
-   - Qual é a saída esperada? (notificação, relatório, ação, atualização)
-
-2. **Avaliar viabilidade técnica:**
-   - As ferramentas no-code conseguem se conectar entre si?
-   - As APIs necessárias existem e são acessíveis?
-   - A lógica requerida pode ser implementada sem código?
-   - Há limitações de volume/escala que impedem a execução?
-
-3. **Identificar bloqueadores:**
-   - Requer processamento em tempo real impossível via no-code?
-   - Precisa de algoritmos complexos não disponíveis?
-   - Depende de hardware específico?
-   - Requer segurança/compliance que no-code não oferece?
-   - APIs necessárias não existem ou são inacessíveis?
-
-4. **Considerar casos limítrofes:**
-   - Se 80% for viável, considere VIÁVEL (pode adaptar)
-   - Se precisa de "pequeno código" mas é mínimo, considere VIÁVEL
-   - Se existem workarounds razoáveis, considere VIÁVEL
-
-## CRITÉRIOS DE DECISÃO
-
-**Marque como VIÁVEL (viable: true) quando:**
-- ✅ Menciona WhatsApp + IA/Automação → SEMPRE VIÁVEL!
-- ✅ Menciona Chatbot + IA → SEMPRE VIÁVEL!
-- ✅ Menciona automação de vendas/CRM + IA → SEMPRE VIÁVEL!
-- ✅ Existe combinação de ferramentas no-code que resolve
-- ✅ APIs/integrações necessárias estão disponíveis
-- ✅ Lógica implementável com Make/Zapier + IA
-- ✅ Pequenos ajustes no escopo tornam viável
-- ✅ Parece com os exemplos de "Casos Sempre Viáveis"
-
-**⚠️ SÓ marque como NÃO VIÁVEL (viable: false) quando:**
-- ❌ Requer hardware físico específico (IoT complexo, sensores industriais)
-- ❌ Precisa processar milhões de operações por segundo
-- ❌ Depende de APIs que comprovadamente não existem
-- ❌ Requer treinar modelo de IA do zero (não usar APIs prontas)
-- ❌ Envolve compliance crítico impossível para no-code (SOC2, HIPAA)
-- ❌ Sistema operacional, compilador, driver de hardware
-
-**⚠️ IMPORTANTE:** Seja GENEROSO! 80%+ das ideias com automação + IA são VIÁVEIS!
-
-## PRINCÍPIOS IMPORTANTES
-
-- **SEJA PRAGMÁTICO**: Make + API + IA = VIÁVEL na maioria dos casos!
-- **SEJA GENEROSO**: Se 80%+ da ideia funciona com no-code, marque como VIÁVEL
-- Seja honesto: se realmente não dá, diga NÃO sem rodeios
-- Seja direto: evite "talvez", "depende", "parcialmente"
-- Pense em workarounds criativos antes de dizer NÃO
-- Considere MVP (produto mínimo viável) ao avaliar
-
-## ESCALA DE SCORE (AJUSTADA)
-
-- **80-100**: Muito simples, ferramentas prontas + conectores nativos
-- **60-79**: Viável, precisa configuração/customização mas é direto
-- **40-59**: Complexo mas possível com workarounds criativos
-- **20-39**: Muito difícil, requer muitas adaptações
-- **0-19**: Tecnicamente inviável com no-code atual
-
-## FORMATO DE RESPOSTA OBRIGATÓRIO
-
-Você DEVE responder APENAS com um objeto JSON no seguinte formato (sem emojis, sem markdown, sem code blocks):
-
+**JSON obrigatório:**
 {
-  "viable": true ou false,
-  "score": 0-100 (número inteiro - quanto mais viável, maior o score. Considere: viabilidade técnica 40%, facilidade de implementação 30%, custo-benefício 20%, escalabilidade 10%),
-  "reason": "Resumo executivo em 1-2 frases (max 100 palavras) explicando a viabilidade",
-  "technical_explanation": "Explicação técnica DETALHADA de 200-400 palavras sobre COMO seria implementado. Mencione: fluxo de dados, integrações necessárias, lógica de processamento, estrutura de dados, APIs envolvidas, e estimativa de requisições/mês. Seja específico como um manual de implementação.",
-  "suggestions": [
-    "3-5 sugestões CONCRETAS e ACIONÁVEIS para melhorar a viabilidade ou reduzir complexidade",
-    "Cada sugestão deve ser específica e mencionar ferramentas/técnicas",
-    "Evite sugestões genéricas - seja prático e técnico"
-  ],
-  "confidence": "high", "medium" ou "low",
-  "estimated_complexity": "low", "medium" ou "high",
-  "estimated_time": "1-2 semanas", "2-4 semanas", "1-2 meses", ou "2-3 meses",
-  "required_stack": ["lista", "de", "3-8", "tecnologias/ferramentas", "principais", "necessárias"],
-  "limitations": [
-    "Liste EXATAMENTE 2 limitações técnicas reais",
-    "Exemplo válido: 'APIs do Instagram têm rate limit de 200 req/h', 'Custo de IA cresce com volume de análises'"
-  ],
-  "cost_estimate": "Estimativa de custo mensal realista (ex: 'R$ 50-200/mês', 'Gratuito até 1000 usuários', 'R$ 500+ dependendo do volume')"
+  "viable": true/false,
+  "score": 0-100,
+  "reason": "2 frases",
+  "technical_explanation": "200+ palavras: fluxo, integrações, APIs, estimativa de custos",
+  "suggestions": ["3-5 sugestões práticas"],
+  "confidence": "high/medium/low",
+  "estimated_complexity": "low/medium/high",
+  "estimated_time": "1-2 semanas/2-4 semanas/1-2 meses",
+  "required_stack": ["3-8 ferramentas"],
+  "limitations": ["2 limitações reais"],
+  "cost_estimate": "R$ X-Y/mês"
 }
 
-IMPORTANTE: 
-- Retorne APENAS o JSON puro, sem texto adicional, sem markdown, sem code blocks, sem emojis
-- Todos os campos são obrigatórios
-- technical_explanation deve ter NO MÍNIMO 200 palavras (conte!)
-- suggestions deve ter NO MÍNIMO 3 itens e NO MÁXIMO 5
-- limitations deve ter EXATAMENTE 2 itens`;
+Retorne APENAS JSON válido, sem markdown.`;
 
     console.log('[VALIDATE-FEASIBILITY] 📤 Chamando Lovable AI...');
     console.log('[VALIDATE-FEASIBILITY] 🤖 Modelo: google/gemini-2.5-pro');
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-pro',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: `Avalie: "${idea}"` }
-          ],
-          temperature: 0.1,
-          max_tokens: 4000
-        }),
-    });
+    // 🆕 CORREÇÃO 1: Forçar JSON válido + CORREÇÃO 5: Retry automático
+    let validationResult;
+    let retryCount = 0;
+    const MAX_RETRIES = 1;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('[VALIDATE-FEASIBILITY] ❌ Erro na API:', response.status, errorText);
-      
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Limite de requisições atingido. Aguarde alguns instantes.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    while (retryCount <= MAX_RETRIES) {
+      try {
+        const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-pro',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: `Avalie: "${idea}"` }
+            ],
+            temperature: 0.1,
+            max_tokens: 4000,
+            response_format: { type: "json_object" } // 🔥 FORÇA JSON VÁLIDO
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('[VALIDATE-FEASIBILITY] ❌ Erro na API:', response.status, errorText);
+          
+          if (response.status === 429) {
+            return new Response(
+              JSON.stringify({ error: 'Limite de requisições atingido. Aguarde alguns instantes.' }),
+              { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+          
+          if (response.status === 402) {
+            return new Response(
+              JSON.stringify({ error: 'Créditos insuficientes. Entre em contato com o suporte.' }),
+              { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+            );
+          }
+
+          throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const content = data.choices?.[0]?.message?.content;
+        
+        const processingTime = Date.now() - startTime;
+        console.log('[VALIDATE-FEASIBILITY] ⏱️ Tempo de processamento:', processingTime + 'ms');
+
+        if (!content) {
+          throw new Error('Resposta vazia da IA');
+        }
+
+        console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content.slice(0, 100));
+
+        // 🆕 VALIDAÇÃO: Verificar se resposta foi truncada
+        if (content.length < 500) {
+          console.error('[VALIDATE-FEASIBILITY] ⚠️ Resposta muito curta, pode ter sido truncada:', content.length, 'chars');
+          throw new Error('Resposta da IA foi truncada. Tente novamente.');
+        }
+
+        // 🧹 LIMPEZA ROBUSTA: Múltiplas estratégias de extração
+        let cleanContent = content.trim();
+
+        // Estratégia 1: Remover markdown code blocks (```json ... ```)
+        if (cleanContent.includes('```json')) {
+          const match = cleanContent.match(/```json\s*([\s\S]*?)```/);
+          if (match) {
+            cleanContent = match[1].trim();
+          }
+        }
+
+        // Estratégia 2: Remover qualquer ``` no início/fim
+        cleanContent = cleanContent
+          .replace(/```json\s*/gi, '')
+          .replace(/```javascript\s*/gi, '')
+          .replace(/```\s*/gi, '')
+          .replace(/`{1,3}/g, '')
+          .trim();
+
+        // Estratégia 3: Tentar encontrar o primeiro { e último }
+        if (!cleanContent.startsWith('{')) {
+          const firstBrace = cleanContent.indexOf('{');
+          if (firstBrace !== -1) {
+            cleanContent = cleanContent.substring(firstBrace);
+          }
+        }
+
+        if (!cleanContent.endsWith('}')) {
+          const lastBrace = cleanContent.lastIndexOf('}');
+          if (lastBrace !== -1) {
+            cleanContent = cleanContent.substring(0, lastBrace + 1);
+          }
+        }
+
+        console.log('[VALIDATE-FEASIBILITY] 🧹 Depois de limpar:', cleanContent.slice(0, 200));
+
+        // 🆕 CORREÇÃO 3: Recuperação de JSON truncado
+        let jsonStr = cleanContent;
+        
+        // Tentar parse direto primeiro (response_format garante JSON válido)
+        try {
+          validationResult = JSON.parse(jsonStr);
+          console.log('[VALIDATE-FEASIBILITY] ✅ JSON parseado diretamente');
+          break; // Sucesso, sair do loop de retry
+        } catch (parseError) {
+          console.warn('[VALIDATE-FEASIBILITY] ⚠️ Erro no parse inicial, tentando recuperação:', parseError);
+          
+          // Estratégia 4: Tentar completar JSON truncado
+          if (!jsonStr.endsWith('}')) {
+            console.log('[VALIDATE-FEASIBILITY] 🔧 Tentando completar JSON truncado...');
+            
+            // Contar { e } para balancear
+            const openBraces = (jsonStr.match(/\{/g) || []).length;
+            const closeBraces = (jsonStr.match(/\}/g) || []).length;
+            const missingBraces = openBraces - closeBraces;
+            
+            if (missingBraces > 0) {
+              jsonStr += '}'.repeat(missingBraces);
+              console.log('[VALIDATE-FEASIBILITY] 🔧 Adicionadas', missingBraces, 'chaves de fechamento');
+            }
+            
+            // Tentar parse novamente
+            try {
+              validationResult = JSON.parse(jsonStr);
+              console.log('[VALIDATE-FEASIBILITY] ✅ JSON recuperado com sucesso');
+              break; // Sucesso, sair do loop
+            } catch (recoveryError) {
+              console.error('[VALIDATE-FEASIBILITY] ❌ Falha na recuperação:', recoveryError);
+            }
+          }
+          
+          // Se chegou aqui, falhou - tentar retry
+          if (retryCount < MAX_RETRIES) {
+            retryCount++;
+            console.log(`[VALIDATE-FEASIBILITY] 🔄 Tentativa ${retryCount + 1}/${MAX_RETRIES + 1}...`);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Aguardar 1s
+            continue; // Tentar novamente
+          }
+          
+          // Esgotou retries
+          throw new Error('Resposta da IA foi truncada. Tente novamente.');
+        }
+      } catch (fetchError: any) {
+        // Erro na chamada da API
+        if (retryCount < MAX_RETRIES && !fetchError.message.includes('requisições')) {
+          retryCount++;
+          console.log(`[VALIDATE-FEASIBILITY] 🔄 Erro na API, tentativa ${retryCount + 1}/${MAX_RETRIES + 1}...`);
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          continue;
+        }
+        throw fetchError;
       }
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Créditos insuficientes. Entre em contato com o suporte.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      throw new Error(`API error: ${response.status}`);
     }
 
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content;
-    
-    const processingTime = Date.now() - startTime;
-    console.log('[VALIDATE-FEASIBILITY] ⏱️ Tempo de processamento:', processingTime + 'ms');
-
-    if (!content) {
-      throw new Error('Resposta vazia da IA');
-    }
-
-    console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content.slice(0, 100));
-
-    // 🆕 VALIDAÇÃO: Verificar se resposta foi truncada
-    if (content.length < 500) {
-      console.error('[VALIDATE-FEASIBILITY] ⚠️ Resposta muito curta, pode ter sido truncada:', content.length, 'chars');
-      throw new Error('Resposta da IA foi truncada. Tente novamente.');
-    }
-
-    // 🧹 LIMPEZA ROBUSTA: Múltiplas estratégias de extração
-    let cleanContent = content.trim();
-
-    // Estratégia 1: Remover markdown code blocks (```json ... ```)
-    if (cleanContent.includes('```json')) {
-      const match = cleanContent.match(/```json\s*([\s\S]*?)```/);
-      if (match) {
-        cleanContent = match[1].trim();
-      }
-    }
-
-    // Estratégia 2: Remover qualquer ``` no início/fim
-    cleanContent = cleanContent
-      .replace(/```json\s*/gi, '')
-      .replace(/```javascript\s*/gi, '')
-      .replace(/```\s*/gi, '')
-      .replace(/`{1,3}/g, '')
-      .trim();
-
-    // Estratégia 3: Tentar encontrar o primeiro { e último }
-    if (!cleanContent.startsWith('{')) {
-      const firstBrace = cleanContent.indexOf('{');
-      if (firstBrace !== -1) {
-        cleanContent = cleanContent.substring(firstBrace);
-      }
-    }
-
-    if (!cleanContent.endsWith('}')) {
-      const lastBrace = cleanContent.lastIndexOf('}');
-      if (lastBrace !== -1) {
-        cleanContent = cleanContent.substring(0, lastBrace + 1);
-      }
-    }
-
-    console.log('[VALIDATE-FEASIBILITY] 🧹 Depois de limpar:', cleanContent.slice(0, 200));
-
-    // Extrair JSON com regex mais robusto - busca o objeto completo com viable, reason, confidence e required_stack
-    const jsonMatch = cleanContent.match(/\{[\s\S]*?"viable"[\s\S]*?"reason"[\s\S]*?"confidence"[\s\S]*?"required_stack"[\s\S]*?\]/);
-    
-    if (!jsonMatch) {
-      console.error('[VALIDATE-FEASIBILITY] ❌ JSON não encontrado na resposta');
-      console.error('[VALIDATE-FEASIBILITY] Conteúdo limpo:', cleanContent);
-      throw new Error('Resposta inválida do modelo de IA');
-    }
-
-    const jsonStr = jsonMatch[0] + '}'; // Adiciona chave de fechamento
-    console.log('[VALIDATE-FEASIBILITY] 📦 JSON extraído:', jsonStr.slice(0, 200));
-
-    // Parse e validação rigorosa
-    const validationResult = JSON.parse(jsonStr);
+    // Fim do loop while - validationResult agora está definido
     
     // 🆕 FASE 2: Validar TODOS os novos campos obrigatórios
     const technicalExplanationWords = validationResult.technical_explanation?.split(/\s+/).length || 0;

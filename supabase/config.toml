@@ -257,8 +257,10 @@ verify_jwt = false
 [functions.analyze-idea]
 verify_jwt = false
 
+# 🆕 CORREÇÃO 4: Timeout aumentado para 60s
 [functions.validate-idea-feasibility]
 verify_jwt = false
+timeout = 60
 
 [functions.generate-builder-solution]
 verify_jwt = false
