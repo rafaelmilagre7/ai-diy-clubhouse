@@ -5,11 +5,13 @@ import { CheckCircle, XCircle } from 'lucide-react';
 interface BuilderValidationAnimationProps {
   status: 'validating' | 'success' | 'error' | 'loading-questions';
   message?: string;
+  onRetry?: () => void;
 }
 
 export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProps> = ({ 
   status,
-  message 
+  message,
+  onRetry
 }) => {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm">
@@ -140,10 +142,22 @@ export const BuilderValidationAnimation: React.FC<BuilderValidationAnimationProp
                 initial={{ y: 10, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3 }}
-                className="text-muted-foreground text-sm max-w-lg text-left leading-relaxed"
+                className="text-muted-foreground text-sm max-w-lg text-center leading-relaxed mb-6"
               >
                 {message || 'Infelizmente, não é possível desenvolver esse projeto usando IA no nosso fluxo atual'}
               </motion.p>
+              
+              {onRetry && (
+                <motion.button
+                  initial={{ y: 10, opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                  onClick={onRetry}
+                  className="px-6 py-3 bg-aurora-primary hover:bg-aurora-primary/90 text-white rounded-lg font-medium transition-colors"
+                >
+                  Tentar outra ideia
+                </motion.button>
+              )}
             </>
           )}
         </div>

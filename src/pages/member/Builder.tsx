@@ -196,14 +196,10 @@ export default function Builder() {
       } = data;
 
       if (!viable) {
-        // Não é viável
+        // Não é viável - mostrar mensagem e aguardar ação do usuário
         setValidationStatus('error');
         setValidationMessage(reason || 'Ideia não é viável para desenvolvimento com IA');
-        
-        setTimeout(() => {
-          setValidationStatus('idle');
-          setCurrentIdea('');
-        }, 5000);
+        // Não limpar automaticamente - usuário deve clicar em "Tentar outra ideia"
         return;
       }
 
@@ -381,6 +377,11 @@ export default function Builder() {
             key="validation"
             status={validationStatus as 'validating' | 'success' | 'error' | 'loading-questions'}
             message={validationMessage}
+            onRetry={() => {
+              setValidationStatus('idle');
+              setCurrentIdea('');
+              setValidationMessage('');
+            }}
           />
         ) : isGenerating ? (
           <BuilderProcessingExperience key="loader" />
