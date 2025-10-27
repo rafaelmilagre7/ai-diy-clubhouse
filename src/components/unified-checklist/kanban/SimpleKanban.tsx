@@ -67,13 +67,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   // Atualizar localItems quando checklistItems mudar
   useEffect(() => {
-    console.log("🔄 [SimpleKanban] checklistItems mudou, atualizando localItems:", {
-      itemsCount: checklistItems.length,
-      firstItemColumn: checklistItems[0]?.column,
-      firstItemTitle: checklistItems[0]?.title,
-      checklistId: checklistData.id,
-      checklistUpdatedAt: checklistData.updated_at
-    });
     setLocalItems(checklistItems);
   }, [checklistItems, checklistData.id, checklistData.updated_at]);
 
@@ -97,7 +90,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
-    console.log("🟢 Drag Start:", event.active.id);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -105,31 +97,17 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     
     setActiveId(null);
 
-    if (!over) {
-      console.log("⚠️ No drop target");
-      return;
-    }
+    if (!over) return;
 
     const itemId = active.id as string;
     const newColumn = over.id as ("todo" | "in_progress" | "done");
-    
-    const oldItem = localItems.find(i => i.id === itemId);
-    console.log("🎯 [SimpleKanban] handleDragEnd:", { 
-      itemId, 
-      itemTitle: oldItem?.title,
-      oldColumn: oldItem?.column,
-      newColumn,
-      checklistId: checklistData.id
-    });
 
     // Atualizar estado local IMEDIATAMENTE para feedback visual
-    setLocalItems((prevItems) => {
-      const updated = prevItems.map((item) =>
+    setLocalItems((prevItems) =>
+      prevItems.map((item) =>
         item.id === itemId ? { ...item, column: newColumn } : item
-      );
-      console.log("✅ [SimpleKanban] Local state atualizado imediatamente");
-      return updated;
-    });
+      )
+    );
 
     // Cancelar timeout anterior (debounce)
     if (saveTimeoutRef.current) {
@@ -138,26 +116,11 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
     // Debounce: salvar após 500ms
     saveTimeoutRef.current = setTimeout(() => {
-      console.log("⏰ [SimpleKanban] Timeout acionado, iniciando salvamento...");
-      
       // Pegar os dados ATUALIZADOS diretamente do estado
       setLocalItems((currentItems) => {
         const currentChecklistData = checklistDataRef.current;
         const currentSolutionId = solutionIdRef.current;
         const currentChecklistType = checklistTypeRef.current;
-        const itemToSave = currentItems.find(i => i.id === itemId);
-        
-        console.log("💾 [SimpleKanban] Preparando para salvar:", {
-          itemId,
-          itemTitle: itemToSave?.title,
-          currentColumn: itemToSave?.column,
-          checklistId: currentChecklistData.id,
-          isUpdate: !!currentChecklistData.id, // ← CRÍTICO: deve ser true após primeira criação
-          userId: currentChecklistData.user_id,
-          solutionId: currentSolutionId,
-          templateId: currentChecklistData.template_id,
-          allItemsColumns: currentItems.map(i => ({ id: i.id, title: i.title?.substring(0, 25), column: i.column }))
-        });
 
         // Calcular progresso
         const completedCount = currentItems.filter(item => item.completed).length;
@@ -167,9 +130,9 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         // Preparar dados com items ATUALIZADOS
         const updatedChecklistData: UnifiedChecklistData = {
           ...currentChecklistData,
-          user_id: currentChecklistData.user_id || user?.id || '', // ✅ Garantir user_id sempre presente
+          user_id: currentChecklistData.user_id || user?.id || '',
           checklist_data: {
-            items: currentItems, // ✅ Usar items atualizados
+            items: currentItems,
             lastUpdated: new Date().toISOString()
           },
           completed_items: completedCount,
@@ -178,14 +141,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           is_completed: completedCount === totalCount && totalCount > 0,
         };
 
-        console.log("🚀 [SimpleKanban] Chamando updateMutation.mutate com:", {
-          checklistId: updatedChecklistData.id,
-          userId: updatedChecklistData.user_id,
-          itemsCount: updatedChecklistData.checklist_data.items.length,
-          solutionId: currentSolutionId,
-          checklistType: currentChecklistType
-        });
-
         // Salvar no banco
         updateMutation.mutate({
           checklistData: updatedChecklistData,
@@ -193,26 +148,15 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           checklistType: currentChecklistType,
           templateId: currentChecklistData.template_id,
         }, {
-          onError: (error) => {
-            console.error("❌ [SimpleKanban] Erro ao salvar:", error);
+          onError: () => {
             toast.error("Erro ao salvar alteração");
-            // Reverter para o estado anterior
             setLocalItems(checklistItems);
           },
           onSuccess: (savedData) => {
-            console.log("✅ [SimpleKanban] Salvo com SUCESSO!");
-            console.log("✅ Saved ID:", savedData.id);
-            console.log("✅ Saved user_id:", savedData.user_id);
-            console.log("✅ Items salvos:", savedData.checklist_data?.items?.map((i: any) => ({ 
-              id: i.id, 
-              title: i.title?.substring(0, 30), 
-              column: i.column 
-            })));
             toast.success("Posição salva!");
             
-            // ✅ Atualizar checklistDataRef com o novo ID (caso seja INSERT)
+            // Atualizar checklistDataRef com o novo ID (caso seja INSERT)
             if (!currentChecklistData.id && savedData.id) {
-              console.log("🆕 [SimpleKanban] Primeira vez salvo, atualizando ref com novo ID:", savedData.id);
               checklistDataRef.current = { ...checklistDataRef.current, id: savedData.id };
             }
           },

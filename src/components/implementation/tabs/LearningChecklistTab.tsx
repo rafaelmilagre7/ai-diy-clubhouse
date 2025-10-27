@@ -35,25 +35,9 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       if (rpcData && Array.isArray(rpcData) && rpcData.length > 0) {
         const template = rpcData[0];
         if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
-          const items = template.checklist_data.items as ChecklistItemData[];
-          
-          console.log('🎯 [LearningChecklistTab] Template carregado:', {
-            solutionId,
-            templateFound: true,
-            itemsCount: items.length,
-            firstItem: items[0]?.title || items[0]?.description || 'N/A'
-          });
-          
-          return items;
+          return template.checklist_data.items as ChecklistItemData[];
         }
       }
-      
-      console.log('🎯 [LearningChecklistTab] Template carregado:', {
-        solutionId,
-        templateFound: false,
-        itemsCount: 0,
-        firstItem: 'N/A'
-      });
       
       return [];
     },
@@ -68,12 +52,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   const { data: userChecklist, error: userChecklistError, refetch: refetchUserChecklist } = useQuery({
     queryKey: ['user-checklist', solutionId, user?.id],
     queryFn: async () => {
-      console.log('🔄 [LearningChecklistTab] REFETCH userChecklist iniciado:', {
-        timestamp: new Date().toISOString(),
-        userId: user?.id,
-        solutionId
-      });
-      
       if (!user?.id) return null;
       
       const { data, error } = await supabase
@@ -84,16 +62,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         .eq('checklist_type', 'implementation')
         .eq('is_template', false)
         .maybeSingle();
-      
-      console.log('🔍 [LearningChecklistTab] Query userChecklist:', {
-        hasUser: !!user?.id,
-        userId: user?.id,
-        solutionId,
-        dataExists: !!data,
-        dataId: data?.id,
-        itemsCount: data?.checklist_data?.items?.length,
-        error: error?.message
-      });
       
       if (error) throw error;
       
@@ -107,40 +75,13 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     refetchOnReconnect: true,
   });
 
-  // Log do estado geral (CRÍTICO para debug)
-  console.log('🎯 [LearningChecklistTab] Estado atual:', {
-    hasUser: !!user?.id,
-    userId: user?.id,
-    solutionId,
-    checklistItemsCount: checklistItems?.length,
-    userChecklistExists: !!userChecklist,
-    userChecklistId: userChecklist?.id, // ← DEVE ter UUID válido
-    hasUserId: !!userChecklist?.user_id, // ← DEVE ser true
-    userChecklistItemsCount: userChecklist?.checklist_data?.items?.length,
-    userChecklistItemsWithColumn: userChecklist?.checklist_data?.items?.filter(i => i.column)?.length,
-    firstItemColumn: userChecklist?.checklist_data?.items?.[0]?.column,
-    loadingChecklist,
-    hasError: !!userChecklistError,
-    errorMessage: userChecklistError?.message,
-    isTemplate: userChecklist?.is_template // ← DEVE ser false
-  });
-
   // Criar checklist pessoal se não existir
   useEffect(() => {
-    // Validação crítica: não criar se não tiver items válidos
     if (!user?.id || !checklistItems || checklistItems.length === 0 || userChecklist !== null || loadingChecklist) {
-      if (checklistItems && checklistItems.length === 0) {
-        console.warn('⚠️ [LearningChecklistTab] Template vazio - não será criado checklist pessoal');
-      }
       return;
     }
     
     const createUserChecklist = async () => {
-      console.log('🆕 [LearningChecklistTab] Criando checklist pessoal...', {
-        userId: user.id,
-        solutionId,
-        itemsCount: checklistItems.length
-      });
 
       const itemsWithColumns = checklistItems.map(item => ({
         ...item,
@@ -165,8 +106,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         is_completed: false,
       };
 
-      console.log('📤 [LearningChecklistTab] Payload INSERT:', JSON.stringify(payload, null, 2));
-
       const { data, error } = await supabase
         .from('unified_checklists')
         .insert(payload)
@@ -183,7 +122,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         });
         toast.error(`Erro ao criar checklist: ${error.message}`);
       } else {
-        console.log('✅ [LearningChecklistTab] Checklist criado com SUCESSO!', data);
         refetchUserChecklist();
       }
     };
@@ -279,9 +217,6 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
 
       {userChecklist ? (
         <>
-          <div className="text-xs text-muted-foreground mb-2 font-mono bg-muted/50 p-2 rounded">
-            🔍 Debug: Checklist ID = {userChecklist.id || 'UNDEFINED'} | User ID = {userChecklist.user_id || 'UNDEFINED'} | Items = {userChecklist.checklist_data?.items?.length || 0}
-          </div>
           <SimpleKanban
             checklistItems={userChecklist.checklist_data?.items || []}
             checklistData={userChecklist}
