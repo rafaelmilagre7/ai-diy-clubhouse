@@ -25,45 +25,49 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
 }) => {
   const { user } = useAuth();
 
-  // Buscar checklist da solução (solutions.checklist_items OU modules.content.checklist)
+  // Buscar checklist da solução
   const { data: checklistItems, isLoading: loadingChecklist } = useQuery({
     queryKey: ['learning-checklist', solutionId],
     queryFn: async () => {
       console.log('🔍 [LearningChecklist] Buscando checklist para:', solutionId);
       
-      // Buscar em solutions.checklist_items
+      // 1. Buscar em solutions.checklist_items ou implementation_steps
       const { data: solution } = await supabase
         .from('solutions')
-        .select('checklist_items')
+        .select('checklist_items, implementation_steps')
         .eq('id', solutionId)
         .single();
 
-      if (solution?.checklist_items) {
-        console.log('✅ [LearningChecklist] Encontrado em solutions.checklist_items:', solution.checklist_items);
+      if (solution?.checklist_items && Array.isArray(solution.checklist_items)) {
+        console.log('✅ [LearningChecklist] Encontrado em checklist_items');
         return solution.checklist_items as ChecklistItemData[];
       }
 
-      // Fallback: buscar em learning_modules.content.checklist
-      const { data: modules } = await supabase
-        .from('learning_modules')
-        .select('content')
+      // 2. Fallback: extrair de implementation_steps
+      if (solution?.implementation_steps && Array.isArray(solution.implementation_steps)) {
+        console.log('✅ [LearningChecklist] Extraindo de implementation_steps');
+        return solution.implementation_steps.map((step: any, idx: number) => ({
+          id: step.id || `step-${idx}`,
+          description: step.description || step.title || `Passo ${idx + 1}`,
+          title: step.title
+        }));
+      }
+
+      // 3. Último recurso: template em unified_checklists
+      const { data: unified } = await supabase
+        .from('unified_checklists')
+        .select('checklist_data')
         .eq('solution_id', solutionId)
-        .order('module_order', { ascending: true });
+        .eq('is_template', true)
+        .single();
 
-      console.log('🔍 [LearningChecklist] Buscando em modules:', modules);
-
-      if (modules && modules.length > 0) {
-        for (const module of modules) {
-          const content = module.content as any;
-          if (content?.checklist && Array.isArray(content.checklist)) {
-            console.log('✅ [LearningChecklist] Encontrado em modules.content.checklist:', content.checklist);
-            return content.checklist.map((item: any, idx: number) => ({
-              id: item.id || `item-${idx}`,
-              description: item.description || item.title || item.text || `Item ${idx + 1}`,
-              title: item.title
-            }));
-          }
-        }
+      if (unified?.checklist_data?.items) {
+        console.log('✅ [LearningChecklist] Encontrado template unified');
+        return unified.checklist_data.items.map((item: any) => ({
+          id: item.id,
+          description: item.description || item.title,
+          title: item.title
+        }));
       }
 
       console.log('⚠️ [LearningChecklist] Nenhum checklist encontrado');

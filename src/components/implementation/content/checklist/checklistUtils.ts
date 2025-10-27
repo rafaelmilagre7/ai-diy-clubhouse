@@ -17,10 +17,11 @@ export interface CheckpointData {
 export const extractChecklistFromSolution = (solution: Solution): ChecklistItem[] => {
   if (!solution) return [];
   
-  // Verificar se há checklist na solução (campo legado)
-  if (solution.checklist && Array.isArray(solution.checklist)) {
-    return solution.checklist.map((item: any, index: number) => ({
-      id: item.id || `legacy-${index}`,
+  // Verificar se há checklist_items na solução (campo atual)
+  const solutionWithChecklist = solution as any;
+  if (solutionWithChecklist.checklist_items && Array.isArray(solutionWithChecklist.checklist_items)) {
+    return solutionWithChecklist.checklist_items.map((item: any, index: number) => ({
+      id: item.id || `item-${index}`,
       title: item.title || item.text || `Item ${index + 1}`,
       description: item.description,
       checked: false
