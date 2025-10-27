@@ -85,9 +85,20 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
 export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: string = 'implementation') => {
   console.log('🔍 [useUnifiedChecklistTemplate] Hook CHAMADO:', {
     solutionId,
+    solutionIdType: typeof solutionId,
+    solutionIdValid: !!solutionId,
     checklistType,
+    enabled: !!solutionId,  // ← CRÍTICO: Verificar se enabled é true
     timestamp: new Date().toISOString()
   });
+
+  // ✅ VERIFICAÇÃO EXPLÍCITA
+  if (!solutionId) {
+    console.error('❌ [useUnifiedChecklistTemplate] solutionId é FALSY! Hook não vai executar query!', {
+      solutionId,
+      type: typeof solutionId
+    });
+  }
 
   return useQuery({
     queryKey: ['unified-checklist-template', solutionId, checklistType],

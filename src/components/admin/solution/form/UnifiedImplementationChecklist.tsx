@@ -8,6 +8,7 @@ import { Plus, Trash2, Save, CheckCircle, ChevronUp, ChevronDown, RefreshCw } fr
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   useUnifiedChecklistTemplate, 
   useCreateUnifiedChecklistTemplate,
@@ -143,6 +144,40 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     }
   };
 
+  const handleDirectFetch = async () => {
+    console.log('🔧 [DEBUG] Executando query DIRETA no Supabase...');
+    
+    try {
+      const { data, error } = await supabase
+        .from('unified_checklists')
+        .select('*')
+        .eq('solution_id', solutionId)
+        .eq('checklist_type', 'implementation')
+        .eq('is_template', true)
+        .maybeSingle();
+
+      console.log('📥 [DEBUG] Resposta DIRETA do Supabase:', {
+        hasData: !!data,
+        hasError: !!error,
+        data,
+        error
+      });
+
+      if (data) {
+        const items = data.checklist_data?.items || [];
+        setChecklistItems(items);
+        toast.success(`Carregado diretamente: ${items.length} itens!`);
+      } else if (error) {
+        toast.error(`Erro: ${error.message}`);
+      } else {
+        toast.error('Nenhum dado encontrado');
+      }
+    } catch (err) {
+      console.error('❌ [DEBUG] Erro ao buscar direto:', err);
+      toast.error('Erro na busca direta');
+    }
+  };
+
   const saveCheckpoints = async () => {
     if (!user) return;
     
@@ -263,16 +298,26 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
             Este sistema unificado substitui as tabelas antigas.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleForceReload}
-          disabled={isLoading}
-          className="gap-2"
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-          Recarregar
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleForceReload}
+            disabled={isLoading}
+            className="gap-2"
+          >
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+            Recarregar
+          </Button>
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleDirectFetch}
+            className="gap-2"
+          >
+            🔧 Debug: Buscar Direto
+          </Button>
+        </div>
       </div>
 
       {checklistItems.length > 0 && (
