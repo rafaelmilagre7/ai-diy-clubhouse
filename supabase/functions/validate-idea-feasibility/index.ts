@@ -87,6 +87,78 @@ serve(async (req) => {
       .eq('is_active', true)
       .single();
 
+    // 🎯 Função auxiliar: Interpreta resposta natural da IA e extrai estrutura
+    const interpretValidationResponse = async (rawResponse: string): Promise<{
+      viable: boolean;
+      score: number;
+      reason: string;
+    }> => {
+      const interpretPrompt = `
+Você é um interpretador de respostas de viabilidade técnica.
+
+RESPOSTA DA IA:
+"""
+${rawResponse}
+"""
+
+TAREFA:
+Analise a resposta acima e extraia:
+1. viable (boolean): A ideia é VIÁVEL tecnicamente? (true/false)
+2. score (number): Confiança na viabilidade de 0-100
+3. reason (string): Resumo objetivo em 1-2 frases do motivo
+
+REGRAS:
+- Se a resposta contém "SIM", "DÁ PRA FAZER", "VIÁVEL" → viable=true
+- Se contém "NÃO", "IMPOSSÍVEL", "INVIÁVEL" → viable=false
+- Score alto (80-100) = muita confiança, baixo (0-30) = incerto
+- Reason deve ser claro e direto
+
+RETORNE APENAS O JSON:
+{
+  "viable": true/false,
+  "score": 0-100,
+  "reason": "texto"
+}
+`;
+
+      const interpretResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [{ role: 'user', content: interpretPrompt }],
+          temperature: 0.3,
+        }),
+      });
+
+      if (!interpretResponse.ok) {
+        throw new Error('Erro ao interpretar resposta');
+      }
+
+      const interpretData = await interpretResponse.json();
+      const interpretContent = interpretData.choices[0].message.content.trim();
+      
+      // Limpar markdown se necessário
+      const cleanInterpretContent = interpretContent
+        .replace(/```json\n?/g, '')
+        .replace(/```\n?/g, '')
+        .trim();
+
+      const parsed = JSON.parse(cleanInterpretContent);
+
+      // Validação básica
+      if (typeof parsed.viable !== 'boolean' ||
+          typeof parsed.score !== 'number' ||
+          typeof parsed.reason !== 'string') {
+        throw new Error('Interpretação inválida');
+      }
+
+      return parsed;
+    };
+
     // Fallback para prompt hardcoded se não encontrar no banco
     const systemPrompt = promptConfig?.prompt_content || `Você é um especialista em automação e IA no-code para empresas. Sua missão é determinar se uma ideia pode ou não ser executada com ferramentas no-code atualmente disponíveis.
 
@@ -259,16 +331,38 @@ Responda APENAS com JSON:
       .replace(/```\s*/gi, '')
       .trim();
 
-    // Parse JSON
-    const validationResult = JSON.parse(cleanContent);
+    // 🎯 INTERPRETAÇÃO INTELIGENTE - Suporta JSON estruturado OU texto natural
+    let validationResult: { viable: boolean; score: number; reason: string };
+    let interpretationMethod = 'direct_parse';
 
-    // ✅ VALIDAÇÃO SIMPLES - apenas os 3 campos essenciais
-    if (typeof validationResult.viable !== 'boolean' ||
-        typeof validationResult.score !== 'number' ||
-        typeof validationResult.reason !== 'string') {
-      console.error('[VALIDATE-FEASIBILITY] ❌ Resposta inválida:', validationResult);
-      throw new Error('Resposta inválida da IA');
+    try {
+      // Tentar parse direto primeiro (se já vier JSON estruturado)
+      const parsed = JSON.parse(cleanContent);
+      
+      if (typeof parsed.viable === 'boolean' &&
+          typeof parsed.score === 'number' &&
+          typeof parsed.reason === 'string') {
+        validationResult = parsed;
+        console.log('[VALIDATE-FEASIBILITY] ✅ Resposta já estruturada (JSON válido)');
+      } else {
+        // Se não tiver o formato correto, interpretar com IA
+        console.log('[VALIDATE-FEASIBILITY] 🔄 JSON inválido, interpretando com IA...');
+        validationResult = await interpretValidationResponse(cleanContent);
+        interpretationMethod = 'ai_interpretation';
+      }
+    } catch (parseError) {
+      // Se JSON.parse falhou, resposta é texto natural → interpretar com IA
+      console.log('[VALIDATE-FEASIBILITY] 🔄 Resposta em texto natural, interpretando com IA...');
+      validationResult = await interpretValidationResponse(cleanContent);
+      interpretationMethod = 'ai_interpretation';
     }
+
+    console.log('[VALIDATE-FEASIBILITY] 📊 Resultado interpretado:', {
+      viable: validationResult.viable,
+      score: validationResult.score,
+      reason: validationResult.reason.substring(0, 100) + (validationResult.reason.length > 100 ? '...' : ''),
+      method: interpretationMethod
+    });
 
     const totalTime = Date.now() - startTime;
     console.log('[VALIDATE-FEASIBILITY] ✅ Resultado:', {
