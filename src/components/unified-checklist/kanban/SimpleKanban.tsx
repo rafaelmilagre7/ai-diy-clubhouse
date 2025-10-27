@@ -245,7 +245,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         onDragEnd={handleDragEnd}
         modifiers={[snapCenterToCursor]}
       >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[calc(100vh-300px)]">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-[400px] md:h-[calc(100vh-300px)]">
           {COLUMNS.map((column) => (
             <KanbanColumn
               key={column.id}

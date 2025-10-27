@@ -44,12 +44,12 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   });
 
   // Buscar checklist pessoal do usuário
-  const { data: userChecklist, refetch: refetchUserChecklist } = useQuery({
+  const { data: userChecklist, error: userChecklistError, refetch: refetchUserChecklist } = useQuery({
     queryKey: ['user-checklist', solutionId, user?.id],
     queryFn: async () => {
       if (!user?.id) return null;
       
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from('unified_checklists')
         .select('*')
         .eq('user_id', user.id)
@@ -58,9 +58,36 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         .eq('is_template', false)
         .maybeSingle();
       
+      console.log('🔍 [LearningChecklistTab] Query userChecklist:', {
+        hasUser: !!user?.id,
+        userId: user?.id,
+        solutionId,
+        dataExists: !!data,
+        dataId: data?.id,
+        itemsCount: data?.checklist_data?.items?.length,
+        error: error?.message
+      });
+      
+      if (error) throw error;
+      
       return data as UnifiedChecklistData | null;
     },
     enabled: !!user?.id && !!checklistItems,
+  });
+
+  // Log do estado geral
+  console.log('🔍 [LearningChecklistTab] Estado geral:', {
+    hasUser: !!user?.id,
+    userId: user?.id,
+    solutionId,
+    checklistItemsCount: checklistItems?.length,
+    userChecklistExists: !!userChecklist,
+    userChecklistId: userChecklist?.id,
+    userChecklistItemsCount: userChecklist?.checklist_data?.items?.length,
+    userChecklistItemsWithColumn: userChecklist?.checklist_data?.items?.filter(i => i.column)?.length,
+    loadingChecklist,
+    hasError: !!userChecklistError,
+    errorMessage: userChecklistError?.message
   });
 
   // Criar checklist pessoal se não existir
@@ -68,6 +95,12 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     if (!user?.id || !checklistItems || userChecklist !== null || loadingChecklist) return;
     
     const createUserChecklist = async () => {
+      console.log('🆕 [LearningChecklistTab] Criando checklist pessoal...', {
+        userId: user.id,
+        solutionId,
+        itemsCount: checklistItems.length
+      });
+
       const itemsWithColumns = checklistItems.map(item => ({
         ...item,
         column: 'todo',
@@ -93,7 +126,11 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
           is_completed: false,
         });
       
-      if (!error) {
+      if (error) {
+        console.error('❌ [LearningChecklistTab] Erro ao criar checklist:', error);
+        toast.error(`Erro ao criar checklist: ${error.message}`);
+      } else {
+        console.log('✅ [LearningChecklistTab] Checklist criado com sucesso!');
         refetchUserChecklist();
       }
     };
@@ -131,6 +168,25 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         <p className="text-muted-foreground">
           Esta solução ainda não possui um checklist de implementação.
         </p>
+      </div>
+    );
+  }
+
+  // Mostrar erro se houver
+  if (userChecklistError) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Erro ao Carregar Checklist</h3>
+        <p className="text-muted-foreground mb-4">
+          {userChecklistError.message}
+        </p>
+        <button 
+          onClick={() => refetchUserChecklist()}
+          className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90"
+        >
+          Tentar Novamente
+        </button>
       </div>
     );
   }
