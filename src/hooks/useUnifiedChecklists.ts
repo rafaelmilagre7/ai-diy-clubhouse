@@ -136,6 +136,14 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
       if (templateData) {
         console.log('✅ Template oficial encontrado:', templateData.id);
         console.log('📋 Itens no template:', templateData.checklist_data?.items?.length || 0);
+        console.log('📦 Template completo (DEBUG):', JSON.stringify(templateData, null, 2));
+        console.log('📋 Primeiros 3 itens (DEBUG):', 
+          templateData.checklist_data?.items?.slice(0, 3).map((item: any) => ({
+            id: item.id,
+            title: item.title,
+            description: item.description?.substring(0, 50)
+          }))
+        );
         return templateData as UnifiedChecklistData;
       }
 

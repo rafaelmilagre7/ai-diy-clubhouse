@@ -51,21 +51,77 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
   useEffect(() => {
-    console.log('🎨 [Admin] Template carregado:', {
-      hasTemplate: !!template,
-      itemCount: template?.checklist_data?.items?.length,
+    console.log('🔄 [Admin useEffect] Executando...', {
       isLoading,
       hasError: !!error,
+      hasTemplate: !!template,
+      templateId: template?.id,
       solutionId
     });
-    
-    if (template?.checklist_data?.items) {
-      console.log('✅ [Admin] Definindo', template.checklist_data.items.length, 'itens no estado');
-      setChecklistItems(template.checklist_data.items);
-    } else if (!isLoading && !template) {
-      console.log('⚠️ [Admin] Nenhum template encontrado, limpando estado');
-      setChecklistItems([]);
+
+    // Ainda carregando
+    if (isLoading) {
+      console.log('⏳ [Admin useEffect] Ainda carregando...');
+      return;
     }
+
+    // Erro ao buscar
+    if (error) {
+      console.error('❌ [Admin useEffect] Erro ao carregar template:', error);
+      console.error('❌ [Admin useEffect] Error object:', JSON.stringify(error, null, 2));
+      setChecklistItems([]);
+      return;
+    }
+
+    // Template não existe
+    if (!template) {
+      console.log('⚠️ [Admin useEffect] Template é null/undefined - nenhum checklist criado ainda');
+      setChecklistItems([]);
+      return;
+    }
+
+    // Template existe - processar dados
+    console.log('📦 [Admin useEffect] Template encontrado:', {
+      templateId: template.id,
+      hasChecklistData: !!template.checklist_data,
+      hasItems: !!template.checklist_data?.items
+    });
+
+    console.log('📦 [Admin useEffect] Template.checklist_data completo:', 
+      JSON.stringify(template.checklist_data, null, 2)
+    );
+
+    const items = template.checklist_data?.items;
+    
+    if (!items) {
+      console.log('⚠️ [Admin useEffect] checklist_data.items não existe');
+      setChecklistItems([]);
+      return;
+    }
+
+    if (!Array.isArray(items)) {
+      console.error('❌ [Admin useEffect] items não é um array:', typeof items, items);
+      setChecklistItems([]);
+      return;
+    }
+
+    if (items.length === 0) {
+      console.log('⚠️ [Admin useEffect] Array de items está vazio');
+      setChecklistItems([]);
+      return;
+    }
+
+    console.log(`✅ [Admin useEffect] Definindo ${items.length} itens no estado`);
+    console.log('📋 [Admin useEffect] Primeiros 3 itens:', 
+      items.slice(0, 3).map((item: any) => ({
+        id: item.id,
+        title: item.title,
+        description: item.description?.substring(0, 50)
+      }))
+    );
+    
+    setChecklistItems(items);
+    console.log('✅ [Admin useEffect] setChecklistItems executado com sucesso');
   }, [template, isLoading, error, solutionId]);
 
   const saveCheckpoints = async () => {
@@ -154,8 +210,69 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     );
   }
 
+  // Botão temporário para testar com dados mockados
+  const loadMockData = () => {
+    console.log('🧪 [Admin] Carregando dados mockados para teste...');
+    const mockItems: UnifiedChecklistItem[] = [
+      {
+        id: 'mock-1',
+        title: 'Item de Teste 1',
+        description: 'Esta é uma descrição de teste para o primeiro item',
+        completed: false
+      },
+      {
+        id: 'mock-2',
+        title: 'Item de Teste 2',
+        description: 'Esta é uma descrição de teste para o segundo item',
+        completed: false
+      },
+      {
+        id: 'mock-3',
+        title: 'Item de Teste 3',
+        description: 'Esta é uma descrição de teste para o terceiro item',
+        completed: true
+      }
+    ];
+    setChecklistItems(mockItems);
+    console.log('✅ [Admin] Dados mockados carregados com sucesso');
+    toast.success('Dados de teste carregados!');
+  };
+
   return (
     <div className="space-y-6">
+      {/* Debug Card - Apenas em desenvolvimento */}
+      {import.meta.env.DEV && (
+        <Card className="bg-yellow-50 dark:bg-yellow-950 border-yellow-200 dark:border-yellow-800">
+          <CardHeader className="pb-3">
+            <CardTitle className="text-sm font-medium text-yellow-900 dark:text-yellow-100">
+              🔍 Debug Info (só visível em DEV)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <pre className="text-xs text-yellow-800 dark:text-yellow-200 overflow-auto max-h-48">
+              {JSON.stringify({
+                isLoading,
+                hasTemplate: !!template,
+                templateId: template?.id,
+                hasError: !!error,
+                errorMessage: error?.message,
+                itemCountInTemplate: template?.checklist_data?.items?.length || 0,
+                itemCountInState: checklistItems.length,
+                solutionId
+              }, null, 2)}
+            </pre>
+            <Button 
+              onClick={loadMockData} 
+              variant="outline" 
+              size="sm"
+              className="mt-3 w-full"
+            >
+              🧪 Carregar Dados de Teste
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+
       <div>
         <h3 className="text-lg font-medium">Checklist de Implementação (Unificado)</h3>
         <p className="text-sm text-muted-foreground">
