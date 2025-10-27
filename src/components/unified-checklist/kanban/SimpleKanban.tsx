@@ -87,17 +87,21 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    console.log("🟢 Drag Start:", event.active.id);
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
+    console.log("🔵 Drag End:", { activeId: active.id, overId: over?.id });
+    
     setActiveId(null);
 
     if (!over) {
+      console.log("⚠️ No drop target");
       return;
     }
-    
+
     const itemId = active.id as string;
     const newColumn = over.id as string;
 
@@ -111,6 +115,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     const mappedColumn = columnMap[newColumn];
     
     if (!mappedColumn) {
+      console.log("⚠️ Invalid column:", newColumn);
       return;
     }
 
@@ -132,6 +137,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       const currentChecklistData = checklistDataRef.current;
       
       if (!currentChecklistData.id) {
+        console.error("❌ Checklist ID não encontrado, não é possível salvar");
         toast.error("Erro: checklist não inicializado");
         return;
       }
@@ -156,6 +162,12 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           is_completed: completedCount === totalCount && totalCount > 0,
         };
 
+        console.log("💾 Salvando mudança de coluna:", {
+          itemId,
+          newColumn: mappedColumn,
+          checklistId: currentChecklistData.id
+        });
+
         // Salvar no banco (FORA do setState)
         updateMutation.mutate({
           checklistData: updatedChecklistData,
@@ -163,10 +175,14 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           checklistType,
           templateId: currentChecklistData.template_id,
         }, {
-          onError: () => {
+          onError: (error) => {
+            console.error("❌ Erro ao salvar:", error);
             toast.error("Erro ao salvar alteração");
             // Reverter para dados originais
             setLocalItems(checklistItems);
+          },
+          onSuccess: () => {
+            console.log("✅ Alteração salva com sucesso");
           },
         });
 

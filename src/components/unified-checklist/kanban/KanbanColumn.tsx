@@ -21,45 +21,12 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ item, onViewDetails }) =>
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: item.id,
   });
-  
-  // Rastrear se houve movimento para diferenciar clique de drag
-  const dragStartPosRef = React.useRef<{ x: number; y: number } | null>(null);
-  const hasMoved = React.useRef(false);
-
-  const handlePointerDown = (e: React.PointerEvent) => {
-    dragStartPosRef.current = { x: e.clientX, y: e.clientY };
-    hasMoved.current = false;
-  };
-
-  const handlePointerMove = (e: React.PointerEvent) => {
-    if (dragStartPosRef.current) {
-      const deltaX = Math.abs(e.clientX - dragStartPosRef.current.x);
-      const deltaY = Math.abs(e.clientY - dragStartPosRef.current.y);
-      
-      // Se moveu mais de 5px, considera como drag
-      if (deltaX > 5 || deltaY > 5) {
-        hasMoved.current = true;
-      }
-    }
-  };
-
-  const handlePointerUp = () => {
-    // Se NÃO moveu E não está arrastando, é um clique - abre detalhes
-    if (!hasMoved.current && !isDragging && dragStartPosRef.current) {
-      onViewDetails(item);
-    }
-    dragStartPosRef.current = null;
-    hasMoved.current = false;
-  };
 
   return (
     <div 
       ref={setNodeRef} 
       {...listeners} 
       {...attributes}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
       className="transition-all duration-200"
     >
       <SimpleKanbanCard 
