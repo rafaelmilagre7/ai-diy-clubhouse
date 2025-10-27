@@ -5648,6 +5648,7 @@ export type Database = {
           id: string
           is_required: boolean | null
           solution_id: string | null
+          tool_id: string
           tool_name: string
           tool_url: string | null
         }
@@ -5656,6 +5657,7 @@ export type Database = {
           id?: string
           is_required?: boolean | null
           solution_id?: string | null
+          tool_id: string
           tool_name: string
           tool_url?: string | null
         }
@@ -5664,10 +5666,19 @@ export type Database = {
           id?: string
           is_required?: boolean | null
           solution_id?: string | null
+          tool_id?: string
           tool_name?: string
           tool_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_solution_tools_tool_id"
+            columns: ["tool_id"]
+            isOneToOne: false
+            referencedRelation: "tools"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       solutions: {
         Row: {

@@ -26,6 +26,7 @@ export interface VideoTutorial {
 export interface SolutionTool {
   id: string;
   solution_id: string;
+  tool_id?: string;
   tool_name: string;
   tool_url?: string;
   is_required: boolean;

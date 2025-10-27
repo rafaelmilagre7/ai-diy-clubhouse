@@ -50,12 +50,20 @@ export const useToolsChecklist = (solutionId: string | null) => {
         const solutionToolsData: SelectedTool[] = [];
         
         for (const solutionTool of data) {
-          const fullTool = availableTools.find(t => t.name === solutionTool.tool_name);
+          // Priorizar busca por tool_id (mais confiável que tool_name)
+          const fullTool = solutionTool.tool_id 
+            ? availableTools.find(t => t.id === solutionTool.tool_id)
+            : availableTools.find(t => t.name === solutionTool.tool_name);
           
           if (fullTool) {
             solutionToolsData.push({
               ...fullTool,
               is_required: solutionTool.is_required
+            });
+          } else {
+            console.warn('Ferramenta não encontrada:', {
+              tool_id: solutionTool.tool_id,
+              tool_name: solutionTool.tool_name
             });
           }
         }
@@ -90,6 +98,7 @@ export const useToolsChecklist = (solutionId: string | null) => {
       if (tools.length > 0) {
         const toolsToInsert = tools.map(tool => ({
           solution_id: solutionId,
+          tool_id: tool.id,
           tool_name: tool.name,
           tool_url: tool.official_url,
           is_required: tool.is_required
