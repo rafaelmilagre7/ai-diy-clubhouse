@@ -17,22 +17,59 @@ export const useKanbanOptimisticUpdate = () => {
 
   return useMutation({
     mutationFn: async ({ checklistData, solutionId, checklistType, templateId }: UpdateItemParams) => {
-      const { data, error } = await supabase
-        .from('unified_checklists')
-        .update({
-          checklist_data: checklistData.checklist_data,
-          completed_items: checklistData.completed_items,
-          total_items: checklistData.total_items,
-          progress_percentage: checklistData.progress_percentage,
-          is_completed: checklistData.is_completed,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', checklistData.id!)
-        .select()
-        .single();
+      console.log('💾 [useKanbanOptimisticUpdate] Salvando:', {
+        checklistId: checklistData.id,
+        hasId: !!checklistData.id,
+        userId: checklistData.user_id,
+        solutionId,
+        checklistType,
+        itemsCount: checklistData.checklist_data?.items?.length
+      });
 
-      if (error) throw error;
-      return data;
+      // ✅ UPSERT: Se tem ID, UPDATE. Se não tem, INSERT.
+      const payload = {
+        solution_id: solutionId,
+        user_id: checklistData.user_id,
+        checklist_type: checklistType,
+        template_id: templateId || null,
+        checklist_data: checklistData.checklist_data,
+        completed_items: checklistData.completed_items,
+        total_items: checklistData.total_items,
+        progress_percentage: checklistData.progress_percentage,
+        is_completed: checklistData.is_completed,
+        updated_at: new Date().toISOString()
+      };
+
+      if (checklistData.id) {
+        // UPDATE existente
+        const { data, error } = await supabase
+          .from('unified_checklists')
+          .update(payload)
+          .eq('id', checklistData.id)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Erro no UPDATE:', error);
+          throw error;
+        }
+        console.log('✅ UPDATE bem-sucedido:', data.id);
+        return data;
+      } else {
+        // INSERT novo
+        const { data, error } = await supabase
+          .from('unified_checklists')
+          .insert(payload)
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Erro no INSERT:', error);
+          throw error;
+        }
+        console.log('✅ INSERT bem-sucedido:', data.id);
+        return data;
+      }
     },
     onMutate: async ({ itemId, updates, checklistData, solutionId, checklistType }) => {
       // 1. Cancelar queries em andamento
