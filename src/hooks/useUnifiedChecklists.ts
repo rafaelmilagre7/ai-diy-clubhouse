@@ -54,14 +54,13 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
       if (!user?.id) return null;
       
-      console.log('🔍 [useUnifiedChecklist] EXECUTANDO queryFn (buscando do banco):', {
+      console.log('🔍 [useUnifiedChecklist] ========== BUSCANDO DO BANCO ==========');
+      console.log('🔍 [useUnifiedChecklist] Params:', {
         userId: user.id,
         solutionId,
         checklistType,
         timestamp: new Date().toISOString()
       });
-
-      console.log('🔍 [useUnifiedChecklist] Buscando userProgress (is_template: false):', { userId: user.id, solutionId, checklistType });
 
       const { data, error } = await supabase
         .from('unified_checklists')
@@ -75,24 +74,39 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
         .maybeSingle();
 
       if (error) {
-        console.error('❌ [useUnifiedChecklist] Erro ao buscar checklist:', error);
+        console.error('❌ [useUnifiedChecklist] Erro:', error);
         return null;
       }
 
-      console.log('✅ [useUnifiedChecklist] UserProgress carregado do banco:', {
-        id: data?.id,
-        updated_at: data?.updated_at,
-        itemsCount: data?.checklist_data?.items?.length,
-        allItemsColumns: data?.checklist_data?.items?.map((i: any) => ({ id: i.id, title: i.title, column: i.column }))
-      });
+      if (data) {
+        console.log('✅ [useUnifiedChecklist] ========== DADOS DO BANCO ==========');
+        console.log('✅ ID:', data.id);
+        console.log('✅ Updated:', data.updated_at);
+        console.log('✅ Total items:', data.checklist_data?.items?.length);
+        console.log('✅ Distribuição:', {
+          todo: data.checklist_data?.items?.filter((i: any) => i.column === 'todo').length,
+          in_progress: data.checklist_data?.items?.filter((i: any) => i.column === 'in_progress').length,
+          done: data.checklist_data?.items?.filter((i: any) => i.column === 'done').length,
+        });
+        console.log('✅ Primeiros 3 items:', 
+          data.checklist_data?.items?.slice(0, 3).map((i: any) => ({
+            id: i.id,
+            title: i.title?.substring(0, 35),
+            column: i.column
+          }))
+        );
+      } else {
+        console.log('⚠️ [useUnifiedChecklist] Nenhum progresso encontrado para este usuário');
+      }
+      
       return data as UnifiedChecklistData;
     },
     enabled: !!user?.id && !!solutionId,
-    staleTime: 0, // SEMPRE buscar dados frescos do banco
-    gcTime: 0, // Não manter em cache
-    refetchOnMount: 'always', // SEMPRE refetch ao montar o componente
-    refetchOnWindowFocus: true, // Refetch quando a janela recebe foco
-    refetchOnReconnect: true, // Refetch quando reconectar
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 };
 

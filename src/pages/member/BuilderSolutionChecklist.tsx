@@ -18,6 +18,17 @@ export default function BuilderSolutionChecklist() {
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
 
+  // 🔥 INVALIDAR CACHE ao montar o componente (forçar reload)
+  useEffect(() => {
+    console.log('🔥 [BuilderSolutionChecklist] MOUNT - Invalidando TODOS os caches relacionados');
+    queryClient.invalidateQueries({ 
+      queryKey: ['unified-checklist'] // Invalida QUALQUER query que comece com unified-checklist
+    });
+    queryClient.invalidateQueries({ 
+      queryKey: ['unified-checklist-template'] 
+    });
+  }, [id, queryClient]);
+
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
     queryFn: async () => {
