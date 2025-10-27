@@ -104,7 +104,7 @@ export default function BuilderSolutionCover() {
     
     console.log('[COVER] 🔄 Conteúdo não existe, gerando...');
     
-    // 🔍 FASE 5: Para checklist, verificar se já existe ANTES de disparar geração
+    // 🔍 Para checklist, verificar se já existe ANTES de disparar geração
     if (sectionKey === 'checklist') {
       console.log('[COVER] 🔍 Verificando se checklist já existe...');
       
@@ -123,30 +123,47 @@ export default function BuilderSolutionCover() {
       
       console.log('[COVER] 📋 Gerando checklist pela primeira vez...');
       
-      // Feedback imediato ao usuário
-      toast.loading('Gerando seu plano de ação personalizado...', {
-        duration: 3000,
-      });
+      // Ativar tela de loading
+      setGeneratingSection(sectionInfo.label);
       
-      // Navegar imediatamente para a tela de preparação
-      navigate(cardPath);
-      
-      // Disparar geração em background
-      supabase.functions.invoke('generate-section-content', {
-        body: {
-          solutionId: solution.id,
-          sectionType: sectionInfo.type,
-          userId: solution.user_id
-        }
-      }).then(({ data, error }) => {
+      try {
+        const { data, error } = await supabase.functions.invoke('generate-section-content', {
+          body: {
+            solutionId: solution.id,
+            sectionType: sectionInfo.type,
+            userId: solution.user_id
+          }
+        });
+        
         if (error) {
           console.error('[COVER] ❌ Erro ao gerar checklist:', error);
-        } else if (data?.success) {
-          console.log('[COVER] ✅ Checklist gerado com sucesso!');
-          queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
-          queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
+          throw error;
         }
-      });
+        
+        if (data?.success) {
+          console.log('[COVER] ✅ Checklist gerado com sucesso!');
+          toast.success('Plano de ação gerado com sucesso! 🎉');
+          
+          // Invalidar cache e navegar
+          await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+          await queryClient.invalidateQueries({ queryKey: ['unified-checklist-exists', id] });
+          navigate(cardPath);
+        } else {
+          throw new Error(data?.error || 'Falha ao gerar plano de ação');
+        }
+      } catch (err: any) {
+        console.error('[COVER] ❌ Erro completo:', err);
+        toast.error('Erro ao gerar plano de ação', {
+          description: err.message || 'Tente novamente em instantes.',
+          action: {
+            label: 'Tentar novamente',
+            onClick: () => handleCardClick(cardPath)
+          },
+          duration: 10000
+        });
+      } finally {
+        setGeneratingSection(null);
+      }
       
       return;
     }
