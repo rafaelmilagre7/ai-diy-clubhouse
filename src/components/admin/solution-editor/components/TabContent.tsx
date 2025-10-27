@@ -76,8 +76,8 @@ const TabContent: React.FC<TabContentProps> = ({
         }
         break;
       case "checklist":
-        if (isValid) {
-          return <ChecklistTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        if (isValid && solution?.id) {
+          return <ChecklistTab solutionId={solution.id} onSave={() => onSubmit(currentValues)} saving={saving} />;
         }
         break;
       case "publish":
@@ -97,7 +97,10 @@ const TabContent: React.FC<TabContentProps> = ({
       case 3:
         return <VideoTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
       case 4:
-        return <ChecklistTab solutionId={solution?.id || null} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        if (solution?.id) {
+          return <ChecklistTab solutionId={solution.id} onSave={() => onSubmit(currentValues)} saving={saving} />;
+        }
+        break;
       case 5:
         return <PublishTab solutionId={solution?.id || null} solution={solution} onSave={onSubmit} saving={saving} />;
     }

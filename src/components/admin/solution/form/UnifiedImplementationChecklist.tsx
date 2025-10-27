@@ -36,7 +36,7 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
 
   // Buscar template existente
   const { data: template, isLoading, error } = useUnifiedChecklistTemplate(
-    solutionId || '', 
+    solutionId,
     'implementation'
   );
   

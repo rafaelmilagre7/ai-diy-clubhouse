@@ -3,7 +3,7 @@ import React from "react";
 import UnifiedImplementationChecklist from "@/components/admin/solution/form/UnifiedImplementationChecklist";
 
 interface ChecklistTabProps {
-  solutionId: string | null;
+  solutionId: string;
   onSave: () => void;
   saving: boolean;
 }
