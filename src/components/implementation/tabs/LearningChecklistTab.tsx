@@ -57,12 +57,23 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       
       return [];
     },
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   // Buscar checklist pessoal do usuário
   const { data: userChecklist, error: userChecklistError, refetch: refetchUserChecklist } = useQuery({
     queryKey: ['user-checklist', solutionId, user?.id],
     queryFn: async () => {
+      console.log('🔄 [LearningChecklistTab] REFETCH userChecklist iniciado:', {
+        timestamp: new Date().toISOString(),
+        userId: user?.id,
+        solutionId
+      });
+      
       if (!user?.id) return null;
       
       const { data, error } = await supabase
@@ -89,6 +100,11 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       return data as UnifiedChecklistData | null;
     },
     enabled: !!user?.id && !!checklistItems,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 
   // Log do estado geral (CRÍTICO para debug)
