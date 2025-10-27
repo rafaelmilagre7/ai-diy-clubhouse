@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode, Loader2, BookOpen } from 'lucide-react';
+import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCode, BookOpen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
@@ -9,6 +9,8 @@ import { LearningRecommendationsCard } from '@/components/builder/LearningRecomm
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
+import { UnifiedLoadingScreen } from '@/components/common/UnifiedLoadingScreen';
+import { getLoadingMessages } from '@/lib/loadingMessages';
 
 export default function BuilderSolutionCover() {
   const { id } = useParams();
@@ -421,21 +423,15 @@ export default function BuilderSolutionCover() {
             })}
           </div>
 
-          {/* Loading Modal */}
+          {/* Loading Screen Unificado */}
           {generatingSection && (
-            <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center">
-              <LiquidGlassCard className="p-8 max-w-md mx-4">
-                <div className="text-center space-y-4">
-                  <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-                  <h3 className="text-xl font-bold">
-                    Gerando {generatingSection}...
-                  </h3>
-                  <p className="text-muted-foreground text-sm">
-                    Isso pode levar até 30 segundos
-                  </p>
-                </div>
-              </LiquidGlassCard>
-            </div>
+            <UnifiedLoadingScreen
+              title={`Gerando ${generatingSection}...`}
+              messages={getLoadingMessages('builder_generating')}
+              estimatedSeconds={45}
+              showTimer={true}
+              showProgressBar={true}
+            />
           )}
         </motion.div>
       </div>
