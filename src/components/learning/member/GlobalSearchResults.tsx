@@ -13,6 +13,7 @@ import {
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { GlobalSearchResult } from "@/hooks/learning/useGlobalLessonSearch";
+import { sanitizeHTML } from "@/utils/security/xssProtection";
 
 interface GlobalSearchResultsProps {
   courseGroups: Record<string, {
@@ -143,7 +144,7 @@ export const GlobalSearchResults: React.FC<GlobalSearchResultsProps> = ({
                     <h4 
                       className="font-semibold text-foreground line-clamp-2 group-hover:text-primary transition-colors"
                       dangerouslySetInnerHTML={{ 
-                        __html: lesson.highlightedTitle || lesson.title 
+                        __html: sanitizeHTML(lesson.highlightedTitle || lesson.title)
                       }}
                     />
 
@@ -152,7 +153,7 @@ export const GlobalSearchResults: React.FC<GlobalSearchResultsProps> = ({
                       <p 
                         className="text-sm text-muted-foreground line-clamp-3"
                         dangerouslySetInnerHTML={{ 
-                          __html: lesson.highlightedDescription || lesson.description 
+                          __html: sanitizeHTML(lesson.highlightedDescription || lesson.description)
                         }}
                       />
                     )}
