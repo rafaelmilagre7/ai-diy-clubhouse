@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef, useEffect } from "react";
 import {
   DndContext,
   DragEndEvent,
+  DragMoveEvent,
   DragOverlay,
   DragStartEvent,
   PointerSensor,
@@ -38,12 +39,14 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   const [selectedItem, setSelectedItem] = useState<UnifiedChecklistItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [localItems, setLocalItems] = useState<UnifiedChecklistItem[]>(checklistItems);
+  const [isDragging, setIsDragging] = useState(false);
 
   const updateMutation = useUpdateUnifiedChecklist();
 
   // Refs para evitar stale closures
   const checklistDataRef = useRef(checklistData);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
+  const dragStartPosRef = useRef<{ x: number; y: number } | null>(null);
 
   // Atualizar ref quando checklistData mudar
   useEffect(() => {
@@ -87,22 +90,59 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
+    setIsDragging(false); // Reset
+    
+    // Capturar posição inicial do mouse/touch
+    const activatorEvent = event.activatorEvent as MouseEvent | TouchEvent;
+    if ('clientX' in activatorEvent) {
+      dragStartPosRef.current = { x: activatorEvent.clientX, y: activatorEvent.clientY };
+    } else if ('touches' in activatorEvent && activatorEvent.touches[0]) {
+      dragStartPosRef.current = { 
+        x: activatorEvent.touches[0].clientX, 
+        y: activatorEvent.touches[0].clientY 
+      };
+    }
+    
     console.log("🟢 Drag Start:", event.active.id);
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    // Marcar que houve movimento real (não é apenas um clique)
+    if (!isDragging && (event.delta.x !== 0 || event.delta.y !== 0)) {
+      setIsDragging(true);
+    }
   };
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     
-    console.log("🔵 Drag End:", { activeId: active.id, overId: over?.id });
+    console.log("🔵 Drag End:", { 
+      activeId: active.id, 
+      overId: over?.id,
+      wasDragging: isDragging 
+    });
+    
+    const itemId = active.id as string;
+    
+    // SE NÃO HOUVE DRAG REAL (clique simples)
+    if (!isDragging) {
+      console.log("👆 Clique detectado - abrindo detalhes");
+      const clickedItem = localItems.find(item => item.id === itemId);
+      if (clickedItem) {
+        handleViewDetails(clickedItem);
+      }
+      setActiveId(null);
+      setIsDragging(false);
+      return; // NÃO processar como drag
+    }
     
     setActiveId(null);
+    setIsDragging(false);
 
     if (!over) {
       console.log("⚠️ No drop target");
       return;
     }
-
-    const itemId = active.id as string;
     const newColumn = over.id as string;
 
     // Mapear colunas para o formato correto
@@ -212,6 +252,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       <DndContext
         sensors={sensors}
         onDragStart={handleDragStart}
+        onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
         modifiers={[snapCenterToCursor]}
       >
