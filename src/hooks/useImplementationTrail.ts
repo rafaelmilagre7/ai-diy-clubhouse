@@ -40,11 +40,11 @@ export function useImplementationTrail() {
       }
 
       if (existingTrail && existingTrail.trail_data) {
-        
+        console.log('✅ [useImplementationTrail] Trilha existente encontrada:', existingTrail.id);
         setTrail(existingTrail.trail_data as ImplementationTrailData);
         setIsFirstTimeGeneration(false);
       } else {
-        
+        console.log('🆕 [useImplementationTrail] Nenhuma trilha encontrada. Gerando nova...');
         setIsFirstTimeGeneration(true);
         await generateTrail();
       }
@@ -65,19 +65,26 @@ export function useImplementationTrail() {
       setIsRegenerating(true);
       setError(null);
 
+      console.log('🚀 [useImplementationTrail] Iniciando geração da trilha para usuário:', user.id);
+
       // Chamar a edge function de geração inteligente
       const { data, error } = await supabase.functions.invoke('generate-smart-trail', {
         body: { userId: user.id }
       });
 
+      console.log('📡 [useImplementationTrail] Resposta da edge function:', { data, error });
+
       if (error) {
+        console.error('❌ [useImplementationTrail] Erro da edge function:', error);
         throw new Error(error.message || 'Erro ao gerar trilha');
       }
 
       if (!data.success) {
+        console.error('❌ [useImplementationTrail] Geração falhou:', data.error);
         throw new Error(data.error || 'Erro desconhecido ao gerar trilha');
       }
 
+      console.log('✅ [useImplementationTrail] Trilha gerada com sucesso:', data.trail);
       setTrail(data.trail);
       
       // Limpar cache de soluções para forçar reload dos dados reais

@@ -1,87 +1,179 @@
 import React from 'react';
-import { Bot, Brain, Target } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { 
+  Brain, 
+  Lightbulb, 
+  Network, 
+  Target, 
+  Zap,
+  CheckCircle2,
+  Sparkles,
+  TrendingUp,
+  Users
+} from 'lucide-react';
 
 interface TrailGenerationLoaderProps {
   message?: string;
 }
 
+const STAGES = [
+  { icon: Brain, label: 'Analisando seu perfil...', color: 'text-cyan-400' },
+  { icon: Lightbulb, label: 'Identificando objetivos...', color: 'text-yellow-400' },
+  { icon: Network, label: 'Mapeando soluções...', color: 'text-teal-400' },
+  { icon: Target, label: 'Priorizando trilha...', color: 'text-emerald-400' },
+  { icon: TrendingUp, label: 'Calculando ROI...', color: 'text-blue-400' },
+  { icon: Zap, label: 'Otimizando sequência...', color: 'text-violet-400' },
+  { icon: Users, label: 'Personalizando aulas...', color: 'text-pink-400' },
+  { icon: CheckCircle2, label: 'Validando recomendações...', color: 'text-green-400' },
+  { icon: Sparkles, label: 'Finalizando trilha...', color: 'text-orange-400' },
+];
+
 export const TrailGenerationLoader: React.FC<TrailGenerationLoaderProps> = ({ 
   message = "Criando sua trilha personalizada com IA..." 
 }) => {
+  const [currentStageIndex, setCurrentStageIndex] = React.useState(0);
+  const [elapsedTime, setElapsedTime] = React.useState(0);
+  const [estimatedTime] = React.useState(45); // Tempo estimado para geração de trilha
+  
+  // Ciclo pelos estágios
+  React.useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentStageIndex((prev) => (prev + 1) % STAGES.length);
+    }, 3500);
+    
+    return () => clearInterval(interval);
+  }, []);
+
+  // Timer de progresso
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setElapsedTime(prev => prev + 1);
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, []);
+  
+  const currentStage = STAGES[currentStageIndex];
+  const IconComponent = currentStage.icon;
+  const progressPercent = Math.min((elapsedTime / estimatedTime) * 100, 95);
+
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-gradient-to-br from-background via-background to-surface-elevated">
-      {/* Background Aurora Effect */}
-      <div className="absolute inset-0 w-full h-full pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gradient-aurora-subtle opacity-40 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-gradient-operational-subtle opacity-40 rounded-full blur-3xl animate-pulse animation-delay-2000" />
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-gradient-revenue-subtle opacity-30 rounded-full blur-3xl animate-pulse animation-delay-4000" />
-      </div>
-
-      {/* Main Content */}
-      <div className="relative z-10 text-center max-w-md mx-auto px-6">
-        {/* Icon Container with Animation */}
-        <div className="relative mb-8">
-          <div className="w-24 h-24 mx-auto bg-card/80 backdrop-blur-xl rounded-3xl flex items-center justify-center border-2 border-aurora-primary/40 shadow-2xl shadow-aurora-primary/20">
-            <Bot className="w-12 h-12 text-aurora-primary animate-pulse" />
-          </div>
-          
-          {/* Floating Icons */}
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-operational rounded-xl flex items-center justify-center shadow-lg animate-float">
-            <Brain className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <div className="absolute -bottom-2 -left-2 w-8 h-8 bg-gradient-revenue rounded-xl flex items-center justify-center shadow-lg animate-float animation-delay-2000">
-            <Brain className="w-4 h-4 text-primary-foreground" />
-          </div>
-          <div className="absolute top-1/2 -right-4 w-6 h-6 bg-gradient-aurora rounded-lg flex items-center justify-center shadow-lg animate-float animation-delay-4000">
-            <Target className="w-3 h-3 text-primary-foreground" />
-          </div>
-        </div>
-
-        {/* Title */}
-        <h2 className="text-2xl font-bold mb-3 bg-gradient-aurora bg-clip-text text-transparent">
-          IA Analisando seu Perfil
-        </h2>
+    <div className="flex flex-col items-center justify-center min-h-screen space-y-8 px-4 bg-gradient-to-br from-background via-background to-surface-elevated">
+      {/* Ícone animado */}
+      <motion.div
+        key={currentStageIndex}
+        initial={{ scale: 0, rotate: -180, opacity: 0 }}
+        animate={{ scale: 1, rotate: 0, opacity: 1 }}
+        exit={{ scale: 0, rotate: 180, opacity: 0 }}
+        transition={{ 
+          type: 'spring', 
+          stiffness: 200, 
+          damping: 20 
+        }}
+        className="relative"
+      >
+        {/* Glow effect */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.6, 0.3],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: 'easeInOut'
+          }}
+          className="absolute inset-0 rounded-full bg-gradient-to-br from-primary/40 to-primary/20 blur-2xl"
+        />
         
-        {/* Message */}
-        <p className="text-muted-foreground mb-8 leading-relaxed">
-          {message}
-        </p>
+        {/* Ícone */}
+        <div className={`relative p-8 rounded-full bg-gradient-to-br from-surface-elevated to-background border-2 border-primary/30 ${currentStage.color}`}>
+          <IconComponent className="h-16 w-16" strokeWidth={1.5} />
+        </div>
+      </motion.div>
 
-        {/* Progress Animation */}
-        <div className="space-y-4">
-          {/* Progress Steps */}
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 text-sm">
-              <div className="w-2 h-2 bg-aurora-primary rounded-full animate-pulse" />
-              <span className="text-muted-foreground">Analisando dados do onboarding</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm animation-delay-1000">
-              <div className="w-2 h-2 bg-operational rounded-full animate-pulse animation-delay-1000" />
-              <span className="text-muted-foreground">Identificando objetivos prioritários</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm animation-delay-2000">
-              <div className="w-2 h-2 bg-revenue rounded-full animate-pulse animation-delay-2000" />
-              <span className="text-muted-foreground">Personalizando recomendações</span>
-            </div>
-            <div className="flex items-center gap-3 text-sm animation-delay-3000">
-              <div className="w-2 h-2 bg-strategy rounded-full animate-pulse animation-delay-3000" />
-              <span className="text-muted-foreground">Criando trilha inteligente</span>
-            </div>
-          </div>
+      {/* Texto do estágio */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentStageIndex}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -20 }}
+          transition={{ duration: 0.3 }}
+          className="text-center space-y-2"
+        >
+          <h3 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+            {currentStage.label}
+          </h3>
+          <p className="text-muted-foreground text-sm">
+            {message}
+          </p>
+        </motion.div>
+      </AnimatePresence>
 
-          {/* Progress Bar */}
-          <div className="w-full bg-muted/30 rounded-full h-2 overflow-hidden backdrop-blur-sm">
-            <div className="h-full bg-gradient-aurora rounded-full animate-pulse transition-all duration-1000" />
-          </div>
+      {/* Barra de progresso com tempo real */}
+      <div className="w-full max-w-md space-y-3">
+        <div className="relative h-3 bg-surface-elevated rounded-full overflow-hidden border border-border/50">
+          {/* Progresso real baseado em tempo estimado */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-500"
+            initial={{ width: '0%' }}
+            animate={{ width: `${progressPercent}%` }}
+            transition={{ 
+              duration: 0.5,
+              ease: 'easeOut' 
+            }}
+          />
+          
+          {/* Shimmer effect */}
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            animate={{
+              x: ['-100%', '200%']
+            }}
+            transition={{
+              duration: 1.5,
+              repeat: Infinity,
+              ease: 'linear'
+            }}
+          />
         </div>
 
-        {/* Additional Info */}
-        <div className="mt-8 p-4 bg-card/60 backdrop-blur-md rounded-2xl border border-aurora-primary/30 shadow-lg">
-          <p className="text-xs text-muted-foreground">
-            ✨ Usando IA para criar uma trilha 100% personalizada baseada no seu perfil e objetivos
-          </p>
+        {/* Tempo decorrido vs estimado */}
+        <div className="flex items-center justify-between text-sm text-muted-foreground">
+          <span>{Math.round(progressPercent)}% concluído</span>
+          <span>{elapsedTime}s / ~{estimatedTime}s</span>
         </div>
       </div>
+
+      {/* Indicadores pulsantes */}
+      <div className="flex gap-2 mt-4">
+        {STAGES.map((s, idx) => (
+          <motion.div
+            key={idx}
+            animate={{
+              scale: idx === currentStageIndex ? 1.2 : 0.8,
+              opacity: idx === currentStageIndex ? 1 : 0.3,
+            }}
+            transition={{ duration: 0.3 }}
+            className={`h-2 w-2 rounded-full ${
+              idx === currentStageIndex
+                ? 'bg-gradient-to-r from-primary to-primary/60' 
+                : 'bg-border'
+            }`}
+          />
+        ))}
+      </div>
+
+      {/* Mensagem de encorajamento */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 1 }}
+        className="text-center text-sm text-muted-foreground max-w-md"
+      >
+        ✨ Criando uma trilha 100% personalizada baseada no seu perfil, objetivos e nível de experiência
+      </motion.p>
     </div>
   );
 };
