@@ -32,7 +32,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   const { data: tools, isLoading, error } = useQuery({
     queryKey: ['solution-tools', solutionId],
     queryFn: async () => {
-      // Buscar ferramentas da solução com JOIN para obter detalhes das ferramentas
+      // Buscar ferramentas da solução com JOIN direto usando tool_id
       const { data, error } = await supabase
         .from('solution_tools')
         .select(`
@@ -40,7 +40,14 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
           tool_name,
           tool_url,
           is_required,
-          created_at
+          tool_id,
+          created_at,
+          tools!inner (
+            id,
+            logo_url,
+            has_member_benefit,
+            benefit_type
+          )
         `)
         .eq('solution_id', solutionId)
         .order('created_at');
@@ -50,27 +57,20 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
         throw error;
       }
 
-      // Para cada ferramenta, tentar buscar detalhes adicionais da tabela tools
-      const toolsWithDetails = await Promise.all(
-        data.map(async (solutionTool) => {
-          const { data: toolDetails } = await supabase
-            .from('tools')
-            .select('id, logo_url, has_member_benefit, benefit_type')
-            .ilike('name', solutionTool.tool_name)
-            .limit(1)
-            .single();
-
-          return {
-            ...solutionTool,
-            tool_id: toolDetails?.id,
-            tool_logo_url: toolDetails?.logo_url,
-            tool_has_member_benefit: toolDetails?.has_member_benefit,
-            tool_benefit_type: toolDetails?.benefit_type,
-          };
-        })
-      );
-      
-      return toolsWithDetails as ToolWithDetails[];
+      // Transformar dados para o formato esperado
+      return data.map((item: any) => {
+        const toolDetails = Array.isArray(item.tools) ? item.tools[0] : item.tools;
+        return {
+          id: item.id,
+          tool_name: item.tool_name,
+          tool_url: item.tool_url,
+          is_required: item.is_required,
+          tool_id: item.tool_id,
+          tool_logo_url: toolDetails?.logo_url,
+          tool_has_member_benefit: toolDetails?.has_member_benefit,
+          tool_benefit_type: toolDetails?.benefit_type,
+        };
+      }) as ToolWithDetails[];
     }
   });
 
