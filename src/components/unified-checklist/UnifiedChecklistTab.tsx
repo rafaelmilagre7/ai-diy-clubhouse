@@ -86,13 +86,19 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       const progressItem = progressItems.find((p: any) => p.id === sourceItem.id);
       
       if (progressItem) {
-        // ✅ Ordem correta: progressItem por último para ter prioridade absoluta
+        // Extrair metadata do template sem o campo 'column'
+        const { column: _, ...safeMetadata } = sourceItem.metadata || {};
+        
+        // ✅ Merge correto: progressItem tem prioridade absoluta
         const merged = Object.assign(
           {},
-          sourceItem,           // 1. Base do template (com metadata)
-          progressItem,         // 2. Sobrescrever TUDO com progresso
+          sourceItem,           // 1. Base do template
+          progressItem,         // 2. Progresso sobrescreve TUDO
           {
-            metadata: sourceItem.metadata  // 3. Restaurar APENAS metadata do template
+            metadata: {         // 3. Restaurar metadata SEM column
+              ...safeMetadata,
+              ...(progressItem.metadata || {}) // Permitir override de metadata pelo progresso
+            }
           }
         );
         
@@ -100,8 +106,9 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
           sourceColumn: sourceItem.column,
           progressColumn: progressItem.column,
           mergedColumn: merged.column,
-          priorityFrom: 'userProgress',
-          progressItem: progressItem
+          sourceMetadata: sourceItem.metadata,
+          safeMetadata,
+          finalMetadata: merged.metadata
         });
         
         return merged;
