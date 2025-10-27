@@ -227,6 +227,63 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_prompts: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          key: string
+          max_tokens: number | null
+          model: string
+          name: string
+          prompt_content: string
+          response_format: Json | null
+          retry_attempts: number
+          temperature: number | null
+          timeout_seconds: number
+          updated_at: string
+          version: number
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key: string
+          max_tokens?: number | null
+          model?: string
+          name: string
+          prompt_content: string
+          response_format?: Json | null
+          retry_attempts?: number
+          temperature?: number | null
+          timeout_seconds?: number
+          updated_at?: string
+          version?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          key?: string
+          max_tokens?: number | null
+          model?: string
+          name?: string
+          prompt_content?: string
+          response_format?: Json | null
+          retry_attempts?: number
+          temperature?: number | null
+          timeout_seconds?: number
+          updated_at?: string
+          version?: number
+        }
+        Relationships: []
+      }
       ai_solution_usage: {
         Row: {
           created_at: string | null
