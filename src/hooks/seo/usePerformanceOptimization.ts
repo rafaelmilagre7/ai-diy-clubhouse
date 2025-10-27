@@ -51,18 +51,44 @@ export const usePerformanceOptimization = () => {
 
     // Image lazy-loading is handled by React and browser native lazy loading
 
-    // Critical resource loading optimization
+    // Critical resource loading optimization with CSS lazy loading
     const optimizeCriticalResources = () => {
-      // Mark critical CSS as high priority
-      const criticalStylesheets = document.querySelectorAll('link[rel="stylesheet"]');
-      criticalStylesheets.forEach((stylesheet, index) => {
-        if (index < 2) { // First 2 stylesheets are usually critical
-          (stylesheet as HTMLLinkElement).setAttribute('fetchpriority', 'high');
+      // Defer non-critical CSS to improve initial page load
+      const stylesheets = document.querySelectorAll('link[rel="stylesheet"]');
+      stylesheets.forEach((stylesheet, index) => {
+        const link = stylesheet as HTMLLinkElement;
+        
+        if (index === 0) {
+          // First stylesheet is critical - load with high priority
+          link.setAttribute('fetchpriority', 'high');
+        } else {
+          // Other stylesheets - load asynchronously to not block render
+          // Save original media
+          const originalMedia = link.media || 'all';
+          
+          // Load as print initially (non-blocking)
+          link.media = 'print';
+          
+          // After load, switch to correct media
+          link.onload = () => {
+            link.media = originalMedia;
+            link.onload = null;
+          };
+          
+          // Fallback for browsers that don't fire onload
+          setTimeout(() => {
+            link.media = originalMedia;
+          }, 3000);
         }
       });
     };
 
-    optimizeCriticalResources();
+    // Run after DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', optimizeCriticalResources);
+    } else {
+      optimizeCriticalResources();
+    }
 
   }, []);
 };
