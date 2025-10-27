@@ -13,6 +13,9 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({
   onSave,
   saving,
 }) => {
+  // 🔍 DEBUG: Confirmar que o componente foi montado
+  console.log('🎯 [ChecklistTab] Componente montado com solutionId:', solutionId);
+
   return (
     <UnifiedImplementationChecklist 
       solutionId={solutionId} 

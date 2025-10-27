@@ -34,16 +34,32 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
-  // Log temporário para debug
+  // 🔍 DEBUG: Logs detalhados do carregamento
   useEffect(() => {
+    console.log('🔄 [UnifiedImplementationChecklist] Estado do hook:', {
+      solutionId,
+      isLoading,
+      hasTemplate: !!template,
+      hasError: !!error,
+      itemsCount: template?.checklist_data?.items?.length || 0
+    });
+
     if (!isLoading && template) {
-      console.log('✅ Template carregado:', {
+      console.log('✅ [UnifiedImplementationChecklist] Template carregado com sucesso:', {
         items: template.checklist_data?.items?.length || 0,
         solutionId,
         data: template.checklist_data
       });
     }
-  }, [template, isLoading, solutionId]);
+
+    if (!isLoading && !template && !error) {
+      console.warn('⚠️ [UnifiedImplementationChecklist] Template não encontrado para solutionId:', solutionId);
+    }
+
+    if (error) {
+      console.error('❌ [UnifiedImplementationChecklist] Erro ao carregar template:', error);
+    }
+  }, [template, isLoading, solutionId, error]);
 
   useEffect(() => {
     // Só processar quando NÃO estiver loading
@@ -144,10 +160,33 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="animate-pulse">
-          <div className="h-4 bg-muted rounded w-1/4 mb-2"></div>
-          <div className="h-8 bg-muted rounded"></div>
-        </div>
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-center">
+                <p className="font-medium">Carregando checklist...</p>
+                <p className="text-sm text-muted-foreground">ID: {solutionId}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <Card className="border-destructive/50">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-12 gap-4 text-destructive">
+              <p className="font-medium">Erro ao carregar checklist</p>
+              <p className="text-sm">{error.message}</p>
+              <p className="text-xs text-muted-foreground">ID: {solutionId}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
