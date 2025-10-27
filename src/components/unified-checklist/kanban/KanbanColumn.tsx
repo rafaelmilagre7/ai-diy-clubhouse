@@ -44,8 +44,8 @@ const DraggableCard: React.FC<DraggableCardProps> = ({ item, onViewDetails }) =>
   };
 
   const handlePointerUp = () => {
-    // Se NÃO moveu, é um clique - abre detalhes
-    if (!hasMoved.current && dragStartPosRef.current) {
+    // Se NÃO moveu E não está arrastando, é um clique - abre detalhes
+    if (!hasMoved.current && !isDragging && dragStartPosRef.current) {
       onViewDetails(item);
     }
     dragStartPosRef.current = null;
