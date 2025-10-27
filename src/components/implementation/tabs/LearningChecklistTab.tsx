@@ -25,97 +25,97 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
 }) => {
   const { user } = useAuth();
 
-  // Buscar checklist da solução
+  // Buscar checklist template da solução
   const { data: checklistItems, isLoading: loadingChecklist } = useQuery({
-    queryKey: ['learning-checklist', solutionId],
+    queryKey: ['learning-checklist-template', solutionId],
     queryFn: async () => {
-      console.log('🔍 [LearningChecklist] Buscando checklist para:', solutionId);
+      console.log('🔍 [LearningChecklist] Buscando template para:', solutionId);
       
-      // 1. Buscar em solutions.checklist_items ou implementation_steps
-      const { data: solution } = await supabase
-        .from('solutions')
-        .select('checklist_items, implementation_steps')
-        .eq('id', solutionId)
-        .maybeSingle();
-
-      if (solution?.checklist_items && Array.isArray(solution.checklist_items)) {
-        console.log('✅ [LearningChecklist] Encontrado em checklist_items');
-        return solution.checklist_items as ChecklistItemData[];
-      }
-
-      // 2. Fallback: extrair de implementation_steps
-      if (solution?.implementation_steps && Array.isArray(solution.implementation_steps)) {
-        console.log('✅ [LearningChecklist] Extraindo de implementation_steps');
-        return solution.implementation_steps.map((step: any, idx: number) => ({
-          id: step.id || `step-${idx}`,
-          description: step.description || step.title || `Passo ${idx + 1}`,
-          title: step.title
-        }));
-      }
-
-      // 3. Buscar estrutura de checklist de QUALQUER usuário desta solução
-      const { data: anyUserChecklist } = await supabase
+      // Buscar template em unified_checklists (cadastrado no admin)
+      const { data: template } = await supabase
         .from('unified_checklists')
         .select('checklist_data')
         .eq('solution_id', solutionId)
         .eq('checklist_type', 'implementation')
-        .limit(1)
+        .eq('is_template', true)
         .maybeSingle();
 
-      if (anyUserChecklist?.checklist_data?.items && Array.isArray(anyUserChecklist.checklist_data.items)) {
-        console.log('✅ [LearningChecklist] Usando estrutura de checklist existente');
-        return anyUserChecklist.checklist_data.items.map((item: any) => ({
-          id: item.id,
-          description: item.description || item.title,
-          title: item.title
-        }));
+      if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
+        console.log('✅ [LearningChecklist] Template encontrado:', template.checklist_data.items.length, 'itens');
+        return template.checklist_data.items as ChecklistItemData[];
       }
 
-      console.log('⚠️ [LearningChecklist] Nenhum checklist encontrado');
+      console.log('⚠️ [LearningChecklist] Nenhum template encontrado');
       return [];
     },
   });
 
-  // Buscar progresso do usuário (user_checklists)
+  // Buscar progresso do usuário (não é template)
   const { data: userProgress, refetch: refetchProgress } = useQuery({
-    queryKey: ['user-checklist-progress', solutionId, user?.id],
+    queryKey: ['learning-user-progress', solutionId, user?.id],
     queryFn: async () => {
-      if (!user) return null;
+      if (!user?.id) return {};
 
       const { data } = await supabase
-        .from('user_checklists')
-        .select('checked_items')
+        .from('unified_checklists')
+        .select('checklist_data')
         .eq('user_id', user.id)
         .eq('solution_id', solutionId)
+        .eq('checklist_type', 'implementation')
+        .eq('is_template', false)
         .maybeSingle();
 
-      console.log('📊 [LearningChecklist] Progresso do usuário:', data?.checked_items);
-      return data?.checked_items as Record<string, boolean> || {};
+      const items = data?.checklist_data?.items || [];
+      const progress: Record<string, boolean> = {};
+      items.forEach((item: any) => {
+        progress[item.id] = item.checked || false;
+      });
+
+      console.log('📊 [LearningChecklist] Progresso do usuário:', progress);
+      return progress;
     },
-    enabled: !!user,
+    enabled: !!user?.id,
   });
 
   // Função para atualizar item
   const handleCheckChange = async (itemId: string, checked: boolean) => {
-    if (!user) {
+    if (!user?.id) {
       toast.error("Você precisa estar logado para marcar itens");
       return;
     }
 
-    const updatedProgress = {
-      ...userProgress,
-      [itemId]: checked,
-    };
+    // Buscar checklist atual do usuário
+    const { data: currentData } = await supabase
+      .from('unified_checklists')
+      .select('checklist_data')
+      .eq('user_id', user.id)
+      .eq('solution_id', solutionId)
+      .eq('checklist_type', 'implementation')
+      .eq('is_template', false)
+      .maybeSingle();
 
-    console.log('💾 [LearningChecklist] Salvando progresso:', { itemId, checked, updatedProgress });
+    // Atualizar os itens com o novo estado
+    const updatedItems = checklistItems?.map(item => ({
+      id: item.id,
+      description: item.description,
+      title: item.title,
+      checked: item.id === itemId ? checked : (userProgress?.[item.id] || false)
+    }));
 
-    // Atualizar no banco
+    console.log('💾 [LearningChecklist] Salvando progresso:', { itemId, checked });
+
+    // Salvar no banco
     const { error } = await supabase
-      .from('user_checklists')
+      .from('unified_checklists')
       .upsert({
         user_id: user.id,
         solution_id: solutionId,
-        checked_items: updatedProgress,
+        checklist_type: 'implementation',
+        is_template: false,
+        checklist_data: {
+          items: updatedItems,
+          lastUpdated: new Date().toISOString()
+        },
         updated_at: new Date().toISOString(),
       });
 
@@ -128,7 +128,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     refetchProgress();
     
     // Verificar se completou tudo
-    const allChecked = checklistItems?.every(item => updatedProgress[item.id]);
+    const allChecked = updatedItems?.every(item => item.checked);
     if (allChecked && onComplete) {
       console.log('🎉 [LearningChecklist] Checklist completo!');
       onComplete();
