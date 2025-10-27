@@ -83,9 +83,20 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
 
 // Hook para buscar template do checklist
 export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: string = 'implementation') => {
+  console.log('🔍 [useUnifiedChecklistTemplate] Hook CHAMADO:', {
+    solutionId,
+    checklistType,
+    timestamp: new Date().toISOString()
+  });
+
   return useQuery({
     queryKey: ['unified-checklist-template', solutionId, checklistType],
     queryFn: async (): Promise<UnifiedChecklistData | null> => {
+      console.log('🌐 [useUnifiedChecklistTemplate] Executando query no Supabase:', {
+        solutionId,
+        checklistType
+      });
+
       const { data: templateData, error: templateError } = await supabase
         .from('unified_checklists')
         .select('*')
@@ -93,6 +104,14 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
         .eq('checklist_type', checklistType)
         .eq('is_template', true)
         .maybeSingle();
+
+      console.log('📥 [useUnifiedChecklistTemplate] Resposta do Supabase:', {
+        hasData: !!templateData,
+        hasError: !!templateError,
+        errorMessage: templateError?.message,
+        dataId: templateData?.id,
+        itemsCount: templateData?.checklist_data?.items?.length
+      });
 
       if (templateError) {
         console.error('Erro ao buscar template:', templateError);

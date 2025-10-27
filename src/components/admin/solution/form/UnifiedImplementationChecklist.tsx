@@ -24,13 +24,31 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   onSave,
   saving
 }) => {
+  console.log('🚀 [UnifiedImplementationChecklist] COMPONENTE INICIADO:', {
+    solutionId,
+    saving,
+    timestamp: new Date().toISOString()
+  });
+
   const [checklistItems, setChecklistItems] = useState<UnifiedChecklistItem[]>([]);
   const { user } = useAuth();
+
+  console.log('📞 [UnifiedImplementationChecklist] Chamando hook com:', {
+    solutionId,
+    checklistType: 'implementation'
+  });
 
   const { data: template, isLoading, error } = useUnifiedChecklistTemplate(
     solutionId,
     'implementation'
   );
+
+  console.log('📊 [UnifiedImplementationChecklist] Estado do hook imediatamente após chamada:', {
+    hasTemplate: !!template,
+    isLoading,
+    hasError: !!error,
+    errorMessage: error?.message
+  });
   
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
