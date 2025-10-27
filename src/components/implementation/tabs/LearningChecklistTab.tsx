@@ -26,19 +26,31 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   const { user } = useAuth();
 
   // Buscar checklist template da solução
-  const { data: checklistItems, isLoading: loadingChecklist } = useQuery({
+  const { data: checklistItems, isLoading: loadingChecklist, error: checklistError } = useQuery({
     queryKey: ['learning-checklist-template', solutionId],
     queryFn: async () => {
       console.log('🔍 [LearningChecklist] Buscando template para:', solutionId);
+      console.log('🔍 [LearningChecklist] User autenticado:', !!user?.id);
       
       // Buscar template em unified_checklists (cadastrado no admin)
-      const { data: template } = await supabase
+      const { data: template, error } = await supabase
         .from('unified_checklists')
         .select('checklist_data')
         .eq('solution_id', solutionId)
         .eq('checklist_type', 'implementation')
         .eq('is_template', true)
         .maybeSingle();
+
+      if (error) {
+        console.error('❌ [LearningChecklist] Erro ao buscar template:', error);
+        throw error;
+      }
+
+      console.log('📦 [LearningChecklist] Resposta da query:', { 
+        hasTemplate: !!template, 
+        hasItems: !!template?.checklist_data?.items,
+        itemCount: template?.checklist_data?.items?.length || 0 
+      });
 
       if (template?.checklist_data?.items && Array.isArray(template.checklist_data.items)) {
         console.log('✅ [LearningChecklist] Template encontrado:', template.checklist_data.items.length, 'itens');
@@ -49,6 +61,11 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       return [];
     },
   });
+
+  // Log de erro se houver
+  if (checklistError) {
+    console.error('❌ [LearningChecklist] Erro na query:', checklistError);
+  }
 
   // Buscar progresso do usuário (não é template)
   const { data: userProgress, refetch: refetchProgress } = useQuery({
