@@ -175,7 +175,17 @@ export default function Builder() {
       if (error) {
         console.error('[BUILDER] Erro na validação:', error);
         setValidationStatus('error');
-        setValidationMessage('Erro ao validar ideia. Tente novamente.');
+        
+        // Mensagens de erro diferenciadas
+        const errorMessage = error.message || '';
+        if (errorMessage.includes('truncada')) {
+          setValidationMessage('A análise foi interrompida. Tente novamente ou simplifique a ideia.');
+        } else if (errorMessage.includes('timeout')) {
+          setValidationMessage('A análise está demorando muito. Tente novamente em alguns instantes.');
+        } else {
+          setValidationMessage('Erro ao validar ideia. Tente novamente.');
+        }
+        
         // Não limpar automaticamente - usuário deve clicar no botão
         return;
       }
@@ -241,11 +251,19 @@ export default function Builder() {
         }
       }, 1000);
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('[BUILDER] Erro na validação:', error);
       setValidationStatus('error');
-      setValidationMessage('Erro inesperado ao validar ideia');
-      setTimeout(() => setValidationStatus('idle'), 3000);
+      
+      // Mensagens de erro diferenciadas
+      const errorMessage = error?.message || '';
+      if (errorMessage.includes('truncada')) {
+        setValidationMessage('A análise foi interrompida. Tente novamente ou simplifique a ideia.');
+      } else if (errorMessage.includes('timeout')) {
+        setValidationMessage('A análise está demorando muito. Tente novamente em alguns instantes.');
+      } else {
+        setValidationMessage('Erro inesperado ao validar ideia. Tente novamente.');
+      }
     }
   };
 

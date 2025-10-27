@@ -280,7 +280,7 @@ IMPORTANTE:
             { role: 'user', content: `Avalie: "${idea}"` }
           ],
           temperature: 0.1,
-          max_tokens: 2000
+          max_tokens: 4000
         }),
     });
 
@@ -317,13 +317,45 @@ IMPORTANTE:
 
     console.log('[VALIDATE-FEASIBILITY] 📥 Resposta raw:', content.slice(0, 100));
 
-    // Limpeza agressiva de markdown e code blocks
-    let cleanContent = content
+    // 🆕 VALIDAÇÃO: Verificar se resposta foi truncada
+    if (content.length < 500) {
+      console.error('[VALIDATE-FEASIBILITY] ⚠️ Resposta muito curta, pode ter sido truncada:', content.length, 'chars');
+      throw new Error('Resposta da IA foi truncada. Tente novamente.');
+    }
+
+    // 🧹 LIMPEZA ROBUSTA: Múltiplas estratégias de extração
+    let cleanContent = content.trim();
+
+    // Estratégia 1: Remover markdown code blocks (```json ... ```)
+    if (cleanContent.includes('```json')) {
+      const match = cleanContent.match(/```json\s*([\s\S]*?)```/);
+      if (match) {
+        cleanContent = match[1].trim();
+      }
+    }
+
+    // Estratégia 2: Remover qualquer ``` no início/fim
+    cleanContent = cleanContent
       .replace(/```json\s*/gi, '')
       .replace(/```javascript\s*/gi, '')
       .replace(/```\s*/gi, '')
       .replace(/`{1,3}/g, '')
       .trim();
+
+    // Estratégia 3: Tentar encontrar o primeiro { e último }
+    if (!cleanContent.startsWith('{')) {
+      const firstBrace = cleanContent.indexOf('{');
+      if (firstBrace !== -1) {
+        cleanContent = cleanContent.substring(firstBrace);
+      }
+    }
+
+    if (!cleanContent.endsWith('}')) {
+      const lastBrace = cleanContent.lastIndexOf('}');
+      if (lastBrace !== -1) {
+        cleanContent = cleanContent.substring(0, lastBrace + 1);
+      }
+    }
 
     console.log('[VALIDATE-FEASIBILITY] 🧹 Depois de limpar:', cleanContent.slice(0, 200));
 
