@@ -30,6 +30,17 @@ export const usePreloadCriticalAssets = () => {
     // Preload critical logo image for LCP optimization
     preloadImage('/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png', 'high');
 
+    // Preload critical fonts to break dependency chain
+    const preloadCriticalFonts = () => {
+      const fontPreload = document.createElement('link');
+      fontPreload.rel = 'preload';
+      fontPreload.as = 'style';
+      fontPreload.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap';
+      document.head.appendChild(fontPreload);
+    };
+    
+    preloadCriticalFonts();
+
     // Preload next likely navigation targets based on current route
     const preloadNextRoute = (href: string) => {
       const link = document.createElement('link');

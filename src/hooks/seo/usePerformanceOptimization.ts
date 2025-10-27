@@ -12,8 +12,11 @@ export const usePerformanceOptimization = () => {
       document.head.appendChild(link);
     };
 
-    // DNS prefetch for external domains
-    addResourceHint('dns-prefetch', 'https://fonts.googleapis.com');
+    // Preconnect to critical font origins (breaks dependency chain)
+    addResourceHint('preconnect', 'https://fonts.googleapis.com');
+    addResourceHint('preconnect', 'https://fonts.gstatic.com');
+    
+    // DNS prefetch for other external domains
     addResourceHint('dns-prefetch', 'https://api.openai.com');
     
     // Preconnect to critical resources
