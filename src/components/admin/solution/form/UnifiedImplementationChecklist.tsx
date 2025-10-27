@@ -27,11 +27,26 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   const [checklistItems, setChecklistItems] = useState<UnifiedChecklistItem[]>([]);
   const { user } = useAuth();
 
+  // 🔍 LOG INICIAL
+  console.log('🎨 [Admin] UnifiedImplementationChecklist montado:', {
+    solutionId,
+    hasSolutionId: !!solutionId,
+    userAuthenticated: !!user?.id
+  });
+
   // Buscar template existente
   const { data: template, isLoading, error } = useUnifiedChecklistTemplate(
     solutionId || '', 
     'implementation'
   );
+  
+  // 🔍 LOG DA QUERY
+  console.log('🎨 [Admin] Estado da query:', {
+    hasTemplate: !!template,
+    isLoading,
+    hasError: !!error,
+    solutionIdPassado: solutionId
+  });
   
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
 
