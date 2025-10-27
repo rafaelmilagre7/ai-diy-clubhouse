@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { GripVertical, Eye, Clock, StickyNote } from "lucide-react";
+import { GripVertical, Eye, StickyNote } from "lucide-react";
 import { UnifiedChecklistItem } from "@/hooks/useUnifiedChecklists";
 
 interface SimpleKanbanCardProps {
@@ -47,20 +47,12 @@ const SimpleKanbanCard: React.FC<SimpleKanbanCardProps> = ({
             )}
             
             {/* Metadata badges */}
-            {(item.metadata?.estimated_time || item.notes) && (
+            {item.notes && (
               <div className="flex gap-1.5 mt-2">
-                {item.metadata?.estimated_time && (
-                  <Badge variant="outline" className="text-xs">
-                    <Clock className="h-3 w-3 mr-1" />
-                    {item.metadata.estimated_time}
-                  </Badge>
-                )}
-                {item.notes && (
-                  <Badge variant="outline" className="text-xs">
-                    <StickyNote className="h-3 w-3 mr-1" />
-                    Notas
-                  </Badge>
-                )}
+                <Badge variant="outline" className="text-xs">
+                  <StickyNote className="h-3 w-3 mr-1" />
+                  Notas
+                </Badge>
               </div>
             )}
           </div>

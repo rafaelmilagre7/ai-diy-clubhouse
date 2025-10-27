@@ -63,6 +63,8 @@ export const useUnifiedChecklist = (solutionId: string, checklistType: string = 
         .eq('solution_id', solutionId)
         .eq('checklist_type', checklistType)
         .eq('is_template', false)
+        .order('updated_at', { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (error) {
@@ -180,7 +182,8 @@ export const useUpdateUnifiedChecklist = () => {
         userId: user.id,
         solutionId,
         checklistType,
-        hasId: !!checklistData.id
+        hasId: !!checklistData.id,
+        checklistId: checklistData.id
       });
       
       const { data, error } = await supabase
