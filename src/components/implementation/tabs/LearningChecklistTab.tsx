@@ -36,7 +36,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         .from('solutions')
         .select('checklist_items, implementation_steps')
         .eq('id', solutionId)
-        .single();
+        .maybeSingle();
 
       if (solution?.checklist_items && Array.isArray(solution.checklist_items)) {
         console.log('✅ [LearningChecklist] Encontrado em checklist_items');
@@ -53,17 +53,18 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         }));
       }
 
-      // 3. Último recurso: template em unified_checklists
-      const { data: unified } = await supabase
+      // 3. Buscar estrutura de checklist de QUALQUER usuário desta solução
+      const { data: anyUserChecklist } = await supabase
         .from('unified_checklists')
         .select('checklist_data')
         .eq('solution_id', solutionId)
-        .eq('is_template', true)
-        .single();
+        .eq('checklist_type', 'implementation')
+        .limit(1)
+        .maybeSingle();
 
-      if (unified?.checklist_data?.items) {
-        console.log('✅ [LearningChecklist] Encontrado template unified');
-        return unified.checklist_data.items.map((item: any) => ({
+      if (anyUserChecklist?.checklist_data?.items && Array.isArray(anyUserChecklist.checklist_data.items)) {
+        console.log('✅ [LearningChecklist] Usando estrutura de checklist existente');
+        return anyUserChecklist.checklist_data.items.map((item: any) => ({
           id: item.id,
           description: item.description || item.title,
           title: item.title
