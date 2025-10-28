@@ -258,15 +258,16 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   };
 
-  // 🔥 CORREÇÃO CRÍTICA: Estabilizar checklistItems com comparação profunda
+  // 🔥 CORREÇÃO CRÍTICA: Estabilizar checklistItems com hash único
   const stableChecklistItems = React.useMemo(() => {
     return checklistItems;
   }, [
     checklistItems.length,
-    checklistItems.map(i => i.id).join(','),
-    checklistItems.map(i => i.column).join(','),
-    checklistItems.map(i => i.completed).join(',')
+    checklistItems.map(i => `${i.id}-${i.column}-${i.completed ? '1' : '0'}`).sort().join('|')
   ]);
+
+  // Memoizar timestamp para evitar criar novo objeto a cada render
+  const lastUpdatedTimestamp = React.useRef(new Date().toISOString());
 
   const checklistDataForKanban: UnifiedChecklistData = React.useMemo(() => {
     const completedCount = stableChecklistItems.filter(i => i.completed).length;
@@ -282,7 +283,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       checklist_type: checklistType,
       checklist_data: {
         items: stableChecklistItems,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: lastUpdatedTimestamp.current
       },
       completed_items: completedCount,
       total_items: stableChecklistItems.length,
