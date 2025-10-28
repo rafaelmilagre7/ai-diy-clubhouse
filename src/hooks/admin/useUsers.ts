@@ -34,9 +34,9 @@ export function useUsers() {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
-  // Estado para controlar visualização lazy
-  const [showUsers, setShowUsers] = useState(false);
-  const [currentFilter, setCurrentFilter] = useState<string>('none');
+  // Estado para controlar visualização - agora inicia com true para carregar automaticamente
+  const [showUsers, setShowUsers] = useState(true);
+  const [currentFilter, setCurrentFilter] = useState<string>('all');
   
   // Filtros simplificados (removidos obsoletos)
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
@@ -79,11 +79,11 @@ export function useUsers() {
     }
   }, [canManageUsers]);
 
-  // Função de busca paginada otimizada com lazy loading
+  // Função de busca paginada otimizada
   const fetchUsers = useCallback(async (forceRefresh = false, page = currentPage, filterType?: string) => {
-    // Só busca usuários se showUsers for true OU se forceRefresh for true
-    if (!canManageUsers || (!showUsers && !forceRefresh) || (fetchInProgress.current && !forceRefresh)) {
-      console.warn('[USERS] Busca cancelada - lazy loading ou sem permissão');
+    // Verificar permissões e evitar múltiplas chamadas simultâneas
+    if (!canManageUsers || (fetchInProgress.current && !forceRefresh)) {
+      console.warn('[USERS] Busca cancelada - sem permissão ou busca em progresso');
       return;
     }
 
@@ -199,11 +199,12 @@ export function useUsers() {
     }
   }, [canAssignRoles]);
 
-  // Carregar apenas estatísticas inicialmente (SEM usuários)
+  // Carregar estatísticas e usuários automaticamente
   useEffect(() => {
     if (canManageUsers) {
-      console.log('[USERS] Carregamento inicial - apenas estatísticas');
-      fetchStats(); // Só carrega stats, não usuários
+      console.log('[USERS] Carregamento inicial - estatísticas e usuários');
+      fetchStats();
+      fetchUsers(true, 1, 'all'); // Carregar primeira página de todos os usuários
     }
   }, [canManageUsers, fetchStats]);
 

@@ -158,7 +158,9 @@ export default function UserManagement() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{users.length}</div>
-            <p className="text-xs text-muted-foreground">usuários no sistema</p>
+            <p className="text-xs text-muted-foreground">
+              {loading ? 'carregando...' : 'usuários no sistema'}
+            </p>
           </CardContent>
         </Card>
         
@@ -233,7 +235,9 @@ export default function UserManagement() {
               <UserPlus className="mx-auto h-12 w-12 text-muted-foreground" />
               <h3 className="mt-4 text-lg font-semibold">Nenhum usuário encontrado</h3>
               <p className="mt-2 text-muted-foreground">
-                {searchQuery ? 'Tente ajustar os filtros de pesquisa.' : 'Não há usuários cadastrados no sistema.'}
+                {searchQuery 
+                  ? 'Tente ajustar os filtros de pesquisa.' 
+                  : 'Aguardando carregamento dos usuários ou não há usuários cadastrados no sistema.'}
               </p>
             </div>
           ) : (
