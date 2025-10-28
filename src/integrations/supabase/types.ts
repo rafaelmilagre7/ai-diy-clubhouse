@@ -8436,7 +8436,7 @@ export type Database = {
       is_service_role: { Args: never; Returns: boolean }
       is_user_admin:
         | { Args: never; Returns: boolean }
-        | { Args: { user_id?: string }; Returns: boolean }
+        | { Args: { user_id: string }; Returns: boolean }
       is_user_admin_enhanced: { Args: { user_id?: string }; Returns: boolean }
       is_user_admin_fast: { Args: { target_user_id: string }; Returns: boolean }
       is_user_admin_safe: { Args: { check_user_id: string }; Returns: boolean }
