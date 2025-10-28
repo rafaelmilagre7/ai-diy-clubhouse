@@ -15,7 +15,7 @@ serve(async (req) => {
 
     const supabase = getSupabaseServiceClient();
 
-    // Buscar solução
+    // Buscar solução completa com perguntas e respostas
     const { data: solution, error: solutionError } = await supabase
       .from('ai_generated_solutions')
       .select('*')
@@ -23,6 +23,13 @@ serve(async (req) => {
       .single();
 
     if (solutionError) throw solutionError;
+
+    // Extrair perguntas e respostas da validação
+    const questionsAsked = solution.questions_asked || [];
+    const userAnswers = solution.user_answers || [];
+    
+    console.log(`[FLOW-GEN] 📝 Perguntas enviadas: ${questionsAsked.length}`);
+    console.log('[FLOW-GEN] 🏗️ Framework Rafael Milagre incluído no contexto');
 
     // Buscar framework_mapping para contexto das ferramentas
     const frameworkData = solution.framework_mapping;
@@ -41,6 +48,26 @@ serve(async (req) => {
     const systemPrompt = `Você é um CONSULTOR DE TRANSFORMAÇÃO DIGITAL especializado em guiar empresários e líderes a implementarem soluções de IA usando ferramentas NO-CODE.
 
 Seu público NÃO é programador. São empresários que querem implementar IA de forma prática.
+
+🏗️ FRAMEWORK DE REFERÊNCIA (by Rafael Milagre):
+
+CATEGORIAS DE FERRAMENTAS NO-CODE:
+1. 📊 BANCOS DE DADOS E ARMAZENAMENTO:
+   - Airtable, Google Sheets, Notion Database, Supabase, Firebase
+
+2. 🧠 INTELIGÊNCIA ARTIFICIAL:
+   - APIs: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek, Manus, Agent GPT, Genspark
+   - Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (voz)
+   - Visão computacional: GPT-4 Vision, Google Vision API
+
+3. 🔄 AUTOMAÇÃO E INTEGRAÇÃO:
+   - Lovable, Make, n8n, Zapier, Lindy AI
+
+4. 💻 INTERFACES ONDE A IA ATUA:
+   - WhatsApp, Site, plataforma própria, CRM, ERP, Gmail, chatbot, Twilio, Discord
+   - Qualquer plataforma com API aberta
+
+Use essas categorias para organizar o fluxo e sugerir ferramentas adequadas ao contexto do empresário.
 
 REGRAS MERMAID (CRÍTICAS - SIGA EXATAMENTE):
 1. Use APENAS "graph TD" na primeira linha
@@ -74,6 +101,8 @@ Use esta ordem lógica:
 5. Ajustes (ex: "Refinar respostas")
 6. Ativação (ex: "Liberar para equipe")
 
+IMPORTANTE: O fluxo deve ter entre 12-15 nós para garantir detalhamento adequado e praticidade.
+
 EXEMPLO 1 - Chatbot de Vendas:
 graph TD
     A[Reunir PDFs dos Produtos] --> B[Criar Conta no ManyChat]
@@ -101,12 +130,22 @@ graph TD
     H --> I
     I --> J[Salvar em Airtable]`;
 
-    const userPrompt = `Crie um fluxo Mermaid (graph TD) com 10-12 etapas PRÁTICAS para um empresário implementar esta solução:
+    // Montar perguntas e respostas para contexto
+    const qaSection = questionsAsked.length > 0 
+      ? questionsAsked.map((q: string, i: number) => 
+          `Pergunta ${i + 1}: ${q}\nResposta: ${userAnswers[i] || 'Não respondida'}`
+        ).join('\n\n')
+      : 'Nenhuma pergunta respondida';
+
+    const userPrompt = `Crie um fluxo Mermaid (graph TD) com 12-15 etapas PRÁTICAS para um empresário implementar esta solução:
 
 CONTEXTO DA SOLUÇÃO:
 - Título: ${solution.title}
 - Desafio do Negócio: ${solution.original_idea}
 - Ferramentas Mapeadas: ${allTools}
+
+📝 PERGUNTAS E RESPOSTAS DA VALIDAÇÃO:
+${qaSection}
 
 FRAMEWORK DE 4 PILARES:
 1. 🤖 AUTOMAÇÃO: ${automationTools.join(', ') || 'Não mapeado'}
@@ -241,13 +280,13 @@ VALIDAÇÃO FINAL:
       // Não bloquear, apenas alertar - deixar usuário regenerar se necessário
     }
     
-    // Contar número de nós no diagrama (verificar se está entre 8-12)
+    // Contar número de nós no diagrama (verificar se está entre 12-15)
     const nodeMatches = flowData.mermaid_code.match(/[A-L]\[/g);
     const nodeCount = nodeMatches ? nodeMatches.length : 0;
     console.log(`[FLOW-GEN] 📊 Diagrama possui ${nodeCount} nós`);
     
-    if (nodeCount < 8 || nodeCount > 12) {
-      console.warn(`[FLOW-GEN] ⚠️ Número de nós fora do ideal (8-12): ${nodeCount}`);
+    if (nodeCount < 12 || nodeCount > 15) {
+      console.warn(`[FLOW-GEN] ⚠️ Número de nós fora do ideal (12-15): ${nodeCount}`);
     }
 
     // 🔧 CAMADA 3: SANITIZAÇÃO MERMAID - Remover parênteses e vírgulas problemáticos

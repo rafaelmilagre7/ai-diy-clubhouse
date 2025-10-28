@@ -5,6 +5,7 @@ import { ArrowLeft, Compass, Network, Wrench, ClipboardCheck, ArrowRight, FileCo
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { LearningRecommendationsCard } from '@/components/builder/LearningRecommendationsCard';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -355,6 +356,9 @@ export default function BuilderSolutionCover() {
     }
   };
 
+  // Verificar pré-requisitos
+  const hasFramework = !!solution?.framework_mapping;
+
   const cards = [
     {
       title: "Framework de Implementação",
@@ -373,6 +377,8 @@ export default function BuilderSolutionCover() {
       color: "from-teal-500/20 to-cyan-400/20",
       borderColor: "border-teal-400/30",
       path: `/ferramentas/builder/solution/${id}/arquitetura`,
+      disabled: !hasFramework,
+      tooltip: !hasFramework ? "Gere primeiro o Framework de Implementação" : undefined,
     },
     {
       title: "Ferramentas Necessárias",
@@ -498,13 +504,14 @@ export default function BuilderSolutionCover() {
               const IconComponent = card.icon;
               const sectionKey = card.path.split('/').pop() as string;
               const validation = validatePrerequisites(sectionKey);
-              const isDisabled = !!generatingSection || !validation.valid;
+              const isCardDisabled = card.disabled || !!generatingSection || !validation.valid;
+              const tooltipMessage = card.tooltip || (!validation.valid ? validation.message : undefined);
               
-              return (
+              const cardButton = (
                 <motion.button
                   key={index}
                   onClick={() => handleCardClick(card.path)}
-                  disabled={isDisabled}
+                  disabled={isCardDisabled}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.08 }}
@@ -516,9 +523,8 @@ export default function BuilderSolutionCover() {
                     bg-gradient-to-br ${card.color}
                     ${card.borderColor} hover:border-primary/50 hover:shadow-2xl hover:shadow-primary/30
                     disabled:opacity-50 disabled:cursor-not-allowed
-                    ${!validation.valid ? 'opacity-60 grayscale' : ''}
+                    ${!validation.valid || card.disabled ? 'opacity-60 grayscale' : ''}
                   `}
-                  title={!validation.valid ? validation.message : undefined}
                 >
                   {/* Glow effect animado no hover */}
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
@@ -552,6 +558,24 @@ export default function BuilderSolutionCover() {
                   </div>
                 </motion.button>
               );
+              
+              // Se tiver tooltip, envolver com TooltipProvider
+              if (tooltipMessage && isCardDisabled) {
+                return (
+                  <TooltipProvider key={index}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {cardButton}
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{tooltipMessage}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              }
+              
+              return cardButton;
             })}
           </div>
 
