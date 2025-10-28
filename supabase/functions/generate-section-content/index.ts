@@ -513,58 +513,82 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
     console.log(`[SECTION-GEN] 📊 Max tokens: ${maxTokens}`);
     console.log(`[SECTION-GEN] 🚀 Chamando Lovable AI...`);
     
-    const startTime = Date.now(); // 🚀 FASE 1: Tracking de tempo
+    const startTime = Date.now();
 
-    const aiResponse = await fetch(lovableUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${lovableApiKey}`,
-      },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 0.8,
-        max_tokens: maxTokens,
-        response_format: { type: "json_object" }
-      }),
-      signal: AbortSignal.timeout(180000)
-    });
+    // ⏰ Timeout explícito de 55 segundos (antes do timeout do Supabase)
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      console.error('[SECTION-GEN] ⏰ Timeout: AI não respondeu em 55s');
+    }, 55000);
 
-    if (!aiResponse.ok) {
-      const errorText = await aiResponse.text();
-      console.error(`[SECTION-GEN] ❌ Erro na AI: ${aiResponse.status} - ${errorText}`);
+    let aiResponse;
+    let content;
+
+    try {
+      aiResponse = await fetch(lovableUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${lovableApiKey}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: systemPrompt },
+            { role: "user", content: userPrompt }
+          ],
+          temperature: 0.8,
+          max_tokens: maxTokens,
+          response_format: { type: "json_object" }
+        }),
+        signal: controller.signal
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!aiResponse.ok) {
+        const errorText = await aiResponse.text();
+        console.error(`[SECTION-GEN] ❌ Erro na AI: ${aiResponse.status} - ${errorText}`);
+        
+        if (aiResponse.status === 429) {
+          return new Response(
+            JSON.stringify({ error: "Rate limit atingido. Aguarde alguns minutos." }),
+            { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        if (aiResponse.status === 402) {
+          return new Response(
+            JSON.stringify({ error: "Créditos insuficientes. Adicione créditos em Settings." }),
+            { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+          );
+        }
+        
+        throw new Error(`Erro na API de IA: ${aiResponse.status}`);
+      }
+
+      const aiData = await aiResponse.json();
+      content = aiData.choices?.[0]?.message?.content;
+
+      if (!content) {
+        throw new Error("Resposta vazia da IA");
+      }
+
+      const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
+      console.log(`[SECTION-GEN] 📥 Resposta recebida (${content.length} chars)`);
+      console.log(`[SECTION-GEN] ⚡ Tempo de geração: ${elapsedTime}s`);
+
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
       
-      if (aiResponse.status === 429) {
-        return new Response(
-          JSON.stringify({ error: "Rate limit atingido. Aguarde alguns minutos." }),
-          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
+      if (fetchError.name === 'AbortError') {
+        console.error('[SECTION-GEN] ⏰ Timeout ao chamar IA');
+        throw new Error('Timeout: IA não respondeu a tempo');
       }
       
-      if (aiResponse.status === 402) {
-        return new Response(
-          JSON.stringify({ error: "Créditos insuficientes. Adicione créditos em Settings." }),
-          { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-      
-      throw new Error(`Erro na API de IA: ${aiResponse.status}`);
+      throw fetchError;
     }
-
-    const aiData = await aiResponse.json();
-    const content = aiData.choices?.[0]?.message?.content;
-
-    if (!content) {
-      throw new Error("Resposta vazia da IA");
-    }
-
-    const elapsedTime = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`[SECTION-GEN] 📥 Resposta recebida (${content.length} chars)`);
-    console.log(`[SECTION-GEN] ⚡ Tempo de geração: ${elapsedTime}s`);
 
     // Parse do JSON retornado com tratamento robusto
     let parsedContent;

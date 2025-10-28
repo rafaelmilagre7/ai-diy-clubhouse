@@ -50,7 +50,8 @@ export default function BuilderSolutionPrompt() {
       setIsGenerating(true);
 
       try {
-        const { data, error } = await supabase.functions.invoke('generate-section-content', {
+        // 🚀 Invocar edge function
+        const { error } = await supabase.functions.invoke('generate-section-content', {
           body: {
             solutionId: solution.id,
             sectionType: 'lovable',
@@ -60,11 +61,47 @@ export default function BuilderSolutionPrompt() {
 
         if (error) throw error;
 
-        if (data?.success) {
-          console.log('[PROMPT] ✅ Lovable Prompt gerado!');
-          toast.success('Prompt Lovable gerado com sucesso! 🎉');
-          await refetch();
-        }
+        console.log('[PROMPT] ✅ Edge function invocada, iniciando polling...');
+
+        // 🔄 POLLING: Verificar se o prompt foi salvo no banco
+        const maxAttempts = 15; // 30 segundos (2s * 15)
+        let attempts = 0;
+
+        const checkPrompt = async (): Promise<void> => {
+          attempts++;
+          console.log(`[PROMPT] 🔍 Polling tentativa ${attempts}/${maxAttempts}`);
+
+          const { data: updatedSolution, error: fetchError } = await supabase
+            .from('ai_generated_solutions')
+            .select('lovable_prompt')
+            .eq('id', solution.id)
+            .single();
+
+          if (fetchError) {
+            console.error('[PROMPT] ❌ Erro ao verificar prompt:', fetchError);
+            throw fetchError;
+          }
+
+          if (updatedSolution?.lovable_prompt) {
+            console.log('[PROMPT] ✅ Prompt encontrado no banco!');
+            await refetch();
+            setIsGenerating(false);
+            toast.success('Prompt Lovable gerado com sucesso! 🎉');
+            return;
+          }
+
+          if (attempts >= maxAttempts) {
+            console.error('[PROMPT] ⏰ Timeout: prompt não foi gerado em 30s');
+            throw new Error('Timeout ao gerar prompt');
+          }
+
+          // Continuar polling após 2 segundos
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          await checkPrompt();
+        };
+
+        await checkPrompt();
+
       } catch (err: any) {
         console.error('[PROMPT] Erro:', err);
         toast.error('Erro ao gerar prompt', {
@@ -74,7 +111,6 @@ export default function BuilderSolutionPrompt() {
             onClick: () => navigate(`/ferramentas/builder/solution/${id}`)
           }
         });
-      } finally {
         setIsGenerating(false);
       }
     };
