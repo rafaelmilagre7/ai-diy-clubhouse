@@ -68,6 +68,35 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   // Atualizar localItems quando checklistItems mudar
   useEffect(() => {
     setLocalItems(checklistItems);
+    
+    // 🐛 FASE 5: DEBUG LOGS - Diagnosticar estrutura dos items
+    if (checklistItems.length > 0) {
+      console.log('🎨 [SimpleKanban] Items recebidos:', {
+        count: checklistItems.length,
+        firstItem: {
+          id: checklistItems[0].id,
+          title: checklistItems[0].title,
+          hasQuadrant: !!checklistItems[0].quadrant,
+          hasStepNumber: !!checklistItems[0].step_number,
+          hasTools: !!checklistItems[0].tools_required,
+          hasEstimatedTime: !!checklistItems[0].estimated_time,
+          hasDifficulty: !!checklistItems[0].difficulty,
+          quadrant: checklistItems[0].quadrant,
+          step_number: checklistItems[0].step_number,
+          tools_required: checklistItems[0].tools_required,
+          estimated_time: checklistItems[0].estimated_time,
+          difficulty: checklistItems[0].difficulty,
+        },
+        allColumns: checklistItems.map(i => i.column),
+        columnsDistribution: {
+          todo: checklistItems.filter(i => i.column === 'todo').length,
+          in_progress: checklistItems.filter(i => i.column === 'in_progress').length,
+          done: checklistItems.filter(i => i.column === 'done').length,
+        }
+      });
+    } else {
+      console.warn('🎨 [SimpleKanban] ⚠️ Nenhum item recebido! checklistItems está vazio.');
+    }
   }, [checklistItems, checklistData.id, checklistData.updated_at]);
 
   // Agrupar items por coluna

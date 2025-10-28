@@ -239,7 +239,7 @@ Foco: Interação do usuário final com a solução
    - Deploy em produção
    - Steps: 3-4 tarefas executáveis
 
-3. **Cada step DEVE incluir (estrutura completa):**
+ 3. **Cada step DEVE incluir (estrutura completa):**
    - \`step_number\`: Número sequencial (1, 2, 3...)
    - \`title\`: Título claro e executável (ex: "Configurar tabela users no Supabase")
    - \`description\`: Tutorial detalhado com 10+ frases explicando COMO fazer, incluindo comandos, endpoints, configurações
@@ -251,6 +251,27 @@ Foco: Interação do usuário final com a solução
    - \`common_pitfalls\`: Array com 5+ erros comuns a evitar (ex: ["Esquecer de habilitar RLS"])
    - \`resources\`: Array de URLs de tutoriais/documentação relevantes (URLs reais quando possível)
    - \`tools_required\`: Array de ferramentas necessárias para este step (ex: ["Supabase", "Make.com"])
+
+⚠️ ATENÇÃO CRÍTICA - ESTRUTURA DE DADOS:
+NÃO aninhe os campos acima dentro de "metadata"! Todos devem estar no PRIMEIRO NÍVEL do objeto step.
+Exemplo CORRETO de JSON:
+{
+  "implementation_checklist": [
+    {
+      "step_number": 1,
+      "title": "Configurar Ambiente Supabase",
+      "description": "Acesse o dashboard do Supabase... [tutorial com 10+ frases]",
+      "quadrant": "Q1",
+      "estimated_time": "2 horas",
+      "difficulty": "easy",
+      "tools_required": ["Supabase", "PostgreSQL"],
+      "dependencies": [],
+      "validation_criteria": ["Banco criado", "Tabelas migradas", "RLS ativo", "Auth configurado"],
+      "common_pitfalls": ["Esquecer de ativar RLS", "Não configurar secrets"],
+      "resources": ["https://supabase.com/docs/guides/database"]
+    }
+  ]
+}
 
 4. **Seja ESPECÍFICO e EXECUTÁVEL:**
    - Mencione ferramentas CONCRETAS do framework fornecido
@@ -574,6 +595,43 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       throw new Error(`JSON inválido retornado pela IA: ${parseError.message}`);
     }
 
+    // 🛡️ FASE 3: VALIDAÇÃO DE RESPOSTA
+    if (sectionType === 'checklist' && parsedContent.implementation_checklist) {
+      const firstItem = parsedContent.implementation_checklist[0];
+      
+      if (firstItem) {
+        console.log('[VALIDATION] 🔍 Estrutura do primeiro item retornado pela IA:', {
+          hasStepNumber: 'step_number' in firstItem,
+          hasQuadrant: 'quadrant' in firstItem,
+          hasEstimatedTime: 'estimated_time' in firstItem,
+          hasDifficulty: 'difficulty' in firstItem,
+          hasToolsRequired: 'tools_required' in firstItem,
+          hasMetadata: 'metadata' in firstItem,
+          keys: Object.keys(firstItem),
+          sample: {
+            step_number: firstItem.step_number,
+            quadrant: firstItem.quadrant,
+            estimated_time: firstItem.estimated_time,
+            difficulty: firstItem.difficulty,
+            tools_required: firstItem.tools_required
+          }
+        });
+        
+        // Avisar se campos estiverem no lugar errado
+        if (firstItem.metadata?.step_number && !firstItem.step_number) {
+          console.warn('⚠️ [VALIDATION] IA colocou step_number dentro de metadata! Normalizando...');
+        }
+        if (firstItem.metadata?.quadrant && !firstItem.quadrant) {
+          console.warn('⚠️ [VALIDATION] IA colocou quadrant dentro de metadata! Normalizando...');
+        }
+        if (firstItem.metadata?.tools_required && !firstItem.tools_required) {
+          console.warn('⚠️ [VALIDATION] IA colocou tools_required dentro de metadata! Normalizando...');
+        }
+      } else {
+        console.error('❌ [VALIDATION] IA não retornou nenhum item no checklist!');
+      }
+    }
+
     // Preparar update baseado no tipo de seção
     const updateData: Record<string, any> = {};
     
@@ -586,28 +644,38 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       updateData.implementation_checklist = parsedContent.implementation_checklist;
       
       // 🆕 Salvar também em unified_checklists para acesso rápido
-      const unifiedItems = parsedContent.implementation_checklist.map((step: any, index: number) => ({
-        id: `step-${step.step_number || index + 1}`,
-        title: step.title,
-        description: step.description,
-        completed: false,
-        column: 'todo',
-        order: index,
-        notes: '',
-        // Campos no primeiro nível (Framework Rafael Milagre)
-        step_number: step.step_number,
-        estimated_time: step.estimated_time,
-        difficulty: step.difficulty,
-        quadrant: step.quadrant || 'Geral',
-        tools_required: step.tools_required || [],
-        // Dados menos críticos em metadata
-        metadata: {
-          dependencies: step.dependencies,
-          validation_criteria: step.validation_criteria,
-          common_pitfalls: step.common_pitfalls,
-          resources: step.resources
-        }
-      }));
+      // 🔥 FASE 1: PARSING ROBUSTO - Extrair campos de onde a IA colocou
+      const unifiedItems = parsedContent.implementation_checklist.map((step: any, index: number) => {
+        // Extrair campos do objeto retornado (primeiro nível OU metadata)
+        const stepNumber = step.step_number ?? step.metadata?.step_number ?? index + 1;
+        const estimatedTime = step.estimated_time ?? step.metadata?.estimated_time;
+        const difficulty = step.difficulty ?? step.metadata?.difficulty;
+        const quadrant = step.quadrant ?? step.metadata?.quadrant ?? 'Geral';
+        const toolsRequired = step.tools_required ?? step.metadata?.tools_required ?? [];
+        
+        return {
+          id: `step-${stepNumber}`,
+          title: step.title,
+          description: step.description,
+          completed: false,
+          column: 'todo',
+          order: index,
+          notes: '',
+          // ✅ Campos SEMPRE no primeiro nível (garantido)
+          step_number: stepNumber,
+          estimated_time: estimatedTime,
+          difficulty: difficulty,
+          quadrant: quadrant,
+          tools_required: toolsRequired,
+          // Metadados opcionais
+          metadata: {
+            dependencies: step.dependencies ?? step.metadata?.dependencies ?? [],
+            validation_criteria: step.validation_criteria ?? step.metadata?.validation_criteria ?? [],
+            common_pitfalls: step.common_pitfalls ?? step.metadata?.common_pitfalls ?? [],
+            resources: step.resources ?? step.metadata?.resources ?? []
+          }
+        };
+      });
       
       // Verificar se já existe um checklist para esta solução
       const { data: existing } = await supabase

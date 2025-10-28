@@ -52,32 +52,32 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       }));
     }
     
-    // Normalizar items (trazer campos de metadata para primeiro nível se necessário)
+    // 🔧 FASE 4: NORMALIZAÇÃO ROBUSTA - Garantir campos no lugar certo
     return rawItems.map((item: any) => {
-      const normalized = {
+      const normalized: UnifiedChecklistItem = {
         ...item,
         column: item.column || 'todo',
         completed: item.completed || false,
         notes: item.notes || '',
+        // ✅ Fallback robusto: buscar em múltiplos lugares
+        step_number: item.step_number ?? item.metadata?.step_number,
+        quadrant: item.quadrant ?? item.metadata?.quadrant ?? 'Geral',
+        tools_required: item.tools_required ?? item.metadata?.tools_required ?? [],
+        estimated_time: item.estimated_time ?? item.metadata?.estimated_time,
+        difficulty: item.difficulty ?? item.metadata?.difficulty,
       };
       
-      // Se campos do Framework estão em metadata, trazer para primeiro nível
-      if (item.metadata) {
-        if (!normalized.step_number && item.metadata.step_number) {
-          normalized.step_number = item.metadata.step_number;
-        }
-        if (!normalized.quadrant && item.metadata.quadrant) {
-          normalized.quadrant = item.metadata.quadrant;
-        }
-        if (!normalized.tools_required && item.metadata.tools_required) {
-          normalized.tools_required = item.metadata.tools_required;
-        }
-        if (!normalized.estimated_time && item.metadata.estimated_time) {
-          normalized.estimated_time = item.metadata.estimated_time;
-        }
-        if (!normalized.difficulty && item.metadata.difficulty) {
-          normalized.difficulty = item.metadata.difficulty;
-        }
+      // Limpar metadata (remover campos já promovidos para evitar duplicação)
+      if (normalized.metadata) {
+        const { 
+          step_number, 
+          quadrant, 
+          tools_required, 
+          estimated_time, 
+          difficulty, 
+          ...cleanMetadata 
+        } = normalized.metadata;
+        normalized.metadata = cleanMetadata;
       }
       
       return normalized;
