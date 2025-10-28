@@ -253,7 +253,67 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       }
       
       if (data?.user) {
-        console.log('✅ [REGISTER] Usuário criado - trigger handle_new_user automaticamente criou perfil');
+        console.log('✅ [REGISTER] Usuário criado:', data.user.id);
+        
+        // FRENTE 2: FALLBACK - Verificar se profile foi criado pelo trigger
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Aguardar 2 segundos
+        
+        const { data: profileCheck } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        if (!profileCheck) {
+          console.warn('⚠️ [REGISTER-FALLBACK] Profile NÃO criado pelo trigger - criando manualmente');
+          
+          // Buscar role padrão
+          const { data: defaultRole } = await supabase
+            .from('user_roles')
+            .select('id')
+            .eq('name', 'membro_club')
+            .single();
+          
+          // CRIAR MANUALMENTE
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              email: data.user.email!,
+              name: name.trim(),
+              role_id: defaultRole?.id,
+              onboarding_completed: false,
+              is_master_user: true
+            });
+          
+          if (createError) {
+            console.error('❌ [REGISTER-FALLBACK] ERRO CRÍTICO ao criar profile:', createError);
+            toast({
+              title: "Erro crítico",
+              description: "Não foi possível completar seu cadastro. Entre em contato com suporte.",
+              variant: "destructive",
+            });
+            throw createError;
+          }
+          
+          console.log('✅ [REGISTER-FALLBACK] Profile criado manualmente com sucesso');
+          
+          // Registrar evento
+          try {
+            await supabase.rpc('log_orphan_profile_creation', {
+              p_user_id: data.user.id,
+              p_created_by: 'ModernRegisterForm_fallback',
+              p_metadata: {
+                email: data.user.email,
+                timestamp: new Date().toISOString()
+              }
+            });
+          } catch (err) {
+            console.warn('Erro ao logar criação manual:', err);
+          }
+        } else {
+          console.log('✅ [REGISTER] Profile criado automaticamente pelo trigger');
+        }
         
         toast({
           title: "Conta criada com sucesso! 🎉",

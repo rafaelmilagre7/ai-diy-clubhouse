@@ -147,6 +147,46 @@ const AcceptInvite: React.FC = () => {
         throw new Error('Erro ao criar conta');
       }
 
+      // FRENTE 2: FALLBACK - Verificar se profile foi criado
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      const { data: profileCheck } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', authData.user.id)
+        .maybeSingle();
+      
+      if (!profileCheck) {
+        console.warn('⚠️ [ACCEPT-INVITE-FALLBACK] Profile não criado - criando manualmente');
+        
+        const { data: defaultRole } = await supabase
+          .from('user_roles')
+          .select('id')
+          .eq('name', 'membro_club')
+          .single();
+        
+        await supabase.from('profiles').insert({
+          id: authData.user.id,
+          email: authData.user.email!,
+          name: values.name,
+          role_id: defaultRole?.id,
+          onboarding_completed: false,
+          is_master_user: true
+        });
+        
+        try {
+          await supabase.rpc('log_orphan_profile_creation', {
+            p_user_id: authData.user.id,
+            p_created_by: 'AcceptInvite_fallback',
+            p_metadata: { email: authData.user.email, timestamp: new Date().toISOString() }
+          });
+        } catch (err) {
+          console.warn('Erro ao logar:', err);
+        }
+        
+        console.log('✅ [ACCEPT-INVITE-FALLBACK] Profile criado manualmente');
+      }
+
       // Marcar convite como usado
       const { error: updateError } = await supabase
         .from('invites')

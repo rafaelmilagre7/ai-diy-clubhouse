@@ -71,9 +71,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
-      // Se não encontrou profile, criar automaticamente
+      // FRENTE 3: Se não encontrou profile, criar automaticamente COM ALERTAS
       if (!profileData) {
-        console.warn('⚠️ [AUTH] Profile não existe - criando automaticamente');
+        console.warn('⚠️ [AUTH-CONTEXT-FALLBACK] Profile não existe - criando automaticamente');
+        
+        // 🚨 ALERTA: Isso NÃO deveria acontecer - trigger deveria ter criado
+        const { toast } = await import('sonner');
+        toast.warning('Seu perfil está sendo configurado...', {
+          description: 'Aguarde enquanto completamos seu cadastro.',
+        });
         
         const { data: user } = await supabase.auth.getUser();
         if (!user.user) return;
@@ -85,13 +91,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .eq('name', 'membro_club')
           .single();
         
-        // Criar profile
+        // Criar profile COM LOG
         const { data: newProfile, error: createError } = await supabase
           .from('profiles')
           .insert({
             id: userId,
             email: user.user.email,
-            full_name: user.user.user_metadata?.full_name || 'Usuário',
+            name: user.user.user_metadata?.name || 
+                  user.user.user_metadata?.full_name || 
+                  'Usuário',
             role_id: defaultRole?.id,
             onboarding_completed: false,
             is_master_user: true
@@ -108,9 +116,32 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           .single();
         
         if (!createError && newProfile) {
-          console.log('✅ [AUTH] Profile criado com sucesso');
+          console.log('✅ [AUTH-CONTEXT-FALLBACK] Profile criado com sucesso');
+          
+          // 📊 REGISTRAR EVENTO DE CORREÇÃO MANUAL
+          try {
+            await supabase.rpc('log_orphan_profile_creation', {
+              p_user_id: userId,
+              p_created_by: 'AuthContext_fallback',
+              p_metadata: {
+                email: user.user.email,
+                timestamp: new Date().toISOString()
+              }
+            });
+          } catch (err) {
+            console.warn('Erro ao logar criação manual:', err);
+          }
+          
           setProfile(newProfile);
+          
+          toast.success('Perfil configurado!', {
+            description: 'Bem-vindo à plataforma.'
+          });
+          
           return;
+        } else {
+          console.error('❌ [AUTH-CONTEXT-FALLBACK] ERRO CRÍTICO ao criar profile:', createError);
+          toast.error('Erro ao configurar perfil. Entre em contato com suporte.');
         }
       }
 

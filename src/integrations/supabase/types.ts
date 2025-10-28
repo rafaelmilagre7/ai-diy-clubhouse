@@ -7482,6 +7482,15 @@ export type Database = {
         Returns: boolean
       }
       ensure_bucket_exists: { Args: { p_bucket_name: string }; Returns: Json }
+      find_orphan_users: {
+        Args: never
+        Returns: {
+          created_at: string
+          email: string
+          id: string
+          raw_user_meta_data: Json
+        }[]
+      }
       fix_audit_logs_rls_violations: { Args: never; Returns: Json }
       fix_existing_onboarding_data: { Args: never; Returns: Json }
       fix_existing_users_onboarding: { Args: never; Returns: Json }
@@ -8493,6 +8502,10 @@ export type Database = {
           p_step: number
           p_user_id: string
         }
+        Returns: undefined
+      }
+      log_orphan_profile_creation: {
+        Args: { p_created_by: string; p_metadata?: Json; p_user_id: string }
         Returns: undefined
       }
       log_permission_change: {

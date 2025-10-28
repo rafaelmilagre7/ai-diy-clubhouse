@@ -65,6 +65,48 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
       
       if (error) throw error;
       
+      // FRENTE 2: FALLBACK - Verificar se profile foi criado
+      if (data?.user) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const { data: profileCheck } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .maybeSingle();
+        
+        if (!profileCheck) {
+          console.warn('⚠️ [REGISTER-FALLBACK] Profile não criado - criando manualmente');
+          
+          const { data: defaultRole } = await supabase
+            .from('user_roles')
+            .select('id')
+            .eq('name', 'membro_club')
+            .single();
+          
+          await supabase.from('profiles').insert({
+            id: data.user.id,
+            email: data.user.email!,
+            name: name,
+            role_id: defaultRole?.id,
+            onboarding_completed: false,
+            is_master_user: true
+          });
+          
+          try {
+            await supabase.rpc('log_orphan_profile_creation', {
+              p_user_id: data.user.id,
+              p_created_by: 'RegisterForm_fallback',
+              p_metadata: { email: data.user.email, timestamp: new Date().toISOString() }
+            });
+          } catch (err) {
+            console.warn('Erro ao logar:', err);
+          }
+          
+          console.log('✅ [REGISTER-FALLBACK] Profile criado manualmente');
+        }
+      }
+      
       // Se há um token de convite, aplicar usando a função correta com onboarding
       if (inviteToken && data.user) {
         try {
