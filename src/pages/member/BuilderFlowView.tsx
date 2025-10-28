@@ -7,6 +7,7 @@ import { SimpleMermaidRenderer } from '@/components/builder/flows/SimpleMermaidR
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/auth';
+import { useValidatedSolutionId } from '@/hooks/builder/useValidatedSolutionId';
 
 interface ImplementationFlow {
   mermaid_code: string;
@@ -24,6 +25,9 @@ export default function BuilderFlowView() {
   const [flow, setFlow] = useState<ImplementationFlow | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isGenerating, setIsGenerating] = useState(false);
+  
+  // Validar UUID antes de qualquer operação
+  useValidatedSolutionId(id);
 
   useEffect(() => {
     // Validar rota

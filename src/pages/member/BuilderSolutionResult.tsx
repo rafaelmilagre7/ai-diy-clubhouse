@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2 } from 'lucide-react';
 import { SolutionResult } from '@/components/builder/SolutionResult';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { useValidatedSolutionId } from '@/hooks/builder/useValidatedSolutionId';
 
 export default function BuilderSolutionResult() {
   const { id } = useParams<{ id: string }>();
@@ -13,6 +14,9 @@ export default function BuilderSolutionResult() {
   const [solution, setSolution] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [lovablePromptReady, setLovablePromptReady] = useState(false);
+  
+  // Validar UUID antes de qualquer operação
+  useValidatedSolutionId(id);
 
   useEffect(() => {
     const loadSolution = async () => {
