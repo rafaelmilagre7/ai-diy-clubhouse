@@ -118,8 +118,30 @@ export function useUsers() {
       });
 
       if (queryError) {
+        console.error('[USERS] ❌ Erro detalhado da RPC:', {
+          message: queryError.message,
+          code: queryError.code,
+          details: queryError.details,
+          hint: queryError.hint,
+          parameters: {
+            p_search_query: searchQuery.trim() || null,
+            p_filter_type: filterType || 'all',
+            p_limit: pageSize,
+            p_offset: offset
+          }
+        });
         throw new Error(`Erro ao buscar usuários: ${queryError.message}`);
       }
+
+      console.log('[USERS] ✅ RPC retornou dados brutos:', {
+        length: data?.length || 0,
+        firstUser: data?.[0] ? {
+          id: data[0].id?.substring(0, 8) + '***',
+          email: data[0].email,
+          role: data[0].role,
+          role_id: data[0].role_id?.substring(0, 8) + '***'
+        } : null
+      });
 
       if (data && data.length > 0) {
         const totalCount = data[0]?.total_count || 0;
