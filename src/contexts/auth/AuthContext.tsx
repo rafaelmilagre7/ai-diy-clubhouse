@@ -5,7 +5,6 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { AuthContextType } from './types';
 import { useAuthMethods } from './hooks/useAuthMethods';
-import { useRoleChangeRealtime } from '@/hooks/admin/useRoleChangeRealtime';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -22,9 +21,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Hook para métodos de autenticação
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
-  
-  // ✅ CAMADA 4: Ativar listener de mudanças de role em tempo real
-  useRoleChangeRealtime();
 
   // Estados derivados memoizados com logs robustos
   const isAdmin = useMemo(() => {

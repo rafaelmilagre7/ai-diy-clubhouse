@@ -28,14 +28,61 @@ if (isProduction && typeof window !== 'undefined') {
     }
   };
   
+  // Lista de erros que DEVEM ser exibidos mesmo em produção
+  const CRITICAL_ERROR_PATTERNS = [
+    'Cannot read propert',
+    'undefined is not',
+    'null is not',
+    'AuthContext',
+    'Provider',
+    'useContext',
+    'Failed to mount',
+    'React',
+    'chunk',
+  ];
+
   // Interceptar erros globais
   window.addEventListener('error', (event) => {
+    const errorMessage = event.message || '';
+    
+    // ✅ NÃO esconder erros críticos
+    const isCritical = CRITICAL_ERROR_PATTERNS.some(pattern => 
+      errorMessage.includes(pattern)
+    );
+    
+    if (isCritical) {
+      try {
+        originalLog('[CRITICAL-ERROR]', errorMessage);
+      } catch {
+        // Falha silenciosamente
+      }
+      // Deixar erro ser exibido normalmente
+      return;
+    }
+    
+    // Apenas esconder erros não-críticos (recursos, tracking, etc)
     event.preventDefault();
     event.stopPropagation();
     return false;
   });
   
   window.addEventListener('unhandledrejection', (event) => {
+    const reason = event.reason?.message || String(event.reason);
+    
+    // ✅ NÃO esconder rejeições críticas
+    const isCritical = CRITICAL_ERROR_PATTERNS.some(pattern => 
+      reason.includes(pattern)
+    );
+    
+    if (isCritical) {
+      try {
+        originalLog('[CRITICAL-REJECTION]', reason);
+      } catch {
+        // Falha silenciosamente
+      }
+      return;
+    }
+    
     event.preventDefault();
     return false;
   });

@@ -8,6 +8,7 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/auth";
 import { LoggingProvider } from "@/hooks/useLogging";
 import { AppRoutes } from "@/routes";
+import { RealtimeWrapper } from "@/components/auth/RealtimeWrapper";
 import { PerformanceDashboard } from "@/components/dev/PerformanceDashboard";
 import { SecurityProvider } from "@/components/security/SecurityProvider";
 import { RealtimeProviderV2 } from "@/contexts/RealtimeProviderV2";
@@ -38,17 +39,19 @@ function App() {
                 enableSound={true}
                 enableDesktopNotifications={true}
               >
-                <LoggingProvider>
-                  <BrowserRouter>
-                    <div className="min-h-screen bg-background font-sans antialiased">
-                      <AppRoutes />
-                      <Toaster />
-                      <Sonner />
-                      {/* Dashboard de performance apenas em desenvolvimento */}
-                      <PerformanceDashboard />
-                    </div>
-                  </BrowserRouter>
-                </LoggingProvider>
+                <RealtimeWrapper>
+                  <LoggingProvider>
+                    <BrowserRouter>
+                      <div className="min-h-screen bg-background font-sans antialiased">
+                        <AppRoutes />
+                        <Toaster />
+                        <Sonner />
+                        {/* Dashboard de performance apenas em desenvolvimento */}
+                        <PerformanceDashboard />
+                      </div>
+                    </BrowserRouter>
+                  </LoggingProvider>
+                </RealtimeWrapper>
               </RealtimeProviderV2>
             </SecurityProvider>
           </AuthProvider>
