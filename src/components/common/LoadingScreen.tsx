@@ -60,8 +60,8 @@ const LoadingScreen = React.memo(({
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-background">
-      <div className="text-center space-y-4 max-w-md">
+    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-background">
+      <div className="text-center space-y-4 max-w-md px-4">
         {/* Logo */}
         <div className="flex items-center justify-center mb-6">
           <img
