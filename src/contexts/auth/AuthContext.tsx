@@ -63,7 +63,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           )
         `)
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('❌ [AUTH] Erro ao buscar perfil:', error);
@@ -71,13 +71,55 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return;
       }
 
+      // Se não encontrou profile, criar automaticamente
+      if (!profileData) {
+        console.warn('⚠️ [AUTH] Profile não existe - criando automaticamente');
+        
+        const { data: user } = await supabase.auth.getUser();
+        if (!user.user) return;
+        
+        // Buscar role padrão
+        const { data: defaultRole } = await supabase
+          .from('user_roles')
+          .select('id')
+          .eq('name', 'membro_club')
+          .single();
+        
+        // Criar profile
+        const { data: newProfile, error: createError } = await supabase
+          .from('profiles')
+          .insert({
+            id: userId,
+            email: user.user.email,
+            full_name: user.user.user_metadata?.full_name || 'Usuário',
+            role_id: defaultRole?.id,
+            onboarding_completed: false,
+            is_master_user: true
+          })
+          .select(`
+            *,
+            user_roles:role_id (
+              id,
+              name,
+              description,
+              permissions
+            )
+          `)
+          .single();
+        
+        if (!createError && newProfile) {
+          console.log('✅ [AUTH] Profile criado com sucesso');
+          setProfile(newProfile);
+          return;
+        }
+      }
+
       // Validação crítica do role_id
-      if (!profileData.role_id) {
+      if (profileData && !profileData.role_id) {
         console.error('❌ [AUTH] CRÍTICO: profile.role_id está NULL/undefined!', {
           profileId: profileData.id,
           email: profileData.email,
-          role_id: profileData.role_id,
-          legacy_role: profileData.role
+          role_id: profileData.role_id
         });
       }
 

@@ -40,7 +40,7 @@ const LayoutProvider = memo(({ children }: { children: ReactNode }) => {
         navigate('/login', { replace: true });
         return;
       }
-      // Layout pronto imediatamente quando usuário está autenticado
+      // Layout pronto quando temos usuário (mesmo sem profile)
       setLayoutReady(true);
     }
     
