@@ -5710,6 +5710,7 @@ export type Database = {
           created_at: string | null
           id: string
           is_required: boolean | null
+          order_index: number | null
           solution_id: string | null
           tool_id: string
           tool_name: string
@@ -5719,6 +5720,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_required?: boolean | null
+          order_index?: number | null
           solution_id?: string | null
           tool_id: string
           tool_name: string
@@ -5728,6 +5730,7 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_required?: boolean | null
+          order_index?: number | null
           solution_id?: string | null
           tool_id?: string
           tool_name?: string
