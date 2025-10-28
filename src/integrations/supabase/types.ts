@@ -2235,6 +2235,7 @@ export type Database = {
           send_attempts: number | null
           token: string
           used_at: string | null
+          used_by_user_id: string | null
           whatsapp_number: string | null
         }
         Insert: {
@@ -2251,6 +2252,7 @@ export type Database = {
           send_attempts?: number | null
           token: string
           used_at?: string | null
+          used_by_user_id?: string | null
           whatsapp_number?: string | null
         }
         Update: {
@@ -2267,6 +2269,7 @@ export type Database = {
           send_attempts?: number | null
           token?: string
           used_at?: string | null
+          used_by_user_id?: string | null
           whatsapp_number?: string | null
         }
         Relationships: [
