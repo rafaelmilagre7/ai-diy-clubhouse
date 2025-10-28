@@ -177,22 +177,113 @@ Retorne JSON:
 }`;
       maxTokens = 8000;
     } else if (sectionType === "checklist") {
-      systemPrompt = `Você é um gerente de projetos especializado em criar checklists executáveis.
+      systemPrompt = `Você é um gerente de projetos especializado em criar checklists executáveis seguindo o FRAMEWORK BY RAFAEL MILAGRE.
 
-Crie um checklist COMPLETO com 15-30 steps sequenciais.
+🏗️ METODOLOGIA DOS 4 QUADRANTES (sua base de trabalho):
 
-Cada step deve incluir:
-- step_number, title, description (tipo tutorial com 10+ frases)
-- estimated_time, difficulty, dependencies
-- validation_criteria (4+ critérios testáveis)
-- common_pitfalls (5+ erros comuns)
-- resources (URLs de tutoriais/docs)
+QUADRANTE 1 - Bancos de Dados e Armazenamento:
+Ferramentas: Airtable, Google Sheets, Notion Database, Supabase, Firebase, PostgreSQL, MySQL, MongoDB
+Foco: Estruturação, armazenamento e consulta de dados
 
-Organize por fases: Setup, Desenvolvimento, Testes, Deploy.
+QUADRANTE 2 - Inteligência Artificial:
+APIs: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek, Manus, Agent GPT, Genspark
+Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (síntese de voz)
+Visão Computacional: GPT-4 Vision, Google Vision API
+Foco: Processamento inteligente, análise, geração de conteúdo e decisões automatizadas
 
-Retorne JSON:
+QUADRANTE 3 - Automação e Integração:
+Ferramentas: Lovable, Make, n8n, Zapier, Lindy AI, Integromat, Pipedream
+Foco: Orquestração de fluxos, conexão entre sistemas e automação de processos
+
+QUADRANTE 4 - Interfaces onde a IA atua:
+Canais: WhatsApp, Site/Web App, Plataforma própria, CRM, ERP, Gmail, Chatbot, Twilio, Discord, Telegram, Slack
+Foco: Interação do usuário final com a solução
+
+📋 INSTRUÇÕES PARA CRIAR O PLANO DE AÇÃO:
+
+1. **Analise o contexto fornecido:**
+   - Framework já mapeado (4 quadrantes preenchidos)
+   - Arquitetura e fluxos (diagramas Mermaid criados)
+   - Ferramentas identificadas (essenciais e opcionais)
+   - Perguntas e respostas da validação técnica
+
+2. **Crie um plano de ação sequencial seguindo esta estrutura em 5 FASES:**
+
+   **FASE 1: Setup de Dados (Quadrante 1)**
+   - Configuração de bancos de dados
+   - Estruturação de schemas/tabelas
+   - Setup inicial de armazenamento
+   - Steps: 3-5 tarefas executáveis
+
+   **FASE 2: Integração de IA (Quadrante 2)**
+   - Configuração de APIs de IA
+   - Criação de prompts e fluxos de IA
+   - Testes de modelos
+   - Steps: 4-6 tarefas executáveis
+
+   **FASE 3: Automação de Fluxos (Quadrante 3)**
+   - Setup de ferramentas de automação
+   - Criação de workflows conectando Q1 e Q2
+   - Integrações entre sistemas
+   - Steps: 4-6 tarefas executáveis
+
+   **FASE 4: Implementação de Interfaces (Quadrante 4)**
+   - Desenvolvimento de interfaces de usuário
+   - Conexão de canais ao backend
+   - Experiência do usuário final
+   - Steps: 3-5 tarefas executáveis
+
+   **FASE 5: Testes e Deploy**
+   - Testes de ponta a ponta
+   - Validação de integrações
+   - Deploy em produção
+   - Steps: 3-4 tarefas executáveis
+
+3. **Cada step DEVE incluir (estrutura completa):**
+   - \`step_number\`: Número sequencial (1, 2, 3...)
+   - \`title\`: Título claro e executável (ex: "Configurar tabela users no Supabase")
+   - \`description\`: Tutorial detalhado com 10+ frases explicando COMO fazer, incluindo comandos, endpoints, configurações
+   - \`quadrant\`: Qual quadrante está sendo implementado ("Q1", "Q2", "Q3", "Q4", "Geral")
+   - \`estimated_time\`: Tempo estimado (ex: "2 horas", "1 dia", "30 minutos")
+   - \`difficulty\`: "easy", "medium", "hard"
+   - \`dependencies\`: Array de step_numbers dependentes (ex: [1, 2])
+   - \`validation_criteria\`: Array com 4+ critérios testáveis (ex: ["Tabela criada no Supabase", "RLS habilitado"])
+   - \`common_pitfalls\`: Array com 5+ erros comuns a evitar (ex: ["Esquecer de habilitar RLS"])
+   - \`resources\`: Array de URLs de tutoriais/documentação relevantes (URLs reais quando possível)
+   - \`tools_required\`: Array de ferramentas necessárias para este step (ex: ["Supabase", "Make.com"])
+
+4. **Seja ESPECÍFICO e EXECUTÁVEL:**
+   - Mencione ferramentas CONCRETAS do framework fornecido
+   - Inclua comandos SQL, endpoints de API, configurações quando possível
+   - Explique integrações entre quadrantes (ex: "Usar Zapier para conectar WhatsApp ao Supabase")
+   - Use dados da arquitetura fornecida (fluxos Mermaid, tempo estimado)
+
+5. **Total de Steps:** 15-25 steps bem detalhados distribuídos pelas 5 fases
+
+⚠️ ATENÇÃO CRÍTICA:
+- O plano DEVE seguir a sequência lógica dos 4 quadrantes
+- NÃO crie um plano genérico ou abstrato
+- USE as ferramentas específicas mencionadas no contexto fornecido
+- Referencie os fluxos da arquitetura quando aplicável
+- Cada descrição deve ser um mini-tutorial executável
+
+Retorne JSON (sem markdown, sem code blocks):
 {
-  "implementation_checklist": [...]
+  "implementation_checklist": [
+    {
+      "step_number": 1,
+      "title": "Exemplo: Configurar banco Supabase",
+      "description": "Acesse o dashboard do Supabase... [10+ frases detalhadas]",
+      "quadrant": "Q1",
+      "estimated_time": "2 horas",
+      "difficulty": "medium",
+      "dependencies": [],
+      "validation_criteria": ["Tabela criada", "RLS habilitado", "Políticas configuradas", "Índices criados"],
+      "common_pitfalls": ["Esquecer RLS", "Não validar permissões", "Índices faltando", "Timestamps ausentes", "Relacionamentos incorretos"],
+      "resources": ["https://supabase.com/docs/guides/database", "https://supabase.com/docs/guides/auth"],
+      "tools_required": ["Supabase", "PostgreSQL"]
+    }
+  ]
 }`;
       maxTokens = 40000;
     } else if (sectionType === "architecture") {
@@ -348,13 +439,43 @@ Retorne JSON:
     }
     
     if (solution.framework_mapping && sectionType !== 'framework') {
-      contextualInfo += '\n\n🏗️ FRAMEWORK JÁ MAPEADO:\n';
+      contextualInfo += '\n\n🏗️ FRAMEWORK JÁ MAPEADO (4 Quadrantes Rafael Milagre):\n';
       const fw = solution.framework_mapping;
       Object.keys(fw).forEach(key => {
         if (fw[key]?.title) {
           contextualInfo += `- ${fw[key].title}: ${fw[key].tool_names?.join(', ') || 'N/A'}\n`;
         }
       });
+    }
+    
+    // 🆕 CRÍTICO: Adicionar arquitetura/fluxos se existir e for geração de checklist
+    if (solution.implementation_flows && sectionType === 'checklist') {
+      contextualInfo += '\n\n🌊 ARQUITETURA E FLUXOS DA SOLUÇÃO:\n';
+      
+      const flows = solution.implementation_flows;
+      
+      if (flows.flows && Array.isArray(flows.flows)) {
+        flows.flows.forEach((flow: any, idx: number) => {
+          contextualInfo += `\nFluxo ${idx + 1}: ${flow.title}\n`;
+          contextualInfo += `Descrição: ${flow.description}\n`;
+          contextualInfo += `Complexidade: ${flow.complexity}\n`;
+          contextualInfo += `Tempo Estimado: ${flow.estimated_time}\n`;
+          
+          // Adicionar código Mermaid resumido (primeiras 10 linhas)
+          if (flow.mermaid_code) {
+            const lines = flow.mermaid_code.split('\n').slice(0, 10).join('\n');
+            contextualInfo += `Estrutura: ${lines}...\n`;
+          }
+        });
+      }
+      
+      if (flows.total_estimated_time) {
+        contextualInfo += `\nTempo Total Estimado: ${flows.total_estimated_time}\n`;
+      }
+      
+      if (flows.prerequisites) {
+        contextualInfo += `Pré-requisitos: ${flows.prerequisites}\n`;
+      }
     }
 
     const userPrompt = `Analise esta solução e gere o conteúdo solicitado:
@@ -480,7 +601,9 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
           dependencies: step.dependencies,
           validation_criteria: step.validation_criteria,
           common_pitfalls: step.common_pitfalls,
-          resources: step.resources
+          resources: step.resources,
+          quadrant: step.quadrant || 'Geral', // 🆕 Framework Rafael Milagre
+          tools_required: step.tools_required || [] // 🆕 Ferramentas necessárias
         }
       }));
       
