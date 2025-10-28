@@ -8744,7 +8744,11 @@ export type Database = {
         }[]
       }
       secure_assign_role: {
-        Args: { new_role_id: string; target_user_id: string }
+        Args: {
+          p_admin_user_id: string
+          p_new_role_id: string
+          p_target_user_id: string
+        }
         Returns: Json
       }
       secure_change_user_role: {

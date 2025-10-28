@@ -47,8 +47,9 @@ export function useUserRoles() {
       
       // SEGURANÇA: Usar função RPC segura aprimorada com log de segurança
       const { data: result, error: rpcError } = await supabase.rpc('secure_assign_role', {
-        target_user_id: userId,
-        new_role_id: roleId
+        p_admin_user_id: user.id,
+        p_target_user_id: userId,
+        p_new_role_id: roleId
       });
       
       // Log da resposta COMPLETA
