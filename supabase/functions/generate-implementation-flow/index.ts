@@ -49,32 +49,39 @@ serve(async (req) => {
 
 Seu público NÃO é programador. São empresários que querem implementar IA de forma prática.
 
-🏗️ FRAMEWORK DE REFERÊNCIA (by Rafael Milagre):
+🏗️ FRAMEWORK DE IMPLEMENTAÇÃO (by Rafael Milagre):
 
-CATEGORIAS DE FERRAMENTAS NO-CODE:
-1. 📊 BANCOS DE DADOS E ARMAZENAMENTO:
-   - Airtable, Google Sheets, Notion Database, Supabase, Firebase
+PRIORIDADE 1 - DESENVOLVIMENTO DE PLATAFORMA:
+🚀 Lovable (https://lovable.dev)
+   - Quando usar: Aplicações web completas, dashboards, portais, sistemas internos, plataformas personalizadas
+   - Capacidades: Frontend completo, autenticação de usuários, banco de dados (Supabase), APIs customizadas, integrações
+   - Vantagens: Código próprio, escalável, personalizável, sem dependências externas, solução proprietária
+   - Exemplos: Plataforma de atendimento com IA, sistema de gestão interna, portal de vendas, dashboard de analytics
 
-2. 🧠 INTELIGÊNCIA ARTIFICIAL:
-   - APIs: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek, Manus, Agent GPT, Genspark
-   - Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (voz)
-   - Visão computacional: GPT-4 Vision, Google Vision API
+PRIORIDADE 2 - AUTOMAÇÃO E INTEGRAÇÃO:
+🔄 Make, n8n, Zapier
+   - Quando usar: Conectar ferramentas existentes, webhooks, integrações pontuais, fluxos entre aplicativos
+   - Capacidades: Fluxos automatizados entre aplicativos, gatilhos automáticos, sincronização de dados
+   - Limitações: Dependente de ferramentas externas, menos personalizável, custos recorrentes por automação
 
-3. 🔄 AUTOMAÇÃO E INTEGRAÇÃO:
-   - Lovable, Make, n8n, Zapier, Lindy AI
+PRIORIDADE 3 - BANCOS DE DADOS:
+📊 Supabase (integrado ao Lovable), Airtable, Google Sheets, Notion Database, Firebase
 
-4. 💻 INTERFACES ONDE A IA ATUA:
-   - WhatsApp, Site, plataforma própria, CRM, ERP, Gmail, chatbot, Twilio, Discord
-   - Qualquer plataforma com API aberta
+PRIORIDADE 4 - INTELIGÊNCIA ARTIFICIAL:
+🧠 APIs: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek, Manus
+   Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (voz), GPT-4 Vision
 
-Use essas categorias para organizar o fluxo e sugerir ferramentas adequadas ao contexto do empresário.
+PRIORIDADE 5 - INTERFACES DE COMUNICAÇÃO:
+💻 WhatsApp, CRM, ERP, Gmail, chatbot, Discord, Twilio, Site corporativo
+
+Use essa hierarquia para priorizar ferramentas adequadas ao contexto da solução.
 
 REGRAS MERMAID (CRÍTICAS - SIGA EXATAMENTE):
 1. Use APENAS "graph TD" na primeira linha
-2. IDs devem ser APENAS letras maiúsculas únicas (A, B, C, D, E, F, G, H, I, J, K, L)
+2. IDs devem ser APENAS letras maiúsculas únicas (A, B, C, D, E, F, G, H, I, J, K, L, M, N, O)
 3. Textos descritivos SEMPRE entre colchetes [ ]
 4. Setas SEMPRE com espaços: " --> " (nunca "-->")
-5. Máximo 12 nós no total
+5. Máximo 15 nós no total
 6. Textos CURTOS: máximo 40 caracteres por nó
 7. Decisões (if/else) usam chaves { } e labels nas setas: -->|Sim| e -->|Não|
 8. NUNCA use: underscores, hífens, espaços ou números em IDs
@@ -91,6 +98,26 @@ LINGUAGEM (CRÍTICO):
 ❌ NUNCA use termos técnicos: "Deploy", "API", "Endpoint", "Código", "Development", "Fine-tuning", "Backend", "Frontend", "Database"
 ✅ USE termos de negócio: "Conectar", "Configurar", "Ativar", "Testar", "Integrar", "Criar conta", "Linkar", "Ajustar"
 
+🎯 REGRA "LOVABLE FIRST" (CRÍTICA):
+SEMPRE avalie se a solução pode ser construída como uma aplicação web.
+Se SIM → Priorize Lovable como base principal do fluxo
+Se NÃO → Use automação (Make/n8n) apenas para integrações específicas
+
+✅ USE LOVABLE QUANDO A SOLUÇÃO PRECISA DE:
+- Interface web (dashboard, portal, sistema, painel de controle)
+- Autenticação de usuários (login, perfis, permissões)
+- Armazenar dados estruturados (cadastros, histórico, relatórios)
+- APIs customizadas (endpoints próprios, integrações específicas)
+- Solução escalável e proprietária (sem depender de plataformas externas)
+
+❌ NÃO USE LOVABLE (use automação simples) QUANDO:
+- Apenas integrar ferramentas existentes sem interface (ex: Slack → Gmail)
+- Solução 100% via WhatsApp/chatbot sem necessidade de painel web
+- Fluxo pontual e simples sem necessidade de plataforma completa
+
+⚠️ ATENÇÃO: Lovable cria APLICAÇÕES WEB COMPLETAS, não é apenas automação.
+Se a solução precisa de interface de usuário → Lovable é SEMPRE a primeira escolha.
+
 ESTRUTURA DO FLUXO:
 O fluxo deve responder: "O que eu faço PRIMEIRO? Depois? E por último?"
 Use esta ordem lógica:
@@ -103,24 +130,25 @@ Use esta ordem lógica:
 
 IMPORTANTE: O fluxo deve ter entre 12-15 nós para garantir detalhamento adequado e praticidade.
 
-EXEMPLO 1 - Chatbot de Vendas:
+EXEMPLO 1 - Portal de Atendimento com IA (Lovable - Plataforma Web):
 graph TD
-    A[Reunir PDFs dos Produtos] --> B[Criar Conta no ManyChat]
-    B --> C[Conectar WhatsApp Business]
-    C --> D[Configurar Cenário no Make]
-    D --> E[Integrar GPT-4 no Make]
-    E --> F[Criar Base no Google Sheets]
-    F --> G[Testar Conversa Completa]
-    G --> H{Respostas OK?}
-    H -->|Não| I[Refinar Prompts]
-    I --> G
-    H -->|Sim| J[Conectar CRM]
-    J --> K[Ativar para Vendedores]
+    A[Mapear Requisitos] --> B[Criar Projeto no Lovable]
+    B --> C[Configurar Autenticação]
+    C --> D[Criar Banco Supabase]
+    D --> E[Integrar API OpenAI]
+    E --> F[Desenvolver Interface]
+    F --> G[Testar Funcionalidades]
+    G --> H{Precisa Integração Externa?}
+    H -->|Sim| I[Conectar via Make]
+    H -->|Não| J[Refinar Interface]
+    I --> J
+    J --> K[Treinar Equipe]
+    K --> L[Publicar na Web]
 
-EXEMPLO 2 - Automação de Suporte:
+EXEMPLO 2 - Automação Simples (Make/n8n - Sem Interface Web):
 graph TD
     A[Mapear FAQs] --> B[Criar Base no Notion]
-    B --> C[Configurar Zapier]
+    B --> C[Configurar Make]
     C --> D[Integrar Claude AI]
     D --> E[Conectar Email]
     E --> F[Testar Resposta]
@@ -128,7 +156,8 @@ graph TD
     G -->|Sim| H[Encaminhar Slack]
     G -->|Não| I[Responder Direto]
     H --> I
-    I --> J[Salvar em Airtable]`;
+    I --> J[Salvar em Airtable]
+    J --> K[Refinar Prompts]`;
 
     // Montar perguntas e respostas para contexto
     const qaSection = questionsAsked.length > 0 
@@ -153,11 +182,39 @@ FRAMEWORK DE 4 PILARES:
 3. 📊 DADOS: ${dataTools.join(', ') || 'Não mapeado'}
 4. 💻 INTERFACE: ${interfaceTools.join(', ') || 'Não mapeado'}
 
+🎯 DECISÃO ESTRATÉGICA (RESPONDA ANTES DE CRIAR O FLUXO):
+1. A solução precisa de uma interface web (dashboard, portal, sistema)?
+   → Se SIM: Use Lovable como ferramenta BASE do fluxo
+   
+2. A solução é apenas integração entre ferramentas existentes sem interface?
+   → Se SIM: Use Make/n8n como base
+   
+3. A solução precisa de banco de dados próprio, autenticação de usuários ou APIs customizadas?
+   → Se SIM: Use Lovable + Supabase como base
+
+⚠️ ATENÇÃO CRÍTICA:
+- Lovable cria APLICAÇÕES WEB COMPLETAS (não é apenas automação)
+- Se houver necessidade de interface de usuário → Lovable é SEMPRE a primeira escolha
+- Make/n8n/Zapier são COMPLEMENTOS para integrações específicas, não substitutos de plataforma
+
 MISSÃO:
 Crie um roteiro visual que mostre COMO implementar essa solução usando as ferramentas mapeadas.
 O fluxo deve ser PRÁTICO e EXECUTÁVEL por alguém SEM conhecimento técnico.
 
-Use esta estrutura:
+Use esta estrutura (adaptada conforme a ferramenta base escolhida):
+
+SE USAR LOVABLE COMO BASE:
+1. Mapear requisitos e funcionalidades
+2. Criar projeto no Lovable
+3. Configurar autenticação e banco de dados
+4. Desenvolver interface principal
+5. Integrar APIs de IA (se necessário)
+6. Conectar integrações externas via Make (se necessário)
+7. Testar funcionalidades completas
+8. Refinar interface e experiência
+9. Treinar equipe e publicar
+
+SE USAR AUTOMAÇÃO SIMPLES (sem interface web):
 1. Preparação (reunir materiais, criar contas)
 2. Configuração das ferramentas principais
 3. Integrações entre ferramentas
@@ -168,12 +225,13 @@ Use esta estrutura:
 LEMBRE-SE:
 - Fale como se estivesse orientando um empresário, não um programador
 - Use os nomes REAIS das ferramentas mapeadas acima
+- Priorize Lovable se a solução precisa de interface web
 - Ordem lógica: o que fazer primeiro, depois, por último
 - Textos curtos (máx 40 caracteres por etapa)
 
 RETORNE APENAS JSON VÁLIDO (sem markdown, sem \`\`\`):
 {
-  "mermaid_code": "graph TD\\n    A[Reunir PDFs] --> B[Criar Conta]\\n    B --> C[Conectar]\\n...",
+  "mermaid_code": "graph TD\\n    A[Mapear Requisitos] --> B[Criar Projeto Lovable]\\n    B --> C[Configurar]\\n...",
   "title": "Roteiro de Implementação: ${solution.title.substring(0, 40)}",
   "description": "Passo a passo prático para colocar ${solution.title.substring(0, 30)} no ar usando no-code",
   "estimated_time": "2-4 horas",
@@ -187,7 +245,9 @@ RETORNE APENAS JSON VÁLIDO (sem markdown, sem \`\`\`):
   ]
 }
 
-VALIDAÇÃO FINAL:
+VALIDAÇÃO FINAL (CRÍTICA):
+- Se a solução precisa de interface web e você NÃO usou Lovable como base → REFAÇA
+- Se você usou Make como base de uma aplicação web que precisa de login/dashboard → USE LOVABLE PRIMEIRO
 - Se você usou palavras como "deploy", "API", "código", "endpoint" → REFAÇA
 - Se os passos são muito técnicos → SIMPLIFIQUE
 - Se não mencionou as ferramentas do framework → INCLUA ELAS`;
@@ -281,7 +341,7 @@ VALIDAÇÃO FINAL:
     }
     
     // Contar número de nós no diagrama (verificar se está entre 12-15)
-    const nodeMatches = flowData.mermaid_code.match(/[A-L]\[/g);
+    const nodeMatches = flowData.mermaid_code.match(/[A-O]\[/g);
     const nodeCount = nodeMatches ? nodeMatches.length : 0;
     console.log(`[FLOW-GEN] 📊 Diagrama possui ${nodeCount} nós`);
     
