@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { AuthContextType } from './types';
 import { useAuthMethods } from './hooks/useAuthMethods';
+import { useRoleChangeRealtime } from '@/hooks/admin/useRoleChangeRealtime';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -21,6 +22,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Hook para métodos de autenticação
   const { signIn, signOut } = useAuthMethods({ setIsLoading });
+  
+  // ✅ CAMADA 4: Ativar listener de mudanças de role em tempo real
+  useRoleChangeRealtime();
 
   // Estados derivados memoizados com logs robustos
   const isAdmin = useMemo(() => {
@@ -217,6 +221,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     };
   }, []); // Array vazio - executar apenas uma vez
 
+  // ✅ NOVO: Método para forçar re-fetch do profile
+  const refetchProfile = useCallback(async () => {
+    if (user?.id) {
+      console.log('🔄 [AUTH] Re-fetch manual do profile solicitado');
+      await fetchUserProfile(user.id);
+    }
+  }, [user?.id, fetchUserProfile]);
+
   const contextValue: AuthContextType = useMemo(() => ({
     session,
     user,
@@ -227,7 +239,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signIn,
     signOut,
     setProfile,
-  }), [session, user, profile, isLoading, isAdmin, isFormacao, signIn, signOut]);
+    refetchProfile,
+  }), [session, user, profile, isLoading, isAdmin, isFormacao, signIn, signOut, refetchProfile]);
 
   return (
     <AuthContext.Provider value={contextValue}>

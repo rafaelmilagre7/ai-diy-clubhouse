@@ -4,9 +4,8 @@ import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
-import { clearPermissionCache } from '@/contexts/auth/utils/securityUtils';
-import { clearProfileCache } from '@/hooks/auth/utils/authSessionUtils';
 import { secureLogger } from '@/utils/security/productionSafeLogging';
+import { useCacheInvalidation } from './useCacheInvalidation';
 
 interface UserRoleResult {
   roleId: string | null;
@@ -20,10 +19,11 @@ interface UserRoleData {
 }
 
 export function useUserRoles() {
-  const { user } = useAuth();
+  const { user, refetchProfile } = useAuth();
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const roleCache = useRef<Map<string, UserRoleResult>>(new Map());
+  const { invalidateAllUserCaches } = useCacheInvalidation();
 
   const assignRoleToUser = useCallback(async (userId: string, roleId: string) => {
     try {
@@ -64,10 +64,27 @@ export function useUserRoles() {
         throw new Error(result?.message || 'Atribuição de papel não autorizada');
       }
       
-      // CORREÇÃO: Invalidação de cache mais abrangente para sincronização imediata
+      // ✅ CORREÇÃO COMPLETA: Invalidar TODOS os caches
+      console.log('🗑️ [USER-ROLES] Iniciando limpeza COMPLETA de caches...');
+      
+      // 1. Limpar cache local de roles
       roleCache.current.delete(userId);
-      clearPermissionCache(userId);
-      clearProfileCache();
+      
+      // 2. Invalidar todos os caches (local + React Query)
+      await invalidateAllUserCaches(userId);
+      
+      // 3. ✅ NOVO: Se o usuário afetado está logado, forçar re-fetch do profile
+      if (userId === user?.id && refetchProfile) {
+        console.log('⚠️ [USER-ROLES] Usuário afetado está logado - forçando re-fetch do profile');
+        await refetchProfile();
+        
+        toast.info('⚡ Seu papel foi atualizado', {
+          description: 'As mudanças já estão ativas. Algumas páginas podem requerer recarregamento.',
+          duration: 5000
+        });
+      }
+      
+      console.log('✅ [USER-ROLES] Todos os caches invalidados com sucesso');
       
       secureLogger.info({
         level: 'info',
@@ -95,7 +112,7 @@ export function useUserRoles() {
     } finally {
       setIsUpdating(false);
     }
-  }, [user?.id]);
+  }, [user?.id, invalidateAllUserCaches, refetchProfile]);
 
   const getUserRole = useCallback(async (userId: string): Promise<UserRoleResult> => {
     if (roleCache.current.has(userId)) {

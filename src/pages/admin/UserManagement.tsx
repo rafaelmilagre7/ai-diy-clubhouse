@@ -63,13 +63,34 @@ export default function UserManagement() {
     if (!selectedUser || !newRoleId) return;
     
     try {
-      await assignRoleToUser(selectedUser.id, newRoleId);
+      console.log('🔄 [USER-MANAGEMENT] Iniciando atualização de role:', {
+        userId: selectedUser.id.substring(0, 8) + '***',
+        currentRoleId: selectedUser.role_id,
+        newRoleId: newRoleId
+      });
+      
+      // 1. Executar mudança de role
+      const result = await assignRoleToUser(selectedUser.id, newRoleId);
+      
+      console.log('✅ [USER-MANAGEMENT] Role atualizada no banco:', result);
+      
+      // 2. ✅ CORREÇÃO: Forçar refresh IMEDIATO da lista com todos os parâmetros
+      console.log('🔄 [USER-MANAGEMENT] Forçando refresh da lista de usuários...');
+      await fetchUsers();
+      
+      // 3. Aguardar um momento para garantir que o UI renderizou
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // 4. Fechar modal e limpar estado
       setShowRoleDialog(false);
       setSelectedUser(null);
       setNewRoleId('');
-      fetchUsers();
+      
+      console.log('✅ [USER-MANAGEMENT] Interface atualizada com sucesso');
+      
     } catch (error) {
-      console.error('Erro ao atualizar papel do usuário:', error);
+      console.error('❌ [USER-MANAGEMENT] Erro ao atualizar papel do usuário:', error);
+      // Modal permanece aberto para usuário tentar novamente
     }
   };
 

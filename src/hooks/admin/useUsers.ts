@@ -81,9 +81,21 @@ export function useUsers() {
 
   // Função de busca paginada otimizada
   const fetchUsers = useCallback(async (forceRefresh = false, page = currentPage, filterType?: string) => {
-    // Verificar permissões e evitar múltiplas chamadas simultâneas
-    if (!canManageUsers || (fetchInProgress.current && !forceRefresh)) {
-      console.warn('[USERS] Busca cancelada - sem permissão ou busca em progresso');
+    // ✅ CORREÇÃO: forceRefresh tem prioridade ABSOLUTA
+    if (!canManageUsers) {
+      console.warn('[USERS] Busca cancelada - sem permissão');
+      return;
+    }
+    
+    // Se há busca em progresso MAS é forceRefresh, PERMITIR (override)
+    if (fetchInProgress.current && forceRefresh) {
+      console.warn('[USERS] ⚠️ Forçando refresh sobrescrevendo busca em progresso');
+      fetchInProgress.current = false; // Resetar flag para permitir
+    }
+    
+    // Apenas cancelar se NÃO for forceRefresh
+    if (fetchInProgress.current && !forceRefresh) {
+      console.warn('[USERS] Busca cancelada - busca em progresso (use forceRefresh=true)');
       return;
     }
 
