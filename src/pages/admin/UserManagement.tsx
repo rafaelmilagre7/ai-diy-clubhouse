@@ -22,6 +22,7 @@ import { useRoles, Role } from '@/hooks/admin/useRoles';
 import { UserProfile } from '@/lib/supabase';
 import { UserRoleDialog } from '@/components/admin/users/UserRoleDialog';
 import { getUserRoleName } from '@/lib/supabase/types';
+import { toast } from 'sonner';
 
 export default function UserManagement() {
   const { 
@@ -62,31 +63,50 @@ export default function UserManagement() {
   };
 
   const handleUpdateRole = async () => {
-    if (!selectedUser || !newRoleId) return;
+    // Validação com mensagem clara
+    if (!selectedUser) {
+      console.error('❌ [USER-MANAGEMENT] Usuário não selecionado');
+      toast.error('Erro', { description: 'Nenhum usuário selecionado' });
+      throw new Error('Usuário não selecionado');
+    }
+    
+    if (!newRoleId) {
+      console.error('❌ [USER-MANAGEMENT] Papel não selecionado');
+      toast.error('Erro', { description: 'Selecione um papel' });
+      throw new Error('Papel não selecionado');
+    }
     
     try {
       console.log('🔄 [USER-MANAGEMENT] Iniciando atualização de role:', {
         userId: selectedUser.id.substring(0, 8) + '***',
+        userName: selectedUser.name || selectedUser.email,
         currentRoleId: selectedUser.role_id,
         newRoleId: newRoleId
       });
       
-      // 1. Executar mudança de role
       const result = await assignRoleToUser(selectedUser.id, newRoleId);
       
       console.log('✅ [USER-MANAGEMENT] Role atualizada no banco:', result);
       
+      return result;
+      
     } catch (error) {
       console.error('❌ [USER-MANAGEMENT] Erro ao atualizar papel do usuário:', error);
-      throw error; // Deixar o dialog lidar com o erro
+      throw error;
     }
   };
 
   // Callback chamado APÓS sucesso da atualização de role
   const handleRoleUpdateSuccess = () => {
     console.log('🔄 [USER-MANAGEMENT] Sucesso! Atualizando interface...');
-    // Forçar refresh mantendo filtro e página atual
+    console.log('📄 Parâmetros atuais:', { currentPage, currentFilter });
+    
+    // Forçar refresh (handleRefresh já usa currentPage e currentFilter internamente)
     fetchUsers();
+    
+    // Limpar estado do dialog
+    setSelectedUser(null);
+    setNewRoleId('');
   };
 
   const getRoleBadgeVariant = (roleName: string) => {

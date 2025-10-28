@@ -30,6 +30,13 @@ export function useUserRoles() {
       setIsUpdating(true);
       setError(null);
       
+      // Log detalhado ANTES de chamar RPC
+      console.log('🔄 [USER-ROLES] Parâmetros da chamada RPC:', {
+        target_user_id: userId.substring(0, 8) + '***',
+        new_role_id: roleId.substring(0, 8) + '***',
+        current_user: user?.id?.substring(0, 8) + '***'
+      });
+      
       // SEGURANÇA: Log seguro da operação
       secureLogger.info({
         level: 'info',
@@ -42,6 +49,13 @@ export function useUserRoles() {
       const { data: result, error: rpcError } = await supabase.rpc('secure_assign_role', {
         target_user_id: userId,
         new_role_id: roleId
+      });
+      
+      // Log da resposta COMPLETA
+      console.log('📨 [USER-ROLES] Resposta da RPC:', {
+        data: result,
+        error: rpcError,
+        hasError: !!rpcError
       });
       
       if (rpcError) {

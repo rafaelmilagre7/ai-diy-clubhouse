@@ -18,6 +18,7 @@ import {
 import { Shield, User, Loader2 } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
 import { Role } from "@/hooks/admin/useRoles";
+import { toast } from "sonner";
 
 interface UserRoleDialogProps {
   open: boolean;
@@ -62,16 +63,29 @@ export const UserRoleDialog = ({
 
   const handleUpdateRole = async () => {
     try {
+      console.log('🔄 [USER-ROLE-DIALOG] Iniciando atualização...');
+      
       await onUpdateRole();
       
+      console.log('✅ [USER-ROLE-DIALOG] Atualização concluída com sucesso');
+      
+      // Executar callback de sucesso ANTES de fechar
       if (onRoleUpdateSuccess) {
         onRoleUpdateSuccess();
       }
       
+      // Aguardar um momento para UI atualizar
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Fechar dialog apenas após tudo estar completo
       onOpenChange(false);
       
     } catch (error) {
       console.error('❌ [USER-ROLE-DIALOG] Erro na atualização:', error);
+      // Não fechar o dialog, deixar usuário ver o erro e tentar novamente
+      toast.error('Erro ao atualizar papel', {
+        description: error instanceof Error ? error.message : 'Tente novamente'
+      });
     }
   };
 
