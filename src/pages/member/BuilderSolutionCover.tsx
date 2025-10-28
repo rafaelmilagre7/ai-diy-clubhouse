@@ -356,7 +356,7 @@ export default function BuilderSolutionCover() {
       title: "Prompt Lovable",
       subtitle: "Cole e comece seu projeto agora",
       icon: FileCode,
-      badge: generatingLovablePrompt ? "Gerando..." : solution?.lovable_prompt ? "✓ Pronto" : "Gerar",
+      badge: "Implementação",
       color: "from-violet-500/20 to-purple-400/20",
       borderColor: "border-violet-400/30",
       path: `/ferramentas/builder/solution/${id}/prompt`,
@@ -493,15 +493,8 @@ export default function BuilderSolutionCover() {
                       </div>
                       <Badge 
                         variant="secondary" 
-                        className={`text-xs px-3 ${
-                          card.path.includes('prompt') && generatingLovablePrompt 
-                            ? 'bg-amber-500/20 text-amber-700 dark:text-amber-400 border-amber-500/30' 
-                            : card.path.includes('prompt') && solution?.lovable_prompt
-                            ? 'bg-green-500/20 text-green-700 dark:text-green-400 border-green-500/30'
-                            : ''
-                        }`}
+                        className="text-xs px-3"
                       >
-                        {generatingLovablePrompt && card.path.includes('prompt') && '⏳ '}
                         {card.badge}
                       </Badge>
                     </div>
