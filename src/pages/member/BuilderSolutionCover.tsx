@@ -330,10 +330,42 @@ export default function BuilderSolutionCover() {
         
         if (data?.success) {
           console.log(`[COVER] ✅ ${sectionInfo.label} gerado!`);
-          toast.success(`${sectionInfo.label} gerado com sucesso! 🎉`);
+          
+          // 🔧 ESPECIAL: Se for ferramentas, processar matching automático
+          if (sectionKey === 'ferramentas') {
+            console.log('[COVER] 🔧 Processando matching de ferramentas...');
+            
+            try {
+              const { data: matchData, error: matchError } = await supabase.functions.invoke('populate-solution-tools', {
+                body: { solutionId: solution.id }
+              });
+              
+              if (matchError) {
+                console.error('[COVER] ⚠️ Erro ao fazer matching:', matchError);
+                toast.error('Ferramentas geradas, mas houve erro no matching', {
+                  description: 'Algumas ferramentas podem não estar vinculadas corretamente.'
+                });
+              } else {
+                console.log('[COVER] ✅ Matching completo:', matchData);
+                
+                if (matchData?.unmatched > 0) {
+                  toast.warning(`${matchData.matched} ferramentas vinculadas`, {
+                    description: `${matchData.unmatched} ferramentas não encontradas na plataforma.`
+                  });
+                } else {
+                  toast.success(`${matchData?.matched || 0} ferramentas vinculadas! 🎉`);
+                }
+              }
+            } catch (matchErr: any) {
+              console.error('[COVER] ❌ Erro crítico no matching:', matchErr);
+            }
+          } else {
+            toast.success(`${sectionInfo.label} gerado com sucesso! 🎉`);
+          }
           
           // Invalidar cache para recarregar dados
           await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+          await queryClient.invalidateQueries({ queryKey: ['builder-solution-tools', id] });
           
           // Navegar para a página
           navigate(cardPath);

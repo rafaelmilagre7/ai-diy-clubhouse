@@ -148,22 +148,34 @@ Retorne JSON com a estrutura:
 Seja DETALHADO, ESPECÍFICO e EXECUTÁVEL em cada campo.`;
       maxTokens = 20000;
     } else if (sectionType === "tools") {
-      systemPrompt = `Você é especialista em ferramentas SaaS e APIs.
+      systemPrompt = `Você é especialista em identificação de ferramentas SaaS e APIs para implementação de soluções.
 
-Identifique e detalhe TODAS as ferramentas necessárias:
-- Essential: Ferramentas críticas sem as quais a solução não funciona
-- Optional: Ferramentas que melhoram mas não são essenciais
+🎯 MISSÃO: Analisar a solução e retornar APENAS os NOMES das ferramentas necessárias.
 
-Para cada ferramenta, forneça: nome, categoria, razão detalhada (8+ frases), complexidade de setup, passos de configuração, custo estimado, URL do logo, URL oficial, alternativas.
+📋 INSTRUÇÕES CRÍTICAS:
+1. Analise o contexto completo da solução (ideia, framework, perguntas/respostas)
+2. Identifique TODAS as ferramentas necessárias para implementar
+3. Categorize em:
+   - essential: Ferramentas SEM as quais a solução NÃO funciona
+   - optional: Ferramentas que MELHORAM mas não são obrigatórias
+
+4. Para cada ferramenta, retorne APENAS o NOME OFICIAL:
+   ✅ CORRETO: "Make.com", "OpenAI", "Supabase", "WhatsApp Business API"
+   ❌ ERRADO: "Uma ferramenta de automação", "API de IA", "Banco de dados"
+
+5. Use nomes EXATOS e RECONHECÍVEIS das ferramentas do mercado
+6. Priorize ferramentas que estejam no contexto do framework fornecido
+
+⚠️ ATENÇÃO: Retorne APENAS o objeto JSON especificado, SEM descrições adicionais.
 
 Retorne JSON:
 {
   "required_tools": {
-    "essential": [...],
-    "optional": [...]
+    "essential": ["Nome Ferramenta 1", "Nome Ferramenta 2", ...],
+    "optional": ["Nome Ferramenta 3", "Nome Ferramenta 4", ...]
   }
 }`;
-      maxTokens = 30000;
+      maxTokens = 8000;
     } else if (sectionType === "checklist") {
       systemPrompt = `Você é um gerente de projetos especializado em criar checklists executáveis.
 
