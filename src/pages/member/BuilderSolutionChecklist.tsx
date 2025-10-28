@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
+import SimpleKanban from '@/components/unified-checklist/kanban/SimpleKanban';
 import { UnifiedLoadingScreen } from '@/components/common/UnifiedLoadingScreen';
 import { getLoadingMessages } from '@/lib/loadingMessages';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -386,12 +386,11 @@ export default function BuilderSolutionChecklist() {
               )
             ) : (
               <TrailErrorBoundary>
-                <UnifiedChecklistTab
+                <SimpleKanban 
+                  checklistItems={existingChecklist?.checklist_data?.items || []}
+                  checklistData={existingChecklist || {} as any}
                   solutionId={id || ''}
                   checklistType="implementation"
-                  onComplete={() => {
-                    toast.success('Parabéns! Você completou todos os passos!');
-                  }}
                 />
               </TrailErrorBoundary>
             )}
