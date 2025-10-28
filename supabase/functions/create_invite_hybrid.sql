@@ -10,6 +10,7 @@ CREATE OR REPLACE FUNCTION public.create_invite_hybrid(
 RETURNS json
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = 'public'
 AS $function$
 DECLARE
   new_token text;

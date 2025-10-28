@@ -9003,6 +9003,15 @@ export type Database = {
           severity: string
         }[]
       }
+      verify_security_implementation: {
+        Args: never
+        Returns: {
+          function_name: string
+          has_search_path: boolean
+          is_secure: boolean
+          search_path_value: string
+        }[]
+      }
     }
     Enums: {
       connection_status: "pending" | "accepted" | "rejected"

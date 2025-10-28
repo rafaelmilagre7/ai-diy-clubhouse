@@ -4,6 +4,7 @@ CREATE OR REPLACE FUNCTION public.increment_benefit_clicks(tool_id UUID)
 RETURNS void
 LANGUAGE plpgsql
 SECURITY DEFINER
+SET search_path = 'public'
 AS $$
 BEGIN
   UPDATE public.tools
