@@ -7049,6 +7049,10 @@ export type Database = {
           table_name: string
         }[]
       }
+      apply_invite_to_user: {
+        Args: { p_invite_token: string; p_user_id: string }
+        Returns: Json
+      }
       audit_legacy_references: { Args: never; Returns: Json }
       auto_generate_course_certificate: {
         Args: { p_course_id: string; p_user_id: string }
