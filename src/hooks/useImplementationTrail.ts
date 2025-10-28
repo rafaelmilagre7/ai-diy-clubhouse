@@ -22,7 +22,10 @@ export function useImplementationTrail() {
       setIsLoading(true);
       setError(null);
 
-      
+      console.log('🔍 [TRAIL-LOAD] Buscando trilha existente para:', {
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
 
       // Buscar trilha existente
       const { data: existingTrail, error: trailError } = await supabase
@@ -34,17 +37,26 @@ export function useImplementationTrail() {
         .limit(1)
         .maybeSingle();
 
+      console.log('📊 [TRAIL-LOAD] Resultado da query:', {
+        hasData: !!existingTrail,
+        hasError: !!trailError,
+        trailId: existingTrail?.id,
+        status: existingTrail?.status,
+        hasTrailData: !!existingTrail?.trail_data,
+        error: trailError?.message
+      });
+
       if (trailError) {
-        
+        console.error('❌ [TRAIL-LOAD] Erro ao buscar trilha:', trailError);
         throw new Error('Erro ao carregar trilha de implementação');
       }
 
       if (existingTrail && existingTrail.trail_data) {
-        console.log('✅ [useImplementationTrail] Trilha existente encontrada:', existingTrail.id);
+        console.log('✅ [TRAIL-LOAD] Trilha existente encontrada:', existingTrail.id);
         setTrail(existingTrail.trail_data as ImplementationTrailData);
         setIsFirstTimeGeneration(false);
       } else {
-        console.log('🆕 [useImplementationTrail] Nenhuma trilha encontrada. Gerando nova...');
+        console.log('🆕 [TRAIL-LOAD] Nenhuma trilha encontrada. Gerando nova...');
         setIsFirstTimeGeneration(true);
         await generateTrail();
       }

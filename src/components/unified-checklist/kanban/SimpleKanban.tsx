@@ -45,6 +45,21 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   const updateMutation = useUpdateUnifiedChecklist();
 
+  // 🛡️ AJUSTE FINAL 1: Validar user_id antes de permitir interação
+  if (!user?.id) {
+    return (
+      <Card className="p-8 text-center">
+        <AlertCircle className="mx-auto h-12 w-12 text-warning mb-4" />
+        <p className="text-foreground font-semibold mb-2">
+          Aguarde a autenticação...
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Carregando seus dados de usuário.
+        </p>
+      </Card>
+    );
+  }
+
   // Refs para evitar stale closures
   const checklistDataRef = useRef(checklistData);
   const saveTimeoutRef = useRef<NodeJS.Timeout>();
