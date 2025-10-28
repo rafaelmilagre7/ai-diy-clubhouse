@@ -172,9 +172,9 @@ export default function BuilderSolutionCover() {
     console.log('[COVER] 📊 Seção:', sectionInfo);
     console.log('[COVER] 📦 Campo no banco:', sectionInfo.field, '=', solution[sectionInfo.field]);
     
-    // 🔧 CASO ESPECIAL: FERRAMENTAS - Verificar solution_tools ao invés de required_tools
+    // 🔧 CASO ESPECIAL: FERRAMENTAS - Verificar e popular solution_tools
     if (sectionKey === 'ferramentas') {
-      console.log('[COVER] 🔧 Verificando se solution_tools tem dados...');
+      console.log('[COVER] 🔧 Verificando solution_tools...');
       
       const { data: solutionTools, error: toolsError } = await supabase
         .from('solution_tools')
@@ -189,89 +189,86 @@ export default function BuilderSolutionCover() {
       const hasSolutionTools = solutionTools && solutionTools.length > 0;
       console.log('[COVER] 📊 solution_tools tem dados?', hasSolutionTools);
       
+      // ✅ Se já tem ferramentas, navegar direto
       if (hasSolutionTools) {
         console.log('[COVER] ✅ Ferramentas já vinculadas, navegando...');
         navigate(cardPath);
         return;
       }
       
-      // Se required_tools existe mas solution_tools está vazio, fazer matching
-      if (solution.required_tools) {
-        console.log('[COVER] 🔄 required_tools existe, mas solution_tools vazio. Fazendo matching...');
-        setGeneratingSection('Ferramentas Necessárias');
+      // 🔄 Se não tem ferramentas, fazer matching (a edge function vai buscar de ai_generated_solutions)
+      console.log('[COVER] 🔄 solution_tools vazio. Chamando edge function para fazer matching...');
+      setGeneratingSection('Ferramentas Necessárias');
+      
+      try {
+        const { data: matchData, error: matchError } = await supabase.functions.invoke('populate-solution-tools', {
+          body: { solutionId: solution.id }
+        });
         
-        try {
-          const { data: matchData, error: matchError } = await supabase.functions.invoke('populate-solution-tools', {
-            body: { solutionId: solution.id }
-          });
-          
-          if (matchError) {
-            console.error('[COVER] ❌ Erro ao fazer matching:', matchError);
-            throw matchError;
-          }
-          
-          console.log('[COVER] ✅ Matching completo:', matchData);
-          
-          // 🆕 POLLING: Aguardar até solution_tools ter dados (máximo 15s)
-          const startWait = Date.now();
-          const maxWait = 15000;
-          let toolsReady = false;
-          
-          while (!toolsReady && (Date.now() - startWait) < maxWait) {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            
-            const { data: check } = await supabase
-              .from('solution_tools')
-              .select('id')
-              .eq('solution_id', solution.id)
-              .limit(1);
-            
-            if (check && check.length > 0) {
-              toolsReady = true;
-              console.log('[COVER] ✅ solution_tools confirmado no banco!');
-            } else {
-              console.log('[COVER] ⏳ Aguardando solution_tools...');
-            }
-          }
-          
-          if (!toolsReady) {
-            console.warn('[COVER] ⚠️ Timeout aguardando solution_tools, navegando mesmo assim');
-          }
-          
-          if (matchData?.matched > 0) {
-            toast.success(`${matchData.matched} ferramentas vinculadas! 🎉`);
-          }
-          
-          if (matchData?.unmatched > 0) {
-            toast.warning('Algumas ferramentas não foram encontradas', {
-              description: `${matchData.unmatched} ferramentas ainda precisam ser cadastradas.`
-            });
-          }
-          
-          // Invalidar cache
-          await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
-          await queryClient.invalidateQueries({ queryKey: ['builder-solution-tools', id] });
-          
-          console.log('[COVER] ➡️ Navegando para ferramentas...');
-          navigate(cardPath);
-        } catch (err: any) {
-          console.error('[COVER] ❌ Erro ao processar ferramentas:', err);
-          toast.error('Erro ao processar ferramentas', {
-            description: err.message || 'Tente novamente.',
-            action: {
-              label: 'Tentar novamente',
-              onClick: () => handleCardClick(cardPath)
-            }
-          });
-        } finally {
-          setGeneratingSection(null);
+        if (matchError) {
+          console.error('[COVER] ❌ Erro ao fazer matching:', matchError);
+          throw matchError;
         }
         
-        return;
+        console.log('[COVER] ✅ Matching completo:', matchData);
+        
+        // 🆕 POLLING: Aguardar até solution_tools ter dados (máximo 15s)
+        const startWait = Date.now();
+        const maxWait = 15000;
+        let toolsReady = false;
+        
+        while (!toolsReady && (Date.now() - startWait) < maxWait) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          
+          const { data: check } = await supabase
+            .from('solution_tools')
+            .select('id')
+            .eq('solution_id', solution.id)
+            .limit(1);
+          
+          if (check && check.length > 0) {
+            toolsReady = true;
+            console.log('[COVER] ✅ solution_tools confirmado no banco!');
+          } else {
+            console.log('[COVER] ⏳ Aguardando solution_tools...');
+          }
+        }
+        
+        if (!toolsReady) {
+          console.warn('[COVER] ⚠️ Timeout aguardando solution_tools');
+        }
+        
+        // 🎉 Feedback ao usuário
+        if (matchData?.matched > 0) {
+          toast.success(`${matchData.matched} ferramentas vinculadas! 🎉`);
+        }
+        
+        if (matchData?.unmatched > 0) {
+          toast.warning('Algumas ferramentas não foram encontradas', {
+            description: `${matchData.unmatched} ferramentas ainda precisam ser cadastradas.`
+          });
+        }
+        
+        // Invalidar cache
+        await queryClient.invalidateQueries({ queryKey: ['builder-solution', id] });
+        await queryClient.invalidateQueries({ queryKey: ['builder-solution-tools', id] });
+        
+        console.log('[COVER] ➡️ Navegando para ferramentas...');
+        navigate(cardPath);
+      } catch (err: any) {
+        console.error('[COVER] ❌ Erro ao processar ferramentas:', err);
+        toast.error('Erro ao processar ferramentas', {
+          description: err.message || 'Tente novamente.',
+          action: {
+            label: 'Tentar novamente',
+            onClick: () => handleCardClick(cardPath)
+          }
+        });
+      } finally {
+        setGeneratingSection(null);
       }
       
-      // Se nem required_tools existe, precisa gerar primeiro
-      console.log('[COVER] ⚠️ required_tools não existe, precisa gerar primeiro');
+      return;
     }
     
     const hasContent = solution[sectionInfo.field] !== null && solution[sectionInfo.field] !== undefined;
