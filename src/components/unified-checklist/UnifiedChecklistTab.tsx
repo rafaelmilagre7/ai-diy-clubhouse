@@ -258,7 +258,22 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   };
 
+  // 🔥 CORREÇÃO CRÍTICA: Estabilizar checklistItems com comparação profunda
+  const stableChecklistItems = React.useMemo(() => {
+    return checklistItems;
+  }, [
+    checklistItems.length,
+    checklistItems.map(i => i.id).join(','),
+    checklistItems.map(i => i.column).join(','),
+    checklistItems.map(i => i.completed).join(',')
+  ]);
+
   const checklistDataForKanban: UnifiedChecklistData = React.useMemo(() => {
+    const completedCount = stableChecklistItems.filter(i => i.completed).length;
+    const progressPercent = stableChecklistItems.length > 0 
+      ? Math.round((completedCount / stableChecklistItems.length) * 100) 
+      : 0;
+    
     return {
       id: userProgress?.id,
       user_id: userProgress?.user_id || '', 
@@ -266,13 +281,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       template_id: template?.id,
       checklist_type: checklistType,
       checklist_data: {
-        items: checklistItems,
+        items: stableChecklistItems,
         lastUpdated: new Date().toISOString()
       },
-      completed_items: completedItems.length,
-      total_items: checklistItems.length,
-      progress_percentage: progressPercentage,
-      is_completed: allCompleted,
+      completed_items: completedCount,
+      total_items: stableChecklistItems.length,
+      progress_percentage: progressPercent,
+      is_completed: completedCount === stableChecklistItems.length && stableChecklistItems.length > 0,
       is_template: false
     };
   }, [
@@ -281,10 +296,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     solutionId,
     template?.id,
     checklistType,
-    JSON.stringify(checklistItems),
-    completedItems.length,
-    progressPercentage,
-    allCompleted
+    stableChecklistItems,
   ]);
 
   return (

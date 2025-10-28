@@ -112,31 +112,50 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   // Atualizar localItems quando checklistItems mudar
   useEffect(() => {
+    console.log('🔍 [SimpleKanban] useEffect disparado - Sincronizando localItems com checklistItems');
+    
     // ⚠️ Só processar se items forem válidos
     if (!hasValidItems) {
       console.warn('[SIMPLE-KANBAN] ⚠️ Pulando atualização - items inválidos');
       return;
     }
 
+    // 🔥 CORREÇÃO: Comparar se items REALMENTE mudaram (deep comparison)
+    const itemsChanged = 
+      localItems.length !== checklistItems.length ||
+      checklistItems.some((item, idx) => {
+        const localItem = localItems[idx];
+        return !localItem || 
+               localItem.id !== item.id || 
+               localItem.column !== item.column || 
+               localItem.completed !== item.completed;
+      });
+
+    if (!itemsChanged) {
+      console.log('🔍 [SimpleKanban] Items não mudaram - pulando atualização');
+      return; // ← EVITAR atualização desnecessária
+    }
+
     setLocalItems(checklistItems);
     
-    // Debug logs
+    // Debug detalhado (apenas se mudou)
     if (checklistItems.length > 0) {
-      console.log('🎨 [SimpleKanban] Items recebidos:', {
+      console.log('🎨 [SimpleKanban] Items ATUALIZADOS:', {
         count: checklistItems.length,
-        firstItem: {
-          id: checklistItems[0].id,
-          title: checklistItems[0].title,
-          column: checklistItems[0].column
-        },
         columnsDistribution: {
           todo: checklistItems.filter(i => i.column === 'todo').length,
           in_progress: checklistItems.filter(i => i.column === 'in_progress').length,
           done: checklistItems.filter(i => i.column === 'done').length,
-        }
+        },
+        firstItem: checklistItems[0] ? {
+          id: checklistItems[0].id,
+          column: checklistItems[0].column,
+          order: checklistItems[0].order,
+          completed: checklistItems[0].completed
+        } : null
       });
     }
-  }, [checklistItems, hasValidItems]);
+  }, [checklistItems, hasValidItems, localItems]);
 
   // Agrupar items por coluna
   const itemsByColumn = useMemo(() => {

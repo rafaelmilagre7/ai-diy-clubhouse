@@ -225,8 +225,11 @@ export const useUnifiedChecklistTemplate = (solutionId: string, checklistType: s
     enabled: !!solutionId,
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
-    retry: 1, // ✅ Reduzir retries para não travar
+    retry: 1,
     retryDelay: 1000,
+    notifyOnChangeProps: ['data', 'error'],
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
   });
 };
 
