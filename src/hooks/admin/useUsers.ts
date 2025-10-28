@@ -260,10 +260,10 @@ export function useUsers() {
 
   // Função para refresh manual
   const handleRefresh = useCallback(() => {
-    console.log('[USERS] Refresh manual');
+    console.log('[USERS] Refresh manual com filtro:', currentFilter);
     setIsRefreshing(true);
-    fetchUsers(true, currentPage);
-  }, [fetchUsers, currentPage]);
+    fetchUsers(true, currentPage, currentFilter);
+  }, [fetchUsers, currentPage, currentFilter]);
 
   // Handlers para Big Numbers clicáveis
   const handleFilterByType = useCallback((filterType: string) => {

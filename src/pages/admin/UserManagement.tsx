@@ -32,7 +32,9 @@ export default function UserManagement() {
     setSearchQuery,
     fetchUsers,
     canManageUsers,
-    canAssignRoles
+    canAssignRoles,
+    currentPage,
+    currentFilter
   } = useUsers();
 
   const { assignRoleToUser, isUpdating: isAssigningRole } = useUserRoles();
@@ -74,24 +76,17 @@ export default function UserManagement() {
       
       console.log('✅ [USER-MANAGEMENT] Role atualizada no banco:', result);
       
-      // 2. ✅ CORREÇÃO: Forçar refresh IMEDIATO da lista com todos os parâmetros
-      console.log('🔄 [USER-MANAGEMENT] Forçando refresh da lista de usuários...');
-      await fetchUsers();
-      
-      // 3. Aguardar um momento para garantir que o UI renderizou
-      await new Promise(resolve => setTimeout(resolve, 300));
-      
-      // 4. Fechar modal e limpar estado
-      setShowRoleDialog(false);
-      setSelectedUser(null);
-      setNewRoleId('');
-      
-      console.log('✅ [USER-MANAGEMENT] Interface atualizada com sucesso');
-      
     } catch (error) {
       console.error('❌ [USER-MANAGEMENT] Erro ao atualizar papel do usuário:', error);
-      // Modal permanece aberto para usuário tentar novamente
+      throw error; // Deixar o dialog lidar com o erro
     }
+  };
+
+  // Callback chamado APÓS sucesso da atualização de role
+  const handleRoleUpdateSuccess = () => {
+    console.log('🔄 [USER-MANAGEMENT] Sucesso! Atualizando interface...');
+    // Forçar refresh mantendo filtro e página atual
+    fetchUsers();
   };
 
   const getRoleBadgeVariant = (roleName: string) => {
@@ -335,6 +330,7 @@ export default function UserManagement() {
         onUpdateRole={handleUpdateRole}
         saving={isAssigningRole}
         availableRoles={availableRoles}
+        onRoleUpdateSuccess={handleRoleUpdateSuccess}
       />
     </div>
   );
