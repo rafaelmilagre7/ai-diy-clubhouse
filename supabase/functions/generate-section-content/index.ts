@@ -78,34 +78,75 @@ serve(async (req) => {
     let maxTokens = 30000;
 
     if (sectionType === "framework") {
-      systemPrompt = `Você é um arquiteto de soluções especializado em criar frameworks executáveis.
+      systemPrompt = `Você é um arquiteto de soluções especializado no FRAMEWORK BY RAFAEL MILAGRE.
 
-Analise a solução e crie um framework de 4 pilares:
-1. Automação No-Code (Lovable, Make, Zapier)
-2. Modelos de IA (GPT-5, Claude, Gemini)
-3. Dados (Sheets, Airtable, Supabase)
-4. Canais (WhatsApp, Email, Web)
+🏗️ METODOLOGIA DOS 4 QUADRANTES:
+
+QUADRANTE 1 - Bancos de Dados e Armazenamento:
+Ferramentas: Airtable, Google Sheets, Notion Database, Supabase, Firebase, PostgreSQL, MySQL, MongoDB
+Use este quadrante para identificar onde os dados serão armazenados, estruturados e consultados.
+
+QUADRANTE 2 - Inteligência Artificial:
+- APIs de IA: OpenAI (GPT-5, DALL-E, Whisper), Anthropic (Claude), Google (Gemini), Grok, Deepseek, Manus, Agent GPT, Genspark
+- Plataformas: ChatGPT, MidJourney, Stable Diffusion, ElevenLabs (síntese de voz)
+- Visão Computacional: GPT-4 Vision, Google Vision API
+Use este quadrante para toda lógica de processamento inteligente, análise, geração de conteúdo e decisões automatizadas.
+
+QUADRANTE 3 - Automação e Integração:
+Ferramentas: Lovable, Make, n8n, Zapier, Lindy AI, Integromat, Pipedream
+Use este quadrante para orquestrar fluxos, conectar sistemas e automatizar processos entre ferramentas.
+
+QUADRANTE 4 - Interfaces onde a IA atua:
+Canais: WhatsApp, Site/Web App, Plataforma própria, CRM, ERP, Gmail, Chatbot, Twilio, Discord, Telegram, Slack, qualquer plataforma com API aberta
+Use este quadrante para definir onde o usuário final interage com a solução.
+
+📋 INSTRUÇÕES:
+1. Analise a solução proposta considerando os 4 quadrantes
+2. Para cada quadrante, identifique FERRAMENTAS ESPECÍFICAS (não genéricas)
+3. Explique COMO cada ferramenta será usada no contexto da solução
+4. Detalhe as INTEGRAÇÕES entre quadrantes (ex: "Zapier conecta WhatsApp ao Airtable")
+5. Seja EXECUTÁVEL: cada item deve ser claro o suficiente para implementação
 
 Retorne JSON com a estrutura:
 {
   "framework_quadrants": {
-    "quadrant1_automation": {
-      "title": "Automação",
-      "description": "...",
-      "items": ["..."],
-      "tool_names": ["..."],
-      "integration_details": "..."
+    "quadrant1_data": {
+      "title": "Bancos de Dados e Armazenamento",
+      "description": "Como e onde os dados serão armazenados",
+      "items": ["Item 1: [Ferramenta] - [Como será usada]", ...],
+      "tool_names": ["Airtable", "Supabase", ...],
+      "integration_details": "Detalhes de como as ferramentas se conectam"
     },
-    (repita para quadrant2_ai, quadrant3_data, quadrant4_interface)
+    "quadrant2_ai": {
+      "title": "Inteligência Artificial",
+      "description": "Modelos e APIs de IA para processamento inteligente",
+      "items": ["Item 1: [API/Modelo] - [Caso de uso específico]", ...],
+      "tool_names": ["OpenAI GPT-5", "Claude", ...],
+      "integration_details": "Como a IA será integrada ao fluxo"
+    },
+    "quadrant3_automation": {
+      "title": "Automação e Integração",
+      "description": "Orquestração de fluxos e conexão entre sistemas",
+      "items": ["Item 1: [Ferramenta] - [Fluxo automatizado]", ...],
+      "tool_names": ["Make", "Zapier", ...],
+      "integration_details": "Fluxos de automação específicos"
+    },
+    "quadrant4_interface": {
+      "title": "Interfaces e Canais",
+      "description": "Onde o usuário interage com a solução",
+      "items": ["Item 1: [Canal] - [Experiência do usuário]", ...],
+      "tool_names": ["WhatsApp", "Web App", ...],
+      "integration_details": "Como os canais se conectam ao backend"
+    }
   },
   "mind_map": {
-    "central_idea": "...",
-    "branches": [{"name": "...", "children": ["..."]}]
+    "central_idea": "Título da solução",
+    "branches": [{"name": "Branch", "children": ["Sub-item 1", ...]}]
   }
 }
 
-Seja DETALHADO e ESPECÍFICO em cada campo.`;
-      maxTokens = 15000; // 🚀 FASE 1: Frameworks raramente ultrapassam 8k tokens
+Seja DETALHADO, ESPECÍFICO e EXECUTÁVEL em cada campo.`;
+      maxTokens = 20000;
     } else if (sectionType === "tools") {
       systemPrompt = `Você é especialista em ferramentas SaaS e APIs.
 
@@ -267,43 +308,41 @@ Retorne JSON:
       maxTokens = 40000; // 🚀 Aumentado para suportar prompts mais completos
     }
 
-    // 🎯 Para Lovable, incluir CONTEXTO COMPLETO (perguntas + respostas)
+    // 🎯 Incluir CONTEXTO COMPLETO para TODAS as seções
     let contextualInfo = '';
     
-    if (sectionType === 'lovable') {
-      // Buscar perguntas e respostas da validação
-      const questionsAsked = solution.questions_asked || [];
-      const userAnswers = solution.user_answers || [];
-      
-      if (questionsAsked.length > 0 && userAnswers.length > 0) {
-        contextualInfo = '\n\n📝 CONTEXTO ADICIONAL (Validação Técnica):\n';
-        questionsAsked.forEach((q: string, idx: number) => {
-          const answer = userAnswers[idx] || 'Não respondido';
-          contextualInfo += `\nPergunta ${idx + 1}: ${q}\nResposta: ${answer}\n`;
-        });
+    // Buscar perguntas e respostas da validação
+    const questionsAsked = solution.questions_asked || [];
+    const userAnswers = solution.user_answers || [];
+    
+    if (questionsAsked.length > 0 && userAnswers.length > 0) {
+      contextualInfo = '\n\n📝 CONTEXTO ADICIONAL (Validação Técnica):\n';
+      questionsAsked.forEach((q: string, idx: number) => {
+        const answer = userAnswers[idx] || 'Não respondido';
+        contextualInfo += `\nPergunta ${idx + 1}: ${q}\nResposta: ${answer}\n`;
+      });
+    }
+    
+    // Adicionar dados estruturados da solução se existirem
+    if (solution.required_tools) {
+      contextualInfo += '\n\n🛠️ FERRAMENTAS IDENTIFICADAS:\n';
+      const tools = solution.required_tools;
+      if (tools.essential) {
+        contextualInfo += `Essential: ${tools.essential.map((t: any) => t.name).join(', ')}\n`;
       }
-      
-      // Adicionar dados estruturados da solução se existirem
-      if (solution.required_tools) {
-        contextualInfo += '\n\n🛠️ FERRAMENTAS IDENTIFICADAS:\n';
-        const tools = solution.required_tools;
-        if (tools.essential) {
-          contextualInfo += `Essential: ${tools.essential.map((t: any) => t.name).join(', ')}\n`;
+      if (tools.optional) {
+        contextualInfo += `Optional: ${tools.optional.map((t: any) => t.name).join(', ')}\n`;
+      }
+    }
+    
+    if (solution.framework_mapping && sectionType !== 'framework') {
+      contextualInfo += '\n\n🏗️ FRAMEWORK JÁ MAPEADO:\n';
+      const fw = solution.framework_mapping;
+      Object.keys(fw).forEach(key => {
+        if (fw[key]?.title) {
+          contextualInfo += `- ${fw[key].title}: ${fw[key].tool_names?.join(', ') || 'N/A'}\n`;
         }
-        if (tools.optional) {
-          contextualInfo += `Optional: ${tools.optional.map((t: any) => t.name).join(', ')}\n`;
-        }
-      }
-      
-      if (solution.framework_mapping) {
-        contextualInfo += '\n\n🏗️ FRAMEWORK JÁ MAPEADO:\n';
-        const fw = solution.framework_mapping;
-        Object.keys(fw).forEach(key => {
-          if (fw[key]?.title) {
-            contextualInfo += `- ${fw[key].title}: ${fw[key].tool_names?.join(', ') || 'N/A'}\n`;
-          }
-        });
-      }
+      });
     }
 
     const userPrompt = `Analise esta solução e gere o conteúdo solicitado:

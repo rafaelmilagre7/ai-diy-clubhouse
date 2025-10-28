@@ -18,6 +18,7 @@ export default function BuilderSolutionCover() {
   const queryClient = useQueryClient();
   const [generatingSection, setGeneratingSection] = useState<string | null>(null);
   const [generatingLovablePrompt, setGeneratingLovablePrompt] = useState(false);
+  const [generatingFramework, setGeneratingFramework] = useState(false);
 
   const { data: solution, isLoading } = useQuery({
     queryKey: ['builder-solution', id],
@@ -69,6 +70,42 @@ export default function BuilderSolutionCover() {
       };
     }
   }, [solution?.id, solution?.lovable_prompt, generatingLovablePrompt, queryClient]);
+
+  // 🚀 POLLING para Framework quando não existe ainda
+  React.useEffect(() => {
+    if (!solution?.framework_mapping && solution?.id && !generatingFramework) {
+      console.log('[COVER] 🔄 Iniciando polling para framework_mapping...');
+      setGeneratingFramework(true);
+      
+      const pollInterval = setInterval(async () => {
+        console.log('[COVER] 🔍 Verificando se framework_mapping foi gerado...');
+        
+        const { data } = await supabase
+          .from('ai_generated_solutions')
+          .select('framework_mapping')
+          .eq('id', solution.id)
+          .single();
+        
+        if (data?.framework_mapping) {
+          console.log('[COVER] ✅ Framework gerado com sucesso!');
+          setGeneratingFramework(false);
+          queryClient.invalidateQueries({ queryKey: ['builder-solution', solution.id] });
+          clearInterval(pollInterval);
+        }
+      }, 5000);
+      
+      const timeout = setTimeout(() => {
+        console.log('[COVER] ⏱️ Timeout do polling de framework (90s)');
+        clearInterval(pollInterval);
+        setGeneratingFramework(false);
+      }, 90000);
+      
+      return () => {
+        clearInterval(pollInterval);
+        clearTimeout(timeout);
+      };
+    }
+  }, [solution?.id, solution?.framework_mapping, generatingFramework, queryClient]);
 
   // Mapear cards para campos do banco e tipos de seção
   const sectionMapping: Record<string, { field: string; type: string; label: string }> = {
@@ -320,7 +357,11 @@ export default function BuilderSolutionCover() {
       title: "Framework de Implementação",
       subtitle: "Os 4 pilares da sua solução",
       icon: Compass,
-      badge: "by Rafael Milagre",
+      badge: generatingFramework 
+        ? "Gerando..." 
+        : solution?.framework_mapping 
+          ? "by Rafael Milagre" 
+          : "Gerar",
       color: "from-cyan-500/20 to-teal-400/20",
       borderColor: "border-cyan-400/30",
       path: `/ferramentas/builder/solution/${id}/framework`,
