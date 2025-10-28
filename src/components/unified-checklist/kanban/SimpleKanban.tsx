@@ -136,7 +136,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         }
       });
     }
-  }, [checklistItems, checklistData.id, checklistData.updated_at, hasValidItems]);
+  }, [checklistItems, hasValidItems]);
 
   // Agrupar items por coluna
   const itemsByColumn = useMemo(() => {

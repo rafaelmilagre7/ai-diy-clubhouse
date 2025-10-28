@@ -275,7 +275,17 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       is_completed: allCompleted,
       is_template: false
     };
-  }, [userProgress, solutionId, template, checklistType, checklistItems, completedItems.length, progressPercentage, allCompleted]);
+  }, [
+    userProgress?.id,
+    userProgress?.user_id,
+    solutionId,
+    template?.id,
+    checklistType,
+    JSON.stringify(checklistItems),
+    completedItems.length,
+    progressPercentage,
+    allCompleted
+  ]);
 
   return (
     <div className="space-y-6">
