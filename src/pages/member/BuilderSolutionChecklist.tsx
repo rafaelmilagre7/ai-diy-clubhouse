@@ -10,6 +10,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useUnifiedChecklistTemplate, useUnifiedChecklist } from '@/hooks/useUnifiedChecklists';
+import { TrailErrorBoundary } from '@/components/implementation-trail/ErrorBoundary';
 
 export default function BuilderSolutionChecklist() {
   const { id } = useParams();
@@ -366,13 +367,15 @@ export default function BuilderSolutionChecklist() {
                 />
               )
             ) : (
-              <UnifiedChecklistTab
-                solutionId={id || ''}
-                checklistType="implementation"
-                onComplete={() => {
-                  toast.success('Parabéns! Você completou todos os passos!');
-                }}
-              />
+              <TrailErrorBoundary>
+                <UnifiedChecklistTab
+                  solutionId={id || ''}
+                  checklistType="implementation"
+                  onComplete={() => {
+                    toast.success('Parabéns! Você completou todos os passos!');
+                  }}
+                />
+              </TrailErrorBoundary>
             )}
           </div>
         </div>

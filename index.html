@@ -39,5 +39,17 @@
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    
+    <!-- Limpar service workers antigos para resolver erros de cache -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+          for(let registration of registrations) {
+            registration.unregister();
+            console.log('🧹 Service worker removido:', registration.scope);
+          }
+        });
+      }
+    </script>
   </body>
 </html>

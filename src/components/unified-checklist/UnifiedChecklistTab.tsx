@@ -30,6 +30,13 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   checklistType = 'implementation', 
   onComplete 
 }) => {
+  // 🐛 LOG INICIAL - Debug de render
+  console.log('🎯 [UnifiedChecklistTab] Render inicial:', {
+    solutionId,
+    checklistType,
+    timestamp: new Date().toISOString()
+  });
+
   const [selectedItem, setSelectedItem] = useState<UnifiedChecklistItem | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   
@@ -95,6 +102,10 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       rawCount: userProgress?.checklist_data?.items?.length || template?.checklist_data?.items?.length || 0,
       normalizedCount: checklistItems.length,
       firstItem: checklistItems[0],
+      isLoadingTemplate,
+      isLoadingProgress,
+      hasTemplate: !!template,
+      hasUserProgress: !!userProgress,
       columnsDistribution: {
         todo: checklistItems.filter(i => i.column === 'todo').length,
         in_progress: checklistItems.filter(i => i.column === 'in_progress').length,
@@ -102,7 +113,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         invalid: checklistItems.filter(i => !['todo', 'in_progress', 'done'].includes(i.column || 'todo')).length
       }
     });
-  }, [checklistItems, userProgress, template]);
+  }, [checklistItems, userProgress, template, isLoadingTemplate, isLoadingProgress]);
 
   // Função para atualizar item
   const handleItemUpdate = (itemId: string, isCompleted: boolean, notes?: string) => {
