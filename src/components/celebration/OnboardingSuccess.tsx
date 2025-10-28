@@ -98,10 +98,34 @@ export const OnboardingSuccess: React.FC<OnboardingSuccessProps> = ({
     
     // Auto complete após todas as animações terminarem
     const timer = setTimeout(() => {
+      console.log('[ONBOARDING_SUCCESS] ✅ Chamando onComplete após celebração');
       onComplete();
     }, 2800);
-    
-    return () => clearTimeout(timer);
+
+    // NOVO: Timeout de segurança como último recurso
+    // Se TUDO falhar (navigate, syncProfile, RootRedirect), forçar redirecionamento
+    const safetyTimer = setTimeout(() => {
+      console.warn('[ONBOARDING_SUCCESS] ⚠️ TIMEOUT DE SEGURANÇA ATIVADO - forçando navegação');
+      console.warn('[ONBOARDING_SUCCESS] Isso não deveria acontecer normalmente');
+      
+      // Última tentativa: invalidar todos os caches antes de redirecionar
+      try {
+        sessionStorage.clear();
+        const authKeys = Object.keys(localStorage).filter(key => 
+          key.includes('auth') || key.includes('viverdeia')
+        );
+        authKeys.forEach(key => localStorage.removeItem(key));
+        console.log('[ONBOARDING_SUCCESS] 🗑️ Caches locais limpos');
+      } catch {}
+      
+      // Forçar redirecionamento hard (último recurso)
+      window.location.href = '/dashboard';
+    }, 6000); // 6 segundos total (2.8s celebração + 3.2s margem)
+
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(safetyTimer); // IMPORTANTE: limpar também o safety timer
+    };
   }, [onComplete]);
 
   const getSuccessMessage = () => {

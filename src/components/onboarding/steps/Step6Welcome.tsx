@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Rocket, Users, BookOpen, Calendar, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { OnboardingSuccess } from '@/components/celebration/OnboardingSuccess';
 import { TeamInviteSection } from '@/components/onboarding/TeamInviteSection';
 
@@ -18,6 +19,7 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   userType,
   userName = "Usuário"
 }) => {
+  const navigate = useNavigate();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showTeamInvites, setShowTeamInvites] = useState(false);
@@ -48,7 +50,16 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   };
 
   const handleSuccessComplete = () => {
-    window.location.href = '/dashboard';
+    console.log('[STEP6] ✅ Onboarding finalizado - navegando para dashboard');
+    
+    // CRÍTICO: Marcar no sessionStorage que onboarding acabou de ser completado
+    // Isso impede que RootRedirect interfira durante a transição
+    sessionStorage.setItem('onboarding_just_completed', 'true');
+    console.log('[STEP6] 🚩 Flag "onboarding_just_completed" setada no sessionStorage');
+    
+    // Usar React Router para navegação suave (sem reload)
+    navigate('/dashboard', { replace: true });
+    console.log('[STEP6] 🚀 Navegação iniciada via React Router');
   };
   return (
     <>

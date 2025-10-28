@@ -558,17 +558,76 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         throw error;
       }
 
-      // Invalidar cache e sincronizar perfil
-      console.log('[ONBOARDING] ⏱️ Sincronizando perfil...');
-      markProfileStale(); // Marcar cache como desatualizado
-      
-      // Tentar sincronizar perfil - não bloquear se falhar
+      // Invalidar AMBOS os caches antes de sincronizar
+      console.log('[ONBOARDING] ⏱️ Invalidando caches...');
+      markProfileStale(); // Invalida authSessionUtils cache
+
+      // NOVO: Invalidar também o AuthCache (localStorage)
       try {
-        await syncProfile(false); // Sincronizar sem toast
-        console.log('[ONBOARDING] ✅ Perfil sincronizado com sucesso');
-      } catch (syncError) {
-        console.warn('[ONBOARDING] ⚠️ Falha na sincronização do perfil (não crítico):', syncError);
+        const { authCache } = await import('@/lib/auth/authCache');
+        authCache.remove(user.id);
+        console.log('[ONBOARDING] ✅ AuthCache (localStorage) invalidado');
+      } catch (cacheError) {
+        console.warn('[ONBOARDING] ⚠️ Erro ao invalidar authCache:', cacheError);
       }
+
+      // SINCRONIZAÇÃO BLOCANTE com retry
+      console.log('[ONBOARDING] ⏱️ Iniciando sincronização blocante do perfil...');
+      let syncAttempts = 0;
+      const maxRetries = 3;
+      let syncSuccess = false;
+
+      while (syncAttempts < maxRetries && !syncSuccess) {
+        try {
+          syncAttempts++;
+          console.log(`[ONBOARDING] 🔄 Tentativa ${syncAttempts}/${maxRetries} de sincronização`);
+          
+          await syncProfile(false);
+          syncSuccess = true;
+          console.log('[ONBOARDING] ✅ Perfil sincronizado com sucesso!');
+        } catch (syncError) {
+          console.warn(`[ONBOARDING] ⚠️ Tentativa ${syncAttempts} falhou:`, syncError);
+          
+          if (syncAttempts < maxRetries) {
+            // Aguardar 500ms antes de tentar novamente
+            console.log('[ONBOARDING] ⏳ Aguardando 500ms antes de retry...');
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            // Re-invalidar cache antes de tentar novamente
+            markProfileStale();
+            try {
+              const { authCache } = await import('@/lib/auth/authCache');
+              authCache.remove(user.id);
+            } catch {}
+          }
+        }
+      }
+
+      // Se falhou todas as tentativas, invalidar TUDO como última tentativa
+      if (!syncSuccess) {
+        console.error('[ONBOARDING] ❌ CRÍTICO: Todas as tentativas de sincronização falharam');
+        
+        // Última tentativa: limpar TODOS os caches
+        try {
+          const { clearProfileCache } = await import('@/hooks/auth/utils/authSessionUtils');
+          clearProfileCache(user.id);
+          
+          const { authCache } = await import('@/lib/auth/authCache');
+          authCache.clear(); // Limpar TUDO do authCache
+          
+          console.log('[ONBOARDING] 🗑️ Todos os caches limpos como fallback');
+        } catch (cleanupError) {
+          console.error('[ONBOARDING] ❌ Erro ao limpar caches:', cleanupError);
+        }
+        
+        // Continuar mesmo assim para não bloquear o usuário permanentemente
+        console.warn('[ONBOARDING] ⚠️ Continuando apesar da falha de sincronização');
+      }
+
+      // Aguardar propagação (800ms) para garantir que o banco atualizou o cache
+      console.log('[ONBOARDING] ⏳ Aguardando 800ms para propagação...');
+      await new Promise(resolve => setTimeout(resolve, 800));
+      console.log('[ONBOARDING] ✅ Sincronização concluída');
 
       // Atualizar estado local rapidamente
       console.log('[ONBOARDING] ⏱️ Atualizando estado local...');

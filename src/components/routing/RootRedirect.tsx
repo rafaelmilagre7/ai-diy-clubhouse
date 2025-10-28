@@ -35,6 +35,21 @@ const RootRedirect = () => {
   // CRÍTICO: Verificar se usuário precisa fazer onboarding
   // CORREÇÃO: Só redirecionar se onboarding_completed for explicitamente false
   if (user && profile && profile.onboarding_completed === false) {
+    // NOVA VERIFICAÇÃO: Se acabou de completar onboarding, aguardar sincronização
+    const justCompletedFlag = sessionStorage.getItem('onboarding_just_completed');
+    
+    if (justCompletedFlag === 'true') {
+      console.log("⏳ [ROOT-REDIRECT] Onboarding recém-completado - aguardando sincronização do cache");
+      
+      // Remover flag para evitar loop infinito
+      sessionStorage.removeItem('onboarding_just_completed');
+      console.log("🗑️ [ROOT-REDIRECT] Flag removida do sessionStorage");
+      
+      // Mostrar loading enquanto o cache sincroniza
+      // Isso dá tempo para a sincronização blocante do useOnboarding completar
+      return <LoadingScreen message="Finalizando configuração..." showProgress />;
+    }
+    
     console.log("📝 [ROOT-REDIRECT] Usuário precisa fazer onboarding - redirecionando");
     return <Navigate to="/onboarding" replace />;
   }
