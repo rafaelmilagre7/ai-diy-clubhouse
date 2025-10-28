@@ -315,6 +315,32 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           console.log('✅ [REGISTER] Profile criado automaticamente pelo trigger');
         }
         
+        // CORREÇÃO 1: Aplicar convite após criação do perfil
+        if (inviteToken) {
+          try {
+            console.log('🎯 [REGISTER] Aplicando convite ao novo usuário...');
+            const { data: inviteResult, error: inviteError } = await supabase.rpc('apply_invite_to_user', {
+              p_invite_token: inviteToken.trim(),
+              p_user_id: data.user.id
+            });
+
+            if (inviteError) {
+              console.error('❌ [REGISTER] Erro ao aplicar convite:', inviteError);
+              toast({
+                title: "Aviso",
+                description: "Conta criada mas houve problema com o convite. Entre em contato conosco.",
+                variant: "destructive",
+              });
+            } else if (inviteResult?.success) {
+              console.log('✅ [REGISTER] Convite aplicado com sucesso - role atualizado');
+            } else {
+              console.warn('⚠️ [REGISTER] Convite não foi aplicado:', inviteResult?.message);
+            }
+          } catch (err) {
+            console.error('❌ [REGISTER] Erro ao processar convite:', err);
+          }
+        }
+        
         toast({
           title: "Conta criada com sucesso! 🎉",
           description: "Bem-vindo à plataforma!",

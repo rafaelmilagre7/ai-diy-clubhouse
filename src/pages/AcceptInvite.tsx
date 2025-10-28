@@ -187,17 +187,23 @@ const AcceptInvite: React.FC = () => {
         console.log('✅ [ACCEPT-INVITE-FALLBACK] Profile criado manualmente');
       }
 
-      // Marcar convite como usado
-      const { error: updateError } = await supabase
-        .from('invites')
-        .update({ 
-          used_at: new Date().toISOString(),
-        })
-        .eq('token', token);
+      // CORREÇÃO 1: Aplicar convite usando RPC que atualiza role e marca como usado
+      try {
+        const { data: inviteResult, error: inviteError } = await supabase.rpc('apply_invite_to_user', {
+          p_invite_token: token,
+          p_user_id: authData.user.id
+        });
 
-      if (updateError) {
-        console.error('Erro ao atualizar convite:', updateError);
-        // Não falha o processo se não conseguir atualizar o convite
+        if (inviteError) {
+          console.error('❌ [ACCEPT-INVITE] Erro ao aplicar convite:', inviteError);
+          toast.error('Conta criada mas houve problema ao aplicar o convite. Entre em contato.');
+        } else if (inviteResult?.success) {
+          console.log('✅ [ACCEPT-INVITE] Convite aplicado - role atualizado e convite marcado como usado');
+        } else {
+          console.warn('⚠️ [ACCEPT-INVITE] Convite não aplicado:', inviteResult?.message);
+        }
+      } catch (err) {
+        console.error('❌ [ACCEPT-INVITE] Erro crítico ao aplicar convite:', err);
       }
 
       toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');

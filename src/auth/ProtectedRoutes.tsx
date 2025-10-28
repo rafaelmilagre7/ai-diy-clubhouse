@@ -56,6 +56,17 @@ export const ProtectedRoutes = ({ children }: ProtectedRoutesProps) => {
     return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
 
+  // CORREÇÃO 3: Verificar onboarding antes de liberar acesso
+  // Rotas isentas: onboarding, profile, settings
+  const exemptPaths = ['/onboarding', '/profile', '/settings'];
+  const isExemptPath = exemptPaths.some(path => location.pathname.startsWith(path));
+  
+  // Se não completou onboarding e não está em rota isenta, redirecionar
+  if (!isExemptPath && profile && !profile.onboarding_completed) {
+    console.log('🔒 [PROTECTED-ROUTE] Onboarding não completo - redirecionando');
+    return <Navigate to="/onboarding" replace />;
+  }
+
   // Usuário autenticado - renderizar conteúdo
   return <>{children}</>;
 };

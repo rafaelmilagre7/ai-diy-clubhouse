@@ -80,8 +80,46 @@ export const useInviteBulkCreate = () => {
           throw new Error('Papel não encontrado. Selecione um papel válido.');
         }
 
+        // CORREÇÃO 4: Pré-validação de emails duplicados
+        const emails = contacts.map(c => c.cleaned.email.toLowerCase());
+        
+        // Verificar convites existentes
+        const { data: existingInvites } = await supabase
+          .from('invites')
+          .select('email, used_at, expires_at')
+          .in('email', emails);
+        
+        // Verificar usuários já registrados
+        const { data: existingUsers } = await supabase
+          .from('profiles')
+          .select('email')
+          .in('email', emails);
+        
+        // Filtrar duplicatas
+        const existingEmails = new Set([
+          ...(existingInvites?.filter(inv => !inv.used_at && new Date(inv.expires_at) > new Date()).map(inv => inv.email.toLowerCase()) || []),
+          ...(existingUsers?.map(u => u.email.toLowerCase()) || [])
+        ]);
+        
+        const filteredContacts = contacts.filter(contact => 
+          !existingEmails.has(contact.cleaned.email.toLowerCase())
+        );
+        
+        // Informar admin sobre duplicatas
+        const duplicatesCount = contacts.length - filteredContacts.length;
+        if (duplicatesCount > 0) {
+          toast.warning(`${duplicatesCount} email(s) já possui convite ativo ou conta registrada`, {
+            description: `${filteredContacts.length} novos convites serão criados`
+          });
+        }
+        
+        // Se não há contatos válidos, retornar
+        if (filteredContacts.length === 0) {
+          throw new Error('Todos os emails já possuem convites ativos ou contas registradas');
+        }
+
         // Preparar dados para a nova estrutura da RPC
-        const inviteData = contacts.map(contact => ({
+        const inviteData = filteredContacts.map(contact => ({
           email: contact.cleaned.email,
           role_id: finalRoleId,
           whatsapp_number: contact.cleaned.phone,

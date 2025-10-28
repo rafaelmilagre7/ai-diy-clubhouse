@@ -177,24 +177,29 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
           console.log('✅ [SIGNUP-FALLBACK] Profile criado manualmente');
         }
         
-        // Se tem token de convite, aplicar agora
+        // CORREÇÃO 1: Aplicar convite usando apply_invite_to_user
         if (inviteToken) {
           try {
-            const { data: inviteResult, error: inviteError } = await supabase.rpc('use_invite_with_onboarding', {
-              invite_token: inviteToken,
-              user_id: data.user.id
+            console.log('🎯 [SIGNUP] Aplicando convite ao novo usuário...');
+            const { data: inviteResult, error: inviteError } = await supabase.rpc('apply_invite_to_user', {
+              p_invite_token: inviteToken,
+              p_user_id: data.user.id
             });
 
-            if (inviteError || inviteResult?.status === 'error') {
-              console.error("[SIGNUP] Erro ao aplicar convite:", inviteError || inviteResult?.message);
+            if (inviteError) {
+              console.error("❌ [SIGNUP] Erro ao aplicar convite:", inviteError);
               toast({
                 title: "Conta criada com sucesso",
                 description: "Porém houve um problema com o convite. Entre em contato conosco.",
                 variant: "destructive",
               });
+            } else if (inviteResult?.success) {
+              console.log('✅ [SIGNUP] Convite aplicado - role atualizado');
+            } else {
+              console.warn('⚠️ [SIGNUP] Convite não foi aplicado:', inviteResult?.message);
             }
           } catch (err) {
-            console.error("[SIGNUP] Erro ao aplicar convite:", err);
+            console.error("❌ [SIGNUP] Erro crítico ao aplicar convite:", err);
           }
         }
         

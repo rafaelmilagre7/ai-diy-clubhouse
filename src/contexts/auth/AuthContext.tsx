@@ -132,6 +132,28 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             console.warn('Erro ao logar criação manual:', err);
           }
           
+          // CORREÇÃO 2: Criar onboarding_final automaticamente
+          try {
+            console.log('🎯 [AUTH-CONTEXT-FALLBACK] Criando onboarding_final...');
+            const { error: onboardingError } = await supabase
+              .from('onboarding_final')
+              .insert({
+                user_id: userId,
+                current_step: 1,
+                is_completed: false,
+                personal_info: {},
+                business_info: {}
+              });
+            
+            if (onboardingError && onboardingError.code !== '23505') { // Ignora duplicatas
+              console.error('❌ [AUTH-CONTEXT-FALLBACK] Erro ao criar onboarding_final:', onboardingError);
+            } else {
+              console.log('✅ [AUTH-CONTEXT-FALLBACK] onboarding_final criado com sucesso');
+            }
+          } catch (onbError) {
+            console.warn('⚠️ [AUTH-CONTEXT-FALLBACK] Erro ao criar onboarding:', onbError);
+          }
+          
           setProfile(newProfile);
           
           toast.success('Perfil configurado!', {
