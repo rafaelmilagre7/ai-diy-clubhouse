@@ -40,39 +40,7 @@ export const convertLegacyChecklistToUnified = (
   }));
 };
 
-/**
- * Busca checklist legado de implementation_checkpoints
- */
-export const fetchLegacyCheckpoints = async (solutionId: string): Promise<UnifiedChecklistItem[]> => {
-  console.log('🔍 Buscando checklist legado em implementation_checkpoints...', { solutionId });
-  
-  try {
-    const { data, error } = await supabase
-      .from('implementation_checkpoints')
-      .select('checkpoint_data')
-      .eq('solution_id', solutionId)
-      .limit(1)
-      .maybeSingle();
-    
-    if (error && error.code !== 'PGRST116') {
-      console.error('❌ Erro ao buscar implementation_checkpoints:', error);
-      return [];
-    }
-    
-    if (data?.checkpoint_data?.items) {
-      console.log('✅ Encontrado checklist em implementation_checkpoints:', {
-        itemsCount: data.checkpoint_data.items.length
-      });
-      return convertLegacyChecklistToUnified(data.checkpoint_data.items);
-    }
-    
-    console.log('📭 Nenhum checkpoint encontrado em implementation_checkpoints');
-    return [];
-  } catch (err) {
-    console.error('❌ Erro ao buscar implementation_checkpoints:', err);
-    return [];
-  }
-};
+// implementation_checkpoints table does not exist - removed
 
 /**
  * Busca checklist_items da tabela solutions
@@ -110,20 +78,12 @@ export const fetchLegacyChecklistItems = async (solutionId: string): Promise<Uni
 };
 
 /**
- * Busca checklist legado de todas as fontes possíveis
- * e retorna o primeiro que encontrar
+ * Busca checklist legado de solutions.checklist_items
+ * (implementation_checkpoints não existe no banco)
  */
 export const fetchLegacyChecklist = async (solutionId: string): Promise<UnifiedChecklistItem[]> => {
-  console.log('🔎 Iniciando busca de checklist legado...', { solutionId });
+  console.log('🔎 Buscando checklist legado em solutions.checklist_items...', { solutionId });
   
-  // Tentar implementation_checkpoints primeiro
-  const checkpointsItems = await fetchLegacyCheckpoints(solutionId);
-  if (checkpointsItems.length > 0) {
-    console.log('✅ Checklist legado encontrado em implementation_checkpoints');
-    return checkpointsItems;
-  }
-  
-  // Tentar solutions.checklist_items
   const solutionItems = await fetchLegacyChecklistItems(solutionId);
   if (solutionItems.length > 0) {
     console.log('✅ Checklist legado encontrado em solutions.checklist_items');

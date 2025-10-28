@@ -47,45 +47,8 @@ export const useChecklistData = (module: Module) => {
         // Extrair checklist da solução
         const extractedChecklist = extractChecklistFromSolution(solutionData);
         
-        // Se não há items na solução, buscar dos checkpoints de implementação
-        if (extractedChecklist.length === 0 && user) {
-          const { data: checkpointData, error: checkpointError } = await supabase
-            .from("implementation_checkpoints")
-            .select("*")
-            .eq("solution_id", module.solution_id)
-            .eq("user_id", user.id)
-            .maybeSingle();
-            
-          if (checkpointError && checkpointError.code !== "PGRST116") {
-            logError("Error fetching checkpoints:", checkpointError);
-          } else if (checkpointData && checkpointData.checkpoint_data) {
-            // Extrair items do campo JSONB
-            const checkpointItems = checkpointData.checkpoint_data as CheckpointData;
-            if (checkpointItems.items && checkpointItems.items.length > 0) {
-              const checklistItems = checkpointItems.items.map(item => ({
-                id: item.id,
-                title: item.title,
-                description: item.description,
-                checked: false
-              }));
-              
-              setChecklist(checklistItems);
-              
-              // Inicializar estado do usuário baseado nos completed_steps
-              const userChecklistState: Record<string, boolean> = {};
-              const completedSteps = checkpointData.completed_steps || [];
-              
-              checklistItems.forEach((item, index) => {
-                userChecklistState[item.id] = completedSteps.includes(String(index));
-              });
-              
-              setUserChecklist(userChecklistState);
-              setLoading(false);
-              return;
-            }
-          }
-          
-          log("No checklist or implementation_checkpoints found", { solutionId: solutionData.id });
+        if (extractedChecklist.length === 0) {
+          log("No checklist found in solution", { solutionId: solutionData.id });
           setChecklist([]);
           setUserChecklist({});
         } else {
