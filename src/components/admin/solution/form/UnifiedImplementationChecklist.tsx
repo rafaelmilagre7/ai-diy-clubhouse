@@ -14,6 +14,7 @@ import {
   useCreateUnifiedChecklistTemplate,
   type UnifiedChecklistItem 
 } from "@/hooks/useUnifiedChecklists";
+import { useMigrateChecklistToUnified } from "@/hooks/useMigrateChecklistToUnified";
 
 interface UnifiedImplementationChecklistProps {
   solutionId: string;
@@ -36,6 +37,17 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   );
   
   const createTemplateMutation = useCreateUnifiedChecklistTemplate();
+  
+  // Hook de migração automática
+  const migration = useMigrateChecklistToUnified(solutionId, !!template);
+
+  // Recarregar após migração bem-sucedida
+  useEffect(() => {
+    if (migration.isMigrated) {
+      console.log('✅ Migração concluída, recarregando template...');
+      refetch();
+    }
+  }, [migration.isMigrated, refetch]);
 
   useEffect(() => {
     if (isLoading) return;
@@ -167,6 +179,27 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   const progressPercentage = checklistItems.length > 0 
     ? Math.round((completedCount / checklistItems.length) * 100)
     : 0;
+
+  // Loading durante migração
+  if (migration.isLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center justify-center py-12 gap-4">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin"></div>
+              <div className="text-center">
+                <p className="font-medium">Migrando checklist antigo...</p>
+                <p className="text-sm text-muted-foreground">
+                  Estamos convertendo seu checklist para o novo formato
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (isLoading) {
     return (
