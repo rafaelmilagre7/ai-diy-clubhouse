@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { ChecklistProgress } from "../content/checklist/ChecklistProgress";
-import { ChecklistLoading } from "../content/checklist/ChecklistLoading";
+import { KanbanLoading } from "@/components/unified-checklist/kanban/KanbanLoading";
 import { AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getChecklistTemplate } from "@/lib/supabase/rpc";
@@ -170,7 +170,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   }, [userChecklist, onComplete]);
 
   if (loadingChecklist) {
-    return <ChecklistLoading />;
+    return <KanbanLoading />;
   }
 
   if (!checklistItems || checklistItems.length === 0) {
@@ -229,7 +229,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
 
   // Mostrar loading enquanto cria o checklist pessoal
   if (!userChecklist && user?.id) {
-    return <ChecklistLoading />;
+    return <KanbanLoading />;
   }
 
   // Verificar se o checklist pessoal está vazio (erro de sincronização)

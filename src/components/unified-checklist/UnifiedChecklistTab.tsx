@@ -18,6 +18,7 @@ import {
   type UnifiedChecklistData
 } from "@/hooks/useUnifiedChecklists";
 import SimpleKanban from "./kanban/SimpleKanban";
+import { KanbanLoading } from "./kanban/KanbanLoading";
 
 interface UnifiedChecklistTabProps {
   solutionId: string;
@@ -203,11 +204,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   }, [allCompleted, onComplete]);
 
   if (isLoadingTemplate || isLoadingProgress) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <KanbanLoading />;
   }
 
   // ✅ Permitir kanban vazio quando não há template
