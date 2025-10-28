@@ -13,7 +13,20 @@ export interface UnifiedChecklistItem {
   completedAt?: string;
   column?: 'todo' | 'in_progress' | 'done';
   order?: number;
-  metadata?: any; // Dados extras como estimated_time, difficulty, etc
+  // Campos do Framework Rafael Milagre (primeiro nível)
+  step_number?: number;
+  estimated_time?: string;
+  difficulty?: 'easy' | 'medium' | 'hard' | 'Fácil' | 'Média' | 'Difícil';
+  quadrant?: string; // "Q1", "Q2", "Q3", "Q4", "Geral"
+  tools_required?: string[];
+  // Dados extras menos críticos
+  metadata?: {
+    dependencies?: number[];
+    validation_criteria?: string[];
+    common_pitfalls?: string[];
+    resources?: string[];
+    [key: string]: any;
+  };
 }
 
 // Helper para normalizar items (garantir coluna e ordem)

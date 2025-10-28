@@ -594,16 +594,18 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
         column: 'todo',
         order: index,
         notes: '',
+        // Campos no primeiro nível (Framework Rafael Milagre)
+        step_number: step.step_number,
+        estimated_time: step.estimated_time,
+        difficulty: step.difficulty,
+        quadrant: step.quadrant || 'Geral',
+        tools_required: step.tools_required || [],
+        // Dados menos críticos em metadata
         metadata: {
-          step_number: step.step_number,
-          estimated_time: step.estimated_time,
-          difficulty: step.difficulty,
           dependencies: step.dependencies,
           validation_criteria: step.validation_criteria,
           common_pitfalls: step.common_pitfalls,
-          resources: step.resources,
-          quadrant: step.quadrant || 'Geral', // 🆕 Framework Rafael Milagre
-          tools_required: step.tools_required || [] // 🆕 Ferramentas necessárias
+          resources: step.resources
         }
       }));
       

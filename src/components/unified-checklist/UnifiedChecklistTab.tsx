@@ -39,12 +39,12 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   const updateMutation = useUpdateUnifiedChecklist();
 
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
-    if (userProgress?.checklist_data?.items?.length > 0) {
-      return userProgress.checklist_data.items;
-    }
+    let rawItems: any[] = [];
     
-    if (template?.checklist_data?.items) {
-      return template.checklist_data.items.map((item: any) => ({
+    if (userProgress?.checklist_data?.items?.length > 0) {
+      rawItems = userProgress.checklist_data.items;
+    } else if (template?.checklist_data?.items) {
+      rawItems = template.checklist_data.items.map((item: any) => ({
         ...item,
         column: item.column || 'todo',
         completed: false,
@@ -52,7 +52,36 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       }));
     }
     
-    return [];
+    // Normalizar items (trazer campos de metadata para primeiro nível se necessário)
+    return rawItems.map((item: any) => {
+      const normalized = {
+        ...item,
+        column: item.column || 'todo',
+        completed: item.completed || false,
+        notes: item.notes || '',
+      };
+      
+      // Se campos do Framework estão em metadata, trazer para primeiro nível
+      if (item.metadata) {
+        if (!normalized.step_number && item.metadata.step_number) {
+          normalized.step_number = item.metadata.step_number;
+        }
+        if (!normalized.quadrant && item.metadata.quadrant) {
+          normalized.quadrant = item.metadata.quadrant;
+        }
+        if (!normalized.tools_required && item.metadata.tools_required) {
+          normalized.tools_required = item.metadata.tools_required;
+        }
+        if (!normalized.estimated_time && item.metadata.estimated_time) {
+          normalized.estimated_time = item.metadata.estimated_time;
+        }
+        if (!normalized.difficulty && item.metadata.difficulty) {
+          normalized.difficulty = item.metadata.difficulty;
+        }
+      }
+      
+      return normalized;
+    });
   }, [template, userProgress]);
 
   // Função para atualizar item
