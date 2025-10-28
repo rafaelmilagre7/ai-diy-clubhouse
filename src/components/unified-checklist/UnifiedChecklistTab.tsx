@@ -52,14 +52,25 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       }));
     }
     
-    // 🔧 FASE 4: NORMALIZAÇÃO ROBUSTA - Garantir campos no lugar certo
-    return rawItems.map((item: any) => {
+    // 🔧 FASE 2: Normalizar items com validação robusta
+    return rawItems.map((item: any, index: number) => {
+      // ✅ Garantir que column seja SEMPRE um valor válido
+      let validColumn: 'todo' | 'in_progress' | 'done' = 'todo';
+      if (item.column === 'in_progress' || item.column === 'in-progress') {
+        validColumn = 'in_progress';
+      } else if (item.column === 'done') {
+        validColumn = 'done';
+      }
+      
       const normalized: UnifiedChecklistItem = {
         ...item,
-        column: item.column || 'todo',
+        id: item.id || `item-${index}`, // ✅ Fallback para ID
+        title: item.title || 'Sem título', // ✅ Fallback para título
+        column: validColumn,
         completed: item.completed || false,
         notes: item.notes || '',
-        // ✅ Fallback robusto: buscar em múltiplos lugares
+        order: item.order ?? index,
+        // Promover campos (APENAS se não existirem no primeiro nível)
         step_number: item.step_number ?? item.metadata?.step_number,
         quadrant: item.quadrant ?? item.metadata?.quadrant ?? 'Geral',
         tools_required: item.tools_required ?? item.metadata?.tools_required ?? [],
@@ -67,22 +78,31 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         difficulty: item.difficulty ?? item.metadata?.difficulty,
       };
       
-      // Limpar metadata (remover campos já promovidos para evitar duplicação)
+      // Limpar metadata (remover campos promovidos)
       if (normalized.metadata) {
-        const { 
-          step_number, 
-          quadrant, 
-          tools_required, 
-          estimated_time, 
-          difficulty, 
-          ...cleanMetadata 
-        } = normalized.metadata;
-        normalized.metadata = cleanMetadata;
+        const { step_number, quadrant, tools_required, estimated_time, difficulty, ...clean } = normalized.metadata;
+        normalized.metadata = clean;
       }
       
       return normalized;
-    });
+    }).filter(item => item.id && item.title); // ✅ Remover items inválidos
   }, [template, userProgress]);
+
+  // 🐛 FASE 4: Logs de Debug
+  React.useEffect(() => {
+    console.log('🔍 [UnifiedChecklistTab] Items processados:', {
+      source: userProgress ? 'userProgress' : template ? 'template' : 'nenhum',
+      rawCount: userProgress?.checklist_data?.items?.length || template?.checklist_data?.items?.length || 0,
+      normalizedCount: checklistItems.length,
+      firstItem: checklistItems[0],
+      columnsDistribution: {
+        todo: checklistItems.filter(i => i.column === 'todo').length,
+        in_progress: checklistItems.filter(i => i.column === 'in_progress').length,
+        done: checklistItems.filter(i => i.column === 'done').length,
+        invalid: checklistItems.filter(i => !['todo', 'in_progress', 'done'].includes(i.column || 'todo')).length
+      }
+    });
+  }, [checklistItems, userProgress, template]);
 
   // Função para atualizar item
   const handleItemUpdate = (itemId: string, isCompleted: boolean, notes?: string) => {

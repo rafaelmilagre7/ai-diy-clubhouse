@@ -644,7 +644,7 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       updateData.implementation_checklist = parsedContent.implementation_checklist;
       
       // 🆕 Salvar também em unified_checklists para acesso rápido
-      // 🔥 FASE 1: PARSING ROBUSTO - Extrair campos de onde a IA colocou
+      // 🔥 FASE 1: PARSING ROBUSTO - Extrair campos e LIMPAR metadata
       const unifiedItems = parsedContent.implementation_checklist.map((step: any, index: number) => {
         // Extrair campos do objeto retornado (primeiro nível OU metadata)
         const stepNumber = step.step_number ?? step.metadata?.step_number ?? index + 1;
@@ -653,27 +653,31 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
         const quadrant = step.quadrant ?? step.metadata?.quadrant ?? 'Geral';
         const toolsRequired = step.tools_required ?? step.metadata?.tools_required ?? [];
         
+        // ✅ NOVO: Criar metadata LIMPO (sem campos que foram promovidos)
+        const cleanMetadata = {
+          dependencies: step.dependencies ?? step.metadata?.dependencies ?? [],
+          validation_criteria: step.validation_criteria ?? step.metadata?.validation_criteria ?? [],
+          common_pitfalls: step.common_pitfalls ?? step.metadata?.common_pitfalls ?? [],
+          resources: step.resources ?? step.metadata?.resources ?? []
+        };
+        // NÃO incluir step_number, difficulty, quadrant, etc em metadata!
+        
         return {
           id: `step-${stepNumber}`,
           title: step.title,
           description: step.description,
           completed: false,
-          column: 'todo',
+          column: 'todo', // ✅ SEMPRE iniciar em 'todo'
           order: index,
           notes: '',
-          // ✅ Campos SEMPRE no primeiro nível (garantido)
+          // ✅ Campos SEMPRE no primeiro nível (NUNCA em metadata)
           step_number: stepNumber,
           estimated_time: estimatedTime,
           difficulty: difficulty,
           quadrant: quadrant,
           tools_required: toolsRequired,
-          // Metadados opcionais
-          metadata: {
-            dependencies: step.dependencies ?? step.metadata?.dependencies ?? [],
-            validation_criteria: step.validation_criteria ?? step.metadata?.validation_criteria ?? [],
-            common_pitfalls: step.common_pitfalls ?? step.metadata?.common_pitfalls ?? [],
-            resources: step.resources ?? step.metadata?.resources ?? []
-          }
+          // Metadata APENAS com campos que não foram promovidos
+          metadata: cleanMetadata
         };
       });
       

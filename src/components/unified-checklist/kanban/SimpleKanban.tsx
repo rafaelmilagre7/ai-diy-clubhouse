@@ -9,6 +9,7 @@ import {
   useSensors,
 } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
+import { Card } from "@/components/ui/card";
 import { UnifiedChecklistItem, UnifiedChecklistData, useUpdateUnifiedChecklist } from "@/hooks/useUnifiedChecklists";
 import KanbanColumn from "./KanbanColumn";
 import SimpleKanbanCard from "./SimpleKanbanCard";
@@ -117,6 +118,15 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     return grouped;
   }, [localItems]);
 
+  // 🛡️ FASE 3: Validação de Items
+  const hasValidItems = React.useMemo(() => {
+    return localItems.length > 0 && localItems.every(item => 
+      item.id && 
+      item.title && 
+      ['todo', 'in_progress', 'done'].includes(item.column || 'todo')
+    );
+  }, [localItems]);
+
   const handleDragStart = (event: DragStartEvent) => {
     setActiveId(event.active.id as string);
   };
@@ -210,6 +220,20 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       prev.map((item) => (item.id === itemId ? { ...item, notes } : item))
     );
   };
+
+  // 🛡️ FASE 3: Renderizar placeholder se não houver items válidos
+  if (!hasValidItems) {
+    return (
+      <Card className="p-8 text-center">
+        <p className="text-muted-foreground mb-4">
+          ⚠️ Não há tarefas válidas para exibir no Kanban.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Verifique se o checklist foi gerado corretamente ou tente regenerá-lo.
+        </p>
+      </Card>
+    );
+  }
 
   return (
     <>
