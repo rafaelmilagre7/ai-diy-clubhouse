@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
@@ -15,65 +15,17 @@ export function useImplementationTrail() {
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [isFirstTimeGeneration, setIsFirstTimeGeneration] = useState(false);
 
-  const loadTrail = async () => {
-    if (!user?.id) return;
+  // 🛡️ Flag para prevenir setState em componente desmontado
+  const isMountedRef = useRef(false);
 
-    try {
-      setIsLoading(true);
-      setError(null);
-
-      console.log('🔍 [TRAIL-LOAD] Buscando trilha existente para:', {
-        userId: user.id,
-        timestamp: new Date().toISOString()
-      });
-
-      // Buscar trilha existente
-      const { data: existingTrail, error: trailError } = await supabase
-        .from('implementation_trails')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'completed')
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      console.log('📊 [TRAIL-LOAD] Resultado da query:', {
-        hasData: !!existingTrail,
-        hasError: !!trailError,
-        trailId: existingTrail?.id,
-        status: existingTrail?.status,
-        hasTrailData: !!existingTrail?.trail_data,
-        error: trailError?.message
-      });
-
-      if (trailError) {
-        console.error('❌ [TRAIL-LOAD] Erro ao buscar trilha:', trailError);
-        throw new Error('Erro ao carregar trilha de implementação');
-      }
-
-      if (existingTrail && existingTrail.trail_data) {
-        console.log('✅ [TRAIL-LOAD] Trilha existente encontrada:', existingTrail.id);
-        setTrail(existingTrail.trail_data as ImplementationTrailData);
-        setIsFirstTimeGeneration(false);
-      } else {
-        console.log('🆕 [TRAIL-LOAD] Nenhuma trilha encontrada. Gerando nova...');
-        setIsFirstTimeGeneration(true);
-        await generateTrail();
-      }
-    } catch (err: any) {
-      setError(err.message || 'Erro ao carregar trilha');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const generateTrail = async () => {
-    if (!user?.id) {
+  const generateTrail = useCallback(async () => {
+    if (!user?.id || !isMountedRef.current) {
       setError('Usuário necessário para gerar trilha');
       return;
     }
 
     try {
+      if (!isMountedRef.current) return;
       setIsRegenerating(true);
       setError(null);
 
@@ -97,6 +49,8 @@ export function useImplementationTrail() {
       }
 
       console.log('✅ [useImplementationTrail] Trilha gerada com sucesso:', data.trail);
+      
+      if (!isMountedRef.current) return;
       setTrail(data.trail);
       
       // Limpar cache de soluções para forçar reload dos dados reais
@@ -111,6 +65,7 @@ export function useImplementationTrail() {
         description: `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`,
       });
     } catch (err: any) {
+      if (!isMountedRef.current) return;
       setError('Não foi possível gerar sua trilha personalizada. Gerando trilha padrão...');
       
       // Fallback para trilha básica em caso de erro
@@ -169,6 +124,7 @@ export function useImplementationTrail() {
         generated_at: new Date().toISOString()
       };
 
+      if (!isMountedRef.current) return;
       setTrail(fallbackTrail);
       toast({
         title: 'Trilha básica criada',
@@ -176,30 +132,88 @@ export function useImplementationTrail() {
         variant: 'default',
       });
     } finally {
-      setIsRegenerating(false);
+      if (isMountedRef.current) {
+        setIsRegenerating(false);
+      }
     }
-  };
+  }, [user?.id, toast]);
+
+  const loadTrail = useCallback(async () => {
+    if (!user?.id || !isMountedRef.current) return;
+
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      console.log('🔍 [TRAIL-LOAD] Buscando trilha existente para:', {
+        userId: user.id,
+        timestamp: new Date().toISOString()
+      });
+
+      // Buscar trilha existente
+      const { data: existingTrail, error: trailError } = await supabase
+        .from('implementation_trails')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'completed')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      console.log('📊 [TRAIL-LOAD] Resultado da query:', {
+        hasData: !!existingTrail,
+        hasError: !!trailError,
+        trailId: existingTrail?.id,
+        status: existingTrail?.status,
+        hasTrailData: !!existingTrail?.trail_data,
+        error: trailError?.message
+      });
+
+      if (trailError) {
+        console.error('❌ [TRAIL-LOAD] Erro ao buscar trilha:', trailError);
+        throw new Error('Erro ao carregar trilha de implementação');
+      }
+
+      if (!isMountedRef.current) return;
+
+      if (existingTrail && existingTrail.trail_data) {
+        console.log('✅ [TRAIL-LOAD] Trilha existente encontrada:', existingTrail.id);
+        setTrail(existingTrail.trail_data as ImplementationTrailData);
+        setIsFirstTimeGeneration(false);
+      } else {
+        console.log('🆕 [TRAIL-LOAD] Nenhuma trilha encontrada. Gerando nova...');
+        setIsFirstTimeGeneration(true);
+        await generateTrail();
+      }
+    } catch (err: any) {
+      if (!isMountedRef.current) return;
+      setError(err.message || 'Erro ao carregar trilha');
+    } finally {
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
+    }
+  }, [user?.id, generateTrail]);
 
   const regenerateTrail = () => {
     setIsFirstTimeGeneration(false);
     generateTrail();
   };
 
-  // 🔄 AJUSTE FINAL 2: Force re-fetch ao montar e cleanup ao desmontar
+  // ✅ CORREÇÃO FINAL: useEffect com dependências corretas e flag de montagem
   useEffect(() => {
+    isMountedRef.current = true;
+    console.log('🔄 [TRAIL-MOUNT] Componente montado');
+
     if (user?.id) {
-      console.log('🔄 [TRAIL-MOUNT] Componente montado, carregando trilha...');
       loadTrail();
     }
 
-    // Cleanup: resetar estado ao desmontar
     return () => {
-      console.log('🧹 [TRAIL-UNMOUNT] Limpando estado da trilha...');
-      setTrail(null);
-      setError(null);
-      setIsLoading(true);
+      console.log('🧹 [TRAIL-UNMOUNT] Componente desmontando');
+      isMountedRef.current = false;
     };
-  }, [user?.id]); // Re-executa quando user.id muda
+  }, [user?.id, loadTrail]);
 
   return {
     trail,
