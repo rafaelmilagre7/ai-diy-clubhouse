@@ -41,11 +41,11 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       
       return [];
     },
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    staleTime: 5 * 60 * 1000, // ✅ 5 minutos - template não muda frequentemente
+    gcTime: 10 * 60 * 1000, // ✅ 10 minutos no cache
+    refetchOnMount: false, // ✅ NÃO refazer ao montar
+    refetchOnWindowFocus: false, // ✅ NÃO refazer ao focar janela
+    refetchOnReconnect: false, // ✅ NÃO refazer ao reconectar
   });
 
   // Buscar checklist pessoal do usuário
@@ -67,21 +67,46 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       
       return data as UnifiedChecklistData | null;
     },
-    enabled: !!user?.id && !!checklistItems,
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: 'always',
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
+    enabled: !!user?.id && !!checklistItems && checklistItems.length > 0,
+    staleTime: 30 * 1000, // ✅ 30 segundos - dados de progresso do usuário
+    gcTime: 5 * 60 * 1000, // ✅ 5 minutos no cache
+    refetchOnMount: false, // ✅ NÃO refazer toda vez
+    refetchOnWindowFocus: false, // ✅ NÃO refazer ao focar
+    refetchOnReconnect: false, // ✅ NÃO refazer ao reconectar
   });
+
+  // 🔥 CORREÇÃO: Flag para evitar múltiplas criações do checklist
+  const hasCreatedChecklistRef = React.useRef(false);
+  
+  // 🔥 CORREÇÃO: Hash estável para detectar mudanças reais em checklistItems
+  const checklistItemsHashRef = React.useRef<string>('');
 
   // Criar checklist pessoal se não existir
   useEffect(() => {
-    if (!user?.id || !checklistItems || checklistItems.length === 0 || userChecklist !== null || loadingChecklist) {
+    if (!user?.id || !checklistItems || checklistItems.length === 0 || loadingChecklist) {
       return;
     }
     
+    if (userChecklist !== null) {
+      return; // Já existe checklist - não criar de novo
+    }
+    
+    // 🔥 CORREÇÃO: Verificar se já tentou criar para evitar múltiplas chamadas
+    if (hasCreatedChecklistRef.current) {
+      console.log('⏭️ [LearningChecklistTab] Checklist já foi criado - pulando');
+      return;
+    }
+    
+    // 🔥 CORREÇÃO: Verificar se items REALMENTE mudaram usando hash
+    const itemsHash = checklistItems.map(i => i.id).sort().join('|');
+    if (checklistItemsHashRef.current === itemsHash && hasCreatedChecklistRef.current) {
+      return; // Items não mudaram e já tentamos criar - não fazer nada
+    }
+    checklistItemsHashRef.current = itemsHash;
+    
     const createUserChecklist = async () => {
+      console.log('🏗️ [LearningChecklistTab] Criando checklist do usuário...');
+      hasCreatedChecklistRef.current = true; // ← MARCAR como "já criado"
 
       const itemsWithColumns = checklistItems.map(item => ({
         ...item,
@@ -113,21 +138,18 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
         .single();
       
       if (error) {
-        console.error('❌ [LearningChecklistTab] Erro COMPLETO ao criar checklist:', {
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          code: error.code,
-          errorFull: JSON.stringify(error, null, 2)
-        });
+        console.error('❌ [LearningChecklistTab] Erro ao criar checklist:', error);
         toast.error(`Erro ao criar checklist: ${error.message}`);
+        hasCreatedChecklistRef.current = false; // ← RESETAR em caso de erro
       } else {
-        refetchUserChecklist();
+        console.log('✅ [LearningChecklistTab] Checklist criado com sucesso!');
+        // Pequeno delay para garantir que o banco salvou
+        setTimeout(() => refetchUserChecklist(), 500);
       }
     };
     
     createUserChecklist();
-  }, [user?.id, checklistItems, userChecklist, loadingChecklist, solutionId, refetchUserChecklist]);
+  }, [user?.id, solutionId, loadingChecklist, userChecklist, checklistItems?.length]);
 
   // Calcular progresso baseado em items completos
   const completedCount = useMemo(() => {

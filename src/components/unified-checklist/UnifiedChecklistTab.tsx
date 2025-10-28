@@ -258,13 +258,21 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     }
   };
 
-  // 🔥 CORREÇÃO CRÍTICA: Estabilizar checklistItems com hash único
+  // 🔥 CORREÇÃO CRÍTICA: Usar useRef para memoizar hash e evitar recalculações
+  const checklistItemsHashRef = React.useRef<string>('');
+
   const stableChecklistItems = React.useMemo(() => {
+    const newHash = checklistItems.length > 0
+      ? `${checklistItems.length}|${checklistItems.map(i => `${i.id}:${i.column}:${i.completed ? '1' : '0'}`).sort().join('|')}`
+      : '';
+    
+    // ✅ Só atualizar se hash REALMENTE mudou
+    if (checklistItemsHashRef.current !== newHash) {
+      checklistItemsHashRef.current = newHash;
+    }
+    
     return checklistItems;
-  }, [
-    checklistItems.length,
-    checklistItems.map(i => `${i.id}-${i.column}-${i.completed ? '1' : '0'}`).sort().join('|')
-  ]);
+  }, [checklistItems.length, checklistItemsHashRef.current]);
 
   // Memoizar timestamp para evitar criar novo objeto a cada render
   const lastUpdatedTimestamp = React.useRef(new Date().toISOString());
