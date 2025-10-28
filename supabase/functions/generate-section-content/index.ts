@@ -566,22 +566,42 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
     console.log(`[SECTION-GEN] 📥 Resposta recebida (${content.length} chars)`);
     console.log(`[SECTION-GEN] ⚡ Tempo de geração: ${elapsedTime}s`);
 
-    // Parse do JSON retornado
+    // Parse do JSON retornado com tratamento robusto
     let parsedContent;
-    try {
-      // Limpar markdown code blocks e whitespace
-      let cleanContent = content.trim();
-      
-      // Remover code blocks markdown se existir
-      if (cleanContent.startsWith('```json')) {
-        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
-      } else if (cleanContent.startsWith('```')) {
-        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
+    
+    // Função para sanitizar caracteres de controle em strings JSON
+    const sanitizeJsonContent = (str: string): string => {
+      // Limpar markdown code blocks
+      let cleaned = str.trim();
+      if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/^```json\s*/, '').replace(/\s*```$/, '').trim();
+      } else if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/^```\s*/, '').replace(/\s*```$/, '').trim();
       }
       
-      parsedContent = JSON.parse(cleanContent);
+      // CRÍTICO: Escapar caracteres de controle literais dentro de valores de string JSON
+      // Isso previne "Bad control character in string literal" errors
+      // Procurar por padrões como "key": "value com \n literal"
+      cleaned = cleaned.replace(
+        /"([^"]+)":\s*"((?:[^"\\]|\\.)*)"/g,
+        (match, key, value) => {
+          // Escapar \n, \r, \t literais que não estão já escapados
+          const sanitizedValue = value
+            .replace(/\n/g, '\\n')
+            .replace(/\r/g, '\\r')
+            .replace(/\t/g, '\\t');
+          return `"${key}": "${sanitizedValue}"`;
+        }
+      );
       
-      // Validar que tem o campo esperado
+      return cleaned;
+    };
+    
+    try {
+      const sanitizedContent = sanitizeJsonContent(content);
+      parsedContent = JSON.parse(sanitizedContent);
+      
+      // Validar campos esperados
       if (sectionType === 'lovable' && !parsedContent.lovable_prompt) {
         throw new Error('Campo lovable_prompt ausente na resposta');
       }
@@ -590,9 +610,32 @@ Retorne APENAS o objeto JSON especificado (sem markdown, sem code blocks).`;
       }
       
     } catch (parseError) {
-      console.error("[SECTION-GEN] ❌ Erro ao fazer parse:", content.substring(0, 800));
       console.error("[SECTION-GEN] ❌ Parse error:", parseError);
-      throw new Error(`JSON inválido retornado pela IA: ${parseError.message}`);
+      console.error("[SECTION-GEN] ❌ Content preview:", content.substring(0, 500));
+      
+      // FALLBACK: Para lovable_prompt, tentar extrair via regex
+      if (sectionType === 'lovable') {
+        try {
+          const promptMatch = content.match(/"lovable_prompt"\s*:\s*"((?:[^"\\]|\\[\s\S])*)"/s);
+          if (promptMatch && promptMatch[1]) {
+            parsedContent = {
+              lovable_prompt: promptMatch[1]
+                .replace(/\\n/g, '\n')
+                .replace(/\\r/g, '\r')
+                .replace(/\\t/g, '\t')
+                .replace(/\\"/g, '"')
+                .replace(/\\\\/g, '\\')
+            };
+            console.log('[SECTION-GEN] ✅ Fallback: lovable_prompt extraído via regex');
+          } else {
+            throw new Error('Não foi possível extrair lovable_prompt via fallback');
+          }
+        } catch (fallbackError) {
+          throw new Error(`JSON inválido e fallback falhou: ${parseError.message}`);
+        }
+      } else {
+        throw new Error(`JSON inválido retornado pela IA: ${parseError.message}`);
+      }
     }
 
     // 🛡️ FASE 3: VALIDAÇÃO DE RESPOSTA
