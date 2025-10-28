@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,11 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
   const [solutionData, setSolutionData] = useState<any>(solution);
+
+  // 🔄 Sincronizar solutionData quando solution prop mudar (fix bug do piscando)
+  useEffect(() => {
+    setSolutionData(solution);
+  }, [solution]);
 
   const toggleSection = async (sectionId: string) => {
     // Se já expandido, apenas fechar
@@ -318,74 +323,79 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </LiquidGlassCard>
       </motion.div>
 
-      {/* Prompt Lovable - ON DEMAND */}
-      {(solutionData.lovable_prompt || true) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-        >
-          <LiquidGlassCard className="p-6">
-            <button
-              onClick={() => toggleSection('lovable')}
-              className="w-full flex items-center justify-between mb-4 group"
-            >
-              <div className="text-left">
-                <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                  Prompt Lovable
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Cole este prompt no Lovable para criar sua aplicação
-                </p>
-              </div>
-              {isExpanded('lovable') ? (
-                <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              )}
-            </button>
-            
-            <AnimatePresence mode="wait">
-              {isExpanded('lovable') && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {isLoading('lovable') ? (
-                    <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">
-                        Gerando prompt completo para Lovable... Isso pode levar até 30 segundos
-                      </p>
-                      <p className="text-xs text-muted-foreground/60">
-                        IA está criando contexto, stack, schema e workflows
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="relative">
-                      <pre className="bg-surface-elevated/50 p-4 rounded-lg overflow-x-auto text-sm">
-                        <code>{solutionData.lovable_prompt}</code>
-                      </pre>
-                      <Button
-                        onClick={() => {
-                          navigator.clipboard.writeText(solutionData.lovable_prompt);
-                          toast.success('Prompt copiado!');
-                        }}
-                        className="absolute top-4 right-4"
-                        size="sm"
-                      >
-                        Copiar
-                      </Button>
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </LiquidGlassCard>
-        </motion.div>
-      )}
+      {/* Prompt Lovable - SEMPRE VISÍVEL para geração sob demanda */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.5 }}
+      >
+        <LiquidGlassCard className="p-6">
+          <button
+            onClick={() => toggleSection('lovable')}
+            className="w-full flex items-center justify-between mb-4 group"
+          >
+            <div className="text-left">
+              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
+                Prompt Lovable
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                {solutionData.lovable_prompt 
+                  ? 'Cole este prompt no Lovable para criar sua aplicação'
+                  : 'Gere um prompt completo para implementar no Lovable'
+                }
+              </p>
+            </div>
+            {isExpanded('lovable') ? (
+              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            ) : (
+              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+            )}
+          </button>
+          
+          <AnimatePresence mode="wait">
+            {isExpanded('lovable') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {isLoading('lovable') ? (
+                  <div className="flex flex-col items-center justify-center py-12 space-y-3">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">
+                      Gerando prompt completo para Lovable... Isso pode levar até 30 segundos
+                    </p>
+                    <p className="text-xs text-muted-foreground/60">
+                      IA está criando contexto, stack, schema e workflows
+                    </p>
+                  </div>
+                ) : solutionData.lovable_prompt ? (
+                  <div className="relative">
+                    <pre className="bg-surface-elevated/50 p-4 rounded-lg overflow-x-auto text-sm">
+                      <code>{solutionData.lovable_prompt}</code>
+                    </pre>
+                    <Button
+                      onClick={() => {
+                        navigator.clipboard.writeText(solutionData.lovable_prompt);
+                        toast.success('Prompt copiado!');
+                      }}
+                      className="absolute top-4 right-4"
+                      size="sm"
+                    >
+                      Copiar
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>Clique novamente para gerar o prompt</p>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </LiquidGlassCard>
+      </motion.div>
 
     </motion.div>
   );
