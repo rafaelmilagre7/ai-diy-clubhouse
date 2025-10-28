@@ -38,6 +38,12 @@ export class TrailErrorBoundary extends Component<Props, State> {
     }
   }
 
+  // 🧹 AJUSTE FINAL 4: Cleanup ao desmontar
+  componentWillUnmount() {
+    console.log('🧹 [ERROR BOUNDARY] Desmontando e resetando estado...');
+    this.setState({ hasError: false, error: undefined });
+  }
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {

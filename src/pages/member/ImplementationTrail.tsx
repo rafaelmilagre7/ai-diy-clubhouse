@@ -82,7 +82,11 @@ const ImplementationTrail = () => {
             onRegenerate={regenerateTrail}
             isRegenerating={isRegenerating}
           />
-          <ImplementationTrailContent trail={trail} />
+          {/* 🔑 AJUSTE FINAL 3: Force remount quando trail mudar */}
+          <ImplementationTrailContent 
+            key={trail.generated_at} 
+            trail={trail} 
+          />
         </TrailErrorBoundary>
       </div>
     </div>

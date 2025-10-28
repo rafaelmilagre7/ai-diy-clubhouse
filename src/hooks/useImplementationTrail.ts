@@ -185,12 +185,21 @@ export function useImplementationTrail() {
     generateTrail();
   };
 
-  // Evitar chamadas duplicadas usando useEffect com dependências específicas
+  // 🔄 AJUSTE FINAL 2: Force re-fetch ao montar e cleanup ao desmontar
   useEffect(() => {
     if (user?.id) {
+      console.log('🔄 [TRAIL-MOUNT] Componente montado, carregando trilha...');
       loadTrail();
     }
-  }, [user?.id]);
+
+    // Cleanup: resetar estado ao desmontar
+    return () => {
+      console.log('🧹 [TRAIL-UNMOUNT] Limpando estado da trilha...');
+      setTrail(null);
+      setError(null);
+      setIsLoading(true);
+    };
+  }, [user?.id]); // Re-executa quando user.id muda
 
   return {
     trail,
