@@ -87,10 +87,13 @@ export default function BuilderSolutionCover() {
           .single();
         
         if (data?.framework_mapping) {
-          console.log('[COVER] ✅ Framework gerado com sucesso!');
+          console.log('[COVER] ✅ Framework gerado com sucesso! Redirecionando...');
           setGeneratingFramework(false);
           queryClient.invalidateQueries({ queryKey: ['builder-solution', solution.id] });
           clearInterval(pollInterval);
+          // Redirecionar automaticamente para o framework
+          toast.success('Framework gerado com sucesso! 🎉');
+          navigate(`/ferramentas/builder/solution/${solution.id}/framework`);
         }
       }, 5000);
       
@@ -357,11 +360,7 @@ export default function BuilderSolutionCover() {
       title: "Framework de Implementação",
       subtitle: "Os 4 pilares da sua solução",
       icon: Compass,
-      badge: generatingFramework 
-        ? "Gerando..." 
-        : solution?.framework_mapping 
-          ? "by Rafael Milagre" 
-          : "Gerar",
+      badge: "by Rafael Milagre",
       color: "from-cyan-500/20 to-teal-400/20",
       borderColor: "border-cyan-400/30",
       path: `/ferramentas/builder/solution/${id}/framework`,
