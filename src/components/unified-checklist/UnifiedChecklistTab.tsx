@@ -45,6 +45,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
   
   const updateMutation = useUpdateUnifiedChecklist();
 
+  // 🛡️ FASE 1: Normalizar e validar items com logs detalhados
   const checklistItems: UnifiedChecklistItem[] = React.useMemo(() => {
     let rawItems: any[] = [];
     
@@ -59,8 +60,8 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
       }));
     }
     
-    // 🔧 FASE 2: Normalizar items com validação robusta
-    return rawItems.map((item: any, index: number) => {
+    // Normalizar items
+    const normalized = rawItems.map((item: any, index: number) => {
       // ✅ Garantir que column seja SEMPRE um valor válido
       let validColumn: 'todo' | 'in_progress' | 'done' = 'todo';
       if (item.column === 'in_progress' || item.column === 'in-progress') {
@@ -69,15 +70,14 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         validColumn = 'done';
       }
       
-      const normalized: UnifiedChecklistItem = {
+      const normalizedItem: UnifiedChecklistItem = {
         ...item,
-        id: item.id || `item-${index}`, // ✅ Fallback para ID
-        title: item.title || 'Sem título', // ✅ Fallback para título
+        id: item.id || `item-${index}`,
+        title: item.title || 'Sem título',
         column: validColumn,
         completed: item.completed || false,
         notes: item.notes || '',
         order: item.order ?? index,
-        // Promover campos (APENAS se não existirem no primeiro nível)
         step_number: item.step_number ?? item.metadata?.step_number,
         quadrant: item.quadrant ?? item.metadata?.quadrant ?? 'Geral',
         tools_required: item.tools_required ?? item.metadata?.tools_required ?? [],
@@ -85,14 +85,38 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         difficulty: item.difficulty ?? item.metadata?.difficulty,
       };
       
-      // Limpar metadata (remover campos promovidos)
-      if (normalized.metadata) {
-        const { step_number, quadrant, tools_required, estimated_time, difficulty, ...clean } = normalized.metadata;
-        normalized.metadata = clean;
+      // Limpar metadata
+      if (normalizedItem.metadata) {
+        const { step_number, quadrant, tools_required, estimated_time, difficulty, ...clean } = normalizedItem.metadata;
+        normalizedItem.metadata = clean;
       }
       
-      return normalized;
-    }).filter(item => item.id && item.title); // ✅ Remover items inválidos
+      return normalizedItem;
+    });
+    
+    // 🛡️ VALIDAÇÃO ROBUSTA: Filtrar items inválidos
+    const validated = normalized.filter(item => {
+      const isValid = 
+        item.id && 
+        typeof item.id === 'string' &&
+        item.title && 
+        typeof item.title === 'string' &&
+        ['todo', 'in_progress', 'done'].includes(item.column || 'todo');
+      
+      if (!isValid) {
+        console.error('[VALIDATION] ⚠️ Item inválido detectado e removido:', item);
+      }
+      
+      return isValid;
+    });
+    
+    console.log('[VALIDATION] ✅ Items validados:', {
+      total: normalized.length,
+      valid: validated.length,
+      invalid: normalized.length - validated.length
+    });
+    
+    return validated;
   }, [template, userProgress]);
 
   // 🐛 FASE 4: Logs de Debug
@@ -186,22 +210,36 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     );
   }
 
-  if (!template || !checklistItems.length) {
+  // 🛡️ MENSAGENS DE ERRO DETALHADAS
+  if (!template) {
     return (
       <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Checklist em Preparação</h3>
+        <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Template não encontrado</h3>
         <p className="text-muted-foreground mb-4">
-          O checklist de {checklistType === 'implementation' ? 'implementação' : checklistType} para esta solução ainda está sendo preparado pela nossa equipe.
+          Não foi possível carregar o checklist desta solução.
         </p>
-        <p className="text-sm text-muted-foreground mb-4">
-          Este conteúdo será disponibilizado em breve. Enquanto isso, você pode explorar outras partes da solução.
+        <Button onClick={() => window.location.reload()}>
+          Recarregar Página
+        </Button>
+      </div>
+    );
+  }
+
+  if (checklistItems.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <AlertCircle className="mx-auto h-12 w-12 text-warning mb-4" />
+        <h3 className="text-lg font-semibold mb-2">Checklist vazio ou inválido</h3>
+        <p className="text-muted-foreground mb-4">
+          O checklist desta solução não contém tarefas válidas.
         </p>
-        {onComplete && (
-          <Button onClick={onComplete} variant="outline">
-            Continuar para próxima etapa
-          </Button>
-        )}
+        <p className="text-sm text-muted-foreground">
+          Isso pode acontecer se o checklist foi corrompido. Tente recarregar a página.
+        </p>
+        <Button onClick={() => window.location.reload()} className="mt-4">
+          Recarregar Página
+        </Button>
       </div>
     );
   }

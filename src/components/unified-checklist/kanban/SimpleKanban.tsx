@@ -10,6 +10,7 @@ import {
 } from "@dnd-kit/core";
 import { snapCenterToCursor } from "@dnd-kit/modifiers";
 import { Card } from "@/components/ui/card";
+import { AlertCircle } from "lucide-react";
 import { UnifiedChecklistItem, UnifiedChecklistData, useUpdateUnifiedChecklist } from "@/hooks/useUnifiedChecklists";
 import KanbanColumn from "./KanbanColumn";
 import SimpleKanbanCard from "./SimpleKanbanCard";
@@ -57,6 +58,28 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     checklistTypeRef.current = checklistType;
   }, [checklistData, solutionId, checklistType]);
 
+  // 🛡️ FASE 4: VALIDAÇÃO PRECOCE - Antes de qualquer processamento
+  const hasValidItems = React.useMemo(() => {
+    const isValid = checklistItems.length > 0 && checklistItems.every(item => 
+      item.id && 
+      typeof item.id === 'string' &&
+      item.title && 
+      typeof item.title === 'string' &&
+      ['todo', 'in_progress', 'done'].includes(item.column || 'todo')
+    );
+    
+    if (!isValid && checklistItems.length > 0) {
+      console.error('[SIMPLE-KANBAN] ⚠️ Items inválidos detectados:', {
+        total: checklistItems.length,
+        invalidItems: checklistItems.filter(item => 
+          !item.id || !item.title || !['todo', 'in_progress', 'done'].includes(item.column || 'todo')
+        )
+      });
+    }
+    
+    return isValid;
+  }, [checklistItems]);
+
   // Configurar sensores para drag com menor distância (mais responsivo)
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -68,37 +91,31 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   // Atualizar localItems quando checklistItems mudar
   useEffect(() => {
+    // ⚠️ Só processar se items forem válidos
+    if (!hasValidItems) {
+      console.warn('[SIMPLE-KANBAN] ⚠️ Pulando atualização - items inválidos');
+      return;
+    }
+
     setLocalItems(checklistItems);
     
-    // 🐛 FASE 5: DEBUG LOGS - Diagnosticar estrutura dos items
+    // Debug logs
     if (checklistItems.length > 0) {
       console.log('🎨 [SimpleKanban] Items recebidos:', {
         count: checklistItems.length,
         firstItem: {
           id: checklistItems[0].id,
           title: checklistItems[0].title,
-          hasQuadrant: !!checklistItems[0].quadrant,
-          hasStepNumber: !!checklistItems[0].step_number,
-          hasTools: !!checklistItems[0].tools_required,
-          hasEstimatedTime: !!checklistItems[0].estimated_time,
-          hasDifficulty: !!checklistItems[0].difficulty,
-          quadrant: checklistItems[0].quadrant,
-          step_number: checklistItems[0].step_number,
-          tools_required: checklistItems[0].tools_required,
-          estimated_time: checklistItems[0].estimated_time,
-          difficulty: checklistItems[0].difficulty,
+          column: checklistItems[0].column
         },
-        allColumns: checklistItems.map(i => i.column),
         columnsDistribution: {
           todo: checklistItems.filter(i => i.column === 'todo').length,
           in_progress: checklistItems.filter(i => i.column === 'in_progress').length,
           done: checklistItems.filter(i => i.column === 'done').length,
         }
       });
-    } else {
-      console.warn('🎨 [SimpleKanban] ⚠️ Nenhum item recebido! checklistItems está vazio.');
     }
-  }, [checklistItems, checklistData.id, checklistData.updated_at]);
+  }, [checklistItems, checklistData.id, checklistData.updated_at, hasValidItems]);
 
   // Agrupar items por coluna
   const itemsByColumn = useMemo(() => {
@@ -116,15 +133,6 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     });
 
     return grouped;
-  }, [localItems]);
-
-  // 🛡️ FASE 3: Validação de Items
-  const hasValidItems = React.useMemo(() => {
-    return localItems.length > 0 && localItems.every(item => 
-      item.id && 
-      item.title && 
-      ['todo', 'in_progress', 'done'].includes(item.column || 'todo')
-    );
   }, [localItems]);
 
   const handleDragStart = (event: DragStartEvent) => {
@@ -221,15 +229,22 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     );
   };
 
-  // 🛡️ FASE 3: Renderizar placeholder se não houver items válidos
+  // 🛡️ FASE 4: Renderizar placeholder SE não houver items válidos
   if (!hasValidItems) {
     return (
       <Card className="p-8 text-center">
-        <p className="text-muted-foreground mb-4">
-          ⚠️ Não há tarefas válidas para exibir no Kanban.
+        <AlertCircle className="mx-auto h-12 w-12 text-warning mb-4" />
+        <p className="text-foreground font-semibold mb-2">
+          ⚠️ Dados do checklist inválidos
         </p>
-        <p className="text-sm text-muted-foreground">
-          Verifique se o checklist foi gerado corretamente ou tente regenerá-lo.
+        <p className="text-sm text-muted-foreground mb-4">
+          {checklistItems.length === 0 
+            ? 'Não há tarefas no checklist.'
+            : 'Algumas tarefas estão com dados incorretos e não podem ser exibidas.'
+          }
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Tente recarregar a página ou entre em contato com o suporte.
         </p>
       </Card>
     );

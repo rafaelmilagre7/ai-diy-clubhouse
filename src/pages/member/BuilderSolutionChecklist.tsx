@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
 import { UnifiedLoadingScreen } from '@/components/common/UnifiedLoadingScreen';
@@ -19,6 +19,24 @@ export default function BuilderSolutionChecklist() {
   const [hasTimeout, setHasTimeout] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 2;
+
+  // 🛡️ FASE 2: VALIDAÇÃO PRECOCE - Evitar hooks com solutionId undefined
+  if (!id) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="text-center py-12">
+          <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
+          <h3 className="text-xl font-semibold mb-4">Solução não encontrada</h3>
+          <p className="text-muted-foreground mb-6">
+            O ID da solução não foi fornecido na URL.
+          </p>
+          <Button onClick={() => navigate('/ferramentas/builder')}>
+            Voltar para Builder
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   // 🔥 INVALIDAR CACHE ao montar o componente (forçar reload)
   useEffect(() => {
@@ -103,14 +121,14 @@ export default function BuilderSolutionChecklist() {
     },
   });
 
-  // ✅ Buscar AMBOS: template E progresso do usuário
+  // ✅ Buscar AMBOS: template E progresso do usuário (id já validado acima)
   const { data: template, isLoading: isLoadingTemplate } = useUnifiedChecklistTemplate(
-    id || '', 
+    id, // ✅ Já validado, nunca é undefined aqui
     'implementation'
   );
   
   const { data: userProgress, isLoading: isLoadingProgress } = useUnifiedChecklist(
-    id || '',
+    id, // ✅ Já validado, nunca é undefined aqui
     'implementation'
   );
 

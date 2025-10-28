@@ -24,9 +24,17 @@ export class TrailErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: any) {
-    // Reportar erro em produção (sem console.log)
+    // 🛡️ FASE 3: Log detalhado para debug
+    console.error('🔴 [ERROR BOUNDARY] Erro capturado:', {
+      error: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString()
+    });
+    
+    // Em produção, enviar para serviço de monitoramento
     if (import.meta.env.PROD) {
-      // Aqui você poderia enviar para um serviço de monitoramento
+      // TODO: Integrar com Sentry ou similar
     }
   }
 
