@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Star, Share2, Download, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { Star, Share2, Download, FileCode, Package, ListChecks, Network, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
@@ -12,6 +12,15 @@ import { RequiredToolsGrid } from './RequiredToolsGrid';
 import UnifiedChecklistTab from '@/components/unified-checklist/UnifiedChecklistTab';
 import { ArchitectureFlowchart } from './ArchitectureFlowchart';
 import { LearningRecommendationsCard } from './LearningRecommendationsCard';
+import { SolutionSectionCard } from './SolutionSectionCard';
+import { PromptLovableModal } from './PromptLovableModal';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 
 interface SolutionResultProps {
   solution: any;
@@ -26,49 +35,30 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
   const [solutionData, setSolutionData] = useState<any>(solution);
+  
+  // Estados para modais
+  const [promptModalOpen, setPromptModalOpen] = useState(false);
+  const [toolsModalOpen, setToolsModalOpen] = useState(false);
+  const [checklistModalOpen, setChecklistModalOpen] = useState(false);
+  const [architectureModalOpen, setArchitectureModalOpen] = useState(false);
 
   // 🔄 Sincronizar solutionData quando solution prop mudar (fix bug do piscando)
   useEffect(() => {
     setSolutionData(solution);
   }, [solution]);
 
-  const toggleSection = async (sectionId: string) => {
-    // Se já expandido, apenas fechar
-    if (expandedSections.has(sectionId)) {
-      setExpandedSections(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(sectionId);
-        return newSet;
-      });
-      return;
-    }
-
-    // Recomendações são sempre geradas on-demand via hook
-    if (sectionId === 'recommendations') {
-      setExpandedSections(prev => new Set([...prev, sectionId]));
-      return;
-    }
-
+  const generateSection = async (sectionType: string) => {
     // Mapear sectionId para campo do banco e tipo
-  const sectionMapping: Record<string, { field: string; type: string }> = {
-    'tools': { field: 'required_tools', type: 'tools' },
-    'checklist': { field: 'implementation_checklist', type: 'checklist' },
-    'architecture': { field: 'architecture_flowchart', type: 'architecture' },
-    'recommendations': { field: 'learning_recommendations', type: 'recommendations' },
-    'lovable': { field: 'lovable_prompt', type: 'lovable' }
-  };
+    const sectionMapping: Record<string, { field: string; type: string }> = {
+      'tools': { field: 'required_tools', type: 'tools' },
+      'checklist': { field: 'implementation_checklist', type: 'checklist' },
+      'architecture': { field: 'architecture_flowchart', type: 'architecture' },
+      'lovable': { field: 'lovable_prompt', type: 'lovable' }
+    };
 
-    const mapping = sectionMapping[sectionId];
-    const hasContent = mapping && solutionData[mapping.field];
-
-    // Se já tem conteúdo, apenas expandir
-    if (hasContent) {
-      setExpandedSections(prev => new Set([...prev, sectionId]));
-      return;
-    }
-
-    // Caso contrário, gerar conteúdo sob demanda
-    setLoadingSections(prev => new Set([...prev, sectionId]));
+    const mapping = sectionMapping[sectionType];
+    
+    setLoadingSections(prev => new Set([...prev, sectionType]));
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-section-content', {
@@ -82,11 +72,9 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
       if (error) throw error;
 
       if (data?.success) {
-        // A resposta da edge function tem estrutura diferente dependendo do sectionType
         let contentToSave;
         
         if (mapping.type === 'lovable') {
-          // Para lovable, o content já é o objeto parseado com lovable_prompt
           contentToSave = data.content.lovable_prompt || data.content;
         } else if (mapping.type === 'framework') {
           contentToSave = data.content.framework_quadrants || data.content;
@@ -94,14 +82,11 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           contentToSave = data.content;
         }
         
-        // Atualizar estado local
         setSolutionData((prev: any) => ({
           ...prev,
           [mapping.field]: contentToSave
         }));
         
-        // Expandir seção
-        setExpandedSections(prev => new Set([...prev, sectionId]));
         toast.success('Conteúdo gerado com sucesso! 🎉');
       }
     } catch (err) {
@@ -111,13 +96,12 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
     } finally {
       setLoadingSections(prev => {
         const newSet = new Set(prev);
-        newSet.delete(sectionId);
+        newSet.delete(sectionType);
         return newSet;
       });
     }
   };
 
-  const isExpanded = (sectionId: string) => expandedSections.has(sectionId);
   const isLoading = (sectionId: string) => loadingSections.has(sectionId);
   
   return (
@@ -176,226 +160,207 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
         </LiquidGlassCard>
       </motion.div>
 
-      {/* REMOVIDO: Card de teste que continha cores hardcoded - Normalização Fase 12 */}
+      {/* GRID DE CARDS DA CAPA - NORMALIZADO */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-md">
+        {/* Card Arquitetura */}
+        <SolutionSectionCard
+          icon={<Network className="h-5 w-5 text-primary" />}
+          title="Arquitetura da Solução"
+          description="Fluxograma técnico completo"
+          badge={
+            isLoading('architecture') 
+              ? 'Gerando...' 
+              : solutionData.architecture_flowchart 
+                ? '✓ Pronto' 
+                : 'Gerar'
+          }
+          badgeVariant={
+            isLoading('architecture') 
+              ? 'loading' 
+              : solutionData.architecture_flowchart 
+                ? 'success' 
+                : 'default'
+          }
+          loading={isLoading('architecture')}
+          onClick={() => {
+            if (!solutionData.architecture_flowchart) {
+              generateSection('architecture');
+            }
+            setArchitectureModalOpen(true);
+          }}
+        />
 
-      {/* Arquitetura Visual (Fluxograma) - 3º Bloco - ON DEMAND */}
-      {(solutionData.architecture_flowchart || true) && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <LiquidGlassCard className="p-6">
-            <button
-              onClick={() => toggleSection('architecture')}
-              className="w-full flex items-center justify-between mb-4 group"
-            >
-              <div className="text-left">
-                <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                  Arquitetura da Solução
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  Fluxograma técnico completo da solução de ponta a ponta
-                </p>
-              </div>
-              {isExpanded('architecture') ? (
-                <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              ) : (
-                <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-              )}
-            </button>
-            
-            <AnimatePresence mode="wait">
-              {isExpanded('architecture') && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  {isLoading('architecture') ? (
-                    <div className="flex items-center justify-center py-12">
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    </div>
-                  ) : (
-                    <ArchitectureFlowchart flowchart={solutionData.architecture_flowchart} />
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </LiquidGlassCard>
-        </motion.div>
-      )}
+        {/* Card Ferramentas */}
+        <SolutionSectionCard
+          icon={<Package className="h-5 w-5 text-primary" />}
+          title="Ferramentas Necessárias"
+          description="Recursos essenciais e opcionais"
+          badge={
+            isLoading('tools') 
+              ? 'Gerando...' 
+              : solutionData.required_tools 
+                ? '✓ Pronto' 
+                : 'Gerar'
+          }
+          badgeVariant={
+            isLoading('tools') 
+              ? 'loading' 
+              : solutionData.required_tools 
+                ? 'success' 
+                : 'default'
+          }
+          loading={isLoading('tools')}
+          onClick={() => {
+            if (!solutionData.required_tools) {
+              generateSection('tools');
+            }
+            setToolsModalOpen(true);
+          }}
+        />
 
-      {/* Ferramentas Necessárias - ON DEMAND */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-      >
-        <LiquidGlassCard className="p-6">
-          <button
-            onClick={() => toggleSection('tools')}
-            className="w-full flex items-center justify-between mb-4 group"
-          >
-            <div className="text-left">
-              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                Ferramentas Necessárias
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Recursos essenciais e opcionais para implementação
-              </p>
+        {/* Card Plano de Ação */}
+        <SolutionSectionCard
+          icon={<ListChecks className="h-5 w-5 text-primary" />}
+          title="Plano de Ação"
+          description="Passos práticos para implementar"
+          badge={
+            isLoading('checklist') 
+              ? 'Gerando...' 
+              : solutionData.implementation_checklist 
+                ? '✓ Pronto' 
+                : 'Gerar'
+          }
+          badgeVariant={
+            isLoading('checklist') 
+              ? 'loading' 
+              : solutionData.implementation_checklist 
+                ? 'success' 
+                : 'default'
+          }
+          loading={isLoading('checklist')}
+          onClick={() => {
+            if (!solutionData.implementation_checklist) {
+              generateSection('checklist');
+            }
+            setChecklistModalOpen(true);
+          }}
+        />
+
+        {/* Card Prompt Lovable */}
+        <SolutionSectionCard
+          icon={<FileCode className="h-5 w-5 text-primary" />}
+          title="Prompt Lovable"
+          description="Cole e comece seu projeto agora"
+          badge={
+            isLoading('lovable') 
+              ? 'Gerando...' 
+              : solutionData.lovable_prompt 
+                ? '✓ Pronto' 
+                : 'Gerar'
+          }
+          badgeVariant={
+            isLoading('lovable') 
+              ? 'loading' 
+              : solutionData.lovable_prompt 
+                ? 'success' 
+                : 'default'
+          }
+          loading={isLoading('lovable')}
+          onClick={() => {
+            if (!solutionData.lovable_prompt) {
+              generateSection('lovable');
+            }
+            setPromptModalOpen(true);
+          }}
+        />
+      </div>
+
+      {/* Modal Prompt Lovable */}
+      <PromptLovableModal
+        open={promptModalOpen}
+        onClose={() => setPromptModalOpen(false)}
+        prompt={solutionData.lovable_prompt}
+        loading={isLoading('lovable')}
+        onGenerate={() => generateSection('lovable')}
+      />
+
+      {/* Modal Arquitetura */}
+      <Dialog open={architectureModalOpen} onOpenChange={setArchitectureModalOpen}>
+        <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Arquitetura da Solução</DialogTitle>
+            <DialogDescription>
+              Fluxograma técnico completo da solução de ponta a ponta
+            </DialogDescription>
+          </DialogHeader>
+          {isLoading('architecture') ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-            {isExpanded('tools') ? (
-              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            )}
-          </button>
-          
-          <AnimatePresence mode="wait">
-            {isExpanded('tools') && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {isLoading('tools') ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
-                  <RequiredToolsGrid tools={solutionData.required_tools} />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </LiquidGlassCard>
-      </motion.div>
-
-      {/* Checklist de Implementação - ON DEMAND */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
-      >
-        <LiquidGlassCard className="p-6">
-          <button
-            onClick={() => toggleSection('checklist')}
-            className="w-full flex items-center justify-between mb-4 group"
-          >
-            <div className="text-left">
-              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                Plano de Ação
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                Passos práticos para transformar sua ideia em realidade
-              </p>
+          ) : solutionData.architecture_flowchart ? (
+            <ArchitectureFlowchart flowchart={solutionData.architecture_flowchart} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma arquitetura gerada ainda.</p>
+              <Button onClick={() => generateSection('architecture')} className="mt-4">
+                Gerar Arquitetura
+              </Button>
             </div>
-            {isExpanded('checklist') ? (
-              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            )}
-          </button>
-          
-          <AnimatePresence mode="wait">
-            {isExpanded('checklist') && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {isLoading('checklist') ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
-                  <UnifiedChecklistTab 
-                    solutionId={solutionData.id}
-                  />
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </LiquidGlassCard>
-      </motion.div>
+          )}
+        </DialogContent>
+      </Dialog>
 
-      {/* Prompt Lovable - SEMPRE VISÍVEL para geração sob demanda */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.5 }}
-      >
-        <LiquidGlassCard className="p-6">
-          <button
-            onClick={() => toggleSection('lovable')}
-            className="w-full flex items-center justify-between mb-4 group"
-          >
-            <div className="text-left">
-              <h3 className="text-xl font-bold mb-1 group-hover:text-primary transition-colors">
-                Prompt Lovable
-              </h3>
-              <p className="text-sm text-muted-foreground">
-                {solutionData.lovable_prompt 
-                  ? 'Cole este prompt no Lovable para criar sua aplicação'
-                  : 'Gere um prompt completo para implementar no Lovable'
-                }
-              </p>
+      {/* Modal Ferramentas */}
+      <Dialog open={toolsModalOpen} onOpenChange={setToolsModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Ferramentas Necessárias</DialogTitle>
+            <DialogDescription>
+              Recursos essenciais e opcionais para implementação
+            </DialogDescription>
+          </DialogHeader>
+          {isLoading('tools') ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-            {isExpanded('lovable') ? (
-              <ChevronUp className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            ) : (
-              <ChevronDown className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-            )}
-          </button>
-          
-          <AnimatePresence mode="wait">
-            {isExpanded('lovable') && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                transition={{ duration: 0.3 }}
-              >
-                {isLoading('lovable') ? (
-                  <div className="flex flex-col items-center justify-center py-12 space-y-3">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                    <p className="text-sm text-muted-foreground">
-                      Gerando prompt completo para Lovable... Isso pode levar até 30 segundos
-                    </p>
-                    <p className="text-xs text-muted-foreground/60">
-                      IA está criando contexto, stack, schema e workflows
-                    </p>
-                  </div>
-                ) : solutionData.lovable_prompt ? (
-                  <div className="relative">
-                    <pre className="bg-surface-elevated/50 p-4 rounded-lg overflow-x-auto text-sm">
-                      <code>{solutionData.lovable_prompt}</code>
-                    </pre>
-                    <Button
-                      onClick={() => {
-                        navigator.clipboard.writeText(solutionData.lovable_prompt);
-                        toast.success('Prompt copiado!');
-                      }}
-                      className="absolute top-4 right-4"
-                      size="sm"
-                    >
-                      Copiar
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>Clique novamente para gerar o prompt</p>
-                  </div>
-                )}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </LiquidGlassCard>
-      </motion.div>
+          ) : solutionData.required_tools ? (
+            <RequiredToolsGrid tools={solutionData.required_tools} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhuma ferramenta gerada ainda.</p>
+              <Button onClick={() => generateSection('tools')} className="mt-4">
+                Gerar Ferramentas
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Plano de Ação */}
+      <Dialog open={checklistModalOpen} onOpenChange={setChecklistModalOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Plano de Ação</DialogTitle>
+            <DialogDescription>
+              Passos práticos para transformar sua ideia em realidade
+            </DialogDescription>
+          </DialogHeader>
+          {isLoading('checklist') ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : solutionData.implementation_checklist ? (
+            <UnifiedChecklistTab solutionId={solutionData.id} />
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Nenhum checklist gerado ainda.</p>
+              <Button onClick={() => generateSection('checklist')} className="mt-4">
+                Gerar Checklist
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
     </motion.div>
   );
