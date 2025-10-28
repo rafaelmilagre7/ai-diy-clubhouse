@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/auth";
 import { ChecklistProgress } from "../content/checklist/ChecklistProgress";
 import { ChecklistLoading } from "../content/checklist/ChecklistLoading";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { getChecklistTemplate } from "@/lib/supabase/rpc";
 import SimpleKanban from "@/components/unified-checklist/kanban/SimpleKanban";
@@ -152,13 +152,36 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   }
 
   if (!checklistItems || checklistItems.length === 0) {
+    const emptyChecklistData: UnifiedChecklistData = {
+      user_id: user?.id || '',
+      solution_id: solutionId,
+      checklist_type: 'implementation',
+      checklist_data: { items: [], lastUpdated: new Date().toISOString() },
+      completed_items: 0,
+      total_items: 0,
+      progress_percentage: 0,
+      is_completed: false,
+      is_template: false
+    };
+
     return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Nenhum Checklist Disponível</h3>
-        <p className="text-muted-foreground">
-          Esta solução ainda não possui um checklist de implementação.
-        </p>
+      <div className="space-y-6">
+        <div className="text-center py-8 bg-muted/30 rounded-lg border border-dashed">
+          <CheckCircle className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Checklist em branco</h3>
+          <p className="text-sm text-muted-foreground">
+            Esta solução ainda não possui tarefas configuradas.
+            <br />
+            Você pode começar a usar assim que o time adicionar as tarefas.
+          </p>
+        </div>
+        
+        <SimpleKanban
+          checklistItems={[]}
+          checklistData={emptyChecklistData}
+          solutionId={solutionId}
+          checklistType="implementation"
+        />
       </div>
     );
   }

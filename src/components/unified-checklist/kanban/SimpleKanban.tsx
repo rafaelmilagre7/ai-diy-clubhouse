@@ -75,7 +75,13 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
 
   // 🛡️ FASE 4: VALIDAÇÃO PRECOCE - Antes de qualquer processamento
   const hasValidItems = React.useMemo(() => {
-    const isValid = checklistItems.length > 0 && checklistItems.every(item => 
+    // ✅ Array vazio é válido (kanban vazio funcional)
+    if (checklistItems.length === 0) {
+      return true;
+    }
+    
+    // ❌ Se tem items, TODOS devem ser válidos
+    const isValid = checklistItems.every(item => 
       item.id && 
       typeof item.id === 'string' &&
       item.title && 
@@ -83,7 +89,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
       ['todo', 'in_progress', 'done'].includes(item.column || 'todo')
     );
     
-    if (!isValid && checklistItems.length > 0) {
+    if (!isValid) {
       console.error('[SIMPLE-KANBAN] ⚠️ Items inválidos detectados:', {
         total: checklistItems.length,
         invalidItems: checklistItems.filter(item => 
@@ -253,15 +259,31 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           ⚠️ Dados do checklist inválidos
         </p>
         <p className="text-sm text-muted-foreground mb-4">
-          {checklistItems.length === 0 
-            ? 'Não há tarefas no checklist.'
-            : 'Algumas tarefas estão com dados incorretos e não podem ser exibidas.'
-          }
+          Algumas tarefas estão com dados incorretos e não podem ser exibidas.
         </p>
         <p className="text-xs text-muted-foreground">
           Tente recarregar a página ou entre em contato com o suporte.
         </p>
       </Card>
+    );
+  }
+
+  // ✅ Renderizar kanban vazio funcional quando não há items
+  if (checklistItems.length === 0) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 min-h-[400px]">
+        {COLUMNS.map((column) => (
+          <Card key={column.id} className="flex flex-col h-full bg-card/50 border border-dashed">
+            <div className="p-4 border-b border-border">
+              <h3 className="font-semibold text-foreground">{column.title}</h3>
+              <p className="text-xs text-muted-foreground mt-1">0 tarefas</p>
+            </div>
+            <div className="flex-1 p-4 flex items-center justify-center text-muted-foreground text-sm">
+              Nenhuma tarefa
+            </div>
+          </Card>
+        ))}
+      </div>
     );
   }
 

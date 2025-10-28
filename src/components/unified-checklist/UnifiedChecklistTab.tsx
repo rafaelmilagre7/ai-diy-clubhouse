@@ -210,36 +210,38 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     );
   }
 
-  // 🛡️ MENSAGENS DE ERRO DETALHADAS
-  if (!template) {
-    return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-destructive mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Template não encontrado</h3>
-        <p className="text-muted-foreground mb-4">
-          Não foi possível carregar o checklist desta solução.
-        </p>
-        <Button onClick={() => window.location.reload()}>
-          Recarregar Página
-        </Button>
-      </div>
-    );
-  }
+  // ✅ Permitir kanban vazio quando não há template
+  if (!template && checklistItems.length === 0) {
+    const emptyChecklistData: UnifiedChecklistData = {
+      user_id: '',
+      solution_id: solutionId,
+      checklist_type: checklistType,
+      checklist_data: { items: [], lastUpdated: new Date().toISOString() },
+      completed_items: 0,
+      total_items: 0,
+      progress_percentage: 0,
+      is_completed: false,
+      is_template: false
+    };
 
-  if (checklistItems.length === 0) {
     return (
-      <div className="text-center py-12">
-        <AlertCircle className="mx-auto h-12 w-12 text-warning mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Checklist vazio ou inválido</h3>
-        <p className="text-muted-foreground mb-4">
-          O checklist desta solução não contém tarefas válidas.
-        </p>
-        <p className="text-sm text-muted-foreground">
-          Isso pode acontecer se o checklist foi corrompido. Tente recarregar a página.
-        </p>
-        <Button onClick={() => window.location.reload()} className="mt-4">
-          Recarregar Página
-        </Button>
+      <div className="space-y-6">
+        <div className="text-center py-8 bg-muted/30 rounded-lg border border-dashed">
+          <CheckCircle className="mx-auto h-12 w-12 text-muted-foreground/50 mb-4" />
+          <h3 className="text-lg font-semibold mb-2">Checklist em branco</h3>
+          <p className="text-sm text-muted-foreground">
+            Esta solução ainda não possui um checklist configurado.
+            <br />
+            Entre em contato com o suporte para adicionar tarefas.
+          </p>
+        </div>
+        
+        <SimpleKanban
+          checklistItems={[]}
+          checklistData={emptyChecklistData}
+          solutionId={solutionId}
+          checklistType={checklistType}
+        />
       </div>
     );
   }
