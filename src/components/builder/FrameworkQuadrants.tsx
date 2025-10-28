@@ -4,9 +4,9 @@ import { Brain, Zap, Database, Monitor } from 'lucide-react';
 
 interface FrameworkQuadrantsProps {
   framework: {
-    quadrant1_automation?: any;
+    quadrant1_data?: any;
     quadrant2_ai?: any;
-    quadrant3_data?: any;
+    quadrant3_automation?: any;
     quadrant4_interface?: any;
   };
 }
@@ -14,14 +14,14 @@ interface FrameworkQuadrantsProps {
 export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framework }) => {
   const quadrants = [
     {
-      key: 'quadrant1_automation',
-      data: framework?.quadrant1_automation,
-      title: '🤖 Automação No-Code',
-      icon: Zap,
-      color: 'from-status-warning/20 to-status-warning/10',
-      borderColor: 'border-status-warning/30',
-      iconBg: 'bg-status-warning/10',
-      iconColor: 'text-status-warning',
+      key: 'quadrant1_data',
+      data: framework?.quadrant1_data,
+      title: '📊 Dados Simples',
+      icon: Database,
+      color: 'from-status-info/20 to-status-info/10',
+      borderColor: 'border-status-info/30',
+      iconBg: 'bg-status-info/10',
+      iconColor: 'text-status-info',
       position: 'top-left'
     },
     {
@@ -36,14 +36,14 @@ export const FrameworkQuadrants: React.FC<FrameworkQuadrantsProps> = ({ framewor
       position: 'top-right'
     },
     {
-      key: 'quadrant3_data',
-      data: framework?.quadrant3_data,
-      title: '📊 Dados Simples',
-      icon: Database,
-      color: 'from-status-info/20 to-status-info/10',
-      borderColor: 'border-status-info/30',
-      iconBg: 'bg-status-info/10',
-      iconColor: 'text-status-info',
+      key: 'quadrant3_automation',
+      data: framework?.quadrant3_automation,
+      title: '🤖 Automação No-Code',
+      icon: Zap,
+      color: 'from-status-warning/20 to-status-warning/10',
+      borderColor: 'border-status-warning/30',
+      iconBg: 'bg-status-warning/10',
+      iconColor: 'text-status-warning',
       position: 'bottom-left'
     },
     {
