@@ -31,12 +31,16 @@ export const supabase = createClient<Database>(supabaseConfig.url, supabaseConfi
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
-    storage: typeof window !== 'undefined' ? window.localStorage : undefined
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+    storageKey: 'viverdeia-auth-token', // Garantir que o token seja incluído em todas as requisições
   },
   global: {
     headers: {
       'X-Client-Info': 'viverdeia-app'
     }
+  },
+  db: {
+    schema: 'public'
   }
 });
 

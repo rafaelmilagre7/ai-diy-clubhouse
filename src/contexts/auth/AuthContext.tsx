@@ -187,6 +187,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   useEffect(() => {
     // Função para processar mudanças de estado de auth
     const handleAuthStateChange = (event: string, session: Session | null) => {
+      console.log('🔐 [AUTH] Evento de autenticação:', event, {
+        hasSession: !!session,
+        userId: session?.user?.id,
+        expiresAt: session?.expires_at
+      });
       
       // Sempre atualizar session e user
       setSession(session);
@@ -202,6 +207,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // Terminar loading
       setIsLoading(false);
+      
+      // ✅ NOVO: Alertar usuário sobre eventos críticos
+      if (event === 'TOKEN_REFRESHED') {
+        console.log('✅ [AUTH] Token renovado automaticamente');
+      } else if (event === 'SIGNED_OUT') {
+        console.log('🚪 [AUTH] Usuário deslogado');
+        const { toast } = require('sonner');
+        toast.info('Você foi desconectado', {
+          description: 'Por favor, faça login novamente'
+        });
+      } else if (event === 'USER_UPDATED') {
+        console.log('👤 [AUTH] Dados do usuário atualizados');
+      }
     };
 
     // Configurar listener primeiro

@@ -16,6 +16,7 @@ const InvitePage = lazy(() => import('@/pages/InvitePage'));
 const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
 const AulaView = lazy(() => import('@/pages/formacao/aulas/AulaView'));
+const AuthDebug = lazy(() => import('@/pages/test/AuthDebug'));
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -125,6 +126,13 @@ const AppRoutes = () => {
         <Route path="/formacao/aulas/view/:cursoId/:aulaId" element={
           <Suspense fallback={<OptimizedLoadingScreen />}>
             <AulaView />
+          </Suspense>
+        } />
+        
+        {/* Rota de debug de autenticação */}
+        <Route path="/test/auth-debug" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <AuthDebug />
           </Suspense>
         } />
         

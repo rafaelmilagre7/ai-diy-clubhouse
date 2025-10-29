@@ -45,11 +45,34 @@ export const ModernPostEditor = ({
         throw new Error('ID do tópico não fornecido');
       }
       
+      // ✅ NOVO: Forçar refresh da sessão antes de operações críticas
+      console.log('🔄 [COMMENT] Forçando refresh da sessão...');
+      const { data: { session }, error: refreshError } = await supabase.auth.refreshSession();
+      
+      if (refreshError || !session) {
+        console.error('❌ [COMMENT] Erro ao renovar sessão:', refreshError);
+        throw new Error('Sua sessão expirou. Por favor, faça login novamente.');
+      }
+      
+      console.log('✅ [COMMENT] Sessão renovada com sucesso:', {
+        userId: session.user.id,
+        expiresAt: session.expires_at,
+        hasAccessToken: !!session.access_token
+      });
+      
+      // Buscar usuário com nova sessão
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
       if (authError || !user?.id) {
+        console.error('❌ [COMMENT] Erro de autenticação:', authError);
         throw new Error('Você precisa estar logado para enviar uma resposta');
       }
+      
+      console.log('📝 [COMMENT] Inserindo post:', {
+        userId: user.id,
+        topicId,
+        contentLength: content.trim().length
+      });
       
       const { data, error } = await supabase
         .from('community_posts')
@@ -61,7 +84,12 @@ export const ModernPostEditor = ({
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [COMMENT] Erro ao inserir post:', error);
+        throw error;
+      }
+      
+      console.log('✅ [COMMENT] Post inserido com sucesso:', data.id);
       
       // Incrementar contador de respostas
       try {
@@ -165,14 +193,42 @@ export const ModernPostEditor = ({
       return;
     }
 
+    // ✅ NOVO: Verificar sessão VÁLIDA antes de submeter
     try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('❌ [COMMENT] Sessão inválida ou expirada:', sessionError);
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente",
+          variant: "destructive"
+        });
+        
+        // Redirecionar para login
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+      
+      console.log('✅ [COMMENT] Sessão válida:', {
+        userId: session.user.id,
+        expiresAt: session.expires_at,
+        accessToken: session.access_token ? 'presente' : 'ausente'
+      });
+
+      // Prosseguir com submit
       if (mode === 'create') {
         await createPostMutation.mutateAsync(content);
       } else {
         await updatePostMutation.mutateAsync(content);
       }
     } catch (error: any) {
-      // Erro já tratado pela mutation
+      console.error('❌ [COMMENT] Erro ao validar sessão:', error);
+      toast({
+        title: "Erro de autenticação",
+        description: "Não foi possível validar sua sessão. Tente fazer login novamente.",
+        variant: "destructive"
+      });
     }
   };
 
