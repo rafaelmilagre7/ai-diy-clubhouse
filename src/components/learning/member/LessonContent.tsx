@@ -68,10 +68,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
   
-  const handleCompleteLesson = () => {
+  const handleCompleteLesson = async () => {
     // Se a aula não estava concluída anteriormente, mostrar o modal de conclusão com NPS
     if (!isCompleted && onComplete) {
-      onComplete(); // Marcar como concluída primeiro
+      await onComplete(); // Marcar como concluída primeiro e aguardar
       setCompletionDialogOpen(true); // Depois abrir o modal de NPS
     }
   };
