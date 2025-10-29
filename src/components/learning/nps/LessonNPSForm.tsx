@@ -58,21 +58,62 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   const [score, setScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string>('');
 
-  // Log quando o componente monta
+  // ============= LOGS DE DIAGNÓSTICO =============
+  console.log('[NPS-FORM] 🚀 ============ COMPONENTE RENDERIZANDO ============');
+  console.log('[NPS-FORM] Props recebidas:', {
+    lessonId,
+    hasOnCompleted: !!onCompleted,
+    isSubmitting,
+    showSuccessMessage,
+    hasNextLesson: !!nextLesson
+  });
+
+  // Log quando o componente monta/desmonta
   React.useEffect(() => {
-    console.log('[NPS-FORM] 🎬 Componente montado:', {
-      lessonId,
-      hasOnCompleted: !!onCompleted,
-      isSubmitting
-    });
+    console.log('[NPS-FORM] ✅ ============ COMPONENTE MONTADO COM SUCESSO ============');
+    return () => {
+      console.log('[NPS-FORM] 🔻 ============ COMPONENTE DESMONTADO ============');
+    };
   }, []);
 
   // Log quando score muda
   React.useEffect(() => {
     if (score !== null) {
-      console.log('[NPS-FORM] ⭐ Score atualizado:', score);
+      console.log('[NPS-FORM] ⭐ Score atualizado para:', score);
     }
   }, [score]);
+
+  // Handler manual simplificado
+  const handleManualSubmit = async () => {
+    console.log('[NPS-FORM] 🎯 ============ SUBMIT MANUAL INICIADO ============');
+    
+    if (score === null) {
+      console.error('[NPS-FORM] ❌ Score é null, não pode submeter');
+      toast.error('Selecione uma nota de 0 a 10');
+      return;
+    }
+    
+    if (!onCompleted) {
+      console.error('[NPS-FORM] ❌ onCompleted não existe!');
+      toast.error('Erro: callback não encontrado');
+      return;
+    }
+    
+    console.log('[NPS-FORM] ✅ Validações OK, chamando onCompleted com:', { score, feedback: feedback.substring(0, 50) });
+    
+    const loadingToastId = toast.loading('Salvando sua avaliação...');
+    
+    try {
+      await onCompleted(score, feedback);
+      toast.dismiss(loadingToastId);
+      console.log('[NPS-FORM] ✅ onCompleted executado com sucesso!');
+    } catch (error) {
+      toast.dismiss(loadingToastId);
+      console.error('[NPS-FORM] ❌ Erro em onCompleted:', error);
+      toast.error('Erro ao salvar avaliação');
+      throw error;
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     console.log('[NPS-FORM] 🔥 ============ FORM SUBMIT DISPARADO ============');
@@ -232,31 +273,43 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
         </CardContent>
         
         <CardFooter className="p-0 pt-6">
-          <Button 
-            type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 text-sm shadow-sm transition-all duration-200 hover:shadow-md rounded-lg" 
-            disabled={score === null || isSubmitting}
-            onClick={(e) => {
-              console.log('[NPS-FORM] 🖱️ BOTÃO CLICADO!', {
-                score,
-                isSubmitting,
-                disabled: score === null || isSubmitting,
-                hasOnCompleted: !!onCompleted
-              });
+          {/* BOTÃO DE TESTE ULTRA SIMPLIFICADO */}
+          <button
+            type="button"
+            onClick={() => {
+              console.log('🔥🔥🔥 ============ CLIQUE DIRETO NO BOTÃO DETECTADO! ============');
+              alert('Botão clicado! Verificar console para logs.');
+              handleManualSubmit();
             }}
+            style={{ 
+              width: '100%', 
+              padding: '12px', 
+              background: score === null ? '#ccc' : '#0066FF',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: score === null ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              fontWeight: '500',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px'
+            }}
+            disabled={score === null || isSubmitting}
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
                 Enviando avaliação...
               </>
             ) : (
               <>
-                <Star className="mr-2 h-4 w-4" />
-                Enviar avaliação
+                <Star className="h-4 w-4" />
+                {score === null ? 'Selecione uma nota acima' : 'TESTE - ENVIAR AVALIAÇÃO'}
               </>
             )}
-          </Button>
+          </button>
         </CardFooter>
       </form>
     </Card>
