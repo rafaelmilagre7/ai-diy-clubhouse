@@ -37,12 +37,21 @@ export const validatePassword = (password: string): PasswordValidationResult => 
   if (requirements.hasNumber) score++;
   if (requirements.hasSpecialChar) score++;
 
+  // Verificar se é uma senha comum
+  const isCommon = isPasswordCommon(password);
+
   // Determinar nível de força
   let level: PasswordStrength['level'];
   let feedback: string;
   let color: string;
 
-  if (score <= 1) {
+  if (isCommon) {
+    // Senha comum sempre é considerada fraca
+    level = 'weak';
+    feedback = 'Senha muito comum';
+    color = 'hsl(0, 84%, 60%)'; // red-500
+    score = Math.min(score, 2); // Reduzir score se for comum
+  } else if (score <= 1) {
     level = 'weak';
     feedback = 'Muito fraca';
     color = 'hsl(0, 84%, 60%)'; // red-500
@@ -67,7 +76,7 @@ export const validatePassword = (password: string): PasswordValidationResult => 
   const percentage = (score / 5) * 100;
 
   return {
-    isValid: score >= 3, // Precisa de pelo menos 3 requisitos
+    isValid: score >= 3 && !isCommon, // Precisa de pelo menos 3 requisitos e não ser comum
     strength: {
       score,
       level,
@@ -86,3 +95,20 @@ export const passwordRequirementsText = [
   'Um número (0-9)',
   'Um caractere especial (!@#$%^&*)',
 ];
+
+// Lista de senhas comuns/fracas para bloquear no front-end
+const COMMON_WEAK_PASSWORDS = [
+  'password', 'senha', 'senha123', 'admin', 'admin123', '12345678', 
+  'qwerty', 'qwerty123', 'abc12345', '123abc45', 'senha@123', 
+  'Password1', 'Admin@123', '123456789', 'password123', 'Senha@123'
+];
+
+/**
+ * Verifica se a senha contém palavras comuns/fracas
+ */
+export const isPasswordCommon = (password: string): boolean => {
+  const lowerPassword = password.toLowerCase();
+  return COMMON_WEAK_PASSWORDS.some(weak => 
+    lowerPassword.includes(weak.toLowerCase())
+  );
+};

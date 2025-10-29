@@ -140,21 +140,42 @@ export const SetNewPasswordForm = () => {
 
   const onSubmit = async (data: SetNewPasswordForm) => {
     if (!isValidSession) {
-      toast.error("Sessão inválida. Solicite um novo link de redefinição.");
+      toast.error("Sessão inválida", {
+        description: "Solicite um novo link de redefinição."
+      });
       return;
     }
 
     try {
       setIsLoading(true);
       
-      const { error } = await supabase.auth.updateUser({
+      const { data: result, error } = await supabase.auth.updateUser({
         password: data.password,
       });
 
-      if (error) throw error;
+      // Verificar explicitamente se há erro
+      if (error) {
+        console.error("❌ [SET-PASSWORD] Erro do Supabase:", error);
+        
+        // Tratar erro de senha fraca especificamente
+        if (error.message?.includes('weak') || error.message?.includes('known')) {
+          toast.error("Senha muito comum", {
+            description: "Esta senha é conhecida e fácil de adivinhar. Por favor, escolha outra mais forte e única."
+          });
+          return;
+        }
+        
+        // Outros erros
+        toast.error("Erro ao atualizar senha", {
+          description: error.message || "Tente novamente."
+        });
+        return;
+      }
 
       setIsSuccess(true);
-      toast.success("Senha atualizada com sucesso!");
+      toast.success("Senha atualizada com sucesso!", {
+        description: "Você será redirecionado para o login."
+      });
       
       // Fazer logout completo da sessão temporária e redirecionar
       setTimeout(async () => {
@@ -162,10 +183,10 @@ export const SetNewPasswordForm = () => {
       }, 3000);
       
     } catch (error: any) {
-      console.error("Erro ao atualizar senha:", error);
-      toast.error(
-        error.message || "Erro ao atualizar senha. Tente novamente."
-      );
+      console.error("❌ [SET-PASSWORD] Erro inesperado:", error);
+      toast.error("Erro inesperado", {
+        description: error.message || "Tente novamente mais tarde."
+      });
     } finally {
       setIsLoading(false);
     }
@@ -355,10 +376,23 @@ export const SetNewPasswordForm = () => {
 
         {/* Requisitos da senha */}
         {password && password.length > 0 && (
-          <PasswordRequirements 
-            requirements={passwordValidation.requirements}
-            className="bg-muted/30 p-4 rounded-lg border border-border"
-          />
+          <div className="space-y-3">
+            <PasswordRequirements 
+              requirements={passwordValidation.requirements}
+              className="bg-muted/30 p-4 rounded-lg border border-border"
+            />
+            
+            {/* Aviso sobre senhas comuns */}
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+              <div className="flex items-start gap-2">
+                <AlertCircle className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-amber-200">
+                  <p className="font-medium mb-1">Evite senhas comuns</p>
+                  <p>Senhas como "senha123", "password", "admin123" são facilmente descobertas e serão rejeitadas.</p>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         <div className="pt-4">
