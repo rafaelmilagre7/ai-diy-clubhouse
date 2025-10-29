@@ -8804,6 +8804,7 @@ export type Database = {
       toggle_topic_solved:
         | { Args: { p_topic_id: string; p_user_id?: string }; Returns: Json }
         | { Args: { topic_id: string }; Returns: Json }
+      topic_allows_posts: { Args: { _topic_id: string }; Returns: boolean }
       track_onboarding_step: {
         Args: { p_step_data?: Json; p_step_name: string; p_user_id: string }
         Returns: Json
