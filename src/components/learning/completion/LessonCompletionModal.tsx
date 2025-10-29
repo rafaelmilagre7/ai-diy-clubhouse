@@ -2,8 +2,7 @@
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LessonNPSForm } from "../nps/LessonNPSForm";
-import { CheckCircle2, Star, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -38,37 +37,24 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal>
-      <DialogContent className="sm:max-w-md border-0 shadow-lg bg-background p-0 overflow-hidden">
-        {/* Close button */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="absolute right-3 top-3 z-10 rounded-full h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
-          onClick={() => setIsOpen(false)}
-        >
-          <X className="h-4 w-4" />
-        </Button>
-        
-        {/* Header with celebration animation */}
-        <div className="relative bg-background border-b p-6 text-center">
-          <div className="space-y-3">
-            <div className="flex justify-center">
-              <div className="relative">
-                <CheckCircle2 className="h-12 w-12 text-primary animate-scale-in" />
-                <Star className="h-4 w-4 absolute -top-1 -right-1 text-primary animate-pulse" />
-              </div>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader className="text-center space-y-4 pb-2">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-primary/10 p-3">
+              <CheckCircle2 className="h-10 w-10 text-primary" />
             </div>
-            <DialogTitle className="text-xl font-bold text-foreground">
+          </div>
+          <div className="space-y-2">
+            <DialogTitle className="text-2xl font-semibold">
               Parabéns!
             </DialogTitle>
-            <DialogDescription className="text-sm text-muted-foreground">
+            <DialogDescription className="text-base">
               Você concluiu a aula "{lesson.title}"
             </DialogDescription>
           </div>
-        </div>
+        </DialogHeader>
 
-        {/* Content area */}
-        <div className="p-6">
+        <div className="pt-2">
           <LessonNPSForm
             lessonId={lesson.id}
             onCompleted={handleNPSCompleted}
