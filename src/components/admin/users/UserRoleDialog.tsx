@@ -1,4 +1,3 @@
-
 import {
   Dialog,
   DialogContent,
@@ -18,7 +17,7 @@ import {
 import { Shield, User, Loader2 } from "lucide-react";
 import { UserProfile } from "@/lib/supabase";
 import { Role } from "@/hooks/admin/useRoles";
-import { toast } from "sonner";
+import { showErrorToast } from "@/lib/toast-helpers";
 
 interface UserRoleDialogProps {
   open: boolean;
@@ -83,9 +82,7 @@ export const UserRoleDialog = ({
     } catch (error) {
       console.error('❌ [USER-ROLE-DIALOG] Erro na atualização:', error);
       // Não fechar o dialog, deixar usuário ver o erro e tentar novamente
-      toast.error('Erro ao atualizar papel', {
-        description: error instanceof Error ? error.message : 'Tente novamente'
-      });
+      showErrorToast('Erro ao atualizar papel', error instanceof Error ? error.message : 'Tente novamente');
     }
   };
 

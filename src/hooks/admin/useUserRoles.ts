@@ -3,7 +3,7 @@ import { useState, useCallback, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { UserProfile } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { showSuccessToast, showErrorToast, showInfoToast } from '@/lib/toast-helpers';
 import { secureLogger } from '@/utils/security/productionSafeLogging';
 import { useCacheInvalidation } from './useCacheInvalidation';
 
@@ -102,10 +102,7 @@ export function useUserRoles() {
         console.log('⚠️ [USER-ROLES] Usuário afetado está logado - forçando re-fetch do profile');
         await refetchProfile();
         
-        toast.info('⚡ Seu papel foi atualizado', {
-          description: 'As mudanças já estão ativas. Algumas páginas podem requerer recarregamento.',
-          duration: 5000
-        });
+        showInfoToast('⚡ Seu papel foi atualizado', 'As mudanças já estão ativas. Algumas páginas podem requerer recarregamento.');
       }
       
       console.log('✅ [USER-ROLES] Todos os caches invalidados com sucesso');
@@ -117,7 +114,7 @@ export function useUserRoles() {
         data: { targetUser: userId, result }
       });
       
-      toast.success('Papel do usuário atualizado com sucesso');
+      showSuccessToast('Papel atualizado com sucesso!', 'O papel do usuário foi alterado e já está ativo na plataforma.');
       return result;
       
     } catch (err: any) {
@@ -129,9 +126,7 @@ export function useUserRoles() {
       });
       
       setError(err);
-      toast.error('Erro ao atualizar papel', {
-        description: err.message || 'Não foi possível atribuir o papel ao usuário.'
-      });
+      showErrorToast('Erro ao atualizar papel', err.message || 'Não foi possível atribuir o papel ao usuário.');
       throw err;
     } finally {
       setIsUpdating(false);

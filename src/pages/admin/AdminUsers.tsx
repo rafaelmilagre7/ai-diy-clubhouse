@@ -180,10 +180,10 @@ export default function AdminUsers() {
       setSelectedUser(null);
       setNewRoleId('');
       fetchUsers();
-      toast.success('Papel do usuário atualizado com sucesso!');
+      // Toast já é mostrado pelo hook useUserRoles
     } catch (error) {
       console.error('Erro ao atualizar papel do usuário:', error);
-      toast.error('Erro ao atualizar papel do usuário');
+      // Toast de erro já é mostrado pelo hook useUserRoles
     }
   };
 
