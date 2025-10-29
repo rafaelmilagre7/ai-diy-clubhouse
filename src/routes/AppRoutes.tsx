@@ -17,6 +17,7 @@ const AcceptInvite = lazy(() => import('@/pages/AcceptInvite'));
 const OnboardingPage = lazy(() => import('@/pages/OnboardingPage'));
 const AulaView = lazy(() => import('@/pages/formacao/aulas/AulaView'));
 const AuthDebug = lazy(() => import('@/pages/test/AuthDebug'));
+const ToastDemo = lazy(() => import('@/pages/ToastDemo'));
 
 const AppRoutes = () => {
   const location = useLocation();
@@ -133,6 +134,13 @@ const AppRoutes = () => {
         <Route path="/test/auth-debug" element={
           <Suspense fallback={<OptimizedLoadingScreen />}>
             <AuthDebug />
+          </Suspense>
+        } />
+        
+        {/* Rota de demonstração do sistema de toast moderno */}
+        <Route path="/toast-demo" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <ToastDemo />
           </Suspense>
         } />
         

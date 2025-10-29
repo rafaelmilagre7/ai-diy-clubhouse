@@ -1,7 +1,7 @@
 
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ToastModernProvider } from "@/components/layout/ToastModernProvider";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
@@ -44,7 +44,7 @@ function App() {
                     <BrowserRouter>
                       <div className="min-h-screen bg-background font-sans antialiased">
                         <AppRoutes />
-                        <Sonner />
+                        <ToastModernProvider />
                         {/* Dashboard de performance apenas em desenvolvimento */}
                         <PerformanceDashboard />
                       </div>
