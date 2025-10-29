@@ -138,8 +138,7 @@ const LessonView = () => {
           lesson_id: lessonId!,
           user_id: userData.user.id,
           score,
-          feedback: feedback || null,
-          updated_at: new Date().toISOString()
+          feedback: feedback || null
         }, {
           onConflict: 'user_id,lesson_id'
         });

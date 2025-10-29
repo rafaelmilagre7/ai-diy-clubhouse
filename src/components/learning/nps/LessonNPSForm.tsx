@@ -60,9 +60,23 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (score === null || !onCompleted) return;
+    console.log('[NPS-FORM] 📝 Submetendo formulário:', { 
+      score, 
+      feedbackLength: feedback.length,
+      hasOnCompleted: !!onCompleted 
+    });
     
-    await onCompleted(score, feedback);
+    if (score === null || !onCompleted) {
+      console.warn('[NPS-FORM] ⚠️ Validação falhou:', { score, onCompleted: !!onCompleted });
+      return;
+    }
+    
+    try {
+      await onCompleted(score, feedback);
+      console.log('[NPS-FORM] ✅ onCompleted executado com sucesso');
+    } catch (error) {
+      console.error('[NPS-FORM] ❌ Erro em onCompleted:', error);
+    }
   };
 
   const getScoreLabel = () => {
