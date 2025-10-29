@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface SecurityIncident {
   id: string;
@@ -48,6 +48,7 @@ export const SecurityIncidentManager = ({ incidents }: SecurityIncidentManagerPr
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');
+  const { showSuccess, showError } = useToastModern();
 
   // Filtrar incidentes
   const filteredIncidents = incidents.filter(incident => {
@@ -98,7 +99,7 @@ export const SecurityIncidentManager = ({ incidents }: SecurityIncidentManagerPr
 
       if (error) throw error;
 
-      toast.success('Status do incidente atualizado com sucesso');
+      showSuccess('Status atualizado', 'Status do incidente atualizado com sucesso');
       
       // Atualizar incidente selecionado se for o mesmo
       if (selectedIncident?.id === incidentId) {
@@ -106,7 +107,7 @@ export const SecurityIncidentManager = ({ incidents }: SecurityIncidentManagerPr
       }
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
-      toast.error('Erro ao atualizar status do incidente');
+      showError('Erro ao atualizar', 'Erro ao atualizar status do incidente');
     }
   };
 
@@ -128,11 +129,11 @@ export const SecurityIncidentManager = ({ incidents }: SecurityIncidentManagerPr
 
       if (error) throw error;
 
-      toast.success('Incidente criado com sucesso');
+      showSuccess('Incidente criado', 'Incidente criado com sucesso');
       setIsCreateDialogOpen(false);
     } catch (error) {
       console.error('Erro ao criar incidente:', error);
-      toast.error('Erro ao criar incidente');
+      showError('Erro ao criar', 'Erro ao criar incidente');
     }
   };
 

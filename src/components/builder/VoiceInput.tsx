@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Mic } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { supabase } from '@/lib/supabase';
 
 interface VoiceInputProps {
@@ -10,6 +10,7 @@ interface VoiceInputProps {
 }
 
 export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProps) {
+  const { showSuccess, showError, showWarning } = useToastModern();
   const [isRecording, setIsRecording] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
@@ -84,15 +85,11 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       mediaRecorder.start();
       setIsRecording(true);
 
-      toast.success('Gravando áudio', {
-        description: 'Fale claramente no microfone'
-      });
+      showSuccess('Gravando áudio', 'Fale claramente no microfone');
 
     } catch (error) {
       console.error('Erro ao acessar microfone:', error);
-      toast.error('Erro ao acessar microfone', {
-        description: 'Verifique as permissões do navegador'
-      });
+      showError('Erro ao acessar microfone', 'Verifique as permissões do navegador');
     }
   };
 
@@ -136,20 +133,16 @@ export function VoiceInput({ onTranscription, disabled = false }: VoiceInputProp
       const transcription = data.text.trim();
 
       if (transcription.length < 30) {
-        toast.warning('Transcrição muito curta', {
-          description: 'Por favor, grave uma descrição mais detalhada'
-        });
+        showWarning('Transcrição muito curta', 'Por favor, grave uma descrição mais detalhada');
         return;
       }
 
-      toast.success('Transcrição concluída!');
+      showSuccess('Transcrição concluída!', 'Áudio transcrito com sucesso');
       onTranscription(transcription);
 
     } catch (error) {
       console.error('Erro na transcrição:', error);
-      toast.error('Erro ao transcrever áudio', {
-        description: 'Tente novamente ou digite sua ideia'
-      });
+      showError('Erro ao transcrever', 'Tente novamente ou digite sua ideia');
     } finally {
       setIsTranscribing(false);
     }

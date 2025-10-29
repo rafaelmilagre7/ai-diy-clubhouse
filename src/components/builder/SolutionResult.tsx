@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Star, Share2, Download, FileCode, Package, ListChecks, Network, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { supabase } from '@/lib/supabase';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { FrameworkQuadrants } from './FrameworkQuadrants';
@@ -31,6 +31,7 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
   solution, 
   onNewIdea
 }) => {
+  const { showSuccess, showError } = useToastModern();
   // Estado para controlar expansão de seções on-demand
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
   const [loadingSections, setLoadingSections] = useState<Set<string>>(new Set());
@@ -87,12 +88,10 @@ export const SolutionResult: React.FC<SolutionResultProps> = ({
           [mapping.field]: contentToSave
         }));
         
-        toast.success('Conteúdo gerado com sucesso! 🎉');
+        showSuccess('Conteúdo gerado!', 'Conteúdo gerado com sucesso! 🎉');
       }
     } catch (err) {
-      toast.error('Erro ao gerar conteúdo', {
-        description: 'Tente novamente em instantes.'
-      });
+      showError('Erro ao gerar conteúdo', 'Tente novamente em instantes.', { duration: 5000 });
     } finally {
       setLoadingSections(prev => {
         const newSet = new Set(prev);

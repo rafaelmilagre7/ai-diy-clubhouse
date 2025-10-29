@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Copy, Loader2, FileCode } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface PromptLovableModalProps {
   open: boolean;
@@ -25,11 +25,13 @@ export const PromptLovableModal: React.FC<PromptLovableModalProps> = ({
   loading,
   onGenerate
 }) => {
+  const { showSuccess, showInfo } = useToastModern();
+  
   const handleCopy = () => {
     if (!prompt) return;
     
     navigator.clipboard.writeText(prompt);
-    toast.success('Prompt copiado para a área de transferência!');
+    showSuccess('Prompt copiado!', 'Prompt copiado para a área de transferência');
   };
 
   return (
@@ -74,7 +76,7 @@ export const PromptLovableModal: React.FC<PromptLovableModalProps> = ({
                   <Button
                     onClick={() => {
                       onGenerate();
-                      toast.info('Gerando novo prompt...');
+                      showInfo('Gerando...', 'Gerando novo prompt...');
                     }}
                     variant="outline"
                   >

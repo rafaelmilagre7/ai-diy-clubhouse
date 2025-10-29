@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { RefreshCw, Palette } from 'lucide-react';
 import { useCertificateRefresh } from '@/hooks/certificates/useCertificateRefresh';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface CertificateRefreshButtonProps {
   variant?: 'refresh' | 'template';
@@ -16,17 +16,16 @@ export const CertificateRefreshButton = ({
   className = ''
 }: CertificateRefreshButtonProps) => {
   const { refreshCertificates, forceTemplateRegeneration } = useCertificateRefresh();
+  const { showSuccess } = useToastModern();
 
   const handleRefresh = () => {
     refreshCertificates();
-    toast.success('Cache de certificados limpo!');
+    showSuccess('Cache limpo!', 'Cache de certificados limpo');
   };
 
   const handleTemplateUpdate = () => {
     forceTemplateRegeneration();
-    toast.success('Template atualizado para versão 4.0 com novo design!', {
-      description: 'Novos certificados usarão o fundo verde/turquesa'
-    });
+    showSuccess('Template atualizado!', 'Template atualizado para versão 4.0 com novo design');
   };
 
   if (variant === 'template') {

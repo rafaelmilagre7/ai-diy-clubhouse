@@ -4,7 +4,7 @@ import { Download, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { PixelPerfectCertificateTemplate } from "./PixelPerfectCertificateTemplate";
 import { pdfGenerator } from "@/utils/certificates/pdfGenerator";
 import { CertificateData, CertificateTemplate as TemplateType } from "@/utils/certificates/templateEngine";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import "@/styles/certificate.css";
 
 interface CertificatePreviewProps {
@@ -26,6 +26,7 @@ export const CertificatePreview = ({
   onDownload: externalOnDownload,
   onOpenInNewTab: externalOnOpenInNewTab
 }: CertificatePreviewProps) => {
+  const { showSuccess, showError } = useToastModern();
   const [isGenerating, setIsGenerating] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [certificateElement, setCertificateElement] = useState<HTMLElement | null>(null);
@@ -42,7 +43,7 @@ export const CertificatePreview = ({
     }
 
     if (!certificateElement) {
-      toast.error("Certificado ainda não está pronto para download");
+      showError("Não está pronto", "Certificado ainda não está pronto para download");
       return;
     }
 
@@ -52,11 +53,11 @@ export const CertificatePreview = ({
       const filename = `certificado-${data.solutionTitle?.replace(/[^a-zA-Z0-9]/g, '-') || 'documento'}.pdf`;
       
       await pdfGenerator.downloadPDF(blob, filename);
-      toast.success("Certificado baixado com sucesso!");
+      showSuccess("Certificado baixado!", "Certificado baixado com sucesso");
       
     } catch (error) {
       console.error('❌ [DOWNLOAD] Erro ao gerar PDF:', error);
-      toast.error("Erro ao gerar certificado para download");
+      showError("Erro ao gerar", "Erro ao gerar certificado para download");
     } finally {
       setIsGenerating(false);
     }
@@ -70,7 +71,7 @@ export const CertificatePreview = ({
     }
 
     if (!certificateElement) {
-      toast.error("Certificado ainda não está pronto");
+      showError("Não está pronto", "Certificado ainda não está pronto");
       return;
     }
 
@@ -81,7 +82,7 @@ export const CertificatePreview = ({
       
     } catch (error) {
       console.error('❌ [OPEN-TAB] Erro ao abrir PDF:', error);
-      toast.error("Erro ao abrir certificado");
+      showError("Erro ao abrir", "Erro ao abrir certificado");
     } finally {
       setIsGenerating(false);
     }

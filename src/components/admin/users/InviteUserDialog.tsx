@@ -30,7 +30,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Mail, User, UserPlus, CheckCircle, Send } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { useInviteCreate } from '@/hooks/admin/invites/useInviteCreate';
@@ -70,6 +70,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
   const queryClient = useQueryClient();
   const { user } = useAuth();
   const { createInvite, isCreating } = useInviteCreate();
+  const { showError } = useToastModern();
 
   // Atualizar a lista de roles quando o dialog for aberto
   useEffect(() => {
@@ -154,9 +155,7 @@ export const InviteUserDialog: React.FC<InviteUserDialogProps> = ({
         setStep('form');
       }, 3000);
       
-      toast.error('Erro ao criar convite', {
-        description: error.message || 'Tente novamente em alguns instantes.'
-      });
+      showError('Erro ao criar convite', error.message || 'Tente novamente em alguns instantes.', { duration: 6000 });
     }
   };
 

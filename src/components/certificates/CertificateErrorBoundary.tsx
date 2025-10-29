@@ -3,7 +3,7 @@ import { ErrorBoundary } from 'react-error-boundary';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface CertificateErrorFallbackProps {
   error: Error;
@@ -11,9 +11,11 @@ interface CertificateErrorFallbackProps {
 }
 
 const CertificateErrorFallback = ({ error, resetErrorBoundary }: CertificateErrorFallbackProps) => {
+  const { showInfo } = useToastModern();
+  
   const handleRetry = () => {
     resetErrorBoundary();
-    toast.info('Recarregando certificado...');
+    showInfo('Recarregando...', 'Recarregando certificado...');
   };
 
   return (
@@ -62,12 +64,14 @@ export const CertificateErrorBoundary = ({
   children, 
   fallback = CertificateErrorFallback 
 }: CertificateErrorBoundaryProps) => {
+  const { showError } = useToastModern();
+  
   const handleError = (error: Error, errorInfo: { componentStack: string }) => {
     console.error('💥 Certificate Error Boundary caught error:', error);
     console.error('Component stack:', errorInfo.componentStack);
     
     // Log para analytics se necessário
-    toast.error('Erro no sistema de certificados');
+    showError('Erro no sistema', 'Erro no sistema de certificados');
   };
 
   return (

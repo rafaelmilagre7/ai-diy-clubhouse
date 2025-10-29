@@ -5,7 +5,7 @@ import {
   Download, Maximize2, Minimize2, Copy, 
   ZoomIn, ZoomOut, RotateCcw, AlertTriangle, Info, Move
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Tooltip,
@@ -30,6 +30,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const mermaidRef = useRef<HTMLDivElement>(null);
+  const { showSuccess, showError, showInfo } = useToastModern();
   
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [zoom, setZoom] = useState(1);
@@ -103,15 +104,15 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
   const resetView = () => {
     setZoom(1);
     setPan({ x: 0, y: 0 });
-    toast.success('Visão resetada');
+    showSuccess('Visão resetada', 'Zoom e posição resetados');
   };
 
   const handleRetry = () => {
     if (retryCount < 3) {
       setRetryCount(prev => prev + 1);
-      toast.info(`Tentando novamente... (${retryCount + 1}/3)`);
+      showInfo('Tentando novamente', `Tentativa ${retryCount + 1}/3`);
     } else {
-      toast.error('Máximo de tentativas atingido');
+      showError('Máximo de tentativas', 'Máximo de tentativas atingido');
     }
   };
 
@@ -119,7 +120,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
     try {
       const svg = mermaidRef.current?.querySelector('svg');
       if (!svg) {
-        toast.error('Diagrama não encontrado');
+        showError('Diagrama não encontrado', 'Não foi possível encontrar o diagrama');
         return;
       }
 
@@ -141,7 +142,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
             link.href = URL.createObjectURL(blob);
             link.download = `${diagramName}.png`;
             link.click();
-            toast.success('PNG baixado!');
+            showSuccess('PNG baixado!', 'Imagem baixada com sucesso');
           }
         });
         URL.revokeObjectURL(url);
@@ -150,7 +151,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
       img.src = url;
     } catch (error) {
       console.error('Erro ao baixar:', error);
-      toast.error('Erro ao baixar PNG');
+      showError('Erro ao baixar PNG', 'Não foi possível baixar a imagem');
     }
   };
 
@@ -158,7 +159,7 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
     try {
       const svg = mermaidRef.current?.querySelector('svg');
       if (!svg) {
-        toast.error('Diagrama não encontrado');
+        showError('Diagrama não encontrado', 'Não foi possível encontrar o diagrama');
         return;
       }
 
@@ -170,17 +171,17 @@ export const DiagramRenderer: React.FC<DiagramRendererProps> = ({
       link.download = `${diagramName}.svg`;
       link.click();
       URL.revokeObjectURL(url);
-      toast.success('SVG baixado!');
+      showSuccess('SVG baixado!', 'Arquivo SVG baixado com sucesso');
     } catch (error) {
       console.error('Erro ao baixar SVG:', error);
-      toast.error('Erro ao baixar SVG');
+      showError('Erro ao baixar SVG', 'Não foi possível baixar o arquivo');
     }
   };
 
   const handleCopyMermaid = () => {
     if (diagram?.mermaid_code) {
       navigator.clipboard.writeText(diagram.mermaid_code);
-      toast.success('Código Mermaid copiado!');
+      showSuccess('Código copiado!', 'Código Mermaid copiado para área de transferência');
     }
   };
 

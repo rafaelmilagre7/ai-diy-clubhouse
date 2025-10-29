@@ -32,7 +32,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Bell, Send, Users, AlertTriangle, Sparkles } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { BUILDER_ANNOUNCEMENT } from "./BuilderAnnouncementTemplate";
@@ -79,6 +79,7 @@ export default function BroadcastForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [progress, setProgress] = useState(0);
+  const { showError, showSuccess, showInfo } = useToastModern();
 
   const form = useForm<BroadcastFormValues>({
     resolver: zodResolver(broadcastSchema),
@@ -123,7 +124,7 @@ export default function BroadcastForm() {
       setEstimatedRecipients(data?.length || 0);
     } catch (error) {
       console.error("Erro ao estimar destinatários:", error);
-      toast.error("Erro ao calcular destinatários");
+      showError("Erro ao calcular", "Erro ao calcular destinatários");
     } finally {
       setIsLoading(false);
     }
@@ -143,9 +144,7 @@ export default function BroadcastForm() {
     form.setValue("action_url", BUILDER_ANNOUNCEMENT.action_url);
     form.setValue("target_audience", "all");
     
-    toast.success("Template aplicado!", {
-      description: "Campos preenchidos com o anúncio do Builder (Opção B)",
-    });
+    showSuccess("Template aplicado!", "Campos preenchidos com o anúncio do Builder (Opção B)");
   };
 
   const sendBroadcast = async () => {
@@ -188,18 +187,14 @@ export default function BroadcastForm() {
 
       if (error) throw error;
 
-      toast.success("Broadcast enviado!", {
-        description: `${data.stats.sent} notificações enviadas com sucesso`,
-      });
+      showSuccess("Broadcast enviado!", `${data.stats.sent} notificações enviadas com sucesso`);
 
       form.reset();
       setEstimatedRecipients(null);
       setShowConfirmDialog(false);
     } catch (error: any) {
       console.error("Erro ao enviar broadcast:", error);
-      toast.error("Erro ao enviar broadcast", {
-        description: error.message,
-      });
+      showError("Erro ao enviar broadcast", error.message, { duration: 6000 });
     } finally {
       setIsSending(false);
       setProgress(0);
