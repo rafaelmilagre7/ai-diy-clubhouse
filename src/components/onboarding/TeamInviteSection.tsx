@@ -98,6 +98,13 @@ export const TeamInviteSection: React.FC<TeamInviteSectionProps> = ({ onComplete
 
   // Se não pode adicionar membros, pular esta seção
   if (!planLimits?.canAddMembers) {
+    console.log('[TEAM_INVITE] ⚠️ Plano não permite adicionar membros', planLimits);
+    
+    const handleContinue = () => {
+      console.log('[TEAM_INVITE] 🚀 Botão Continuar clicado - chamando onSkip');
+      onSkip();
+    };
+    
     return (
       <Card>
         <CardHeader>
@@ -110,7 +117,7 @@ export const TeamInviteSection: React.FC<TeamInviteSectionProps> = ({ onComplete
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button onClick={onSkip} className="w-full">
+          <Button onClick={handleContinue} className="w-full">
             Continuar
           </Button>
         </CardContent>

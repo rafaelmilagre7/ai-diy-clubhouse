@@ -33,15 +33,20 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   };
 
   const handleSkipTeamInvites = async () => {
+    console.log('[STEP6] 🔥 handleSkipTeamInvites chamado');
     await handleFinish();
   };
 
   const handleFinish = async () => {
+    console.log('[STEP6] 🎯 handleFinish chamado - iniciando processo');
     setIsCompleting(true);
     
+    console.log('[STEP6] 🔄 Chamando onFinish...');
     const success = await onFinish();
+    console.log('[STEP6] 📊 onFinish retornou:', success);
     
     if (success) {
+      console.log('[STEP6] ✅ Sucesso! Mostrando animação de celebração');
       setShowSuccess(true);
     } else {
       console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
