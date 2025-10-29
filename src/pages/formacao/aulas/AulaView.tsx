@@ -8,17 +8,27 @@ import { LessonNavigation } from "@/components/learning/member/LessonNavigation"
 import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { LessonSidebar } from "@/components/learning/member/LessonSidebar";
 import { LessonResources } from "@/components/learning/member/LessonResources";
+import { LessonCompletionModal } from "@/components/learning/completion/LessonCompletionModal";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { VideoPlayer } from "@/components/formacao/aulas/VideoPlayer";
 import { VideoDisplay } from "@/components/formacao/aulas/VideoDisplay";
+import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
 
 const AulaView: React.FC = () => {
   const { cursoId, aulaId } = useParams<{ cursoId: string; aulaId: string }>();
   const navigate = useNavigate();
   const [videoProgresses, setVideoProgresses] = useState<Record<string, number>>({});
   const [selectedVideo, setSelectedVideo] = useState<any>(null);
+  const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  
+  // ✅ Sistema binário integrado (Fase 1 + Fase 2)
+  const { 
+    isCompleted, 
+    completeLesson,
+    isUpdating 
+  } = useLessonProgress({ lessonId: aulaId });
   
   // Buscar detalhes da aula
   const { data: aula, isLoading: isLoadingAula } = useQuery({
@@ -245,20 +255,32 @@ const AulaView: React.FC = () => {
     */
   };
   
-  // Marcar aula como concluída manualmente
-  const handleComplete = async (): Promise<void> => {
-    const fullProgress: Record<string, number> = {};
-    videos?.forEach(video => {
-      fullProgress[video.id] = 100;
-    });
+  // ✅ Marcar aula como concluída usando sistema binário
+  const handleComplete = async (): Promise<boolean> => {
+    console.log('[AULA-VIEW] 🎯 handleComplete chamado');
     
-    setVideoProgresses(fullProgress);
-    await updateProgressMutation.mutateAsync({
-      progress: 100,
-      videoProgress: fullProgress
-    });
+    if (isCompleted) {
+      console.log('[AULA-VIEW] ℹ️ Aula já concluída');
+      return true;
+    }
     
-    toast.success("Aula concluída! Parabéns!");
+    try {
+      const success = await completeLesson();
+      
+      if (success) {
+        console.log('[AULA-VIEW] ✅ Progresso salvo! Abrindo modal NPS');
+        setCompletionDialogOpen(true);
+      } else {
+        console.error('[AULA-VIEW] ❌ Falha ao salvar progresso');
+        toast.error("Não foi possível marcar como concluída");
+      }
+      
+      return success;
+    } catch (error) {
+      console.error('[AULA-VIEW] ❌ Erro ao completar:', error);
+      toast.error("Erro ao marcar aula como concluída");
+      return false;
+    }
   };
   
   // Selecionar um vídeo para exibir
@@ -354,10 +376,32 @@ const AulaView: React.FC = () => {
               currentLesson={aula}
               allLessons={moduloData?.aulas || []}
               onComplete={handleComplete}
-              isCompleted={(userProgress?.progress_percentage || 0) >= 100}
+              isCompleted={isCompleted}
             />
           </div>
         </div>
+        
+        {/* Modal de conclusão com NPS */}
+        <LessonCompletionModal
+          isOpen={completionDialogOpen}
+          setIsOpen={setCompletionDialogOpen}
+          lesson={aula}
+          onNext={() => {
+            setCompletionDialogOpen(false);
+            // Navegar para próxima aula se existir
+            const currentIndex = moduloData?.aulas?.findIndex(l => l.id === aula.id) ?? -1;
+            const nextLesson = currentIndex >= 0 ? moduloData?.aulas?.[currentIndex + 1] : null;
+            if (nextLesson) {
+              navigate(`/formacao/aulas/${nextLesson.id}`);
+            }
+          }}
+          nextLesson={
+            moduloData?.aulas?.[
+              (moduloData?.aulas?.findIndex(l => l.id === aula.id) ?? -1) + 1
+            ]
+          }
+        />
+
         
         <div>
           <LessonSidebar

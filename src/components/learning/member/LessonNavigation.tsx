@@ -12,7 +12,7 @@ interface LessonNavigationProps {
   currentLesson: LearningLesson;
   allLessons: LearningLesson[];
   isCompleted?: boolean;
-  onComplete?: () => Promise<void>;
+  onComplete?: () => Promise<boolean | void>;
   prevLesson?: LearningLesson | null;
   nextLesson?: LearningLesson | null;
 }
@@ -33,14 +33,17 @@ export const LessonNavigation: React.FC<LessonNavigationProps> = ({
     
     if (onComplete) {
       try {
-        await onComplete();
-        console.log('[LESSON-NAV] ✅ Aula concluída com sucesso');
+        const result = await onComplete();
+        console.log('[LESSON-NAV] ✅ onComplete retornou:', result);
         
-        // Pequeno delay para garantir que o estado seja atualizado
-        setTimeout(() => {
-          console.log('[LESSON-NAV] 🔄 Forçando refresh da página para sincronização');
-          window.location.reload();
-        }, 1500);
+        // Se retornou false explicitamente, houve erro
+        if (result === false) {
+          console.error('[LESSON-NAV] ❌ Falha ao concluir aula');
+          return;
+        }
+        
+        // Sucesso (true ou undefined/void)
+        console.log('[LESSON-NAV] ✅ Aula concluída com sucesso');
       } catch (error) {
         console.error('[LESSON-NAV] ❌ Erro ao concluir aula:', error);
       }
