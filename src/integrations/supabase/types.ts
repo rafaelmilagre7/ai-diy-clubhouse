@@ -8631,6 +8631,7 @@ export type Database = {
         Args: { action_type: string; details?: Json; user_id: string }
         Returns: undefined
       }
+      maintenance_fix_orphaned_onboarding: { Args: never; Returns: undefined }
       manage_user_session: {
         Args: {
           p_ip_address?: string
@@ -8708,6 +8709,7 @@ export type Database = {
           whatsapp_recovered: string
         }[]
       }
+      recover_orphaned_users: { Args: never; Returns: undefined }
       regenerate_recurring_event_dates: { Args: never; Returns: Json }
       register_with_invite: {
         Args: { p_name: string; p_password: string; p_token: string }

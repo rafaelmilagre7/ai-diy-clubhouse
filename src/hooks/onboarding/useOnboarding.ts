@@ -558,28 +558,59 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
       setLoadingMessage('Aplicando configurações finais...');
       
-      // ESTRATÉGIA SIMPLIFICADA: Apenas marcar profile como completo
-      // O onboarding_final é secundário e pode falhar sem bloquear o usuário
-      console.log('[ONBOARDING] 🎯 Finalizando onboarding (estratégia simplificada)...');
-      const rpcStartTime = performance.now();
+      // ESTRATÉGIA SIMPLIFICADA E ROBUSTA
+      console.log('[ONBOARDING] 🎯 Finalizando (estratégia robusta)...');
+      const finalizationStartTime = performance.now();
       
-      let onboardingSuccess = false;
       let profileSuccess = false;
       
-      // 1. TENTAR atualizar onboarding_final (não-bloqueante)
       try {
-        console.log('[ONBOARDING] 📝 Tentando atualizar onboarding_final...');
+        // CRÍTICO: Atualizar profiles PRIMEIRO (mais importante)
+        console.log('[ONBOARDING] 📝 Atualizando profiles (PRIORIDADE 1)...');
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            onboarding_completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
         
-        // Verificar se registro existe
-        const { data: existingRecord } = await supabase
+        if (profileError) {
+          console.error('[ONBOARDING] ❌ Erro profiles:', profileError);
+          
+          // Fallback: tentar upsert
+          const { error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: user.id,
+              onboarding_completed: true,
+              updated_at: new Date().toISOString()
+            }, { onConflict: 'id' });
+          
+          if (upsertError) throw new Error('Falha crítica em profiles');
+        }
+        
+        profileSuccess = true;
+        console.log('[ONBOARDING] ✅ profiles OK');
+        
+      } catch (profileError: any) {
+        console.error('[ONBOARDING] ❌ CRÍTICO profiles:', profileError);
+        showError("Erro ao finalizar", "Tente novamente.");
+        throw profileError;
+      }
+      
+      // Atualizar onboarding_final (secundário, não-bloqueante)
+      try {
+        console.log('[ONBOARDING] 📝 Atualizando onboarding_final...');
+        
+        const { data: existing } = await supabase
           .from('onboarding_final')
           .select('id')
           .eq('user_id', user.id)
           .maybeSingle();
         
-        if (existingRecord) {
-          // Registro existe, fazer UPDATE
-          const { error: updateError } = await supabase
+        if (existing) {
+          await supabase
             .from('onboarding_final')
             .update({
               is_completed: true,
@@ -596,17 +627,8 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
               updated_at: new Date().toISOString()
             })
             .eq('user_id', user.id);
-          
-          if (!updateError) {
-            console.log('[ONBOARDING] ✅ onboarding_final atualizado');
-            onboardingSuccess = true;
-          } else {
-            console.warn('[ONBOARDING] ⚠️ Erro ao atualizar onboarding_final (não-bloqueante):', updateError);
-          }
         } else {
-          // Registro não existe, criar um novo
-          console.log('[ONBOARDING] 🆕 Criando novo registro onboarding_final...');
-          const { error: insertError } = await supabase
+          await supabase
             .from('onboarding_final')
             .insert({
               user_id: user.id,
@@ -627,70 +649,19 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
               },
               business_info: {
                 company_name: state.data.professional_info?.company_name,
-                company_sector: state.data.professional_info?.company_sector,
-                company_size: state.data.professional_info?.company_size
+                company_sector: state.data.professional_info?.company_sector
               },
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
-          
-          if (!insertError) {
-            console.log('[ONBOARDING] ✅ onboarding_final criado');
-            onboardingSuccess = true;
-          } else {
-            console.warn('[ONBOARDING] ⚠️ Erro ao criar onboarding_final (não-bloqueante):', insertError);
-          }
         }
+        
+        console.log('[ONBOARDING] ✅ onboarding_final OK');
       } catch (onboardingError) {
-        console.warn('[ONBOARDING] ⚠️ Erro em onboarding_final (não-bloqueante):', onboardingError);
+        console.warn('[ONBOARDING] ⚠️ Erro onboarding_final (não-bloqueante):', onboardingError);
       }
       
-      // 2. ATUALIZAR profiles (CRÍTICO - bloqueante)
-      try {
-        console.log('[ONBOARDING] 📝 Atualizando profiles (CRÍTICO)...');
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .update({
-            onboarding_completed: true,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', user.id);
-        
-        if (profileError) {
-          console.error('[ONBOARDING] ❌ Erro CRÍTICO ao atualizar profiles:', profileError);
-          // Tentar novamente com upsert
-          console.log('[ONBOARDING] 🔄 Tentando upsert em profiles...');
-          const { error: upsertError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: user.id,
-              onboarding_completed: true,
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'id'
-            });
-          
-          if (upsertError) {
-            console.error('[ONBOARDING] ❌ Upsert falhou:', upsertError);
-            throw new Error('Falha crítica ao atualizar profile');
-          }
-        }
-        
-        console.log('[ONBOARDING] ✅ profiles atualizado com sucesso');
-        profileSuccess = true;
-        
-      } catch (profileError: any) {
-        console.error('[ONBOARDING] ❌ ERRO CRÍTICO em profiles:', profileError);
-        showError(
-          "Erro ao finalizar",
-          "Não foi possível completar o onboarding. Tente novamente."
-        );
-        throw profileError;
-      }
-      
-      const rpcDuration = performance.now() - rpcStartTime;
-      console.log('[ONBOARDING] ⏱️ Finalização concluída em:', rpcDuration, 'ms');
-      console.log('[ONBOARDING] 📊 Status:', { onboardingSuccess, profileSuccess });
+      console.log('[ONBOARDING] ⏱️ Finalização:', performance.now() - finalizationStartTime, 'ms');
 
       // Invalidar caches de forma simples e rápida
       console.log('[ONBOARDING] ⏱️ Invalidando caches...');
