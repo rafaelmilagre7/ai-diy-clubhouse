@@ -211,19 +211,20 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   
   // Marcar como concluída com toast e aguardar salvamento
   const completeLesson = async () => {
-    console.log("[LESSON-PROGRESS] 🎯 Iniciando conclusão manual");
+    console.log("[LESSON-PROGRESS] 🎯 Iniciando conclusão");
     
-    const loadingId = showModernLoading("Concluindo aula...", "Salvando seu progresso...");
+    const loadingId = showModernLoading("Concluindo aula...");
     
     try {
       const result = await updateProgressMutation.mutateAsync(true);
+      console.log("[LESSON-PROGRESS] ✅ Aula concluída com sucesso:", result);
       
       dismissModernToast(loadingId);
       showModernSuccess("Aula concluída!", "Seu progresso foi salvo");
       
-      console.log("[LESSON-PROGRESS] ✅ Conclusão bem-sucedida:", result);
+      return result;
     } catch (error: any) {
-      console.error("[LESSON-PROGRESS] ❌ Erro na conclusão:", {
+      console.error("[LESSON-PROGRESS] ❌ Erro ao concluir aula:", {
         error,
         message: error?.message,
         code: error?.code,
@@ -232,7 +233,6 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       
       dismissModernToast(loadingId);
       
-      // Mensagem de erro mais específica
       const errorMessage = error?.message?.includes('constraint') 
         ? "Erro de consistência. Tente novamente."
         : error?.message || "Não foi possível salvar.";

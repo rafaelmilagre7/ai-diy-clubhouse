@@ -138,18 +138,18 @@ export const showModernInfo = (
 
 /**
  * Toast de loading (sem auto-dismiss)
- * @example const id = showModernLoading("Salvando...", "Aguarde enquanto processamos"); dismissModernToast(id);
+ * @example const id = showModernLoading("Salvando..."); dismissModernToast(id);
  */
 export const showModernLoading = (
   title: string,
-  message: string,
+  message?: string,
   options?: ModernToastOptions
 ): ToastId => {
   if (!modernToastInstance) {
     console.warn('Modern toast not initialized');
     return '';
   }
-  return modernToastInstance.showLoading(title, message, options);
+  return modernToastInstance.showLoading(title, message || title, options);
 };
 
 /**
