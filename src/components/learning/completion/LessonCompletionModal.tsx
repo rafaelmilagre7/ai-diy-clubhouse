@@ -28,6 +28,19 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   const [npsSubmitted, setNpsSubmitted] = useState(false);
   const { log } = useLogging();
 
+  // Log quando modal abre
+  React.useEffect(() => {
+    if (isOpen) {
+      console.log('[MODAL] 🎬 Modal aberto:', {
+        lessonId: lesson.id,
+        hasOnSaveCompletion: !!onSaveCompletion,
+        hasOnNext: !!onNext,
+        hasNextLesson: !!nextLesson,
+        isSubmitting
+      });
+    }
+  }, [isOpen]);
+
   const handleNPSCompleted = async (score: number, feedback: string) => {
     if (!onSaveCompletion) {
       console.error('[MODAL] ❌ onSaveCompletion não definido');

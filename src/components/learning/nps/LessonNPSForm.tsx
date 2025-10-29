@@ -58,10 +58,27 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   const [score, setScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string>('');
 
+  // Log quando o componente monta
+  React.useEffect(() => {
+    console.log('[NPS-FORM] 🎬 Componente montado:', {
+      lessonId,
+      hasOnCompleted: !!onCompleted,
+      isSubmitting
+    });
+  }, []);
+
+  // Log quando score muda
+  React.useEffect(() => {
+    if (score !== null) {
+      console.log('[NPS-FORM] ⭐ Score atualizado:', score);
+    }
+  }, [score]);
+
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('[NPS-FORM] 🔥 ============ FORM SUBMIT DISPARADO ============');
     e.preventDefault();
     
-    console.log('[NPS-FORM] 🚀 handleSubmit INICIADO');
+    console.log('[NPS-FORM] 🚀 handleSubmit INICIADO após preventDefault');
     console.log('[NPS-FORM] 📊 Estado atual:', { 
       score, 
       feedbackLength: feedback.length,
@@ -219,6 +236,14 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
             type="submit" 
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 text-sm shadow-sm transition-all duration-200 hover:shadow-md rounded-lg" 
             disabled={score === null || isSubmitting}
+            onClick={(e) => {
+              console.log('[NPS-FORM] 🖱️ BOTÃO CLICADO!', {
+                score,
+                isSubmitting,
+                disabled: score === null || isSubmitting,
+                hasOnCompleted: !!onCompleted
+              });
+            }}
           >
             {isSubmitting ? (
               <>
