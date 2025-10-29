@@ -131,7 +131,8 @@ const AulaView: React.FC = () => {
     enabled: !!aulaId
   });
   
-  // Usamos uma mutação para atualizar o progresso
+  // ❌ MUTATION DESABILITADA: Sistema progressivo foi desabilitado
+  // Usar apenas useLessonProgress (sistema binário: 1% ou 100%)
   const updateProgressMutation = useMutation({
     mutationFn: async ({ 
       progress, 
@@ -140,13 +141,16 @@ const AulaView: React.FC = () => {
       progress: number, 
       videoProgress: Record<string, number> 
     }) => {
+      console.warn('[AULA-VIEW] ⚠️ updateProgressMutation desabilitada (sistema progressivo)');
+      return null;
+      
+      /* CÓDIGO ORIGINAL COMENTADO - NÃO USAR:
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) return null;
       
       const now = new Date().toISOString();
       
       if (userProgress) {
-        // Atualizar progresso existente
         const { data, error } = await supabase
           .from("learning_progress")
           .update({
@@ -161,7 +165,6 @@ const AulaView: React.FC = () => {
         if (error) throw error;
         return data;
       } else {
-        // Criar novo registro de progresso
         const { data, error } = await supabase
           .from("learning_progress")
           .insert({
@@ -177,33 +180,38 @@ const AulaView: React.FC = () => {
         if (error) throw error;
         return data;
       }
+      */
     },
     onSuccess: () => {
-      refetchProgress();
+      console.log('[AULA-VIEW] ℹ️ updateProgressMutation.onSuccess (desabilitada)');
     },
     onError: (error) => {
-      console.error("Erro ao atualizar progresso:", error);
-      toast.error("Não foi possível salvar seu progresso");
+      console.warn('[AULA-VIEW] ⚠️ updateProgressMutation.onError (desabilitada)', error);
     }
   });
   
-  // Função para atualizar o progresso de um vídeo específico
+  // ❌ DESABILITADO: Sistema progressivo conflita com sistema binário
+  // Este tracking progressivo foi desabilitado para evitar conflito com useLessonProgress
+  // Agora usamos apenas: 1% (iniciada) ou 100% (concluída)
+  
+  // Função DESABILITADA para atualizar o progresso de um vídeo específico
   const handleVideoProgress = (videoId: string, progress: number) => {
+    // NÃO FAZ NADA - sistema progressivo desabilitado
+    console.log('[AULA-VIEW] ⚠️ handleVideoProgress desabilitado (sistema progressivo)');
+    return;
+    
+    /* CÓDIGO ORIGINAL COMENTADO:
     if (!videoId) return;
     
-    // Atualizar o estado local
     setVideoProgresses(prev => {
-      // Se o progresso anterior for maior, manter o maior progresso
       const currentProgress = prev[videoId] || 0;
       if (progress <= currentProgress) return prev;
       
       const newProgresses = { ...prev, [videoId]: progress };
       
-      // Calcular o progresso geral da aula
       let totalProgress = 0;
       let videoCount = 0;
       
-      // Considerar apenas os vídeos que temos na lista
       if (videos && videos.length > 0) {
         videoCount = videos.length;
         videos.forEach(video => {
@@ -211,10 +219,8 @@ const AulaView: React.FC = () => {
           totalProgress += videoProgress;
         });
         
-        // Média do progresso de todos os vídeos
         const averageProgress = Math.round(totalProgress / videoCount);
         
-        // Atualizar no banco de dados
         updateProgressMutation.mutate({
           progress: averageProgress,
           videoProgress: newProgresses
@@ -223,17 +229,20 @@ const AulaView: React.FC = () => {
       
       return newProgresses;
     });
+    */
   };
   
-  // Função para lidar com a atualização de progresso do vídeo
+  // ❌ DESABILITADO: Função que atualizava progresso baseado em tempo de vídeo
   const handleVideoTimeUpdate = (currentTime: number, duration: number) => {
+    // NÃO FAZ NADA - sistema progressivo desabilitado
+    console.log('[AULA-VIEW] ⚠️ handleVideoTimeUpdate desabilitado (sistema progressivo)');
+    return;
+    
+    /* CÓDIGO ORIGINAL COMENTADO:
     if (!selectedVideo || !duration) return;
-    
-    // Calcular a porcentagem de progresso
     const progress = Math.round((currentTime / duration) * 100);
-    
-    // Atualizar o progresso deste vídeo específico
     handleVideoProgress(selectedVideo.id, progress);
+    */
   };
   
   // Marcar aula como concluída manualmente
