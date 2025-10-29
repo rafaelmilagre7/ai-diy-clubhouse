@@ -157,21 +157,25 @@ export default function AdminRoles() {
 
       {/* Dialog para criar papel */}
       <Dialog open={showCreateForm} onOpenChange={setShowCreateForm}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Criar Novo Papel</DialogTitle>
           </DialogHeader>
-          <RoleForm onSave={handleFormSave} onCancel={handleFormCancel} />
+          <div className="flex-1 overflow-y-auto">
+            <RoleForm onSave={handleFormSave} onCancel={handleFormCancel} />
+          </div>
         </DialogContent>
       </Dialog>
 
       {/* Dialog para editar papel */}
       <Dialog open={!!selectedRole} onOpenChange={() => setSelectedRole(null)}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
           <DialogHeader>
             <DialogTitle>Editar Papel</DialogTitle>
           </DialogHeader>
-          <RoleForm role={selectedRole} onSave={handleFormSave} onCancel={handleFormCancel} />
+          <div className="flex-1 overflow-y-auto">
+            <RoleForm role={selectedRole} onSave={handleFormSave} onCancel={handleFormCancel} />
+          </div>
         </DialogContent>
       </Dialog>
 
