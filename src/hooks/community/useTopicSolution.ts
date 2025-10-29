@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
@@ -14,6 +14,7 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
   
   const canMarkAsSolved = user?.id === topicAuthorId;
 
@@ -44,14 +45,14 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
 
       if (topicError) throw topicError;
 
-      toast.success("Post marcado como solução!");
+      showSuccess("Sucesso", "Post marcado como solução!");
       
       // Invalidar caches
       queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
       queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
     } catch (error: any) {
       console.error("Erro ao marcar como solução:", error);
-      toast.error("Erro ao marcar como solução");
+      showError("Erro", "Erro ao marcar como solução");
     } finally {
       setIsSubmitting(false);
     }
@@ -78,14 +79,14 @@ export const useTopicSolution = ({ topicId, topicAuthorId }: UseTopicSolutionPro
 
       if (topicError) throw topicError;
 
-      toast.success("Solução removida!");
+      showSuccess("Sucesso", "Solução removida!");
       
       // Invalidar caches
       queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
       queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
     } catch (error: any) {
       console.error("Erro ao remover solução:", error);
-      toast.error("Erro ao remover solução");
+      showError("Erro", "Erro ao remover solução");
     } finally {
       setIsSubmitting(false);
     }

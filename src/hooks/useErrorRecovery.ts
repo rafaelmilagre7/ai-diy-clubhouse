@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
+import { useToastModern } from './useToastModern';
 import { logger } from '@/utils/logger';
 
 interface ErrorRecoveryOptions {
@@ -14,6 +14,7 @@ interface ErrorRecoveryOptions {
 
 export const useErrorRecovery = () => {
   const queryClient = useQueryClient();
+  const { showError, showSuccess } = useToastModern();
 
   const handleError = useCallback(async (
     error: unknown,
@@ -36,9 +37,7 @@ export const useErrorRecovery = () => {
 
     // Mostrar toast se solicitado
     if (showToast) {
-      toast.error('Erro', {
-        description: displayMessage
-      });
+      showError('Erro', displayMessage);
     }
 
     // Invalidar queries específicas para atualizar dados
@@ -74,15 +73,11 @@ export const useErrorRecovery = () => {
         await queryClient.invalidateQueries({ queryKey });
       }
       
-      toast.success('Dados atualizados', {
-        description: `${context} foi atualizada com sucesso`
-      });
+      showSuccess('Dados atualizados', `${context} foi atualizada com sucesso`);
       
     } catch (error) {
       logger.error('[ERROR-RECOVERY] Recovery failed:', error);
-      toast.error('Erro na recuperação', {
-        description: 'Não foi possível atualizar os dados'
-      });
+      showError('Erro na recuperação', 'Não foi possível atualizar os dados');
     }
   }, [queryClient]);
 
