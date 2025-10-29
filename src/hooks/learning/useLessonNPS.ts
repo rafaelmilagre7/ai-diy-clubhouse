@@ -46,9 +46,14 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
     mutationFn: async ({ score, feedback }: SubmitNPSData) => {
       if (!user) throw new Error('Usuário não autenticado');
       
-      // ✅ USAR FUNÇÃO SECURITY DEFINER para bypass de RLS
-      // A função safe_insert_or_update_lesson_nps já faz UPDATE se existir
-      console.log('[LESSON-NPS] 💾 Salvando via RPC safe_insert_or_update_lesson_nps...');
+      console.log('[LESSON-NPS] 💾 ============ INICIANDO RPC safe_insert_or_update_lesson_nps ============');
+      console.log('[LESSON-NPS] Parâmetros:', {
+        p_lesson_id: lessonId,
+        p_score: score,
+        p_feedback: feedback?.substring(0, 50) || 'sem feedback',
+        user_id: user.id
+      });
+      
       const { data: result, error } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
         p_lesson_id: lessonId,
         p_score: score,
@@ -56,11 +61,18 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
       });
       
       if (error) {
-        console.error('[LESSON-NPS] ❌ Erro na RPC:', error);
-        throw error;
+        console.error('[LESSON-NPS] ❌ ============ ERRO NA RPC ============');
+        console.error('[LESSON-NPS] Detalhes do erro:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        throw new Error(`Falha ao salvar avaliação: ${error.message}`);
       }
 
-      console.log('[LESSON-NPS] ✅ NPS salvo com sucesso:', result);
+      console.log('[LESSON-NPS] ✅ ============ RPC EXECUTADA COM SUCESSO ============');
+      console.log('[LESSON-NPS] Resultado:', result);
       return result;
     },
     onSuccess: () => {

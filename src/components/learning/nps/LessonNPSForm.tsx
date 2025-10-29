@@ -57,6 +57,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
 }) => {
   const [score, setScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string>('');
+  const [isSubmittingLocal, setIsSubmittingLocal] = useState(false);
 
   // ============= LOGS DE DIAGNÓSTICO =============
   console.log('[NPS-FORM] 🚀 ============ COMPONENTE RENDERIZANDO ============');
@@ -83,8 +84,14 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     }
   }, [score]);
 
-  // Handler manual simplificado
+  // Handler manual com debounce e tratamento robusto de erros
   const handleManualSubmit = async () => {
+    // Prevenir múltiplos cliques
+    if (isSubmittingLocal || isSubmitting) {
+      console.warn('[NPS-FORM] ⚠️ Já está enviando, ignorando clique duplicado');
+      return;
+    }
+    
     console.log('[NPS-FORM] 🎯 ============ SUBMIT MANUAL INICIADO ============');
     
     if (score === null) {
@@ -99,19 +106,39 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
       return;
     }
     
-    console.log('[NPS-FORM] ✅ Validações OK, chamando onCompleted com:', { score, feedback: feedback.substring(0, 50) });
+    setIsSubmittingLocal(true);
+    console.log('[NPS-FORM] ✅ Validações OK, chamando onCompleted com:', { 
+      score, 
+      feedback: feedback ? feedback.substring(0, 50) + '...' : 'sem feedback' 
+    });
     
     const loadingToastId = toast.loading('Salvando sua avaliação...');
     
     try {
+      console.log('[NPS-FORM] 📤 Aguardando onCompleted...');
       await onCompleted(score, feedback);
+      
       toast.dismiss(loadingToastId);
-      console.log('[NPS-FORM] ✅ onCompleted executado com sucesso!');
-    } catch (error) {
+      console.log('[NPS-FORM] ✅ ============ SUCESSO COMPLETO! ============');
+      
+    } catch (error: any) {
       toast.dismiss(loadingToastId);
-      console.error('[NPS-FORM] ❌ Erro em onCompleted:', error);
-      toast.error('Erro ao salvar avaliação');
+      console.error('[NPS-FORM] ❌ ============ ERRO CAPTURADO ============');
+      console.error('[NPS-FORM] Detalhes do erro:', {
+        message: error?.message || 'Erro desconhecido',
+        name: error?.name,
+        stack: error?.stack
+      });
+      
+      // Mostrar erro específico ao usuário
+      const errorMessage = error?.message || 'Erro desconhecido ao salvar';
+      toast.error(`Erro: ${errorMessage}`, { duration: 5000 });
+      
+      // Re-lançar para permitir que o modal capture se necessário
       throw error;
+      
+    } finally {
+      setIsSubmittingLocal(false);
     }
   };
 
@@ -296,9 +323,9 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
               justifyContent: 'center',
               gap: '8px'
             }}
-            disabled={score === null || isSubmitting}
+            disabled={score === null || isSubmitting || isSubmittingLocal}
           >
-            {isSubmitting ? (
+            {(isSubmitting || isSubmittingLocal) ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Enviando avaliação...
