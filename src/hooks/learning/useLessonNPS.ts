@@ -81,9 +81,9 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
     }
   });
 
-  const submitNPS = (score: number, feedback?: string) => {
+  const submitNPS = async (score: number, feedback?: string) => {
     console.log('[LESSON-NPS] 🎯 Enviando NPS:', { score, feedback: feedback?.substring(0, 50) });
-    submitNPSMutation.mutate({ score, feedback });
+    return await submitNPSMutation.mutateAsync({ score, feedback });
   };
 
   return {

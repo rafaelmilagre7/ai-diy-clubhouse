@@ -128,9 +128,10 @@ const LessonView = () => {
       await completeLesson();
       console.log('[LESSON-VIEW] ✅ Progresso salvo');
       
-      // 2. Salvar NPS usando hook centralizado
+      // 2. Salvar NPS usando hook centralizado (AGUARDAR)
       console.log('[LESSON-VIEW] 📝 Chamando submitNPS do hook...');
-      submitNPS(score, feedback);
+      await submitNPS(score, feedback);
+      console.log('[LESSON-VIEW] ✅ NPS salvo');
       
       console.log('[LESSON-VIEW] ✅ Salvamento concluído');
       
