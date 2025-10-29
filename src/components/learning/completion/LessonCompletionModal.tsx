@@ -34,32 +34,23 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
 
     setIsSubmitting(true);
     
-    // ✅ Timeout de segurança (10 segundos)
-    const safetyTimeout = setTimeout(() => {
-      console.warn('[MODAL] ⚠️ Timeout de segurança ativado - resetando isSubmitting');
-      setIsSubmitting(false);
-    }, 10000);
-    
     try {
+      console.log('[MODAL] 📤 Enviando para onSaveCompletion:', { score, feedback });
       await onSaveCompletion(score, feedback);
       
-      clearTimeout(safetyTimeout);
       log('NPS e progresso salvos', { lessonId: lesson.id, score });
       setNpsSubmitted(true);
       
       // Fechar modal e navegar após delay
       setTimeout(() => {
         setIsOpen(false);
-        setNpsSubmitted(false); // Reset para próxima vez
+        setNpsSubmitted(false);
         if (onNext && nextLesson) {
           onNext();
         }
       }, 1500);
     } catch (error) {
-      clearTimeout(safetyTimeout);
       console.error('[MODAL] ❌ Erro:', error);
-    } finally {
-      // ✅ SEMPRE resetar isSubmitting, independente de sucesso ou erro
       setIsSubmitting(false);
     }
   };

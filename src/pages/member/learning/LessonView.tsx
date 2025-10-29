@@ -12,6 +12,7 @@ import { LessonLoadingSkeleton } from "@/components/learning/LessonLoadingSkelet
 import { useLessonData } from "@/hooks/learning/useLessonData";
 import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
+import { useLessonNPS } from "@/hooks/learning/useLessonNPS";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -81,6 +82,9 @@ const LessonView = () => {
     isUpdating
   } = useLessonProgress({ lessonId });
   
+  // Hook de NPS centralizado
+  const { submitNPS } = useLessonNPS({ lessonId: lessonId || '' });
+  
   // Buscar lições completadas para o sidebar
   const { data: completedLessonsData = [] } = useQuery({
     queryKey: ["learning-completed-lessons", moduleData?.module?.id],
@@ -118,43 +122,20 @@ const LessonView = () => {
   const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
     console.log('[LESSON-VIEW] 💾 Iniciando salvamento:', { lessonId, score });
     
-    const { showModernLoading, dismissModernToast, showModernSuccess, showModernError } = await import('@/lib/toast-helpers');
-    const loadingId = showModernLoading("Salvando avaliação...");
-    
     try {
       // 1. Salvar progresso (100%)
       console.log('[LESSON-VIEW] 📊 Salvando progresso...');
       await completeLesson();
       console.log('[LESSON-VIEW] ✅ Progresso salvo');
       
-      // 2. Salvar NPS usando função SECURITY DEFINER (bypassa RLS)
-      console.log('[LESSON-VIEW] 💾 Salvando NPS via RPC safe_insert_or_update_lesson_nps...');
-      const { data: npsResult, error: npsError } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
-        p_lesson_id: lessonId!,
-        p_score: score,
-        p_feedback: feedback || null
-      });
+      // 2. Salvar NPS usando hook centralizado
+      console.log('[LESSON-VIEW] 📝 Chamando submitNPS do hook...');
+      submitNPS(score, feedback);
       
-      if (npsError) {
-        console.error('[LESSON-VIEW] ❌ Erro ao salvar NPS:', npsError);
-        throw npsError;
-      }
-      
-      console.log('[LESSON-VIEW] ✅ NPS salvo com sucesso:', npsResult);
-      
-      // 4. Feedback visual de sucesso
-      dismissModernToast(loadingId);
-      showModernSuccess("Avaliação enviada!", "Obrigado pelo seu feedback!");
+      console.log('[LESSON-VIEW] ✅ Salvamento concluído');
       
     } catch (error: any) {
-      console.error('[LESSON-VIEW] ❌ Erro geral:', error);
-      dismissModernToast(loadingId);
-      showModernError(
-        "Erro ao salvar", 
-        error.message || "Tente novamente"
-      );
-      
-      // Re-lançar erro para que Modal capture
+      console.error('[LESSON-VIEW] ❌ Erro ao salvar:', error);
       throw error;
     }
   };
