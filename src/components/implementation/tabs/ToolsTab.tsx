@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Wrench, CheckCircle } from "lucide-react";
 import { ToolItem } from "@/components/implementation/content/tools/ToolItem";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface ToolsTabProps {
   solutionId: string;
@@ -27,6 +27,7 @@ interface ToolWithDetails {
 const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
   const [viewedTools, setViewedTools] = useState<string[]>([]);
   const [isAware, setIsAware] = useState(false);
+  const { showSuccess } = useToastModern();
   const completedRef = useRef(false);
 
   const { data: tools, isLoading, error } = useQuery({
@@ -81,7 +82,7 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
     if (!completedRef.current) {
       completedRef.current = true;
       setIsAware(true);
-      toast.success("Ótimo! Você está ciente das ferramentas necessárias.");
+      showSuccess("Ótimo!", "Você está ciente das ferramentas necessárias.");
       onComplete();
     }
   };

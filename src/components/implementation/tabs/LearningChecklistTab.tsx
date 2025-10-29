@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/auth";
 import { ChecklistProgress } from "../content/checklist/ChecklistProgress";
 import { KanbanLoading } from "@/components/unified-checklist/kanban/KanbanLoading";
 import { AlertCircle, CheckCircle } from "lucide-react";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { getChecklistTemplate } from "@/lib/supabase/rpc";
 import SimpleKanban from "@/components/unified-checklist/kanban/SimpleKanban";
 import { UnifiedChecklistData } from "@/hooks/useUnifiedChecklists";
@@ -26,6 +26,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
   onComplete 
 }) => {
   const { user } = useAuth();
+  const { showSuccess, showError } = useToastModern();
 
   const { data: checklistItems, isLoading: loadingChecklist, error: checklistError } = useQuery({
     queryKey: ['learning-checklist-template', solutionId],
@@ -139,7 +140,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
       
       if (error) {
         console.error('❌ [LearningChecklistTab] Erro ao criar checklist:', error);
-        toast.error(`Erro ao criar checklist: ${error.message}`);
+        showError('Erro', `Erro ao criar checklist: ${error.message}`);
         hasCreatedChecklistRef.current = false; // ← RESETAR em caso de erro
       } else {
         console.log('✅ [LearningChecklistTab] Checklist criado com sucesso!');
@@ -165,7 +166,7 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     
     if (allDone && onComplete) {
       onComplete();
-      toast.success("🎉 Parabéns! Você completou todas as tarefas!");
+      showSuccess("🎉 Parabéns!", "Você completou todas as tarefas!");
     }
   }, [userChecklist, onComplete]);
 

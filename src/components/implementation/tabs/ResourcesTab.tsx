@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, FileText, FileImage, FileVideo, File as FileIcon, FileArchive, ExternalLink } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface Resource {
   id: string;
@@ -32,7 +32,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
   const [resources, setResources] = useState<Resource[]>([]);
   const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { showError, showSuccess } = useToastModern();
 
   useEffect(() => {
     fetchResources();
@@ -51,21 +51,14 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
         .neq("name", "Solution Resources");
       
       if (error) {
-        toast({
-          title: "Erro ao carregar recursos",
-          description: "Não foi possível carregar os recursos da solução.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar recursos", "Não foi possível carregar os recursos da solução.");
+        setLoading(false);
         return;
       }
       
       setResources(data || []);
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro inesperado ao carregar os recursos.",
-        variant: "destructive",
-      });
+      showError("Erro", "Ocorreu um erro inesperado ao carregar os recursos.");
     } finally {
       setLoading(false);
     }
@@ -164,11 +157,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
   const handleDownload = async (resource: Resource) => {
     try {
       if (!resource.url) {
-        toast({
-          title: "Erro",
-          description: "URL do arquivo não disponível.",
-          variant: "destructive",
-        });
+        showError("Erro", "URL do arquivo não disponível.");
         return;
       }
 
@@ -192,17 +181,10 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      toast({
-        title: "Download iniciado",
-        description: `O arquivo "${resource.name}" está sendo baixado.`,
-      });
+      showSuccess("Download iniciado", `O arquivo "${resource.name}" está sendo baixado.`);
     } catch (error) {
       console.error("Erro ao baixar arquivo:", error);
-      toast({
-        title: "Erro no download",
-        description: "Não foi possível baixar o arquivo. Tente novamente.",
-        variant: "destructive",
-      });
+      showError("Erro no download", "Não foi possível baixar o arquivo. Tente novamente.");
     }
   };
 

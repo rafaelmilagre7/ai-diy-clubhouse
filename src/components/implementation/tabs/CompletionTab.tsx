@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Trophy, ArrowRight, Download, Gift, Star, Award } from "lucide-react";
 import confetti from "canvas-confetti";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { cn } from "@/lib/utils";
 
 interface CompletionTabProps {
@@ -28,6 +28,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { showSuccess } = useToastModern();
   const [showCelebration, setShowCelebration] = useState(false);
   const [showSummary, setShowSummary] = useState(false);
   const completionProcessedRef = useRef(false);
@@ -100,7 +101,7 @@ const CompletionTab: React.FC<CompletionTabProps> = ({
         });
       }, 250);
 
-      toast.success('🎉 Parabéns! Solução concluída com sucesso!');
+      showSuccess('🎉 Parabéns!', 'Solução concluída com sucesso!');
       onComplete();
       
       // Show summary after celebration

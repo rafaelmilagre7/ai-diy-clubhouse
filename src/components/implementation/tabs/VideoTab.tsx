@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Video, CheckCircle } from "lucide-react";
 import { PandaVideoPlayer } from "@/components/formacao/comum/PandaVideoPlayer";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface VideoTabProps {
   solutionId: string;
@@ -23,6 +23,7 @@ interface VideoLesson {
 
 const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
   const [isWatched, setIsWatched] = useState(false);
+  const { showSuccess } = useToastModern();
 
   const extractPandaVideoId = (url: string): string | null => {
     try {
@@ -75,7 +76,7 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
 
   const handleMarkAsWatched = () => {
     setIsWatched(true);
-    toast.success("Ótimo! Você assistiu aos vídeos da solução.");
+    showSuccess("Ótimo!", "Você assistiu aos vídeos da solução.");
     onComplete();
   };
 

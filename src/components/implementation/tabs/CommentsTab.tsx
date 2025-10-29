@@ -7,7 +7,7 @@ import { Star } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { cn } from "@/lib/utils";
 import { UnifiedCommentsSection } from "@/components/implementation/comments/UnifiedCommentsSection";
 
@@ -27,6 +27,7 @@ interface Rating {
 const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
   const [selectedRating, setSelectedRating] = useState<number | null>(null);
   const [ratingFeedback, setRatingFeedback] = useState("");
   const completedRef = useRef(false);
@@ -91,10 +92,10 @@ const CommentsTab: React.FC<CommentsTabProps> = ({ solutionId, onComplete }) => 
       queryClient.invalidateQueries({ queryKey: ['user-rating', solutionId, user?.id] });
       setSelectedRating(null);
       setRatingFeedback("");
-      toast.success('Avaliação enviada!');
+      showSuccess('Sucesso', 'Avaliação enviada!');
     },
     onError: () => {
-      toast.error('Erro ao enviar avaliação');
+      showError('Erro', 'Erro ao enviar avaliação');
     }
   });
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { MessageSquare, Send, Reply, X, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,7 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
 }) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
   const [newComment, setNewComment] = useState('');
   const [replyingTo, setReplyingTo] = useState<string | null>(null);
   const [replyContent, setReplyContent] = useState('');
@@ -109,11 +110,11 @@ export const UnifiedCommentsSection: React.FC<UnifiedCommentsSectionProps> = ({
       setNewComment('');
       setReplyContent('');
       setReplyingTo(null);
-      toast.success('Comentário adicionado com sucesso!');
+      showSuccess('Sucesso', 'Comentário adicionado com sucesso!');
     },
     onError: (error) => {
       console.error('Erro ao adicionar comentário:', error);
-      toast.error('Erro ao adicionar comentário');
+      showError('Erro', 'Erro ao adicionar comentário');
     }
   });
 
