@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showModernSuccess, showModernError, showModernWarning } from '@/lib/toast-helpers';
 
 export function useInviteDelete() {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -27,24 +27,22 @@ export function useInviteDelete() {
       const totalTime = Math.round(performance.now() - startTime);
       
       // 🎯 TOAST OTIMIZADO - Feedback instantâneo com métricas
-      toast.success('🗑️ Convite removido com sucesso!', {
-        description: `✅ ${data.email} (${totalTime}ms) - Limpeza física em 24h`,
-        duration: 4000
-      });
+      showModernSuccess(
+        '🗑️ Convite removido!',
+        `${data.email} (${totalTime}ms) - Limpeza física em 24h`,
+        { duration: 4000 }
+      );
       
       return true;
     } catch (err: any) {
       const totalTime = Math.round(performance.now() - startTime);
       console.error('❌ Erro ao excluir convite:', err, `(${totalTime}ms)`);
       
-      toast.error('❌ Erro ao remover convite', {
-        description: err.message || 'Não foi possível remover o convite.',
-        duration: 6000,
-        action: {
-          label: "Tentar Novamente",
-          onClick: () => {}
-        }
-      });
+      showModernError(
+        'Erro ao remover convite',
+        err.message || 'Não foi possível remover o convite',
+        { duration: 6000 }
+      );
       return false;
     } finally {
       setIsDeleting(false);
@@ -60,16 +58,18 @@ export function useInviteDelete() {
       
       if (error) throw error;
       
-      toast.success('🧹 Limpeza automática concluída', {
-        description: `${data.cleaned_count || 0} convites removidos fisicamente`,
-        duration: 3000
-      });
+      showModernSuccess(
+        '🧹 Limpeza concluída',
+        `${data.cleaned_count || 0} convites removidos fisicamente`,
+        { duration: 3000 }
+      );
     } catch (err: any) {
       console.error('❌ Erro na limpeza:', err);
-      toast.error('⚠️ Falha na limpeza automática', {
-        description: 'A limpeza será executada automaticamente mais tarde',
-        duration: 4000
-      });
+      showModernWarning(
+        'Falha na limpeza automática',
+        'A limpeza será executada automaticamente mais tarde',
+        { duration: 4000 }
+      );
     }
   }, []);
 
@@ -82,18 +82,20 @@ export function useInviteDelete() {
       
       if (error) throw error;
       
-      toast.success('🗑️ Convite deletado fisicamente', {
-        description: `${data.message}`,
-        duration: 4000
-      });
+      showModernSuccess(
+        '🗑️ Convite deletado',
+        data.message,
+        { duration: 4000 }
+      );
       
       return true;
     } catch (err: any) {
       console.error('❌ Erro na deleção física:', err);
-      toast.error('⚠️ Falha na deleção física', {
-        description: err.message || 'Não foi possível deletar o convite fisicamente',
-        duration: 4000
-      });
+      showModernError(
+        'Falha na deleção física',
+        err.message || 'Não foi possível deletar o convite',
+        { duration: 4000 }
+      );
       return false;
     }
   }, []);

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
 import { type CleanedContact } from '@/utils/contactDataCleaner';
 import { useRoleMapping } from './useRoleMapping';
 import { devLog } from '@/utils/devLogger';
+import { showModernError, showModernSuccess, showModernWarning } from '@/lib/toast-helpers';
 
 export interface BulkInviteItem {
   contact: CleanedContact;
@@ -41,7 +41,7 @@ export const useInviteBulkCreate = () => {
     expiresIn: string = '7 days'
   ) => {
     if (!user) {
-      toast.error('Usuário não autenticado');
+      showModernError('Não autenticado', 'Faça login para criar convites em massa');
       return;
     }
 
@@ -108,9 +108,11 @@ export const useInviteBulkCreate = () => {
         // Informar admin sobre duplicatas
         const duplicatesCount = contacts.length - filteredContacts.length;
         if (duplicatesCount > 0) {
-          toast.warning(`${duplicatesCount} email(s) já possui convite ativo ou conta registrada`, {
-            description: `${filteredContacts.length} novos convites serão criados`
-          });
+          showModernWarning(
+            `${duplicatesCount} emails duplicados`,
+            `${filteredContacts.length} novos convites serão criados`,
+            { duration: 5000 }
+          );
         }
         
         // Se não há contatos válidos, retornar
@@ -248,15 +250,19 @@ export const useInviteBulkCreate = () => {
       });
 
       if (successful > 0) {
-        toast.success(`${successful} convites enviados com sucesso!`, {
-          description: failed > 0 ? `${failed} falharam` : undefined
-        });
+        showModernSuccess(
+          `${successful} convites enviados!`,
+          failed > 0 ? `${failed} falharam` : 'Todos enviados com sucesso',
+          { duration: 5000 }
+        );
       }
 
-      if (failed > 0) {
-        toast.error(`${failed} convites falharam`, {
-          description: `${successful} foram enviados com sucesso`
-        });
+      if (failed > 0 && successful === 0) {
+        showModernError(
+          `${failed} convites falharam`,
+          'Nenhum convite foi enviado com sucesso',
+          { duration: 6000 }
+        );
       }
 
       return {
@@ -279,9 +285,11 @@ export const useInviteBulkCreate = () => {
         failed: prev.items.length
       }));
 
-      toast.error('Erro no envio em lote', {
-        description: error.message || 'Não foi possível processar os convites'
-      });
+      showModernError(
+        'Erro no envio em lote',
+        error.message || 'Não foi possível processar os convites',
+        { duration: 6000 }
+      );
     }
   };
 

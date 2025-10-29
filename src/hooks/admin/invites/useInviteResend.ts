@@ -1,9 +1,9 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { Invite } from './types';
 import { useInviteChannelService } from './useInviteChannelService';
+import { showModernError, showModernSuccess, showModernWarning } from '@/lib/toast-helpers';
 
 export function useInviteResend() {
   const [isSending, setIsSending] = useState(false);
@@ -20,7 +20,10 @@ export function useInviteResend() {
 
       // Verificar apenas se não expirou (permitir reenvio mesmo se usado)
       if (new Date(invite.expires_at) < new Date()) {
-        toast.error("Convite expirado - crie um novo convite");
+        showModernError(
+          'Convite expirado',
+          'Crie um novo convite para este usuário'
+        );
         return null;
       }
 
@@ -52,13 +55,17 @@ export function useInviteResend() {
       if (sendResult.success) {
         const channelText = invite.preferred_channel === 'both' ? 'email e WhatsApp' : 
                            invite.preferred_channel === 'whatsapp' ? 'WhatsApp' : 'email';
-        toast.success(`Convite reenviado para ${invite.email}`, {
-          description: `${sendResult.message}. Canal: ${channelText}.`
-        });
+        showModernSuccess(
+          'Convite reenviado!',
+          `${invite.email} via ${channelText}`,
+          { duration: 4000 }
+        );
       } else {
-        toast.warning(`Tentativa de reenvio para ${invite.email}`, {
-          description: sendResult.error || 'Verifique os logs se necessário'
-        });
+        showModernWarning(
+          'Falha no reenvio',
+          `${invite.email}: ${sendResult.error || 'Verifique os logs'}`,
+          { duration: 5000 }
+        );
       }
 
       return {
@@ -70,7 +77,11 @@ export function useInviteResend() {
     } catch (err: any) {
       console.error('❌ Erro ao reenviar:', err);
       setResendError(err);
-      toast.error(`Erro ao reenviar: ${err.message}`);
+      showModernError(
+        'Erro ao reenviar convite',
+        err.message || 'Falha no reenvio',
+        { duration: 6000 }
+      );
       return null;
     } finally {
       setIsSending(false);

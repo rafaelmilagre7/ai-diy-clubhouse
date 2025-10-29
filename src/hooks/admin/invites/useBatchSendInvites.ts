@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showModernInfo, showModernSuccess, showModernError, showModernWarning } from '@/lib/toast-helpers';
 
 export interface BatchProgress {
   type: 'init' | 'batch_start' | 'batch_complete' | 'invite_processing' | 'invite_success' | 'invite_retry' | 'invite_failed' | 'complete' | 'error';
@@ -61,7 +61,10 @@ export function useBatchSendInvites() {
             // Log detalhado de cada evento
             switch (data.type) {
               case 'init':
-                toast.info(`Iniciando envio de ${data.total} convites...`);
+                showModernInfo(
+                  'Processamento iniciado',
+                  `Enviando ${data.total} convites em lote...`
+                );
                 break;
               
               case 'batch_start':
@@ -74,11 +77,14 @@ export function useBatchSendInvites() {
                 break;
               
               case 'invite_retry':
-                toast.warning(`Reenvio: ${data.email} (tentativa ${data.attempt + 1})`);
+                showModernWarning(
+                  'Tentando reenviar',
+                  `${data.email} (tentativa ${data.attempt + 1})`
+                );
                 break;
               
               case 'invite_failed':
-                toast.error(`Falha: ${data.email}`);
+                showModernError('Falha no envio', data.email);
                 break;
               
               case 'batch_complete':
@@ -86,15 +92,20 @@ export function useBatchSendInvites() {
               
               case 'complete':
                 setSummary(data);
-                toast.success(
-                  `Concluído! ${data.successful} enviados, ${data.failed} falhas`,
+                showModernSuccess(
+                  'Envio concluído!',
+                  `${data.successful} enviados, ${data.failed} falhas`,
                   { duration: 5000 }
                 );
                 break;
               
               case 'error':
                 console.error('Erro:', data.error);
-                toast.error(`Erro no processamento: ${data.error}`);
+                showModernError(
+                  'Erro no processamento',
+                  data.error,
+                  { duration: 6000 }
+                );
                 break;
             }
           }
@@ -103,7 +114,11 @@ export function useBatchSendInvites() {
 
     } catch (err: any) {
       console.error('Erro geral:', err);
-      toast.error(`Erro ao enviar convites: ${err.message}`);
+      showModernError(
+        'Erro ao enviar convites',
+        err.message || 'Falha no processamento em lote',
+        { duration: 6000 }
+      );
     } finally {
       setIsProcessing(false);
     }

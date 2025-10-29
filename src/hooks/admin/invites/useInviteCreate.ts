@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
 import { generateInviteUrl } from '@/utils/inviteValidationUtils';
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 
 export const useInviteCreate = () => {
   const { user } = useAuth();
@@ -18,7 +18,7 @@ export const useInviteCreate = () => {
     channelPreference: 'email' | 'whatsapp' | 'both' = 'email'
   ) => {
     if (!user) {
-      toast.error('Usuário não autenticado');
+      showModernError('Não autenticado', 'Faça login para criar convites');
       return null;
     }
 
@@ -55,9 +55,11 @@ export const useInviteCreate = () => {
 
     } catch (err: any) {
       console.error('❌ [INVITE-CREATE] Erro crítico:', err);
-      toast.error('Erro ao criar convite', {
-        description: err.message || 'Não foi possível criar o convite.'
-      });
+      showModernError(
+        'Erro ao criar convite',
+        err.message || 'Não foi possível criar o convite',
+        { duration: 6000 }
+      );
       return null;
     } finally {
       setIsCreating(false);
@@ -116,24 +118,20 @@ const processInviteDeliveryInBackground = async (
         const channelText = sendResult.method === 'email+whatsapp' ? 'Email + WhatsApp' : 
                            sendResult.method?.includes('whatsapp') ? 'WhatsApp' : 'Email';
         
-        toast.success(`${methodEmoji} Convite entregue com sucesso!`, {
-          description: `✅ ${email} via ${channelText} (${totalTime}ms)`,
-          duration: 4000
-        });
+        showModernSuccess(
+          `${methodEmoji} Convite entregue!`,
+          `${email} via ${channelText} (${totalTime}ms)`,
+          { duration: 4000 }
+        );
       } else {
         // 🚨 IMPORTANTE: Salvar convite falhado para o filtro
         await saveFailedInvite(email, sendResult.error || 'Erro desconhecido', inviteData);
         
-        toast.error('❌ Falha na entrega do convite', {
-          description: `${email}: ${sendResult.error}`,
-          duration: 6000,
-          action: {
-            label: "Ver Falhados",
-            onClick: () => {
-              // Trigger para abrir filtro de falhados (se disponível)
-            }
-          }
-        });
+        showModernError(
+          'Falha na entrega',
+          `${email}: ${sendResult.error}`,
+          { duration: 6000 }
+        );
       }
 
     } catch (bgError: any) {
@@ -142,14 +140,11 @@ const processInviteDeliveryInBackground = async (
       // Salvar convite falhado
       await saveFailedInvite(email, bgError.message || 'Erro desconhecido no background', inviteData);
       
-      toast.error('❌ Erro crítico no processamento', {
-        description: `${email}: ${bgError.message}`,
-        duration: 6000,
-        action: {
-          label: "Ver Falhados", 
-          onClick: () => {}
-        }
-      });
+      showModernError(
+        'Erro no processamento',
+        `${email}: ${bgError.message}`,
+        { duration: 6000 }
+      );
     }
   }, 50); // 50ms delay otimizado para resposta instantânea
 };
