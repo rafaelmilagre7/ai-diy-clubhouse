@@ -411,16 +411,27 @@ export const useOnboarding = () => {
 
   // Navegar para próximo step
   const goToNextStep = useCallback(async (currentStepData?: any) => {
+    console.log('[ONBOARDING] 🚶 goToNextStep chamado', {
+      current_step: state.current_step,
+      hasStepData: !!currentStepData
+    });
+    
     if (currentStepData) {
       const success = await saveStepData(state.current_step, currentStepData);
-      if (!success) return false;
+      if (!success) {
+        console.error('[ONBOARDING] ❌ Falha ao salvar em goToNextStep');
+        return false;
+      }
     }
 
     if (state.current_step < 6) {
-      setState(prev => ({ ...prev, current_step: prev.current_step + 1 }));
+      const nextStep = state.current_step + 1;
+      console.log('[ONBOARDING] ➡️ Avançando de', state.current_step, 'para', nextStep);
+      setState(prev => ({ ...prev, current_step: nextStep }));
       return true;
     }
     
+    console.log('[ONBOARDING] ⚠️ Já estamos no step 6, não avançar');
     return false;
   }, [state.current_step, saveStepData]);
 
@@ -496,27 +507,38 @@ export const useOnboarding = () => {
 
   // Finalizar onboarding (gerar mensagem da NINA)
   const completeOnboarding = useCallback(async (finalStepData: any) => {
-    if (!user?.id) return false;
+    if (!user?.id) {
+      console.error('[ONBOARDING] ❌ Sem user.id');
+      return false;
+    }
+    
+    console.log('[ONBOARDING] 🎬 === INICIANDO COMPLETE ONBOARDING ===');
+    console.log('[ONBOARDING] 📊 Estado atual:', {
+      current_step: state.current_step,
+      is_completed: state.is_completed,
+      completed_steps: state.completed_steps,
+      has_id: !!state.id
+    });
     
     try {
-      console.log('[ONBOARDING] ⏱️ Iniciando completeOnboarding...');
       const startTime = performance.now();
       
       setIsSaving(true);
       setLoadingMessage('Finalizando sua configuração...');
       
-      // Salvar dados do step 5 APENAS se ainda não estamos no step 6
+      // NÃO salvar step 5 se já estamos no step 6
       if (state.current_step < 6) {
-        console.log('[ONBOARDING] ⏱️ Salvando step 5...');
+        console.log('[ONBOARDING] 💾 Salvando step 5 primeiro...');
         const stepStartTime = performance.now();
         const success = await saveStepData(5, finalStepData);
         console.log('[ONBOARDING] ⏱️ Step 5 salvo em:', performance.now() - stepStartTime, 'ms');
         
         if (!success) {
+          console.error('[ONBOARDING] ❌ Falha ao salvar step 5');
           throw new Error('Falha ao salvar dados do step 5');
         }
       } else {
-        console.log('[ONBOARDING] ℹ️ Já estamos no step 6, pulando salvamento do step 5');
+        console.log('[ONBOARDING] ⏭️ current_step >= 6, pulando salvamento do step 5');
       }
       
       setLoadingMessage('Gerando sua experiência personalizada...');
@@ -536,20 +558,30 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
       setLoadingMessage('Aplicando configurações finais...');
       
-      // Finalizar onboarding com nova função
-      console.log('[ONBOARDING] ⏱️ Iniciando complete_onboarding_final_flow...');
+      // Finalizar onboarding com função RPC
+      console.log('[ONBOARDING] 🎯 Chamando RPC complete_onboarding_final_flow...');
+      console.log('[ONBOARDING] 📤 Parâmetros:', { p_user_id: user.id });
       const rpcStartTime = performance.now();
       
-      const { error } = await supabase.rpc('complete_onboarding_final_flow', {
+      const { data: rpcResult, error: rpcError } = await supabase.rpc('complete_onboarding_final_flow', {
         p_user_id: user.id,
       });
       
-      console.log('[ONBOARDING] ⏱️ complete_onboarding_final_flow concluído em:', performance.now() - rpcStartTime, 'ms');
+      const rpcDuration = performance.now() - rpcStartTime;
+      console.log('[ONBOARDING] ⏱️ RPC finalizado em:', rpcDuration, 'ms');
+      console.log('[ONBOARDING] 📥 Resposta RPC:', rpcResult);
 
-      if (error) {
-        console.error('[ONBOARDING] Erro na função complete_onboarding_final_flow:', error);
-        throw error;
+      if (rpcError) {
+        console.error('[ONBOARDING] ❌ Erro na RPC complete_onboarding_final_flow:', rpcError);
+        throw rpcError;
       }
+      
+      if (rpcResult && !rpcResult.success) {
+        console.error('[ONBOARDING] ❌ RPC retornou sucesso=false:', rpcResult);
+        throw new Error(rpcResult.error || 'Erro desconhecido ao finalizar onboarding');
+      }
+      
+      console.log('[ONBOARDING] ✅ RPC executada com sucesso');
 
       // Invalidar AMBOS os caches antes de sincronizar
       console.log('[ONBOARDING] ⏱️ Invalidando caches...');

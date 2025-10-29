@@ -105,18 +105,21 @@ const OnboardingPage: React.FC = () => {
     if (current_step <= 5) {
       stepData = stepMapping[current_step as keyof typeof stepMapping];
       
+      console.log('[ONBOARDING_PAGE] 💾 Salvando step', current_step, 'dados:', stepData);
       const success = await saveStepData(current_step, stepData);
       if (!success) {
-        console.error('[ONBOARDING_PAGE] Falha ao salvar step', current_step);
+        console.error('[ONBOARDING_PAGE] ❌ Falha ao salvar step', current_step);
         return;
       }
       
+      // Se salvamos o step 5 com sucesso, garantir que vamos para step 6
       if (current_step === 5) {
-        // Não finalizar ainda, apenas ir para step 6
+        console.log('[ONBOARDING_PAGE] ✅ Step 5 salvo, indo para Step 6');
       }
     }
     
     if (current_step < 6) {
+      console.log('[ONBOARDING_PAGE] ➡️ Avançando para próximo step:', current_step + 1);
       await goToNextStep();
     }
   }, [current_step, data, saveStepData, goToNextStep]);
@@ -295,23 +298,22 @@ const OnboardingPage: React.FC = () => {
             ninaMessage={nina_message}
             userName={data.personal_info?.name || profile?.name || "Usuário"}
             onFinish={async () => {
-              // Se já está completo OU já está no step 6, apenas mostrar celebração
-              if (is_completed || current_step === 6) {
-                console.log('[ONBOARDING_PAGE] Step 6 - usuário já finalizado, apenas celebrando');
-                
-                // Marcar como completo se ainda não foi
-                if (!is_completed) {
-                  console.log('[ONBOARDING_PAGE] Marcando onboarding como completo...');
-                  const success = await completeOnboarding(data.personalization);
-                  return success;
-                }
-                
-                return true; 
+              console.log('[ONBOARDING_PAGE] 🎯 onFinish chamado', {
+                is_completed,
+                current_step,
+                hasPersonalization: !!data.personalization
+              });
+              
+              // Se já está completo, apenas celebrar
+              if (is_completed) {
+                console.log('[ONBOARDING_PAGE] ✅ Já completo, apenas celebrando');
+                return true;
               }
               
-              // Se não está completo, finalizar o processo
-              console.log('[ONBOARDING_PAGE] Finalizando onboarding pela primeira vez');
+              // Caso contrário, completar agora
+              console.log('[ONBOARDING_PAGE] 🚀 Iniciando completeOnboarding...');
               const success = await completeOnboarding(data.personalization);
+              console.log('[ONBOARDING_PAGE] 📊 Resultado completeOnboarding:', success);
               return success;
             }}
             userType={userType || 'entrepreneur'}
