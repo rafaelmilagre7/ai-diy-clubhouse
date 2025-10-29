@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export interface InviteValidationResult {
   valid: boolean;
@@ -28,6 +28,7 @@ export interface InviteValidationResult {
 
 export const useInviteValidation = () => {
   const [isValidating, setIsValidating] = useState(false);
+  const { showError } = useToastModern();
   const [validationState, setValidationState] = useState({
     isValidating: false,
     error: null,
@@ -87,11 +88,7 @@ export const useInviteValidation = () => {
 
     } catch (error: any) {
       console.error('❌ [INVITE-VALIDATION] Erro inesperado:', error);
-      toast({
-        title: "Erro na validação",
-        description: "Não foi possível validar o convite. Tente novamente.",
-        variant: "destructive",
-      });
+      showError("Erro na validação", "Não foi possível validar o convite. Tente novamente.");
       
       const result = {
         valid: false,

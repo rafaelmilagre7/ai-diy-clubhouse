@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useEffect } from 'react';
 
 export interface Message {
@@ -76,6 +76,7 @@ export const useMessages = (conversationId?: string, otherUserId?: string) => {
 
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
+  const { showError } = useToastModern();
 
   return useMutation({
     mutationFn: async ({
@@ -136,11 +137,7 @@ export const useSendMessage = () => {
       queryClient.invalidateQueries({ queryKey: ['unread-count'] });
     },
     onError: (error) => {
-      toast({
-        title: 'Erro ao enviar mensagem',
-        description: error.message,
-        variant: 'destructive',
-      });
+      showError('Erro ao enviar mensagem', error.message);
     },
   });
 };

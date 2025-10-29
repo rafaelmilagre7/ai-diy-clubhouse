@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { Invite } from './types';
 
 interface ReactivateInviteResponse {
@@ -12,6 +12,7 @@ interface ReactivateInviteResponse {
 
 export const useInviteReactivate = () => {
   const [isReactivating, setIsReactivating] = useState(false);
+  const { showError, showSuccess } = useToastModern();
 
   const reactivateInvite = async (invite: Invite, daysExtension: number = 7): Promise<boolean> => {
     setIsReactivating(true);
@@ -20,21 +21,13 @@ export const useInviteReactivate = () => {
       // Verificar se o convite está expirado
       const isExpired = new Date(invite.expires_at) <= new Date();
       if (!isExpired) {
-        toast({
-          title: "Convite ativo",
-          description: "Este convite ainda não está expirado",
-          variant: "destructive"
-        });
+        showError("Convite ativo", "Este convite ainda não está expirado");
         return false;
       }
 
       // Verificar se o convite não foi usado
       if (invite.used_at) {
-        toast({
-          title: "Convite já utilizado",
-          description: "Não é possível reativar um convite que já foi utilizado",
-          variant: "destructive"
-        });
+        showError("Convite já utilizado", "Não é possível reativar um convite que já foi utilizado");
         return false;
       }
 
@@ -52,28 +45,16 @@ export const useInviteReactivate = () => {
       const response = data as ReactivateInviteResponse;
 
       if (response.success) {
-        toast({
-          title: "Convite reativado!",
-          description: response.message,
-          variant: "default"
-        });
+        showSuccess("Convite reativado!", response.message);
         return true;
       } else {
-        toast({
-          title: "Erro ao reativar",
-          description: response.error || "Erro desconhecido",
-          variant: "destructive"
-        });
+        showError("Erro ao reativar", response.error || "Erro desconhecido");
         return false;
       }
 
     } catch (error) {
       console.error('Erro ao reativar convite:', error);
-      toast({
-        title: "Erro inesperado",
-        description: "Ocorreu um erro ao tentar reativar o convite. Tente novamente.",
-        variant: "destructive"
-      });
+      showError("Erro inesperado", "Ocorreu um erro ao tentar reativar o convite. Tente novamente.");
       return false;
     } finally {
       setIsReactivating(false);

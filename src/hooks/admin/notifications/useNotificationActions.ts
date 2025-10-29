@@ -1,9 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase/client';
-import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export const useNotificationActions = () => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   const resendNotification = useMutation({
     mutationFn: async (notificationId: string) => {
@@ -16,26 +17,15 @@ export const useNotificationActions = () => {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast({
-          title: 'Sucesso',
-          description: data.message,
-        });
+        showSuccess('Sucesso', data.message);
         queryClient.invalidateQueries({ queryKey: ['admin-notification-queue'] });
         queryClient.invalidateQueries({ queryKey: ['admin-notification-stats'] });
       } else {
-        toast({
-          title: 'Erro',
-          description: data.message,
-          variant: 'destructive',
-        });
+        showError('Erro', data.message);
       }
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro ao reenviar notificação',
-        description: error.message,
-        variant: 'destructive',
-      });
+      showError('Erro ao reenviar notificação', error.message);
     },
   });
 
@@ -50,26 +40,15 @@ export const useNotificationActions = () => {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast({
-          title: 'Sucesso',
-          description: data.message,
-        });
+        showSuccess('Sucesso', data.message);
         queryClient.invalidateQueries({ queryKey: ['admin-notification-queue'] });
         queryClient.invalidateQueries({ queryKey: ['admin-notification-stats'] });
       } else {
-        toast({
-          title: 'Erro',
-          description: data.message,
-          variant: 'destructive',
-        });
+        showError('Erro', data.message);
       }
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro ao cancelar notificação',
-        description: error.message,
-        variant: 'destructive',
-      });
+      showError('Erro ao cancelar notificação', error.message);
     },
   });
 
@@ -98,19 +77,12 @@ export const useNotificationActions = () => {
     },
     onSuccess: (data) => {
       if (data.success) {
-        toast({
-          title: 'Notificação de teste enviada',
-          description: 'A notificação foi criada e será processada em breve.',
-        });
+        showSuccess('Notificação de teste enviada', 'A notificação foi criada e será processada em breve.');
         queryClient.invalidateQueries({ queryKey: ['admin-notification-queue'] });
       }
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro ao enviar notificação de teste',
-        description: error.message,
-        variant: 'destructive',
-      });
+      showError('Erro ao enviar notificação de teste', error.message);
     },
   });
 
@@ -128,19 +100,12 @@ export const useNotificationActions = () => {
       return { successful, failed, total: notificationIds.length };
     },
     onSuccess: (data) => {
-      toast({
-        title: 'Reenvio em massa concluído',
-        description: `${data.successful} de ${data.total} notificações reagendadas.`,
-      });
+      showSuccess('Reenvio em massa concluído', `${data.successful} de ${data.total} notificações reagendadas.`);
       queryClient.invalidateQueries({ queryKey: ['admin-notification-queue'] });
       queryClient.invalidateQueries({ queryKey: ['admin-notification-stats'] });
     },
     onError: (error: any) => {
-      toast({
-        title: 'Erro no reenvio em massa',
-        description: error.message,
-        variant: 'destructive',
-      });
+      showError('Erro no reenvio em massa', error.message);
     },
   });
 

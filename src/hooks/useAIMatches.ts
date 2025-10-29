@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 import { useQueryClient } from '@tanstack/react-query';
 
 export const useAIMatches = () => {
   const [isGenerating, setIsGenerating] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const { logEvent } = useNetworkingAnalytics();
   const queryClient = useQueryClient();
 
@@ -41,11 +41,7 @@ export const useAIMatches = () => {
           }
         });
 
-        toast({
-          title: "Conexões Geradas!",
-          description: `${data.matches_generated} novas conexões estratégicas foram criadas para você!`,
-          variant: "default"
-        });
+        showSuccess("Conexões Geradas!", `${data.matches_generated} novas conexões estratégicas foram criadas para você!`);
         return data;
       } else {
         throw new Error(data.error || 'Erro ao gerar matches');
@@ -54,11 +50,7 @@ export const useAIMatches = () => {
       console.error('Erro ao gerar matches IA:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erro ao gerar matches IA';
       
-      toast({
-        title: "Erro ao gerar matches",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      showError("Erro ao gerar matches", errorMessage);
       
       throw error;
     } finally {

@@ -2,12 +2,12 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export const useBenefitClick = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
 
   const registerBenefitClick = async (toolId: string, benefitLink: string) => {
     if (!user) {
@@ -37,11 +37,7 @@ export const useBenefitClick = () => {
       // Mesmo com erro, abre o link para não prejudicar a experiência do usuário
       window.open(benefitLink, '_blank');
       
-      toast({
-        variant: 'destructive',
-        title: 'Erro ao registrar acesso',
-        description: 'Ocorreu um erro ao registrar o seu acesso à oferta, mas o link foi aberto.',
-      });
+      showError('Erro ao registrar acesso', 'Ocorreu um erro ao registrar o seu acesso à oferta, mas o link foi aberto.');
     } finally {
       setIsProcessing(false);
     }

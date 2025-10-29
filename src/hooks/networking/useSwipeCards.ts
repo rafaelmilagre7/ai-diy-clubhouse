@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
 import { useAIMatches } from '@/hooks/useAIMatches';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -29,7 +28,6 @@ export interface SwipeCard {
 
 export const useSwipeCards = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
   const { generateMatches, isGenerating } = useAIMatches();
   const queryClient = useQueryClient();
   const [cards, setCards] = useState<SwipeCard[]>([]);

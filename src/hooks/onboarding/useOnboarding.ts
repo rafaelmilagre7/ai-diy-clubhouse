@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useProfileSync } from '@/hooks/auth/useProfileSync';
 import { useNavigate } from 'react-router-dom';
 
@@ -70,6 +70,7 @@ export const useOnboarding = () => {
   const { user } = useAuth();
   const { syncProfile, markProfileStale } = useProfileSync();
   const navigate = useNavigate();
+  const { showSuccess, showError, showInfo } = useToastModern();
   const [state, setState] = useState<OnboardingState>({
     userType: undefined,
     current_step: 0, // Começar no Step 0 para escolher tipo
@@ -267,11 +268,7 @@ export const useOnboarding = () => {
             data: backup,
           });
           
-          toast({
-            title: 'Dados recuperados',
-            description: 'Seus dados foram recuperados de onde você parou.',
-            variant: 'default'
-          });
+          showSuccess('Dados recuperados', 'Seus dados foram recuperados de onde você parou.');
         } else {
           console.log('[ONBOARDING] Primeiro acesso - sem backup');
           setState({
@@ -327,10 +324,10 @@ export const useOnboarding = () => {
       };
       
       setLoadingMessage(stepMessages[step as keyof typeof stepMessages] || 'Salvando dados...');
-      const toastId = toast({ 
-        title: stepMessages[step as keyof typeof stepMessages], 
-        description: 'Por favor aguarde...' 
-      }).id;
+      showInfo(
+        stepMessages[step as keyof typeof stepMessages] || 'Salvando dados...', 
+        'Por favor aguarde...'
+      );
       
       // Salvar backup no localStorage antes de tentar salvar no servidor
       saveToLocalStorage(stepData, step);
@@ -401,19 +398,11 @@ export const useOnboarding = () => {
       }));
 
       console.log('[ONBOARDING] Step', step, 'salvo com sucesso!');
-      toast({ 
-        title: 'Dados salvos!', 
-        description: 'Seus dados foram salvos com sucesso.',
-        variant: 'default'
-      });
+      showSuccess('Dados salvos!', 'Seus dados foram salvos com sucesso.');
       return true;
     } catch (error) {
       console.error('Erro ao salvar step:', error);
-      toast({ 
-        title: 'Erro ao salvar', 
-        description: 'Erro ao salvar dados: ' + (error?.message || 'Erro desconhecido'),
-        variant: 'destructive'
-      });
+      showError('Erro ao salvar', 'Erro ao salvar dados: ' + (error?.message || 'Erro desconhecido'));
       return false;
     } finally {
       setIsSaving(false);
@@ -657,11 +646,7 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
     } catch (error) {
       console.error('[ONBOARDING] Erro ao finalizar onboarding:', error);
-      toast({ 
-        title: 'Erro ao finalizar', 
-        description: 'Erro ao finalizar onboarding: ' + (error?.message || 'Erro desconhecido'),
-        variant: 'destructive'
-      });
+      showError('Erro ao finalizar', 'Erro ao finalizar onboarding: ' + (error?.message || 'Erro desconhecido'));
       return false;
     } finally {
       setIsSaving(false);
