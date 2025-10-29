@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useNavigate } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -25,6 +25,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { showSuccess, showError } = useToastModern();
 
   const {
     register,
@@ -63,7 +64,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
         // Verificar se o erro está relacionado ao e-mail não verificado
         if (error.message && error.message.includes("not verified")) {
           setError("Erro de configuração: O e-mail de envio não está verificado. Por favor, contacte o administrador.");
-          toast.error("Erro de configuração no servidor de e-mail. Entre em contato com o suporte.");
+          showError("Erro", "Erro de configuração no servidor de e-mail. Entre em contato com o suporte.");
           return;
         }
         
@@ -72,9 +73,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
 
       setSubmitted(true);
       
-      toast.success(
-        "E-mail de recuperação enviado! Verifique sua caixa de entrada e spam."
-      );
+      showSuccess("Sucesso", "E-mail de recuperação enviado! Verifique sua caixa de entrada e spam.");
       
     } catch (error: any) {
       console.error("Erro completo ao solicitar reset de senha:", error);
@@ -84,9 +83,7 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
         "Não foi possível enviar o e-mail de recuperação. Verifique se o e-mail está correto ou tente novamente mais tarde."
       );
       
-      toast.error(
-        "Erro ao enviar e-mail de recuperação. Tente novamente."
-      );
+      showError("Erro", "Erro ao enviar e-mail de recuperação. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

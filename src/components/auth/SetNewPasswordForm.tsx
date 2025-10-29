@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
@@ -41,6 +41,7 @@ export const SetNewPasswordForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { showSuccess, showError } = useToastModern();
 
   const {
     register,
@@ -140,9 +141,7 @@ export const SetNewPasswordForm = () => {
 
   const onSubmit = async (data: SetNewPasswordForm) => {
     if (!isValidSession) {
-      toast.error("Sessão inválida", {
-        description: "Solicite um novo link de redefinição."
-      });
+      showError("Erro", "Sessão inválida. Solicite um novo link de redefinição.");
       return;
     }
 
@@ -159,23 +158,17 @@ export const SetNewPasswordForm = () => {
         
         // Tratar erro de senha fraca especificamente
         if (error.message?.includes('weak') || error.message?.includes('known')) {
-          toast.error("Senha muito comum", {
-            description: "Esta senha é conhecida e fácil de adivinhar. Por favor, escolha outra mais forte e única."
-          });
+          showError("Erro", "Senha muito comum. Esta senha é conhecida e fácil de adivinhar. Por favor, escolha outra mais forte e única.");
           return;
         }
         
         // Outros erros
-        toast.error("Erro ao atualizar senha", {
-          description: error.message || "Tente novamente."
-        });
+        showError("Erro", "Erro ao atualizar senha: " + (error.message || "Tente novamente."));
         return;
       }
 
       setIsSuccess(true);
-      toast.success("Senha atualizada com sucesso!", {
-        description: "Você será redirecionado para o login."
-      });
+      showSuccess("Sucesso", "Senha atualizada com sucesso! Você será redirecionado para o login.");
       
       // Fazer logout completo da sessão temporária e redirecionar
       setTimeout(async () => {
@@ -184,9 +177,7 @@ export const SetNewPasswordForm = () => {
       
     } catch (error: any) {
       console.error("❌ [SET-PASSWORD] Erro inesperado:", error);
-      toast.error("Erro inesperado", {
-        description: error.message || "Tente novamente mais tarde."
-      });
+      showError("Erro", "Erro inesperado: " + (error.message || "Tente novamente mais tarde."));
     } finally {
       setIsLoading(false);
     }

@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Activity, Bell, CheckCircle, Clock, RefreshCw } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface NotificationHealth {
   total_notifications: number;
@@ -17,6 +17,7 @@ interface NotificationHealth {
 }
 
 export const NotificationHealthMonitor = () => {
+  const { showSuccess, showError } = useToastModern();
   const { data: health, isLoading, refetch } = useQuery({
     queryKey: ['notification-health'],
     queryFn: async () => {
@@ -35,13 +36,11 @@ export const NotificationHealthMonitor = () => {
       
       if (error) throw error;
       
-      toast.success('Notificação de teste criada!', {
-        description: 'Verifique o sino de notificações'
-      });
+      showSuccess('Sucesso', 'Notificação de teste criada! Verifique o sino de notificações');
       
       refetch();
     } catch (error: any) {
-      toast.error('Erro ao criar notificação de teste: ' + error.message);
+      showError('Erro', 'Erro ao criar notificação de teste: ' + error.message);
     }
   };
 

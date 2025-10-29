@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { AlertTriangle, Users, Shield, RefreshCw, Database } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface DataInconsistency {
   type: 'missing_role' | 'orphaned_access' | 'invalid_event' | 'user_without_role';
@@ -16,6 +16,7 @@ interface DataInconsistency {
 }
 
 export const EventAuditDashboard = () => {
+  const { showSuccess, showWarning, showError } = useToastModern();
   const [inconsistencies, setInconsistencies] = useState<DataInconsistency[]>([]);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState({
@@ -142,14 +143,14 @@ export const EventAuditDashboard = () => {
       setInconsistencies(foundInconsistencies);
 
       if (foundInconsistencies.length === 0) {
-        toast.success('Nenhuma inconsistência encontrada!');
+        showSuccess('Sucesso', 'Nenhuma inconsistência encontrada!');
       } else {
-        toast.warning(`${foundInconsistencies.length} inconsistências encontradas`);
+        showWarning('Atenção', `${foundInconsistencies.length} inconsistências encontradas`);
       }
 
     } catch (error) {
       console.error('Erro ao executar auditoria:', error);
-      toast.error('Erro ao executar auditoria');
+      showError('Erro', 'Erro ao executar auditoria');
     } finally {
       setLoading(false);
     }

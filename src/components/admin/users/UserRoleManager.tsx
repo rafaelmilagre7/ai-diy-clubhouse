@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Badge } from "@/components/ui/badge";
 
 // CORREÇÃO BUG BAIXO 2: Melhorar type safety com interfaces mais específicas
@@ -57,6 +57,7 @@ export const UserRoleManager = ({
   const { assignRoleToUser, getUserRole, isUpdating } = useUserRoles();
   const [selectedRoleId, setSelectedRoleId] = useState<string>("");
   const [currentRole, setCurrentRole] = useState<string | null>(null);
+  const { showSuccess, showError } = useToastModern();
 
   // Quando o diálogo é aberto, buscar o papel atual do usuário
   const handleOpenChange = async (isOpen: boolean) => {
@@ -78,9 +79,7 @@ export const UserRoleManager = ({
       } catch (error: unknown) {
         // CORREÇÃO BUG BAIXO 2: Usar helper para tratamento seguro de erro
         console.error("Erro ao buscar papel do usuário:", error);
-        toast.error("Não foi possível carregar as informações do usuário", {
-          description: handleError(error)
-        });
+        showError("Erro", "Não foi possível carregar as informações do usuário: " + handleError(error));
       }
     }
   };
@@ -88,13 +87,13 @@ export const UserRoleManager = ({
   const handleAssignRole = async () => {
     // CORREÇÃO BUG BAIXO 2: Validação mais rigorosa de tipos
     if (!user?.id || !selectedRoleId) {
-      toast.error("Dados insuficientes para atualizar o papel");
+      showError("Erro", "Dados insuficientes para atualizar o papel");
       return;
     }
     
     try {
       await assignRoleToUser(user.id, selectedRoleId);
-      toast.success("Papel do usuário atualizado com sucesso");
+      showSuccess("Sucesso", "Papel do usuário atualizado com sucesso");
       onOpenChange(false);
       
       // CORREÇÃO BUG BAIXO 2: Usar type guard para validar callback antes de executar
@@ -104,9 +103,7 @@ export const UserRoleManager = ({
     } catch (error: unknown) {
       // CORREÇÃO BUG BAIXO 2: Tratamento seguro de erro com helper
       console.error("Erro ao atribuir papel:", error);
-      toast.error("Não foi possível atualizar o papel do usuário", {
-        description: handleError(error)
-      });
+      showError("Erro", "Não foi possível atualizar o papel do usuário: " + handleError(error));
     }
   };
 

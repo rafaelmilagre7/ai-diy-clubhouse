@@ -11,7 +11,7 @@ import { auditLogger } from '@/utils/auditLogger';
 import { logger } from '@/utils/logger';
 import { useAuth } from '@/contexts/auth';
 import { Loader2, Shield, AlertTriangle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export const SecureLoginForm: React.FC = () => {
   const { signIn } = useAuth();
@@ -19,6 +19,7 @@ export const SecureLoginForm: React.FC = () => {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { showSuccess } = useToastModern();
   const [rateLimitInfo, setRateLimitInfo] = useState<{
     remaining?: number;
     waitTime?: number;
@@ -122,7 +123,7 @@ export const SecureLoginForm: React.FC = () => {
         method: 'email_password'
       });
       
-      toast.success('Login realizado com sucesso!');
+      showSuccess('Sucesso', 'Login realizado com sucesso!');
       
     } catch (error: any) {
       logger.warn("Falha no login", {

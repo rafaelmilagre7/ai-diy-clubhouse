@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tool } from '@/types/toolTypes';
 import { supabase } from '@/lib/supabase';
 import { Loader2, Shield } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface BenefitAccessControlProps {
   open: boolean;
@@ -29,6 +29,7 @@ export function BenefitAccessControl({
   const [allowedRoles, setAllowedRoles] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const { showSuccess, showError } = useToastModern();
 
   // Buscar papéis disponíveis
   useEffect(() => {
@@ -50,7 +51,7 @@ export function BenefitAccessControl({
       setRoles(data || []);
     } catch (err) {
       console.error('Erro ao buscar papéis:', err);
-      toast.error('Erro ao carregar papéis');
+      showError('Erro', 'Erro ao carregar papéis');
     } finally {
       setIsLoading(false);
     }
@@ -72,7 +73,7 @@ export function BenefitAccessControl({
       setAllowedRoles(data.map(item => item.role_id));
     } catch (err) {
       console.error('Erro ao buscar acesso ao benefício:', err);
-      toast.error('Erro ao carregar configurações de acesso');
+      showError('Erro', 'Erro ao carregar configurações de acesso');
     } finally {
       setIsLoading(false);
     }
@@ -95,7 +96,7 @@ export function BenefitAccessControl({
           
         if (error) throw error;
         setAllowedRoles(prev => [...prev, roleId]);
-        toast.success('Acesso concedido ao papel');
+        showSuccess('Sucesso', 'Acesso concedido ao papel');
       } else {
         // Remover acesso
         const { error } = await supabase
@@ -106,11 +107,11 @@ export function BenefitAccessControl({
           
         if (error) throw error;
         setAllowedRoles(prev => prev.filter(id => id !== roleId));
-        toast.success('Acesso removido do papel');
+        showSuccess('Sucesso', 'Acesso removido do papel');
       }
     } catch (err) {
       console.error('Erro ao atualizar acesso:', err);
-      toast.error('Erro ao atualizar acesso');
+      showError('Erro', 'Erro ao atualizar acesso');
     } finally {
       setIsSaving(false);
     }

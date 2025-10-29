@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { RefreshCw, Bug, CheckCircle, AlertTriangle, XCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface DebugStats {
   enhanced_stats: any;
@@ -28,6 +28,7 @@ interface DebugStats {
 }
 
 export const UserStatsDebugger = () => {
+  const { showSuccess, showError } = useToastModern();
   const [debugData, setDebugData] = useState<DebugStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
@@ -87,13 +88,11 @@ export const UserStatsDebugger = () => {
 
       setDebugData(debugResults);
       setLastUpdate(new Date());
-      toast.success('Testes de debug executados com sucesso!');
+      showSuccess('Sucesso', 'Testes de debug executados com sucesso!');
       
     } catch (error: any) {
       console.error('❌ Erro nos testes de debug:', error);
-      toast.error('Erro ao executar testes de debug', {
-        description: error.message
-      });
+      showError('Erro', 'Erro ao executar testes de debug: ' + error.message);
     } finally {
       setLoading(false);
     }

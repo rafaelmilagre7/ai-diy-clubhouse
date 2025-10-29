@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Save, CheckCircle, ChevronUp, ChevronDown, RefreshCw } from "lucide-react";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -30,6 +30,7 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
   const [checklistItems, setChecklistItems] = useState<UnifiedChecklistItem[]>([]);
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   const { data: template, isLoading, error, refetch } = useUnifiedChecklistTemplate(
     solutionId,
@@ -75,9 +76,9 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
     const result = await refetch();
     
     if (result.data) {
-      toast.success('Checklist recarregado!');
+      showSuccess('Sucesso', 'Checklist recarregado!');
     } else {
-      toast.error('Não foi possível recarregar');
+      showError('Erro', 'Não foi possível recarregar');
     }
   };
 
@@ -94,14 +95,14 @@ const UnifiedImplementationChecklist: React.FC<UnifiedImplementationChecklistPro
       if (data) {
         const items = data.checklist_data?.items || [];
         setChecklistItems(items);
-        toast.success(`Carregado diretamente: ${items.length} itens!`);
+        showSuccess('Sucesso', `Carregado diretamente: ${items.length} itens!`);
       } else if (error) {
-        toast.error(`Erro: ${error.message}`);
+        showError('Erro', `Erro: ${error.message}`);
       } else {
-        toast.error('Nenhum dado encontrado');
+        showError('Erro', 'Nenhum dado encontrado');
       }
     } catch (err) {
-      toast.error('Erro na busca direta');
+      showError('Erro', 'Erro na busca direta');
     }
   };
 

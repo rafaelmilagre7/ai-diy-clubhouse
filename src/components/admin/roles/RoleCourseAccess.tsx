@@ -14,7 +14,7 @@ import { Role } from "@/hooks/admin/useRoles";
 import { LearningCourse } from "@/lib/supabase";
 import { useCourseAccess } from "@/hooks/learning/useCourseAccess";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/lib/supabase";
 
 interface RoleCourseAccessProps {
@@ -33,6 +33,7 @@ export function RoleCourseAccess({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { getCoursesByRole, manageCourseAccess } = useCourseAccess();
+  const { showSuccess, showError } = useToastModern();
   
   // Debounce para toggleCourseSelection
   const [pendingToggles, setPendingToggles] = useState<Set<string>>(new Set());
@@ -67,7 +68,7 @@ export function RoleCourseAccess({
       setSelectedCourses(roleCoursesIds);
     } catch (error) {
       console.error("❌ Erro ao carregar dados iniciais:", error);
-      toast.error("Erro ao carregar dados");
+      showError("Erro", "Erro ao carregar dados");
       setCourses([]);
       setSelectedCourses([]);
     } finally {
@@ -141,11 +142,11 @@ export function RoleCourseAccess({
       await Promise.all(promises);
       
       // Salvamento concluído
-      toast.success(`Configurações de acesso salvas para o papel ${role.name}`);
+      showSuccess("Sucesso", `Configurações de acesso salvas para o papel ${role.name}`);
       onOpenChange(false);
     } catch (error) {
       console.error("❌ Erro ao salvar configurações:", error);
-      toast.error("Erro ao salvar configurações de acesso");
+      showError("Erro", "Erro ao salvar configurações de acesso");
     } finally {
       setIsSaving(false);
     }

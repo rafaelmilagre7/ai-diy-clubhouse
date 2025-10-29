@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Mail, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase/client';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useAuth } from '@/contexts/auth';
 
 interface SendTestEmailButtonProps {
@@ -13,10 +13,11 @@ interface SendTestEmailButtonProps {
 export function SendTestEmailButton({ templateType, templateData }: SendTestEmailButtonProps) {
   const [isSending, setIsSending] = useState(false);
   const { user } = useAuth();
+  const { showSuccess, showError } = useToastModern();
 
   const handleSendTest = async () => {
     if (!user) {
-      toast.error('Você precisa estar logado');
+      showError('Erro', 'Você precisa estar logado');
       return;
     }
 
@@ -55,7 +56,7 @@ export function SendTestEmailButton({ templateType, templateData }: SendTestEmai
 
       if (error) throw error;
 
-      toast.success('Email de teste enviado com sucesso! Verifique sua caixa de entrada.');
+      showSuccess('Sucesso', 'Email de teste enviado com sucesso! Verifique sua caixa de entrada.');
       
       // Limpar notificação de teste
       await supabase
@@ -65,7 +66,7 @@ export function SendTestEmailButton({ templateType, templateData }: SendTestEmai
         
     } catch (error: any) {
       console.error('Erro ao enviar email de teste:', error);
-      toast.error(`Erro ao enviar email: ${error.message}`);
+      showError('Erro', `Erro ao enviar email: ${error.message}`);
     } finally {
       setIsSending(false);
     }

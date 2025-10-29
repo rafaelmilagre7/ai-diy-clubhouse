@@ -14,7 +14,7 @@ import {
   Lock
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface SecurityViolation {
   id: string;
@@ -28,6 +28,7 @@ interface SecurityViolation {
 }
 
 export const SecurityViolationsMonitor: React.FC = () => {
+  const { showError } = useToastModern();
   const [violations, setViolations] = useState<SecurityViolation[]>([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -54,7 +55,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
 
       if (error) {
         console.error('Erro ao carregar violações:', error);
-        toast.error('Erro ao carregar dados de segurança');
+        showError('Erro', 'Erro ao carregar dados de segurança');
         return;
       }
 
@@ -76,7 +77,7 @@ export const SecurityViolationsMonitor: React.FC = () => {
       setStats(newStats);
     } catch (error) {
       console.error('Erro ao carregar violações:', error);
-      toast.error('Erro interno ao carregar dados');
+      showError('Erro', 'Erro interno ao carregar dados');
     } finally {
       setLoading(false);
     }

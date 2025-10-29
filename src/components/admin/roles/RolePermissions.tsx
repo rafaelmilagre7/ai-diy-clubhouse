@@ -35,7 +35,7 @@ import {
   Trash2,
   Zap
 } from "lucide-react";
-import { toast } from "sonner";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/lib/supabase";
 
 interface RolePermissionsProps {
@@ -150,6 +150,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   // Verificar se é admin do sistema
   const isSystemAdmin = role?.name === 'admin' || role?.is_system;
@@ -189,7 +190,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       setRolePermissions(permissionCodes);
     } catch (err) {
       console.error("Erro ao buscar permissões do papel:", err);
-      toast.error("Erro ao carregar permissões do papel");
+      showError("Erro", "Erro ao carregar permissões do papel");
     } finally {
       setIsLoading(false);
     }
@@ -213,7 +214,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         if (error) throw error;
         
         setRolePermissions(prev => [...prev, permission.code]);
-        toast.success(`Acesso ativado`);
+        showSuccess("Sucesso", "Acesso ativado");
       } else {
         // 1. Remover da tabela role_permissions (relacional)
         const { error } = await supabase
@@ -227,7 +228,7 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
         setRolePermissions(prev => 
           prev.filter(code => code !== permission.code)
         );
-        toast.success(`Acesso removido`);
+        showSuccess("Sucesso", "Acesso removido");
       }
 
       // 2. 🔄 SINCRONIZAR CAMPO JSONB na tabela user_roles
@@ -258,13 +259,11 @@ export function RolePermissions({ open, onOpenChange, role }: RolePermissionsPro
       await fetchUserPermissions();
       
       // Cache invalidado
-      toast.success('⚡ Alterações aplicadas e sincronizadas!', {
-        description: 'Permissões ativas em tempo real para todos os usuários'
-      });
+      showSuccess("Sucesso", '⚡ Alterações aplicadas e sincronizadas! Permissões ativas em tempo real para todos os usuários');
       
     } catch (err) {
       console.error("Erro ao atualizar permissão:", err);
-      toast.error("Erro ao atualizar permissão");
+      showError("Erro", "Erro ao atualizar permissão");
     } finally {
       setIsSaving(false);
     }

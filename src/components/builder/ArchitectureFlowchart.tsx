@@ -2,7 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import mermaid from 'mermaid';
 import { Button } from '@/components/ui/button';
 import { Download, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface ArchitectureFlowchartProps {
   flowchart: {
@@ -13,6 +13,7 @@ interface ArchitectureFlowchartProps {
 
 export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ flowchart }) => {
   const mermaidRef = useRef<HTMLDivElement>(null);
+  const { showSuccess, showError } = useToastModern();
 
   useEffect(() => {
     console.log('🔍 ArchitectureFlowchart: Recebeu props:', {
@@ -108,7 +109,7 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
     try {
       const svg = mermaidRef.current?.querySelector('svg');
       if (!svg) {
-        toast.error('Fluxograma não encontrado');
+        showError('Erro', 'Fluxograma não encontrado');
         return;
       }
 
@@ -130,7 +131,7 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
             link.href = URL.createObjectURL(blob);
             link.download = 'arquitetura-builder-ai.png';
             link.click();
-            toast.success('Fluxograma baixado com sucesso!');
+            showSuccess('Sucesso', 'Fluxograma baixado com sucesso!');
           }
         });
         URL.revokeObjectURL(url);
@@ -139,7 +140,7 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
       img.src = url;
     } catch (error) {
       console.error('Erro ao baixar fluxograma:', error);
-      toast.error('Erro ao baixar fluxograma');
+      showError('Erro', 'Erro ao baixar fluxograma');
     }
   };
 
@@ -184,8 +185,8 @@ export const ArchitectureFlowchart: React.FC<ArchitectureFlowchartProps> = ({ fl
             onClick={() => {
               console.log('🔍 DEBUG Mermaid Code:', flowchart.mermaid_code);
               navigator.clipboard.writeText(flowchart.mermaid_code);
-              toast.success('Código Mermaid copiado para clipboard');
-            }} 
+              showSuccess('Sucesso', 'Código Mermaid copiado para clipboard');
+            }}
             variant="ghost" 
             size="sm"
           >

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { useToastModern } from '@/hooks/useToastModern';
 import { Search, User, Shield, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 
 interface TestResult {
@@ -21,6 +21,7 @@ interface TestResult {
 }
 
 export const EventPermissionTester = () => {
+  const { showError } = useToastModern();
   const [userEmail, setUserEmail] = useState('');
   const [eventId, setEventId] = useState('');
   const [testing, setTesting] = useState(false);
@@ -28,7 +29,7 @@ export const EventPermissionTester = () => {
 
   const testPermission = async () => {
     if (!userEmail.trim() || !eventId.trim()) {
-      toast.error('Preencha email do usuário e ID do evento');
+      showError('Erro', 'Preencha email do usuário e ID do evento');
       return;
     }
 
@@ -53,7 +54,7 @@ export const EventPermissionTester = () => {
         .single();
 
       if (userError || !userData) {
-        toast.error('Usuário não encontrado');
+        showError('Erro', 'Usuário não encontrado');
         return;
       }
 
@@ -65,7 +66,7 @@ export const EventPermissionTester = () => {
         .single();
 
       if (eventError || !eventData) {
-        toast.error('Evento não encontrado');
+        showError('Erro', 'Evento não encontrado');
         return;
       }
 
@@ -127,7 +128,7 @@ export const EventPermissionTester = () => {
 
     } catch (error) {
       console.error('Erro ao testar permissão:', error);
-      toast.error('Erro ao testar permissão');
+      showError('Erro', 'Erro ao testar permissão');
     } finally {
       setTesting(false);
     }
