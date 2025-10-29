@@ -170,6 +170,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         onNext={handleNavigateToNext}
         nextLesson={nextLesson}
         onSaveCompletion={onSaveCompletion}
+        isSubmitting={isUpdating}
       />
     </div>
   );

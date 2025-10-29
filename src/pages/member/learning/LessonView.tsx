@@ -84,7 +84,10 @@ const LessonView = () => {
   } = useLessonProgress({ lessonId });
   
   // Hook de NPS centralizado
-  const { submitNPS } = useLessonNPS({ lessonId: lessonId || '' });
+  const { submitNPS, isSubmitting: isSubmittingNPS } = useLessonNPS({ lessonId: lessonId || '' });
+  
+  // Estado combinado de loading
+  const isSaving = isUpdating || isSubmittingNPS;
   
   // Buscar lições completadas para o sidebar
   const { data: completedLessonsData = [] } = useQuery({
@@ -218,7 +221,7 @@ const LessonView = () => {
                   allLessons={safeAllCourseLessons}
                   onNextLesson={navigateToNext}
                   onPreviousLesson={navigateToPrevious}
-                  isUpdating={isUpdating}
+                  isUpdating={isSaving}
                 />
               </Suspense>
             </div>
