@@ -7,8 +7,9 @@ export interface SyncHistoryLog {
   master_email: string;
   member_email: string | null;
   operation: string;
-  status: 'success' | 'error' | 'warning';
+  sync_status: 'success' | 'error' | 'warning';
   error_message: string | null;
+  status?: 'success' | 'error' | 'warning'; // Para compatibilidade com componentes
 }
 
 export interface AggregatedSync {
@@ -33,7 +34,12 @@ export const useSyncHistory = () => {
         .limit(500);
 
       if (error) throw error;
-      return data as SyncHistoryLog[];
+      
+      // Mapear sync_status para status para compatibilidade com componentes
+      return (data || []).map(log => ({
+        ...log,
+        status: log.sync_status
+      })) as SyncHistoryLog[];
     },
     staleTime: 1000 * 60 * 2, // 2 minutos
     refetchOnWindowFocus: false
@@ -46,18 +52,18 @@ export const useSyncHistory = () => {
     if (existingSync) {
       existingSync.logs.push(log);
       existingSync.total_logs++;
-      if (log.status === 'success') existingSync.success_count++;
-      if (log.status === 'error') existingSync.error_count++;
-      if (log.status === 'warning') existingSync.warning_count++;
+      if (log.sync_status === 'success') existingSync.success_count++;
+      if (log.sync_status === 'error') existingSync.error_count++;
+      if (log.sync_status === 'warning') existingSync.warning_count++;
       existingSync.masters_processed.add(log.master_email);
       if (log.member_email) existingSync.members_processed.add(log.member_email);
     } else {
       acc.push({
         synced_at: log.synced_at,
         total_logs: 1,
-        success_count: log.status === 'success' ? 1 : 0,
-        error_count: log.status === 'error' ? 1 : 0,
-        warning_count: log.status === 'warning' ? 1 : 0,
+        success_count: log.sync_status === 'success' ? 1 : 0,
+        error_count: log.sync_status === 'error' ? 1 : 0,
+        warning_count: log.sync_status === 'warning' ? 1 : 0,
         masters_processed: new Set([log.master_email]),
         members_processed: log.member_email ? new Set([log.member_email]) : new Set(),
         logs: [log]
@@ -72,7 +78,7 @@ export const useSyncHistory = () => {
     total_syncs: aggregatedSyncs.length,
     total_logs: rawLogs.length,
     success_rate: rawLogs.length > 0 
-      ? Math.round((rawLogs.filter(l => l.status === 'success').length / rawLogs.length) * 100)
+      ? Math.round((rawLogs.filter(l => l.sync_status === 'success').length / rawLogs.length) * 100)
       : 0,
     last_sync: aggregatedSyncs[0]?.synced_at || null
   };

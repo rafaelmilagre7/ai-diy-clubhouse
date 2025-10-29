@@ -359,7 +359,7 @@ Deno.serve(async (req) => {
                 member_email: log.member_email,
                 operation: log.operation,
                 sync_status: log.status,
-                message: log.message,
+                error_message: log.message,
                 synced_at: new Date().toISOString()
               }))
             )
