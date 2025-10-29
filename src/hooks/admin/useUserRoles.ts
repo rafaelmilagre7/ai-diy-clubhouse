@@ -30,11 +30,20 @@ export function useUserRoles() {
       setIsUpdating(true);
       setError(null);
       
+      // ✅ VALIDAÇÃO CRÍTICA: Garantir que o usuário está autenticado
+      if (!user?.id) {
+        const errorMsg = 'Usuário não autenticado. Faça login novamente.';
+        console.error('❌ [USER-ROLES] Tentativa de mudança de role sem autenticação');
+        throw new Error(errorMsg);
+      }
+      
       // Log detalhado ANTES de chamar RPC
-      console.log('🔄 [USER-ROLES] Parâmetros da chamada RPC:', {
+      console.log('🔄 [USER-ROLES] Admin autenticado - iniciando mudança de role:', {
+        admin_email: user.email,
+        admin_id: user.id.substring(0, 8) + '***',
         target_user_id: userId.substring(0, 8) + '***',
         new_role_id: roleId.substring(0, 8) + '***',
-        current_user: user?.id?.substring(0, 8) + '***'
+        is_authenticated: true
       });
       
       // SEGURANÇA: Log seguro da operação
