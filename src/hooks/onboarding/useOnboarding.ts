@@ -556,6 +556,7 @@ Preparei uma experiência completamente personalizada para você, com conteúdos
 
 Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
+      console.log('[ONBOARDING] 📧 Nina message gerada:', ninaMessage.substring(0, 50) + '...');
       setLoadingMessage('Aplicando configurações finais...');
       
       // ESTRATÉGIA SIMPLIFICADA E ROBUSTA
@@ -610,7 +611,8 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
           .maybeSingle();
         
         if (existing) {
-          await supabase
+          console.log('[ONBOARDING] 📝 Updating existing onboarding_final...');
+          const { error: updateError } = await supabase
             .from('onboarding_final')
             .update({
               is_completed: true,
@@ -627,8 +629,15 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
               updated_at: new Date().toISOString()
             })
             .eq('user_id', user.id);
+          
+          if (updateError) {
+            console.error('[ONBOARDING] ❌ Erro no UPDATE:', updateError);
+          } else {
+            console.log('[ONBOARDING] ✅ onboarding_final UPDATED com nina_message');
+          }
         } else {
-          await supabase
+          console.log('[ONBOARDING] 📝 Inserting new onboarding_final...');
+          const { error: insertError } = await supabase
             .from('onboarding_final')
             .insert({
               user_id: user.id,
@@ -654,9 +663,13 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });
+          
+          if (insertError) {
+            console.error('[ONBOARDING] ❌ Erro no INSERT:', insertError);
+          } else {
+            console.log('[ONBOARDING] ✅ onboarding_final INSERTED com nina_message');
+          }
         }
-        
-        console.log('[ONBOARDING] ✅ onboarding_final OK');
       } catch (onboardingError) {
         console.warn('[ONBOARDING] ⚠️ Erro onboarding_final (não-bloqueante):', onboardingError);
       }
