@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { ArrowLeft, Save, Play, TestTube } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/integrations/supabase/client";
 import { EnhancedWizardProgress } from "./EnhancedWizardProgress";
 
@@ -27,7 +27,7 @@ interface AutomationFormData {
 export const EnhancedAutomationWizard = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const isEditing = !!id;
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -114,11 +114,7 @@ export const EnhancedAutomationWizard = () => {
         setValue('actions', data.actions);
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a regra",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível carregar a regra");
       navigate('/admin/automations');
     }
   };
@@ -146,28 +142,18 @@ export const EnhancedAutomationWizard = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: `Regra ${isEditing ? 'atualizada' : 'criada'} com sucesso`,
-      });
+      showSuccess("Sucesso", `Regra ${isEditing ? 'atualizada' : 'criada'} com sucesso`);
 
       navigate('/admin/automations');
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: `Não foi possível ${isEditing ? 'atualizar' : 'criar'} a regra`,
-        variant: "destructive",
-      });
+      showError("Erro", `Não foi possível ${isEditing ? 'atualizar' : 'criar'} a regra`);
     } finally {
       setLoading(false);
     }
   };
 
   const testRule = async () => {
-    toast({
-      title: "Teste iniciado",
-      description: "Executando teste da regra com dados mock...",
-    });
+    showSuccess("Teste iniciado", "Executando teste da regra com dados mock...");
     // TODO: Implement test logic
   };
 

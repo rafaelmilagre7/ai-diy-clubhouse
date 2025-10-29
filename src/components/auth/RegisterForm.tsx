@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 interface RegisterFormProps {
   inviteToken?: string;
@@ -25,20 +25,12 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
     e.preventDefault();
     
     if (!name || !email || !password) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos.");
       return;
     }
     
     if (password.length < 6) {
-      toast({
-        title: "Senha muito curta",
-        description: "A senha deve ter pelo menos 6 caracteres.",
-        variant: "destructive",
-      });
+      toast.error("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
     
@@ -46,10 +38,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
       setIsLoading(true);
       
       // Show immediate feedback toast
-      toast({
-        title: "Criando conta...",
-        description: "Estamos processando seu cadastro.",
-      });
+      toast.loading("Estamos processando seu cadastro...");
       
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -116,16 +105,9 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
           });
           
           if (inviteError) {
-            toast({
-              title: "Aviso",
-              description: "Conta criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.",
-              variant: "destructive",
-            });
+            toast.error("Conta criada, mas houve um problema ao aplicar o convite. Entre em contato com o suporte.");
           } else if (inviteResult?.status === 'success') {
-            toast({
-              title: "Convite aplicado!",
-              description: "Seu convite foi aplicado com sucesso. Redirecionando para o dashboard...",
-            });
+            toast.success("Seu convite foi aplicado com sucesso. Redirecionando para o dashboard...");
             
             // Redirecionar para dashboard após sucesso
             setTimeout(() => {
@@ -133,11 +115,7 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
             }, 2000);
           }
         } catch (inviteError) {
-          toast({
-            title: "Aviso",
-            description: "Conta criada, mas houve um problema ao aplicar o convite.",
-            variant: "destructive",
-          });
+          toast.error("Conta criada, mas houve um problema ao aplicar o convite.");
         }
       } else {
         // Se não há convite, redirecionar para dashboard
@@ -146,18 +124,11 @@ const RegisterForm = ({ inviteToken, prefilledEmail }: RegisterFormProps = {}) =
         }, 2000);
       }
       
-      toast({
-        title: "Cadastro realizado",
-        description: "Sua conta foi criada com sucesso!",
-      });
+      toast.success("Sua conta foi criada com sucesso!");
       
     } catch (error: any) {
       console.error("Erro ao criar conta:", error);
-      toast({
-        title: "Erro no cadastro",
-        description: error.message || "Não foi possível criar sua conta. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Não foi possível criar sua conta. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/integrations/supabase/client";
 
 import { HublaEventSelector } from "./hubla/HublaEventSelector";
@@ -29,7 +29,7 @@ interface AutomationFormData {
 export const UnifiedAutomationForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -81,11 +81,7 @@ export const UnifiedAutomationForm = () => {
         setValue('actions', data.actions);
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a regra",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível carregar a regra");
       navigate('/admin/automations');
     }
   };
@@ -112,18 +108,11 @@ export const UnifiedAutomationForm = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: `Regra ${isEditing ? 'atualizada' : 'criada'} com sucesso`,
-      });
+      showSuccess("Sucesso", `Regra ${isEditing ? 'atualizada' : 'criada'} com sucesso`);
 
       navigate('/admin/automations');
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: `Não foi possível ${isEditing ? 'atualizar' : 'criar'} a regra`,
-        variant: "destructive",
-      });
+      showError("Erro", `Não foi possível ${isEditing ? 'atualizar' : 'criar'} a regra`);
     } finally {
       setLoading(false);
     }

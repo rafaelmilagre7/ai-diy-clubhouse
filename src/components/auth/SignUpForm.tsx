@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Eye, EyeOff, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
@@ -70,38 +70,22 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
     
     // Validações
     if (!name.trim()) {
-      toast({
-        title: "Nome obrigatório",
-        description: "Por favor, informe seu nome completo.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, informe seu nome completo.");
       return;
     }
 
     if (!email || !password || !confirmPassword) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Preencha todos os campos obrigatórios.",
-        variant: "destructive",
-      });
+      toast.error("Preencha todos os campos obrigatórios.");
       return;
     }
 
     if (password !== confirmPassword) {
-      toast({
-        title: "Senhas não coincidem",
-        description: "As senhas digitadas são diferentes.",
-        variant: "destructive",
-      });
+      toast.error("As senhas digitadas são diferentes.");
       return;
     }
 
     if (passwordStrength.score < 3) {
-      toast({
-        title: "Senha muito fraca",
-        description: "Use pelo menos 8 caracteres com letras, números e símbolos.",
-        variant: "destructive",
-      });
+      toast.error("Use pelo menos 8 caracteres com letras, números e símbolos.");
       return;
     }
     
@@ -125,11 +109,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
         console.error("[SIGNUP] Erro no registro:", error);
         
         if (error.message?.includes('already registered')) {
-          toast({
-            title: "Email já cadastrado",
-            description: "Este email já está em uso. Tente fazer login ou use outro email.",
-            variant: "destructive",
-          });
+          toast.error("Este email já está em uso. Tente fazer login ou use outro email.");
         } else {
           throw error;
         }
@@ -188,11 +168,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
 
             if (inviteError) {
               console.error("❌ [SIGNUP] Erro ao aplicar convite:", inviteError);
-              toast({
-                title: "Conta criada com sucesso",
-                description: "Porém houve um problema com o convite. Entre em contato conosco.",
-                variant: "destructive",
-              });
+              toast.error("Conta criada, porém houve um problema com o convite. Entre em contato conosco.");
             } else if (inviteResult?.success) {
               console.log('✅ [SIGNUP] Convite aplicado - role atualizado');
             } else {
@@ -203,10 +179,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
           }
         }
         
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Verifique seu email para confirmar a conta e depois faça login.",
-        });
+        toast.success("Conta criada! Verifique seu email para confirmar e depois faça login.");
         
         // Voltar para o login após um tempo
         setTimeout(() => {
@@ -216,11 +189,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       
     } catch (error: any) {
       console.error("[SIGNUP] Erro no processo de registro:", error);
-      toast({
-        title: "Erro no registro",
-        description: error.message || "Não foi possível criar a conta. Tente novamente.",
-        variant: "destructive",
-      });
+      toast.error(error.message || "Não foi possível criar a conta. Tente novamente.");
     } finally {
       setIsLoading(false);
     }

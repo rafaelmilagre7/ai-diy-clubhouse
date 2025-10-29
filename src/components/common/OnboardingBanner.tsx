@@ -4,12 +4,11 @@ import { X, CheckCircle, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const OnboardingBanner: React.FC = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [showBanner, setShowBanner] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
   const [isLegacyUser, setIsLegacyUser] = useState(false);
@@ -77,10 +76,7 @@ export const OnboardingBanner: React.FC = () => {
     setIsDismissed(true);
     setShowBanner(false);
     
-    toast({
-      title: "Banner ocultado",
-      description: "Você pode acessar o onboarding pelo menu quando quiser!",
-    });
+    toast.success("Você pode acessar o onboarding pelo menu quando quiser!");
   };
 
   if (!showBanner || isDismissed) {

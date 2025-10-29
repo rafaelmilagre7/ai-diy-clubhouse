@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { uploadFileToStorage } from "@/components/ui/file/uploadUtils";
 import { useImageURL } from "@/hooks/useImageURL";
 import { ImagePlus, Trash2, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface ImageUploadProps {
   value: string | undefined;
@@ -24,7 +24,7 @@ export const ImageUpload = ({
   const [progress, setProgress] = useState(0);
   const [optimizedUrl, setOptimizedUrl] = useState<string>(value || '');
   const { optimizeImageURL } = useImageURL();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   // Otimizar URL quando value mudar
   useEffect(() => {
@@ -61,18 +61,10 @@ export const ImageUpload = ({
       // Chamar onChange com a URL original (não otimizada ainda)
       onChange(result.publicUrl);
       
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso.",
-        variant: "default",
-      });
+      showSuccess("Upload concluído", "A imagem foi enviada com sucesso.");
     } catch (error) {
       console.error("Erro ao fazer upload:", error);
-      toast({
-        title: "Falha no upload",
-        description: "Não foi possível enviar a imagem. Tente novamente.",
-        variant: "destructive",
-      });
+      showError("Falha no upload", "Não foi possível enviar a imagem. Tente novamente.");
     } finally {
       setUploading(false);
     }

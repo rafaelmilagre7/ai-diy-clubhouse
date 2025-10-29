@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 /**
  * Hook personalizado para gerenciar as funcionalidades da tela de publicação
@@ -15,7 +15,7 @@ export const usePublishSolution = (
   saving: boolean
 ) => {
   const [isPublished, setIsPublished] = useState(solution?.published || false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const navigate = useNavigate();
 
   /**
@@ -31,24 +31,21 @@ export const usePublishSolution = (
         published: checked
       });
       
-      toast({
-        title: checked ? "Solução publicada" : "Solução despublicada",
-        description: checked 
-          ? "A solução agora está visível para os membros." 
-          : "A solução agora está oculta para os membros.",
-        variant: checked ? "default" : "destructive",
-      });
+      if (checked) {
+        showSuccess("Solução publicada", "A solução agora está visível para os membros.");
+      } else {
+        showError("Solução despublicada", "A solução agora está oculta para os membros.");
+      }
     } catch (error: any) {
       console.error("Erro ao atualizar status de publicação:", error);
       
       // Reverter o estado em caso de erro
       setIsPublished(!checked);
       
-      toast({
-        title: "Erro ao atualizar publicação",
-        description: error.message || "Ocorreu um erro ao tentar atualizar o status de publicação.",
-        variant: "destructive",
-      });
+      showError(
+        "Erro ao atualizar publicação",
+        error.message || "Ocorreu um erro ao tentar atualizar o status de publicação."
+      );
     }
   };
 

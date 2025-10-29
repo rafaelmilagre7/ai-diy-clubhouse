@@ -13,7 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { AutomationEngine } from "./AutomationEngine";
 
 interface TestAutomationDialogProps {
@@ -44,7 +44,7 @@ const DEFAULT_TEST_PAYLOAD = {
 };
 
 export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [open, setOpen] = useState(false);
   const [testPayload, setTestPayload] = useState(
     JSON.stringify(DEFAULT_TEST_PAYLOAD, null, 2)
@@ -110,11 +110,11 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
         actions: actionResults.results || []
       });
 
-      toast({
-        title: actionResults.success ? "✅ Teste bem-sucedido" : "⚠️ Teste com erros",
-        description: `${actionResults.results?.length || 0} ação(ões) executada(s)`,
-        variant: actionResults.success ? "default" : "destructive"
-      });
+      if (actionResults.success) {
+        showSuccess("Teste bem-sucedido", `${actionResults.results?.length || 0} ação(ões) executada(s)`);
+      } else {
+        showError("Teste com erros", `${actionResults.results?.length || 0} ação(ões) executada(s)`);
+      }
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
@@ -126,11 +126,7 @@ export const TestAutomationDialog = ({ ruleData }: TestAutomationDialogProps) =>
         actions: []
       });
 
-      toast({
-        title: "❌ Erro no teste",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      showError("Erro no teste", errorMessage);
     } finally {
       setTesting(false);
     }
