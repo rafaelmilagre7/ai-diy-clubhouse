@@ -173,6 +173,7 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     isUpdating: updateProgressMutation.isPending,
     updateProgress,
     completeLesson,
+    refetchProgress,
     isLoading: isLoadingProgress
   };
 }

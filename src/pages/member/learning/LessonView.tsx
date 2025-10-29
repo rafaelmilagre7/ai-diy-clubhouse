@@ -79,7 +79,8 @@ const LessonView = () => {
     isCompleted,
     updateProgress,
     completeLesson,
-    isUpdating
+    isUpdating,
+    refetchProgress
   } = useLessonProgress({ lessonId });
   
   // Hook de NPS centralizado
@@ -128,12 +129,17 @@ const LessonView = () => {
       await completeLesson();
       console.log('[LESSON-VIEW] ✅ Progresso salvo');
       
-      // 2. Salvar NPS usando hook centralizado (AGUARDAR)
+      // 2. Salvar NPS usando hook centralizado
       console.log('[LESSON-VIEW] 📝 Chamando submitNPS do hook...');
       await submitNPS(score, feedback);
       console.log('[LESSON-VIEW] ✅ NPS salvo');
       
-      console.log('[LESSON-VIEW] ✅ Salvamento concluído');
+      // 3. Refetch para garantir UI atualizada
+      console.log('[LESSON-VIEW] 🔄 Refazendo fetch do progresso...');
+      await refetchProgress();
+      console.log('[LESSON-VIEW] ✅ Progresso atualizado na UI');
+      
+      console.log('[LESSON-VIEW] ✅ Salvamento concluído com sucesso');
       
     } catch (error: any) {
       console.error('[LESSON-VIEW] ❌ Erro ao salvar:', error);

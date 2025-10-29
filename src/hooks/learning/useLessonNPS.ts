@@ -64,9 +64,17 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
       return result;
     },
     onSuccess: () => {
-      console.log('[LESSON-NPS] ✅ Mutation onSuccess');
+      console.log('[LESSON-NPS] ✅ Mutation onSuccess - Invalidando todos os caches');
       toast.success('Sua avaliação foi enviada com sucesso!');
-      queryClient.invalidateQueries({ queryKey: ['lesson-nps', lessonId, user?.id] });
+      
+      // Invalidar TODOS os caches relacionados
+      queryClient.invalidateQueries({ queryKey: ['lesson-nps', lessonId] });
+      queryClient.invalidateQueries({ queryKey: ['learning-lesson-progress', lessonId] });
+      queryClient.invalidateQueries({ queryKey: ['learning-user-progress'] });
+      queryClient.invalidateQueries({ queryKey: ['course-details'] });
+      queryClient.invalidateQueries({ queryKey: ['learning-completed-lessons'] });
+      
+      console.log('[LESSON-NPS] ✅ Caches invalidados com sucesso');
     },
     onError: (error) => {
       console.error('[LESSON-NPS] ❌ Erro ao enviar avaliação:', error);

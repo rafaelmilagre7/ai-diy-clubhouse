@@ -40,14 +40,14 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
       log('NPS e progresso salvos', { lessonId: lesson.id, score });
       setNpsSubmitted(true);
       
-      // Fechar modal e navegar após delay
+      // Fechar modal e navegar após delay (aumentado para dar tempo de ver o toast)
       setTimeout(() => {
         setIsOpen(false);
         setNpsSubmitted(false);
         if (onNext && nextLesson) {
           onNext();
         }
-      }, 1500);
+      }, 2500);
     } catch (error) {
       console.error('[MODAL] ❌ Erro:', error);
     }
