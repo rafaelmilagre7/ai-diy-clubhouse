@@ -87,32 +87,145 @@ const courseProgress = Math.round(
 
 ## 🗄️ Estrutura do Banco de Dados
 
-### Tabela `learning_progress`
-
 ```sql
 CREATE TABLE learning_progress (
   id UUID PRIMARY KEY,
-  user_id UUID NOT NULL REFERENCES auth.users,
-  lesson_id UUID NOT NULL REFERENCES learning_lessons,
+  user_id UUID REFERENCES auth.users NOT NULL,
+  lesson_id UUID REFERENCES learning_lessons NOT NULL,
   progress_percentage INTEGER DEFAULT 0,
-  started_at TIMESTAMPTZ,
-  completed_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ,
+  started_at TIMESTAMP WITH TIME ZONE,
+  completed_at TIMESTAMP WITH TIME ZONE,
+  last_accessed_at TIMESTAMP WITH TIME ZONE,
   
-  -- Constraint de consistência
   CONSTRAINT check_completed_consistency CHECK (
-    (progress_percentage >= 100 AND completed_at IS NOT NULL) OR
+    (progress_percentage >= 100 AND completed_at IS NOT NULL)
+    OR 
     (progress_percentage < 100 AND completed_at IS NULL)
-  ),
-  
-  -- Índices otimizados
-  UNIQUE(user_id, lesson_id)
+  )
 );
 
-CREATE INDEX idx_learning_progress_completion 
-ON learning_progress(user_id, progress_percentage)
-WHERE progress_percentage >= 100;
+-- Trigger automático para garantir consistência
+CREATE TRIGGER learning_progress_ensure_completed
+  BEFORE INSERT OR UPDATE ON learning_progress
+  FOR EACH ROW
+  EXECUTE FUNCTION ensure_completed_at_consistency();
 ```
+
+## Troubleshooting
+
+### Modal NPS não abre
+
+**Sintomas:**
+- Usuário clica em "Marcar como Concluída"
+- Toast de sucesso aparece
+- Modal NPS não abre
+
+**Diagnóstico:**
+1. Abrir console do navegador
+2. Procurar por `[LESSON-CONTENT] ❌` ou `[LESSON-PROGRESS] ❌`
+3. Verificar se há erros no Network tab (filtrar por `learning_progress`)
+
+**Soluções:**
+- Se erro de constraint: verificar que trigger `ensure_completed_at_consistency()` está ativo
+- Se erro de RLS: verificar policies na tabela `learning_progress`
+- Se erro de rede: tentar fazer logout e login novamente
+- Se persistir: rodar query de monitoramento para verificar estado do banco
+
+**Query de verificação:**
+```sql
+SELECT * FROM learning_progress 
+WHERE user_id = '<user_id>' 
+AND lesson_id = '<lesson_id>';
+```
+
+### Progresso não salva
+
+**Sintomas:**
+- Botão fica em "Salvando..." indefinidamente
+- Toast de erro aparece
+- Progresso não atualiza
+
+**Diagnóstico:**
+1. Console do navegador: procurar por `[LESSON-PROGRESS] ❌ Erro no UPSERT`
+2. Network tab: verificar status da request para `/rest/v1/learning_progress`
+3. Verificar response body do erro
+
+**Soluções:**
+- **Erro 401/403**: Problema de autenticação/autorização
+  - Verificar RLS policies
+  - Fazer logout e login novamente
+- **Erro 409/Conflict**: Problema de concorrência
+  - Sistema tentará retry automático (2x)
+  - Se persistir, recarregar página
+- **Erro 500**: Problema no servidor
+  - Verificar logs do Supabase
+  - Verificar se trigger está funcionando
+
+### Toast de loading não aparece
+
+**Sintomas:**
+- Clica em "Marcar como Concluída"
+- Não aparece feedback visual
+- Console mostra "Modern toast not initialized"
+
+**Soluções:**
+1. Verificar que `ToastModernProvider` está no `App.tsx`
+2. Verificar import correto de `showModernLoading`
+3. Recarregar aplicação
+
+### Progresso do curso não atualiza
+
+**Sintomas:**
+- Aula marcada como concluída
+- Progresso do curso continua igual
+
+**Diagnóstico:**
+```sql
+-- Verificar aulas concluídas do curso
+SELECT 
+  l.title,
+  p.progress_percentage,
+  p.completed_at
+FROM learning_progress p
+JOIN learning_lessons l ON p.lesson_id = l.id
+WHERE l.module_id IN (
+  SELECT id FROM learning_modules WHERE course_id = '<course_id>'
+)
+AND p.user_id = '<user_id>'
+ORDER BY l.order_index;
+```
+
+**Soluções:**
+- Verificar que cache foi invalidado (procurar por `[LESSON-PROGRESS] 🔄 Caches invalidados` no console)
+- Forçar refresh: recarregar página
+- Verificar cálculo em `useCourseStats.ts` usa `>= 100` e não `=== 100`
+
+### Retry automático não funciona
+
+**Sintomas:**
+- Erro ao salvar
+- Não tenta novamente automaticamente
+
+**Diagnóstico:**
+1. Console: verificar `[LESSON-CONTENT] 🔄 Retry`
+2. Verificar se já atingiu MAX_RETRIES (2)
+
+**Soluções:**
+- Sistema tenta automaticamente até 2 vezes
+- Se falhar 2 vezes, usuário precisa clicar novamente manualmente
+- Verificar conexão de rede (DevTools > Network > Offline)
+
+## Queries de Monitoramento
+
+Ver arquivo: `docs/lesson-progress-monitoring.sql`
+
+### Principais queries:
+
+1. **Conclusões recentes (última hora)**
+2. **Estados inconsistentes**
+3. **Progresso por usuário**
+4. **Estatísticas do curso**
+5. **Performance de conclusões**
 
 ## 🔧 Utilitários Disponíveis
 

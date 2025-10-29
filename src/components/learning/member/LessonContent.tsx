@@ -68,16 +68,31 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
   
+  const [retryCount, setRetryCount] = React.useState(0);
+  const MAX_RETRIES = 2;
+
   const handleCompleteLesson = async () => {
-    // Aguardar conclusão antes de abrir modal
     if (!isCompleted && onComplete) {
       try {
-        await onComplete(); // Aguarda salvamento
-        console.log('[LESSON-CONTENT] ✅ Aula concluída, abrindo modal NPS');
-        setCompletionDialogOpen(true); // Só abre se salvou com sucesso
+        console.log('[LESSON-CONTENT] 🎯 Iniciando conclusão');
+        await onComplete();
+        console.log('[LESSON-CONTENT] ✅ Aula concluída com sucesso');
+        setCompletionDialogOpen(true);
+        setRetryCount(0); // Reset contador
       } catch (error) {
-        console.error('[LESSON-CONTENT] ❌ Erro ao concluir aula:', error);
-        // Modal não abre se der erro
+        console.error('[LESSON-CONTENT] ❌ Erro ao concluir:', error);
+        
+        // Retry automático se ainda não excedeu limite
+        if (retryCount < MAX_RETRIES) {
+          console.log(`[LESSON-CONTENT] 🔄 Retry ${retryCount + 1}/${MAX_RETRIES}`);
+          setRetryCount(prev => prev + 1);
+          
+          // Aguardar 1s e tentar novamente
+          setTimeout(() => handleCompleteLesson(), 1000);
+        } else {
+          console.error('[LESSON-CONTENT] 🚫 Máximo de retries atingido');
+          setRetryCount(0); // Reset para próxima tentativa manual
+        }
       }
     }
   };

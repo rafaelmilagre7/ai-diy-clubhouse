@@ -71,6 +71,7 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       console.log("[LESSON-PROGRESS] 🎯 Iniciando atualização:", {
         lessonId,
         completed,
+        currentProgress: userProgress?.progress_percentage,
         timestamp: new Date().toISOString()
       });
       
@@ -78,7 +79,10 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       if (!userData.user) throw new Error("Usuário não autenticado");
       
       const timestamp = new Date().toISOString();
-      const progressPercentage = completed ? LESSON_PROGRESS.COMPLETED : LESSON_PROGRESS.STARTED;
+      // CRÍTICO: usar STARTED (5%) para novas aulas, não 1%
+      const progressPercentage = completed 
+        ? LESSON_PROGRESS.COMPLETED 
+        : (userProgress?.progress_percentage || LESSON_PROGRESS.STARTED);
       
       // UPSERT otimizado
       const { data, error } = await supabase
@@ -141,8 +145,13 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       
       setIsCompleted(result.completed);
       
-      // Invalidação hierárquica (específico -> geral)
+      if (result.completed) {
+        showModernSuccess("Aula concluída!", "Seu progresso foi salvo com sucesso");
+      }
+      
+      // Invalidação hierárquica (específico -> geral) SEM setTimeout
       console.log("[LESSON-PROGRESS] 🔄 Invalidando caches relacionados");
+      
       await queryClient.invalidateQueries({ 
         queryKey: ["learning-lesson-progress", lessonId],
         refetchType: 'active'
@@ -162,6 +171,8 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         queryKey: ["course-details"],
         refetchType: 'active'
       });
+      
+      console.log("[LESSON-PROGRESS] ✅ Caches invalidados");
     },
     onError: (error: any) => {
       console.error("[LESSON-PROGRESS] ❌ Erro ao salvar progresso:", error);
@@ -178,7 +189,11 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       
       const timer = setTimeout(() => {
         console.log("[LESSON-PROGRESS] 🎬 Inicializando progresso da aula");
-        updateProgressMutation.mutate(false);
+        updateProgressMutation.mutate(false, {
+          onSuccess: (result) => {
+            console.log("[LESSON-PROGRESS] ✅ Progresso inicializado com 5%:", result);
+          }
+        });
       }, 500);
       
       return () => clearTimeout(timer);
@@ -196,25 +211,35 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   
   // Marcar como concluída com toast e aguardar salvamento
   const completeLesson = async () => {
-    const loadingId = showModernLoading(
-      "Concluindo aula",
-      "Salvando seu progresso..."
-    );
+    console.log("[LESSON-PROGRESS] 🎯 Iniciando conclusão manual");
+    
+    const loadingId = showModernLoading("Concluindo aula...", "Salvando seu progresso...");
     
     try {
-      await updateProgressMutation.mutateAsync(true);
-      dismissModernToast(loadingId);
-      showModernSuccess("Aula concluída!", "Seu progresso foi salvo com sucesso");
+      const result = await updateProgressMutation.mutateAsync(true);
       
-      console.log("[LESSON-PROGRESS] ✅ Aula concluída com sucesso");
-    } catch (error) {
       dismissModernToast(loadingId);
-      showModernError(
-        "Erro ao concluir aula",
-        "Não foi possível salvar. Tente novamente."
-      );
-      console.error("[LESSON-PROGRESS] ❌ Erro ao concluir aula:", error);
-      throw error; // Re-throw para que o componente saiba que falhou
+      showModernSuccess("Aula concluída!", "Seu progresso foi salvo");
+      
+      console.log("[LESSON-PROGRESS] ✅ Conclusão bem-sucedida:", result);
+    } catch (error: any) {
+      console.error("[LESSON-PROGRESS] ❌ Erro na conclusão:", {
+        error,
+        message: error?.message,
+        code: error?.code,
+        details: error?.details
+      });
+      
+      dismissModernToast(loadingId);
+      
+      // Mensagem de erro mais específica
+      const errorMessage = error?.message?.includes('constraint') 
+        ? "Erro de consistência. Tente novamente."
+        : error?.message || "Não foi possível salvar.";
+      
+      showModernError("Erro ao concluir aula", errorMessage);
+      
+      throw error;
     }
   };
 

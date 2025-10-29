@@ -1,34 +1,43 @@
--- ============================================
+-- =====================================================
 -- QUERIES DE MONITORAMENTO - PROGRESSO DE AULAS
--- ============================================
+-- =====================================================
 
--- ============================================
--- 1. VERIFICAR ESTADOS INCONSISTENTES
--- ============================================
--- Deve retornar 0 registros se tudo estiver OK
--- Se retornar registros, há bugs no sistema
-
+-- 1. VERIFICAR CONCLUSÕES RECENTES (última hora)
+-- =====================================================
 SELECT 
-  lp.user_id,
-  lp.lesson_id,
-  lp.progress_percentage,
-  lp.completed_at,
-  lp.updated_at,
-  ll.title as lesson_title,
+  l.title as aula,
+  l.id as lesson_id,
+  p.progress_percentage,
+  p.completed_at,
+  p.updated_at,
+  EXTRACT(EPOCH FROM (NOW() - p.updated_at)) / 60 as minutos_atras,
+  prof.name as usuario
+FROM learning_progress p
+JOIN learning_lessons l ON p.lesson_id = l.id
+LEFT JOIN profiles prof ON p.user_id = prof.id
+WHERE p.progress_percentage >= 100
+  AND p.updated_at >= NOW() - INTERVAL '1 hour'
+ORDER BY p.updated_at DESC;
+
+-- 2. VERIFICAR ESTADO INCONSISTENTE
+-- =====================================================
+SELECT 
+  user_id,
+  lesson_id,
+  progress_percentage,
+  completed_at,
+  updated_at,
   CASE 
-    WHEN lp.progress_percentage >= 100 AND lp.completed_at IS NULL 
-      THEN '🐛 BUG: Concluída sem data'
-    WHEN lp.progress_percentage < 100 AND lp.completed_at IS NOT NULL 
-      THEN '🐛 BUG: Não concluída com data'
-    ELSE '✅ OK'
+    WHEN progress_percentage >= 100 AND completed_at IS NULL THEN 'BUG: Concluída sem data'
+    WHEN progress_percentage < 100 AND completed_at IS NOT NULL THEN 'BUG: Não concluída com data'
+    ELSE 'OK'
   END as status
-FROM learning_progress lp
-LEFT JOIN learning_lessons ll ON lp.lesson_id = ll.id
+FROM learning_progress
 WHERE 
-  (lp.progress_percentage >= 100 AND lp.completed_at IS NULL)
+  (progress_percentage >= 100 AND completed_at IS NULL)
   OR
-  (lp.progress_percentage < 100 AND lp.completed_at IS NOT NULL)
-ORDER BY lp.updated_at DESC
+  (progress_percentage < 100 AND completed_at IS NOT NULL)
+ORDER BY updated_at DESC
 LIMIT 100;
 
 
