@@ -8739,6 +8739,28 @@ export type Database = {
       }
       reset_user_complete: { Args: { target_user_id: string }; Returns: Json }
       reset_user_onboarding: { Args: { target_user_id: string }; Returns: Json }
+      safe_insert_or_update_lesson_nps: {
+        Args: { p_feedback?: string; p_lesson_id: string; p_score: number }
+        Returns: {
+          created_at: string
+          feedback: string
+          id: string
+          lesson_id: string
+          score: number
+          updated_at: string
+          user_id: string
+        }[]
+      }
+      safe_upsert_learning_progress: {
+        Args: {
+          p_completed_at?: string
+          p_last_position_seconds?: number
+          p_lesson_id: string
+          p_progress_percentage: number
+          p_video_progress?: Json
+        }
+        Returns: Json
+      }
       search_users: {
         Args: {
           limit_count?: number
