@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import { RateLimitGuard } from '@/components/security/RateLimitGuard';
 import { useRateLimit } from '@/hooks/security/useRateLimit';
 import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
@@ -86,11 +86,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     });
 
     if (!rateLimitAllowed) {
-      toast({
-        title: "Muitas tentativas",
-        description: "Aguarde alguns minutos antes de tentar novamente.",
-        variant: "destructive",
-      });
+      toast.error("Aguarde alguns minutos antes de tentar novamente.");
       setError('Rate limit atingido. Aguarde antes de tentar novamente.');
       return;
     }
@@ -98,20 +94,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     console.log('🚀 [REGISTER] Iniciando processo de registro');
     
     if (!name || !email || !password || !confirmPassword) {
-      toast({
-        title: "Campos obrigatórios",
-        description: "Por favor, preencha todos os campos.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, preencha todos os campos.");
       return;
     }
     
     if (!passwordsMatch) {
-      toast({
-        title: "Senhas não coincidem",
-        description: "As senhas digitadas são diferentes. Verifique e tente novamente.",
-        variant: "destructive",
-      });
+      toast.error("As senhas digitadas são diferentes. Verifique e tente novamente.");
       return;
     }
     
@@ -120,11 +108,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         passwordScore: passwordValidation.score,
         passwordStrength: passwordValidation.strength
       });
-      toast({
-        title: "Senha não atende os critérios",
-        description: "Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos.",
-        variant: "destructive",
-      });
+      toast.error("Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos.");
       return;
     }
 
@@ -132,11 +116,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     const serverValidation = await validatePasswordOnServer(password);
     if (serverValidation && !serverValidation.is_valid) {
       console.log('❌ [REGISTER] Senha rejeitada pelo servidor:', serverValidation);
-      toast({
-        title: "Senha muito fraca",
-        description: "Sua senha não atende aos critérios de segurança. Evite senhas comuns e use uma combinação mais forte.",
-        variant: "destructive",
-      });
+      toast.error("Sua senha não atende aos critérios de segurança. Evite senhas comuns e use uma combinação mais forte.");
       return;
     }
     
@@ -149,10 +129,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         console.log('💾 [REGISTER] Token salvo no sessionStorage:', inviteToken.substring(0, 6) + '***');
       }
       
-      toast({
-        title: "Criando sua conta...",
-        description: "Por favor, aguarde enquanto preparamos tudo para você.",
-      });
+      toast.loading("Criando sua conta... Por favor, aguarde enquanto preparamos tudo para você.");
       
       // 🎯 NOVO FLUXO SIMPLIFICADO: Apenas signUp - o trigger handle_new_user cuida do resto
       const { data, error } = await supabase.auth.signUp({
@@ -191,11 +168,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             
             if (rateLimitInfo) {
               setError(rateLimitInfo.user_message);
-              toast({
-                title: "Limite de email atingido",
-                description: rateLimitInfo.user_message,
-                variant: "destructive",
-              });
+              toast.error(rateLimitInfo.user_message);
               
               // Log da tentativa para monitoramento
               await supabase.rpc('log_registration_attempt', {
@@ -229,11 +202,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         }
         
         setError(userMessage);
-        toast({
-          title: "Erro no cadastro",
-          description: userMessage,
-          variant: "destructive",
-        });
+        toast.error(userMessage);
         
         // Log da tentativa para monitoramento
         try {
@@ -288,11 +257,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           
           if (createError) {
             console.error('❌ [REGISTER-FALLBACK] ERRO CRÍTICO ao criar profile:', createError);
-            toast({
-              title: "Erro crítico",
-              description: "Não foi possível completar seu cadastro. Entre em contato com suporte.",
-              variant: "destructive",
-            });
+            toast.error("Não foi possível completar seu cadastro. Entre em contato com suporte.");
             throw createError;
           }
           
@@ -326,11 +291,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
 
             if (inviteError) {
               console.error('❌ [REGISTER] Erro ao aplicar convite:', inviteError);
-              toast({
-                title: "Aviso",
-                description: "Conta criada mas houve problema com o convite. Entre em contato conosco.",
-                variant: "destructive",
-              });
+              toast.error("Conta criada mas houve problema com o convite. Entre em contato conosco.");
             } else if (inviteResult?.success) {
               console.log('✅ [REGISTER] Convite aplicado com sucesso - role atualizado');
             } else {
@@ -341,10 +302,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           }
         }
         
-        toast({
-          title: "Conta criada com sucesso! 🎉",
-          description: "Bem-vindo à plataforma!",
-        });
+        toast.success("Conta criada com sucesso! 🎉 Bem-vindo à plataforma!");
         
         // Sucesso - chamar callback
         onSuccess?.();
@@ -353,11 +311,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     } catch (error: any) {
       console.error('❌ [REGISTER] Erro:', error);
       const errorMessage = error.message || "Erro ao criar conta. Tente novamente.";
-      toast({
-        title: "Erro inesperado",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }

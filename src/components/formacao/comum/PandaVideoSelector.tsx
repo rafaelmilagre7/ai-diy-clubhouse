@@ -12,7 +12,7 @@ import {
   RefreshCw
 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { PandaVideoPlayer } from "./PandaVideoPlayer";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -48,7 +48,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(currentVideoId || null);
-  const { toast } = useToast();
+  const { showError, showSuccess } = useToastModern();
 
   // Buscar vídeos do Panda Video
   const fetchVideos = async () => {
@@ -75,11 +75,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
     } catch (err: any) {
       console.error("Erro ao buscar vídeos do Panda Video:", err);
       setError(err.message || "Não foi possível carregar os vídeos. Tente novamente mais tarde.");
-      toast({
-        title: "Erro ao carregar vídeos",
-        description: "Não foi possível obter a lista de vídeos do Panda Video.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar vídeos", "Não foi possível obter a lista de vídeos do Panda Video.");
     } finally {
       setLoading(false);
     }
@@ -137,10 +133,7 @@ export const PandaVideoSelector: React.FC<PandaVideoSelectorProps> = ({
 
   const handleRetry = () => {
     fetchVideos();
-    toast({
-      title: "Tentando novamente",
-      description: "Buscando vídeos do Panda Video...",
-    });
+    showSuccess("Tentando novamente", "Buscando vídeos do Panda Video...");
   };
 
   return (

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useLogging } from "@/hooks/useLogging";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,7 +23,7 @@ export const ImageUploadImgBB = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError: showErrorToast } = useToastModern();
   const { logError } = useLogging();
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,11 +36,7 @@ export const ImageUploadImgBB = ({
     if (!securityCheck.isSecure) {
       const errorMsg = [...securityCheck.errors, ...securityCheck.warnings].join('; ');
       setError(errorMsg);
-      toast({
-        title: "Arquivo rejeitado por segurança",
-        description: errorMsg,
-        variant: "destructive",
-      });
+      showErrorToast("Arquivo rejeitado por segurança", errorMsg);
       return;
     }
 
@@ -48,11 +44,7 @@ export const ImageUploadImgBB = ({
     const maxSize = maxSizeMB * 1024 * 1024; // Converter para bytes
     if (file.size > maxSize) {
       setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
-      toast({
-        title: "Arquivo muito grande",
-        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione uma imagem menor.`,
-        variant: "destructive",
-      });
+      showErrorToast("Arquivo muito grande", `A imagem excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione uma imagem menor.`);
       return;
     }
 
@@ -90,19 +82,11 @@ export const ImageUploadImgBB = ({
       
       setProgress(100);
       
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso via conexão segura.",
-        variant: "default",
-      });
+      showSuccess("Upload concluído", "A imagem foi enviada com sucesso via conexão segura.");
     } catch (error: any) {
       logError("secure_imgbb_upload_error", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
-      toast({
-        title: "Falha no upload",
-        description: error.message || "Não foi possível enviar a imagem. Tente novamente.",
-        variant: "destructive",
-      });
+      showErrorToast("Falha no upload", error.message || "Não foi possível enviar a imagem. Tente novamente.");
     } finally {
       setUploading(false);
     }

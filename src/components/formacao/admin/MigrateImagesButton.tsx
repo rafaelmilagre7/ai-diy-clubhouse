@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
-import { 
+import { useToastModern } from "@/hooks/useToastModern";
+import {
   AlertDialog, 
   AlertDialogAction, 
   AlertDialogCancel, 
@@ -20,7 +20,7 @@ export const MigrateImagesButton = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<any>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const handleMigration = async () => {
     setIsLoading(true);
@@ -45,26 +45,14 @@ export const MigrateImagesButton = () => {
       setResult(data);
       
       if (data.success) {
-        toast({
-          title: "Migração concluída!",
-          description: data.message,
-          variant: "default",
-        });
+        showSuccess("Migração concluída!", data.message);
       } else {
-        toast({
-          title: "Erro na migração",
-          description: data.error || "Erro desconhecido",
-          variant: "destructive",
-        });
+        showError("Erro na migração", data.error || "Erro desconhecido");
       }
     } catch (error: any) {
       console.error("Erro na migração:", error);
       setProgress(0);
-      toast({
-        title: "Erro na migração",
-        description: error.message || "Erro ao executar migração",
-        variant: "destructive",
-      });
+      showError("Erro na migração", error.message || "Erro ao executar migração");
     } finally {
       setIsLoading(false);
     }

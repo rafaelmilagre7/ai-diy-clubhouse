@@ -2,12 +2,12 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useLMSStructure } from "@/hooks/learning/useLMSStructure";
 import { csvExporter } from "@/utils/csvExporter";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { format } from "date-fns";
 
 export const ExportLMSButton = () => {
   const { data: structureData, isLoading, refetch } = useLMSStructure();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const handleExport = async () => {
     try {
@@ -15,11 +15,7 @@ export const ExportLMSButton = () => {
       const { data } = await refetch();
       
       if (!data || data.length === 0) {
-        toast({
-          title: "Nenhum dado encontrado",
-          description: "Não há estrutura do LMS para exportar.",
-          variant: "destructive",
-        });
+        showError("Nenhum dado encontrado", "Não há estrutura do LMS para exportar.");
         return;
       }
 
@@ -42,17 +38,10 @@ export const ExportLMSButton = () => {
         includeHeaders: true,
       });
 
-      toast({
-        title: "Exportação concluída!",
-        description: `${data.length} registros exportados com sucesso.`,
-      });
+      showSuccess("Exportação concluída!", `${data.length} registros exportados com sucesso.`);
     } catch (error) {
       console.error('Erro ao exportar estrutura do LMS:', error);
-      toast({
-        title: "Erro na exportação",
-        description: "Não foi possível exportar a estrutura do LMS.",
-        variant: "destructive",
-      });
+      showError("Erro na exportação", "Não foi possível exportar a estrutura do LMS.");
     }
   };
 

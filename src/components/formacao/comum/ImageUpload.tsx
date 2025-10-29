@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 
 import { supabase } from "@/lib/supabase";
 import { ImagePlus, Trash2, Loader2, AlertCircle } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { STORAGE_BUCKETS, MAX_UPLOAD_SIZES } from "@/lib/supabase/config";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
@@ -28,7 +28,7 @@ export const ImageUpload = ({
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError: showErrorToast } = useToastModern();
 
   const setupStorageIfNeeded = async () => {
     try {
@@ -55,11 +55,7 @@ export const ImageUpload = ({
     const fileType = file.type.split('/')[0];
     if (fileType !== 'image') {
       setError("Por favor, selecione apenas arquivos de imagem");
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de imagem.",
-        variant: "destructive",
-      });
+      showErrorToast("Tipo de arquivo inválido", "Por favor, selecione apenas arquivos de imagem.");
       return;
     }
 
@@ -67,11 +63,7 @@ export const ImageUpload = ({
     const maxSize = maxSizeMB * 1024 * 1024; // Converter para bytes
     if (file.size > maxSize) {
       setError(`A imagem é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
-      toast({
-        title: "Arquivo muito grande",
-        description: `A imagem excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione uma imagem menor.`,
-        variant: "destructive",
-      });
+      showErrorToast("Arquivo muito grande", `A imagem excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione uma imagem menor.`);
       return;
     }
 
@@ -104,19 +96,11 @@ export const ImageUpload = ({
       
       onChange(urlData.publicUrl);
       
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso.",
-        variant: "default",
-      });
+      showSuccess("Upload concluído", "A imagem foi enviada com sucesso.");
     } catch (error: any) {
       console.error("Erro ao fazer upload:", error);
       setError(error.message || "Não foi possível enviar a imagem. Tente novamente.");
-      toast({
-        title: "Falha no upload",
-        description: error.message || "Não foi possível enviar a imagem. Tente novamente.",
-        variant: "destructive",
-      });
+      showErrorToast("Falha no upload", error.message || "Não foi possível enviar a imagem. Tente novamente.");
     } finally {
       setUploading(false);
     }

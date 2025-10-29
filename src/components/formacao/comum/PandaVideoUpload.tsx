@@ -10,7 +10,7 @@ import {
   X,
   RefreshCw
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { supabase } from "@/lib/supabase";
 import { Progress } from "@/components/ui/progress";
@@ -48,7 +48,7 @@ export const PandaVideoUpload = ({
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [videoFile, setVideoFile] = useState<File | null>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError: showErrorToast } = useToastModern();
 
   const maxSizeMB = 500; // 500MB máximo
   const maxRetries = 3;   // Número máximo de tentativas
@@ -61,11 +61,7 @@ export const PandaVideoUpload = ({
     const fileType = file.type.split('/')[0];
     if (fileType !== 'video') {
       setError("Por favor, selecione apenas arquivos de vídeo");
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de vídeo.",
-        variant: "destructive",
-      });
+      showErrorToast("Tipo de arquivo inválido", "Por favor, selecione apenas arquivos de vídeo.");
       return;
     }
 
@@ -73,11 +69,7 @@ export const PandaVideoUpload = ({
     const maxSize = maxSizeMB * 1024 * 1024; // Converter para bytes
     if (file.size > maxSize) {
       setError(`O vídeo é muito grande (${(file.size / (1024 * 1024)).toFixed(2)}MB). O tamanho máximo é ${maxSizeMB}MB.`);
-      toast({
-        title: "Arquivo muito grande",
-        description: `O vídeo excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione um vídeo menor.`,
-        variant: "destructive",
-      });
+      showErrorToast("Arquivo muito grande", `O vídeo excede o tamanho máximo de ${maxSizeMB}MB. Por favor, selecione um vídeo menor.`);
       return;
     }
 
@@ -202,11 +194,7 @@ export const PandaVideoUpload = ({
           setRetrying(true);
           setRetryCount(prevCount => prevCount + 1);
           
-          toast({
-            title: "Tentando novamente",
-            description: `Tentativa ${retryCount + 1} de ${maxRetries}. Por favor, aguarde...`,
-            variant: "default",
-          });
+          showSuccess("Tentando novamente", `Tentativa ${retryCount + 1} de ${maxRetries}. Por favor, aguarde...`);
           
           // Esperar antes de tentar novamente (backoff exponencial)
           const retryDelay = Math.pow(2, retryCount) * 2000;
@@ -268,11 +256,7 @@ export const PandaVideoUpload = ({
         videoInfo.id              // ID do vídeo no Panda
       );
 
-      toast({
-        title: "Upload concluído",
-        description: "O vídeo foi enviado com sucesso e está sendo processado.",
-        variant: "default",
-      });
+      showSuccess("Upload concluído", "O vídeo foi enviado com sucesso e está sendo processado.");
 
       // Limpar arquivo após upload bem-sucedido
       setVideoFile(null);
@@ -283,11 +267,7 @@ export const PandaVideoUpload = ({
       let errorMessage = error.message || "Não foi possível enviar o vídeo. Tente novamente.";
       
       setError(errorMessage);
-      toast({
-        title: "Falha no upload",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      showErrorToast("Falha no upload", errorMessage);
     } finally {
       setUploading(false);
     }
