@@ -103,6 +103,41 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       return;
     }
     
+    // Validar se convite ainda é válido (antes de criar usuário)
+    if (inviteToken) {
+      try {
+        const { data: inviteCheck } = await supabase
+          .from('invites')
+          .select('id, expires_at, used_at')
+          .eq('token', inviteToken.trim())
+          .maybeSingle();
+        
+        if (!inviteCheck) {
+          toast.error("Convite inválido. Solicite um novo convite ao administrador.");
+          setError("Convite não encontrado ou inválido");
+          return;
+        }
+        
+        if (inviteCheck.used_at) {
+          toast.error("Este convite já foi utilizado. Solicite um novo convite.");
+          setError("Convite já utilizado");
+          return;
+        }
+        
+        if (new Date(inviteCheck.expires_at) < new Date()) {
+          toast.error("Este convite expirou. Solicite um novo convite ao administrador.");
+          setError("Convite expirado");
+          return;
+        }
+        
+        console.log('✅ [REGISTER] Convite validado com sucesso');
+      } catch (err) {
+        console.error('❌ [REGISTER] Erro ao validar convite:', err);
+        toast.error("Não foi possível validar o convite. Tente novamente.");
+        return;
+      }
+    }
+    
     if (!isPasswordValid) {
       await logSecurityViolation('weak_password_attempt', 'low', 'Tentativa de registro com senha fraca', {
         passwordScore: passwordValidation.score,
@@ -157,6 +192,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       
       if (error) {
         console.error('❌ [REGISTER] Erro no signUp:', error);
+        
+        // Tratamento específico para usuário já existente
+        if (error.message?.includes("User already registered") || error.message?.includes("already been registered")) {
+          setError("Este email já possui uma conta. Tente fazer login ou use 'Esqueci minha senha'.");
+          toast.error("Email já cadastrado. Faça login ou recupere sua senha.");
+          return;
+        }
         
         // Verificar se é erro de rate limit de email
         if (error.message?.includes("email rate limit exceeded")) {
@@ -224,8 +266,31 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       if (data?.user) {
         console.log('✅ [REGISTER] Usuário criado:', data.user.id);
         
-        // AGUARDAR trigger completar (profile + onboarding + convite)
+        // FALLBACK ROBUSTO: Aguardar trigger + verificar criação
         await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Verificar se profile foi criado (com retry)
+        let profileCreated = false;
+        for (let i = 0; i < 3; i++) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('id')
+            .eq('id', data.user.id)
+            .maybeSingle();
+          
+          if (profile) {
+            profileCreated = true;
+            break;
+          }
+          
+          if (i < 2) await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+        
+        if (!profileCreated) {
+          console.warn('⚠️ [REGISTER] Profile não criado após 3 tentativas - fluxo pode ter problema');
+          toast.error("Houve um atraso na criação da sua conta. Tente fazer login em alguns instantes.");
+          return;
+        }
         
         toast.success("Conta criada com sucesso! 🎉 Bem-vindo à plataforma!");
         

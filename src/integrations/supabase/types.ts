@@ -7065,6 +7065,7 @@ export type Database = {
         Args: { p_solution_id: string; p_user_id: string }
         Returns: Json
       }
+      auto_recover_orphaned_users: { Args: never; Returns: undefined }
       automated_security_monitor: { Args: never; Returns: Json }
       backup_all_onboarding_data: { Args: never; Returns: Json }
       backup_table_data: {
@@ -7158,6 +7159,7 @@ export type Database = {
           security_type: string
         }[]
       }
+      check_invite_flow_health: { Args: never; Returns: Json }
       check_invite_rate_limit: {
         Args: {
           p_action_type: string
