@@ -81,7 +81,8 @@ export const SECURE_CSP_DIRECTIVES = {
     "https://api.openai.com",
     "https://api.resend.com", 
     "https://resend.com",
-    "https://*.pandavideo.com.br"
+    "https://*.pandavideo.com.br",
+    "https://api.imgbb.com" // Upload de imagens (migração em andamento)
   ],
   
   // Frames: vídeos específicos
