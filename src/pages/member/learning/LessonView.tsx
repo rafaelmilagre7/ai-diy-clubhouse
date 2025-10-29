@@ -116,44 +116,91 @@ const LessonView = () => {
 
   // Salvar conclusão (progresso + NPS) quando usuário submeter o formulário
   const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
-    console.log('[LESSON-VIEW] Salvando progresso + NPS:', { lessonId, score });
+    console.log('[LESSON-VIEW] 💾 Iniciando salvamento:', { lessonId, score });
     
     const { showModernLoading, dismissModernToast, showModernSuccess, showModernError } = await import('@/lib/toast-helpers');
     const loadingId = showModernLoading("Salvando avaliação...");
     
     try {
-      // 1. Salvar progresso
+      // 1. Salvar progresso (100%)
+      console.log('[LESSON-VIEW] 📊 Salvando progresso...');
       await completeLesson();
+      console.log('[LESSON-VIEW] ✅ Progresso salvo');
       
-      // 2. Salvar NPS
+      // 2. Buscar usuário autenticado
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
       if (userError || !userData.user) {
         throw new Error('Usuário não autenticado');
       }
       
-      const { error: npsError } = await supabase
+      console.log('[LESSON-VIEW] 👤 Usuário autenticado:', userData.user.id);
+      
+      // 3. Verificar se já existe avaliação
+      console.log('[LESSON-VIEW] 🔍 Verificando avaliação existente...');
+      const { data: existing, error: checkError } = await supabase
         .from('learning_lesson_nps')
-        .upsert({
-          lesson_id: lessonId!,
-          user_id: userData.user.id,
-          score,
-          feedback: feedback || null
-        }, {
-          onConflict: 'user_id,lesson_id'
-        });
+        .select('id, response_code')
+        .eq('lesson_id', lessonId!)
+        .eq('user_id', userData.user.id)
+        .maybeSingle();
+      
+      if (checkError) {
+        console.error('[LESSON-VIEW] ❌ Erro ao verificar avaliação:', checkError);
+        throw checkError;
+      }
+      
+      let npsError;
+      
+      if (existing) {
+        // UPDATE: já existe avaliação
+        console.log('[LESSON-VIEW] 🔄 Atualizando avaliação existente:', existing.id);
+        const { error } = await supabase
+          .from('learning_lesson_nps')
+          .update({
+            score,
+            feedback: feedback || null
+            // response_code e updated_at gerenciados automaticamente
+          })
+          .eq('id', existing.id);
+        
+        npsError = error;
+      } else {
+        // INSERT: primeira avaliação
+        console.log('[LESSON-VIEW] ➕ Criando nova avaliação');
+        const { error } = await supabase
+          .from('learning_lesson_nps')
+          .insert({
+            lesson_id: lessonId!,
+            user_id: userData.user.id,
+            score,
+            feedback: feedback || null
+            // response_code será gerado pelo trigger automaticamente
+          });
+        
+        npsError = error;
+      }
       
       if (npsError) {
-        console.error('[LESSON-VIEW] Erro ao salvar NPS:', npsError);
+        console.error('[LESSON-VIEW] ❌ Erro ao salvar NPS:', npsError);
         throw npsError;
       }
       
+      console.log('[LESSON-VIEW] ✅ NPS salvo com sucesso');
+      
+      // 4. Feedback visual de sucesso
       dismissModernToast(loadingId);
-      showModernSuccess("Avaliação enviada!", "Obrigado pelo feedback!");
-    } catch (error) {
-      console.error('[LESSON-VIEW] Erro:', error);
+      showModernSuccess("Avaliação enviada!", "Obrigado pelo seu feedback!");
+      
+    } catch (error: any) {
+      console.error('[LESSON-VIEW] ❌ Erro geral:', error);
       dismissModernToast(loadingId);
-      showModernError("Erro ao salvar", "Tente novamente");
+      showModernError(
+        "Erro ao salvar", 
+        error.message || "Tente novamente"
+      );
+      
+      // Re-lançar erro para que Modal capture
       throw error;
     }
   };
