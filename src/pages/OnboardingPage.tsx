@@ -140,11 +140,8 @@ const OnboardingPage: React.FC = () => {
           data.personal_info?.state && 
           data.personal_info?.city;
         
-        // TEMPORARIAMENTE removendo obrigatoriedade da foto para debugar
-        const hasProfilePicture = true; // data.personal_info?.profile_picture && 
-          // data.personal_info.profile_picture.trim().length > 0;
-        
-        const canAdvance = !!(hasRequiredFields && phoneValid && hasProfilePicture);
+        // Foto não é obrigatória - apenas nome, telefone, estado e cidade
+        const canAdvance = !!(hasRequiredFields && phoneValid);
         
         return canAdvance;
       case 2:

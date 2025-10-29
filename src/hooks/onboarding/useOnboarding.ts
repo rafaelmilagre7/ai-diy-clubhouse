@@ -174,8 +174,8 @@ export const useOnboarding = () => {
         // PRIORIDADE 1: Se onboarding já está marcado como completo
         if (data.is_completed === true) {
           console.log('[ONBOARDING] ✅ ONBOARDING COMPLETO - redirecionando para dashboard');
-          // Se já está completo, redirecionar para dashboard em vez de mostrar step 6
-          window.location.href = '/dashboard';
+          // Se já está completo, redirecionar para dashboard usando React Router (não reload)
+          navigate('/dashboard', { replace: true });
           return;
         }
         
