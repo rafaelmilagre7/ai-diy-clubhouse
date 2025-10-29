@@ -283,7 +283,7 @@ export default function AdminUsers() {
         <TabsContent value="usuarios" className="space-y-4 mt-4">
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
+        <div className="grid gap-4 grid-cols-1 min-[480px]:grid-cols-2 lg:grid-cols-4 md:gap-6">
           <div 
             onClick={() => handleFilterByType('all')}
             className="cursor-pointer"
