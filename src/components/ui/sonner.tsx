@@ -16,17 +16,17 @@ const Toaster = ({ ...props }: ToasterProps) => {
         duration: 4000,
         classNames: {
           toast:
-            "group toast toast-liquid-glass rounded-2xl shadow-2xl border backdrop-blur-xl",
+            "group toast toast-liquid-glass rounded-2xl shadow-2xl border backdrop-blur-xl transition-all duration-300",
           description: "text-sm opacity-90 mt-1 text-white",
           actionButton:
-            "bg-white/20 hover:bg-white/30 text-white border-none rounded-lg font-medium",
+            "bg-white/20 hover:bg-white/30 text-white border-none rounded-lg font-medium transition-all duration-300",
           cancelButton:
-            "bg-white/10 hover:bg-white/20 text-white border-none rounded-lg",
+            "bg-white/10 hover:bg-white/20 text-white border-none rounded-lg transition-all duration-300",
           title: "font-semibold text-base text-white",
-          success: "gradient-success-solid border-status-success/30 shadow-lg shadow-status-success/20",
-          error: "gradient-error-solid border-status-error/30 shadow-lg shadow-status-error/20",
-          info: "gradient-info-solid border-status-info/30 shadow-lg shadow-status-info/20",
-          warning: "gradient-warning-solid border-status-warning/30 shadow-lg shadow-status-warning/20",
+          success: "toast-aurora-success",
+          error: "toast-aurora-error",
+          info: "toast-aurora-info",
+          warning: "toast-aurora-warning",
         },
       }}
       {...props}

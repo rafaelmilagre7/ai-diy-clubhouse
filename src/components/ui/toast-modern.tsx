@@ -49,20 +49,20 @@ export interface ToastModernRef {
 }
 
 const variantStyles: Record<ToastModernVariant, string> = {
-  default: 'bg-card border-border text-foreground',
-  success: 'bg-card border-operational/50',
-  error: 'bg-card border-status-error/50',
-  warning: 'bg-card border-amber-600/50',
-  info: 'bg-card border-aurora-primary/50',
-  loading: 'bg-card border-aurora-primary/50',
+  default: 'bg-card border-border text-foreground shadow-md',
+  success: 'bg-gradient-to-br from-operational/10 via-card to-card border-operational/50 shadow-lg shadow-operational/10',
+  error: 'bg-gradient-to-br from-status-error/10 via-card to-card border-status-error/50 shadow-lg shadow-status-error/10',
+  warning: 'bg-gradient-to-br from-status-warning/10 via-card to-card border-status-warning/50 shadow-lg shadow-status-warning/10',
+  info: 'bg-gradient-to-br from-status-info/10 via-card to-card border-status-info/50 shadow-lg shadow-status-info/10',
+  loading: 'bg-gradient-to-br from-aurora-primary/10 via-card to-card border-aurora-primary/50 shadow-lg shadow-aurora-primary/10',
 };
 
 const titleColor: Record<ToastModernVariant, string> = {
   default: 'text-foreground',
   success: 'text-operational',
   error: 'text-status-error',
-  warning: 'text-amber-600 dark:text-amber-400',
-  info: 'text-aurora-primary',
+  warning: 'text-status-warning',
+  info: 'text-status-info',
   loading: 'text-aurora-primary',
 };
 
@@ -70,8 +70,8 @@ const iconColor: Record<ToastModernVariant, string> = {
   default: 'text-muted-foreground',
   success: 'text-operational',
   error: 'text-status-error',
-  warning: 'text-amber-600 dark:text-amber-400',
-  info: 'text-aurora-primary',
+  warning: 'text-status-warning',
+  info: 'text-status-info',
   loading: 'text-aurora-primary',
 };
 
@@ -152,13 +152,15 @@ export const ToastModern = forwardRef<ToastModernRef, { defaultPosition?: ToastM
                       sonnerToast.dismiss(toastId);
                     }}
                     className={cn(
-                      'cursor-pointer h-7 px-2 text-xs',
+                      'cursor-pointer h-7 px-2 text-xs transition-all duration-300',
                       variant === 'success'
                         ? 'text-operational border-operational hover:bg-operational/10'
                         : variant === 'error'
                         ? 'text-status-error border-status-error hover:bg-status-error/10'
                         : variant === 'warning'
-                        ? 'text-amber-600 border-amber-600 hover:bg-amber-600/10'
+                        ? 'text-status-warning border-status-warning hover:bg-status-warning/10'
+                        : variant === 'info'
+                        ? 'text-status-info border-status-info hover:bg-status-info/10'
                         : 'text-foreground border-border hover:bg-muted/10'
                     )}
                   >
