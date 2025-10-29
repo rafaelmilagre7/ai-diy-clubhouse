@@ -587,6 +587,12 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
               current_step: 6,
               completed_steps: [0, 1, 2, 3, 4, 5, 6],
               nina_message: ninaMessage,
+              user_type: state.userType,
+              personal_info: state.data.personal_info || {},
+              professional_info: state.data.professional_info || {},
+              ai_experience: state.data.ai_experience || {},
+              goals_info: state.data.goals_info || {},
+              personalization: state.data.personalization || {},
               updated_at: new Date().toISOString()
             })
             .eq('user_id', user.id);
@@ -609,7 +615,21 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
               current_step: 6,
               completed_steps: [0, 1, 2, 3, 4, 5, 6],
               nina_message: ninaMessage,
-              data: state.data,
+              user_type: state.userType,
+              personal_info: state.data.personal_info || {},
+              professional_info: state.data.professional_info || {},
+              ai_experience: state.data.ai_experience || {},
+              goals_info: state.data.goals_info || {},
+              personalization: state.data.personalization || {},
+              location_info: {
+                state: state.data.personal_info?.state,
+                city: state.data.personal_info?.city
+              },
+              business_info: {
+                company_name: state.data.professional_info?.company_name,
+                company_sector: state.data.professional_info?.company_sector,
+                company_size: state.data.professional_info?.company_size
+              },
               created_at: new Date().toISOString(),
               updated_at: new Date().toISOString()
             });

@@ -28,13 +28,7 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
   
   const handleContinueToTeamInvites = () => {
-    console.log('='.repeat(80));
-    console.log('[STEP6] 🚀 BOTÃO CONTINUAR CLICADO');
-    console.log('[STEP6] Timestamp:', new Date().toISOString());
-    console.log('[STEP6] isCompleting:', isCompleting);
-    console.log('='.repeat(80));
-    
-    // Pular direto para finalização
+    console.log('[STEP6] 🚀 Botão Continuar clicado');
     handleFinish();
   };
 
@@ -101,11 +95,9 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
     // CRÍTICO: Marcar no sessionStorage que onboarding acabou de ser completado
     // Isso impede que RootRedirect interfira durante a transição
     sessionStorage.setItem('onboarding_just_completed', 'true');
-    console.log('[STEP6] 🚩 Flag "onboarding_just_completed" setada no sessionStorage');
     
     // Usar React Router para navegação suave (sem reload)
     navigate('/dashboard', { replace: true });
-    console.log('[STEP6] 🚀 Navegação iniciada via React Router');
   };
   return (
     <>
