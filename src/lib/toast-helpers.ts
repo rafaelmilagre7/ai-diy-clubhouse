@@ -13,7 +13,6 @@ export const showErrorToast = (title: string, description?: string) => {
   toast.error(title, {
     description,
     duration: 4000,
-    className: 'toast-aurora-error',
   });
 };
 

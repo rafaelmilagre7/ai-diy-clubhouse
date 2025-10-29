@@ -188,7 +188,11 @@ const AuthLayout = () => {
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-foreground/90 font-medium">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-aurora-primary transition-colors" />
+                      <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors ${
+                        hasLoginError 
+                          ? 'text-status-error' 
+                          : 'text-muted-foreground group-focus-within:text-aurora-primary'
+                      }`} />
                       <Input
                         id="password"
                         type="password"
@@ -198,10 +202,17 @@ const AuthLayout = () => {
                           setPassword(e.target.value);
                           setHasLoginError(false);
                         }}
-                        className="pl-10 h-12 bg-card/5 border-border/20 text-foreground placeholder:text-muted-foreground focus:bg-card/10 focus:border-aurora-primary/50 transition-smooth rounded-lg"
+                        className={`pl-10 pr-10 h-12 bg-card/5 text-foreground placeholder:text-muted-foreground focus:bg-card/10 transition-smooth rounded-lg ${
+                          hasLoginError
+                            ? 'border-status-error/50 focus:border-status-error/70 animate-shake'
+                            : 'border-border/20 focus:border-aurora-primary/50'
+                        }`}
                         disabled={isSigningIn}
                         required
                       />
+                      {hasLoginError && (
+                        <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-status-error" />
+                      )}
                     </div>
                   </div>
                   <Button
@@ -225,7 +236,11 @@ const AuthLayout = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="text-muted-foreground hover:text-aurora-primary hover:bg-surface-elevated/30 text-sm underline transition-smooth"
+                    className={`text-sm underline transition-smooth ${
+                      hasLoginError
+                        ? 'text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10'
+                        : 'text-muted-foreground hover:text-aurora-primary hover:bg-surface-elevated/30'
+                    }`}
                     onClick={() => navigate('/reset-password')}
                     disabled={isSigningIn}
                   >

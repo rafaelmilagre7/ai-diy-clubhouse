@@ -44,7 +44,6 @@ function App() {
                     <BrowserRouter>
                       <div className="min-h-screen bg-background font-sans antialiased">
                         <AppRoutes />
-                        <Toaster />
                         <Sonner />
                         {/* Dashboard de performance apenas em desenvolvimento */}
                         <PerformanceDashboard />
