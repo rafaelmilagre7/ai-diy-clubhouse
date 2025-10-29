@@ -161,25 +161,12 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   
   // Marcar como concluída - retorna Promise para controle de fluxo
   const completeLesson = async (): Promise<void> => {
-    console.log("[LESSON-PROGRESS] 🎯 Iniciando conclusão da aula");
+    console.log("[LESSON-PROGRESS] 🎯 Salvando progresso silenciosamente:", lessonId);
     
-    const loadingId = showModernLoading("Concluindo aula...");
+    // SEM TOAST - apenas salvar
+    await updateProgressMutation.mutateAsync(true);
     
-    try {
-      await updateProgressMutation.mutateAsync(true);
-      dismissModernToast(loadingId);
-      console.log("[LESSON-PROGRESS] ✅ Aula concluída - retornando sucesso");
-    } catch (error: any) {
-      dismissModernToast(loadingId);
-      console.error("[LESSON-PROGRESS] ❌ Erro ao concluir:", error);
-      
-      const errorMessage = error?.message?.includes('constraint') 
-        ? "Erro de consistência no banco de dados"
-        : error?.message || "Não foi possível salvar";
-      
-      showModernError("Erro ao concluir aula", errorMessage);
-      throw error;
-    }
+    console.log("[LESSON-PROGRESS] ✅ Progresso salvo");
   };
 
   // Progresso padronizado (0, 5 ou 100)

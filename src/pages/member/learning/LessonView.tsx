@@ -114,6 +114,42 @@ const LessonView = () => {
     updateProgress(newProgress);
   };
 
+  // Salvar conclusão (progresso + NPS) quando usuário submeter o formulário
+  const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
+    console.log('[LESSON-VIEW] 💾 Salvando progresso + NPS', { score, hasFeedback: !!feedback });
+    
+    const { showModernLoading, dismissModernToast, showModernSuccess, showModernError } = await import('@/lib/toast-helpers');
+    const loadingId = showModernLoading("Salvando avaliação...");
+    
+    try {
+      // 1. Salvar progresso (marcar como concluída)
+      await completeLesson();
+      
+      // 2. Salvar NPS
+      const { data: userData } = await supabase.auth.getUser();
+      if (userData.user && lessonId) {
+        await supabase
+          .from('learning_lesson_nps')
+          .upsert({
+            lesson_id: lessonId,
+            user_id: userData.user.id,
+            score,
+            feedback: feedback || null
+          });
+      }
+      
+      dismissModernToast(loadingId);
+      showModernSuccess("Avaliação enviada!", "Obrigado pelo feedback!");
+      
+      console.log('[LESSON-VIEW] ✅ Tudo salvo com sucesso');
+    } catch (error) {
+      dismissModernToast(loadingId);
+      showModernError("Erro ao salvar", "Tente novamente");
+      console.error('[LESSON-VIEW] ❌ Erro ao salvar:', error);
+      throw error;
+    }
+  };
+
   if (isLoading) {
     return <LessonLoadingSkeleton />;
   }
@@ -178,6 +214,7 @@ const LessonView = () => {
                   isCompleted={isCompleted}
                   onProgressUpdate={handleProgressUpdate} 
                   onComplete={completeLesson}
+                  onSaveCompletion={handleSaveCompletionWithNPS}
                   prevLesson={prevLesson}
                   nextLesson={nextLesson}
                   courseId={validCourseId} // Usar courseId válido

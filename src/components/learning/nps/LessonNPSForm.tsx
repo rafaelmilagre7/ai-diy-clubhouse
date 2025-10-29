@@ -42,7 +42,7 @@ const NPSRatingButton: React.FC<NPSRatingButtonProps> = ({ value, selectedValue,
 
 interface LessonNPSFormProps {
   lessonId: string;
-  onCompleted?: () => void;
+  onCompleted?: (score: number, feedback: string) => Promise<void>;
   showSuccessMessage?: boolean;
   nextLesson?: LearningLesson | null;
 }
@@ -65,15 +65,12 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
       return;
     }
     
-    console.log('[LESSON-NPS-FORM] 🎯 Enviando avaliação:', { score, hasFeedback: !!feedback });
+    console.log('[LESSON-NPS-FORM] 📤 Enviando dados para modal pai:', { score, hasFeedback: !!feedback });
     
-    // Enviar NPS
-    submitNPS(score, feedback);
-    
-    // Chamar callback imediatamente (o toast de sucesso vem do hook)
+    // Passar dados para o componente pai (modal) salvar
     if (onCompleted) {
       console.log('[LESSON-NPS-FORM] ✅ Chamando onCompleted');
-      onCompleted();
+      await onCompleted(score, feedback);
     }
   };
 

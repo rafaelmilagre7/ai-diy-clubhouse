@@ -19,6 +19,7 @@ interface LessonContentProps {
   isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
   onComplete?: () => void;
+  onSaveCompletion?: (score: number, feedback: string) => Promise<void>;
   prevLesson?: any;
   nextLesson?: any;
   courseId?: string;
@@ -35,6 +36,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   isCompleted = false,
   onProgressUpdate,
   onComplete,
+  onSaveCompletion,
   prevLesson,
   nextLesson,
   courseId,
@@ -68,25 +70,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
   
-  const handleCompleteLesson = async () => {
-    if (isCompleted) {
-      console.log('[LESSON-CONTENT] ⚠️ Aula já está concluída');
-      return;
-    }
-    
-    if (!onComplete) {
-      console.error('[LESSON-CONTENT] ❌ Função onComplete não foi fornecida');
-      return;
-    }
-    
-    try {
-      console.log('[LESSON-CONTENT] 🎯 Solicitando conclusão da aula');
-      await onComplete();
-      console.log('[LESSON-CONTENT] ✅ Conclusão bem-sucedida - abrindo modal NPS');
-      setCompletionDialogOpen(true);
-    } catch (error) {
-      console.error('[LESSON-CONTENT] ❌ Erro ao concluir aula:', error);
-    }
+  const handleCompleteLesson = () => {
+    // Apenas abrir o modal, sem salvar nada
+    console.log('[LESSON-CONTENT] 🎉 Abrindo modal NPS');
+    setCompletionDialogOpen(true);
   };
 
   // Função para lidar com a navegação para a próxima aula a partir do modal
@@ -184,6 +171,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         lesson={lesson}
         onNext={handleNavigateToNext}
         nextLesson={nextLesson}
+        onSaveCompletion={onSaveCompletion}
       />
     </div>
   );

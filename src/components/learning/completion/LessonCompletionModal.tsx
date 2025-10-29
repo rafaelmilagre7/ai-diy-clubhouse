@@ -13,6 +13,7 @@ interface LessonCompletionModalProps {
   lesson: LearningLesson;
   onNext?: () => void;
   nextLesson?: LearningLesson | null;
+  onSaveCompletion?: (score: number, feedback: string) => Promise<void>;
 }
 
 export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
@@ -20,24 +21,40 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   setIsOpen,
   lesson,
   onNext,
-  nextLesson
+  nextLesson,
+  onSaveCompletion
 }) => {
   const [npsSubmitted, setNpsSubmitted] = useState(false);
   const { log } = useLogging();
 
-  const handleNPSCompleted = () => {
-    console.log('[LESSON-COMPLETION-MODAL] ✅ NPS enviado com sucesso');
-    log('NPS enviado com sucesso para a aula', { lessonId: lesson.id, lessonTitle: lesson.title });
-    setNpsSubmitted(true);
+  const handleNPSCompleted = async (score: number, feedback: string) => {
+    console.log('[LESSON-COMPLETION-MODAL] 💾 Salvando NPS + Progresso');
     
-    // Fechar modal e navegar após feedback visual
-    setTimeout(() => {
-      console.log('[LESSON-COMPLETION-MODAL] 🔄 Fechando modal e navegando');
-      setIsOpen(false);
-      if (onNext && nextLesson) {
-        onNext();
-      }
-    }, 1500);
+    if (!onSaveCompletion) {
+      console.error('[LESSON-COMPLETION-MODAL] ❌ onSaveCompletion não definido');
+      return;
+    }
+
+    try {
+      // Salvar progresso E NPS ao mesmo tempo
+      await onSaveCompletion(score, feedback);
+      
+      console.log('[LESSON-COMPLETION-MODAL] ✅ Salvamento bem-sucedido');
+      log('NPS e progresso salvos com sucesso', { lessonId: lesson.id, lessonTitle: lesson.title, score });
+      setNpsSubmitted(true);
+      
+      // Fechar modal e navegar após delay
+      setTimeout(() => {
+        console.log('[LESSON-COMPLETION-MODAL] 🔄 Fechando modal e navegando');
+        setIsOpen(false);
+        if (onNext && nextLesson) {
+          onNext();
+        }
+      }, 1500);
+    } catch (error) {
+      console.error('[LESSON-COMPLETION-MODAL] ❌ Erro ao salvar:', error);
+      // Modal permanece aberto para usuário tentar novamente
+    }
   };
 
   return (
