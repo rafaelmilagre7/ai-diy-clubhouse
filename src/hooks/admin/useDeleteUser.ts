@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showModernLoading, showModernSuccess, showModernError, showModernWarning, dismissModernToast } from '@/lib/toast-helpers';
 
 interface DeleteResult {
   success: boolean;
@@ -23,6 +23,11 @@ export const useDeleteUser = () => {
   const [deleteResult, setDeleteResult] = useState<DeleteResult | null>(null);
 
   const deleteUser = async (userId: string, userEmail: string, softDelete: boolean = false, isCompleteDelete: boolean = true) => {
+    const loadingToastId = showModernLoading(
+      'Excluindo usuário',
+      `Removendo ${userEmail} da plataforma...`
+    );
+    
     try {
       setIsDeleting(true);
       setError(null);
@@ -59,37 +64,42 @@ export const useDeleteUser = () => {
       }
 
       setDeleteResult(data as DeleteResult);
+      dismissModernToast(loadingToastId);
 
       // Toast detalhado baseado no resultado
       if (isCompleteDelete && !softDelete) {
-        const authStatus = data.details.authUserDeleted ? "✅ Removido do Auth" : "⚠️ Auth mantido";
-        const profileStatus = data.details.profileDeleted ? "✅ Perfil excluído" : "⚠️ Perfil mantido";
+        const authStatus = data.details.authUserDeleted ? "Auth removido" : "Auth mantido";
+        const profileStatus = data.details.profileDeleted ? "Perfil excluído" : "Perfil mantido";
         
-        toast.success('🔥 USUÁRIO EXCLUÍDO COMPLETAMENTE DA PLATAFORMA!', {
-          description: `${userEmail} foi REMOVIDO TOTALMENTE. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas. Email liberado para reutilização!`,
-          duration: 10000
-        });
+        showModernSuccess(
+          '🔥 Usuário excluído completamente!',
+          `${userEmail} foi removido totalmente. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas. Email liberado!`,
+          { duration: 10000 }
+        );
       } else if (softDelete) {
-        toast.success('🧹 Dados do usuário limpos (soft delete)', {
-          description: `${userEmail} foi resetado. ${data.details.tablesAffected.length} tabelas limpas. Email ainda ocupado no sistema.`,
-          duration: 6000
-        });
+        showModernSuccess(
+          '🧹 Dados limpos (soft delete)',
+          `${userEmail} foi resetado. ${data.details.tablesAffected.length} tabelas limpas.`,
+          { duration: 6000 }
+        );
       } else {
-        const authStatus = data.details.authUserDeleted ? "✅ Auth removido" : "⚠️ Auth mantido";
-        const profileStatus = data.details.profileDeleted ? "✅ Perfil removido" : "⚠️ Perfil mantido";
+        const authStatus = data.details.authUserDeleted ? "Auth removido" : "Auth mantido";
+        const profileStatus = data.details.profileDeleted ? "Perfil removido" : "Perfil mantido";
         
-        toast.success('💥 Usuário processado', {
-          description: `${userEmail} foi processado. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas.`,
-          duration: 8000
-        });
+        showModernSuccess(
+          '💥 Usuário processado',
+          `${userEmail} processado. ${authStatus}, ${profileStatus}. ${data.details.tablesAffected.length} tabelas limpas.`,
+          { duration: 8000 }
+        );
       }
 
       // Toast adicional com detalhes técnicos se houver erros
       if (data.details.errors.length > 0) {
-        toast.warning('⚠️ Exclusão com avisos', {
-          description: `${data.details.errors.length} avisos durante a exclusão. Verifique os logs para detalhes.`,
-          duration: 5000
-        });
+        showModernWarning(
+          'Exclusão com avisos',
+          `${data.details.errors.length} avisos durante exclusão. Verifique logs.`,
+          { duration: 5000 }
+        );
       }
 
       return true;
@@ -97,10 +107,12 @@ export const useDeleteUser = () => {
       console.error('❌ Erro ao processar usuário:', err);
       setError(err);
       
-      toast.error('❌ Erro ao processar usuário', {
-        description: err.message || 'Não foi possível processar o usuário. Verifique os logs e tente novamente.',
-        duration: 10000
-      });
+      dismissModernToast(loadingToastId);
+      showModernError(
+        'Erro ao processar usuário',
+        err.message || 'Não foi possível processar. Verifique os logs.',
+        { duration: 8000 }
+      );
       
       return false;
     } finally {

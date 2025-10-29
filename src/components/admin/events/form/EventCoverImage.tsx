@@ -5,8 +5,8 @@ import type { EventFormData } from "./EventFormSchema";
 import { Button } from "@/components/ui/button";
 import { Upload, Loader2 } from "lucide-react";
 import { useState, useRef } from "react";
-import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 
 interface EventCoverImageProps {
   form: UseFormReturn<EventFormData>;
@@ -18,7 +18,10 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
 
   const handleImageUpload = async (file: File) => {
     if (file.size > 2 * 1024 * 1024) {
-      toast.error("A imagem deve ter no máximo 2MB");
+      showModernError(
+        'Imagem muito grande',
+        'A imagem deve ter no máximo 2MB'
+      );
       return;
     }
 
@@ -34,10 +37,16 @@ export const EventCoverImage = ({ form }: EventCoverImageProps) => {
       if (error) throw error;
 
       form.setValue("cover_image_url", data.publicUrl);
-      toast.success("Imagem carregada com sucesso!");
+      showModernSuccess(
+        'Imagem carregada!',
+        'Imagem do evento adicionada com sucesso'
+      );
     } catch (error) {
       console.error("Erro ao fazer upload da imagem:", error);
-      toast.error("Erro ao fazer upload da imagem");
+      showModernError(
+        'Erro no upload',
+        'Não foi possível carregar a imagem. Tente novamente.'
+      );
     } finally {
       setIsUploading(false);
     }

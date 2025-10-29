@@ -16,7 +16,7 @@ import {
   TrendingUp,
   Server
 } from 'lucide-react';
-import { toast } from 'sonner';
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 
 interface SystemMetrics {
   connectionMetrics: {
@@ -67,7 +67,10 @@ export const SystemHealthDashboard = () => {
       
     } catch (error) {
       console.error('Erro ao buscar métricas:', error);
-      toast.error('Erro ao carregar métricas do sistema');
+      showModernError(
+        'Erro ao carregar métricas',
+        'Não foi possível buscar dados do sistema'
+      );
     } finally {
       setLoading(false);
     }
@@ -80,16 +83,22 @@ export const SystemHealthDashboard = () => {
           await supabase.functions.invoke('emergency-rate-limiter', {
             body: { action: 'flush' }
           });
-          toast.success('Logs processados em batch');
+          showModernSuccess(
+            'Logs processados',
+            'Batch de logs processado com sucesso'
+          );
           break;
           
         case 'force_cleanup':
           await supabase.rpc('force_cleanup_connections');
-          toast.success('Cleanup de conexões executado');
+          showModernSuccess(
+            'Cleanup executado',
+            'Conexões limpas com sucesso'
+          );
           break;
           
         default:
-          toast.error('Ação desconhecida');
+          showModernError('Ação desconhecida', 'Operação não reconhecida');
       }
       
       // Atualizar métricas após ação
@@ -97,7 +106,10 @@ export const SystemHealthDashboard = () => {
       
     } catch (error) {
       console.error('Erro na ação de emergência:', error);
-      toast.error('Erro ao executar ação de emergência');
+      showModernError(
+        'Erro na ação de emergência',
+        'Não foi possível executar a operação'
+      );
     }
   };
 

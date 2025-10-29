@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { toast } from "sonner";
+import { showModernError, showModernInfo } from '@/lib/toast-helpers';
 
 interface AdminProtectedRoutesProps {
   children: ReactNode;
@@ -92,8 +92,10 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    // Redirecionamento silencioso
-    toast.error("Por favor, faça login para acessar esta página");
+    showModernError(
+      'Acesso negado',
+      'Faça login para acessar esta página'
+    );
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -105,14 +107,19 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
   // Se não tem perfil após carregamento, algo está errado
   if (!profile) {
     console.error("❌ [ADMIN-CHECK] Perfil não encontrado após carregamento");
-    toast.error("Erro ao carregar seu perfil. Por favor, tente novamente.");
+    showModernError(
+      'Erro ao carregar perfil',
+      'Tente novamente ou entre em contato com suporte'
+    );
     return <Navigate to="/dashboard" replace />;
   }
 
   // CRÍTICO: Verificar se usuário completou onboarding antes de verificar permissões
   if (profile.onboarding_completed !== true) {
-    // Onboarding pendente
-    toast.info("Complete seu onboarding primeiro para acessar esta área");
+    showModernInfo(
+      'Onboarding pendente',
+      'Complete seu cadastro para acessar esta área'
+    );
     return <Navigate to="/onboarding" replace />;
   }
 
@@ -126,7 +133,10 @@ export const AdminProtectedRoutes = ({ children }: AdminProtectedRoutesProps) =>
       permissions: profile.user_roles?.permissions,
       isAdmin
     });
-    toast.error("Você não tem permissão para acessar esta área");
+    showModernError(
+      'Permissão negada',
+      'Você não tem acesso a esta área administrativa'
+    );
     return <Navigate to="/dashboard" replace />;
   }
 

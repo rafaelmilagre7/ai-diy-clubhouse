@@ -1,14 +1,19 @@
 
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { APP_CONFIG } from '@/config/app';
+import { showModernLoading, showModernSuccess, showModernError, dismissModernToast } from '@/lib/toast-helpers';
 
 export const useResetPassword = () => {
   const [isResetting, setIsResetting] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
   const resetUserPassword = async (userEmail: string) => {
+    const loadingToastId = showModernLoading(
+      'Enviando e-mail',
+      'Preparando link de redefinição de senha...'
+    );
+    
     try {
       setIsResetting(true);
       setError(null);
@@ -53,14 +58,18 @@ export const useResetPassword = () => {
         // Não falhar a operação por causa do log
       }
 
-      toast.success('Email de redefinição de senha enviado', {
-        description: `Um email foi enviado para ${userEmail} com instruções para redefinir a senha.`
-      });
+      dismissModernToast(loadingToastId);
+      showModernSuccess(
+        'E-mail enviado com sucesso!',
+        `Link de redefinição enviado para ${userEmail}`
+      );
 
       return true;
     } catch (err: any) {
       console.error('❌ Erro ao redefinir senha:', err);
       setError(err);
+      
+      dismissModernToast(loadingToastId);
       
       // Mensagens de erro mais específicas
       let errorMessage = 'Não foi possível enviar o email de redefinição de senha.';
@@ -75,9 +84,11 @@ export const useResetPassword = () => {
         errorMessage = 'Erro ao conectar com o serviço de email. Tente novamente.';
       }
       
-      toast.error('Erro ao enviar email de redefinição de senha', {
-        description: errorMessage + (err.message ? ` (${err.message})` : '')
-      });
+      showModernError(
+        'Erro ao enviar e-mail',
+        errorMessage,
+        { duration: 6000 }
+      );
       
       return false;
     } finally {
