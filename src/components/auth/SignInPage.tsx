@@ -149,10 +149,20 @@ export const SignInPage: React.FC<SignInPageProps> = ({
       {/* Right column: hero image + testimonials */}
       {heroImageSrc && (
         <section className="hidden md:block flex-1 relative p-4">
-          <div
-            className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl bg-cover bg-center"
-            style={{ backgroundImage: `url(${heroImageSrc})` }}
-          ></div>
+          <div className="animate-slide-right animate-delay-300 absolute inset-4 rounded-3xl overflow-hidden">
+            {/* Background Image */}
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: `url(${heroImageSrc})` }}
+            />
+            
+            {/* Overlay Effects */}
+            <div className="absolute inset-0 bg-gradient-to-br from-aurora-primary/20 via-transparent to-background/40" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background via-transparent to-transparent opacity-70" />
+            
+            {/* Subtle vignette effect */}
+            <div className="absolute inset-0 shadow-[inset_0_0_100px_rgba(0,0,0,0.3)]" />
+          </div>
           {testimonials.length > 0 && (
             <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-4 px-8 w-full justify-center">
               <TestimonialCard testimonial={testimonials[0]} delay="animate-delay-1000" />

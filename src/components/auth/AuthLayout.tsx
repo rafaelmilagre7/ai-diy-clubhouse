@@ -164,7 +164,7 @@ const AuthLayout = () => {
       logoSrc="/lovable-uploads/fe3733f5-092e-4a4e-bdd7-650b71aaa801.png"
       title={<span className="font-light text-foreground tracking-tighter">Bem-vindo</span>}
       description="Acesse a plataforma de soluções e educação de IA"
-      heroImageSrc="https://images.unsplash.com/photo-1677442136019-21780ecad995?w=2160&q=80"
+      heroImageSrc="/images/hero-login.jpg"
       testimonials={loginTestimonials}
       onSignIn={handleFormSubmit}
       onResetPassword={handleResetPasswordClick}
