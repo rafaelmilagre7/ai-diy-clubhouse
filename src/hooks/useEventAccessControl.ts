@@ -106,8 +106,17 @@ export const useEventAccessControl = ({ eventId }: UseEventAccessControlProps) =
         throw error;
       }
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       console.log("useEventAccessControl - Access control saved successfully");
+      
+      // Feedback visual de sucesso
+      const roleCount = variables.roleIds.length;
+      if (roleCount === 0) {
+        console.log("✅ Evento público - todos os usuários têm acesso");
+      } else {
+        console.log(`✅ Acesso restrito a ${roleCount} papel(is)`);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ['event-access-control'] });
       queryClient.invalidateQueries({ queryKey: ['events'] });
     },

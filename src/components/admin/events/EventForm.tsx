@@ -174,6 +174,26 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
 
       if (result.error) {
         console.error("Erro do Supabase:", result.error);
+        dismissModernToast(loadingId);
+        
+        // Feedback específico para erro de trigger ou profiles
+        const errorMessage = result.error.message || '';
+        if (errorMessage.includes('profiles') || errorMessage.includes('trigger')) {
+          showModernError(
+            "Erro ao configurar evento",
+            "Houve um problema ao configurar os lembretes automáticos. Entre em contato com o suporte."
+          );
+        } else if (errorMessage.includes('violates row-level security')) {
+          showModernError(
+            "Sem permissão",
+            "Você não tem permissão para criar eventos. Verifique seu acesso."
+          );
+        } else {
+          showModernError(
+            "Erro ao salvar evento",
+            errorMessage || "Não foi possível salvar. Verifique os dados e tente novamente."
+          );
+        }
         throw result.error;
       }
 
