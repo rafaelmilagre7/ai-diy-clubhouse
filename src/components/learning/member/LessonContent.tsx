@@ -70,50 +70,40 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = async () => {
-    console.log('[LESSON-CONTENT] 🎯 Botão de conclusão clicado');
+    console.log('[LESSON-CONTENT] 🎯 Concluindo aula');
     
-    // Verificar se usuário está autenticado
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('[LESSON-CONTENT] ❌ Usuário não autenticado');
       toast({
         variant: "destructive",
-        title: "Erro de Autenticação",
+        title: "Autenticação necessária",
         description: "Você precisa estar logado para marcar a aula como concluída"
       });
       return;
     }
     
-    if (!onComplete) {
-      console.log('[LESSON-CONTENT] ⚠️ Falta onComplete callback');
-      return;
-    }
-    
-    console.log('[LESSON-CONTENT] ⏳ Salvando progresso para usuário:', user.email);
+    if (!onComplete) return;
     
     try {
       const result = await onComplete();
       
       if (result === false) {
-        console.error('[LESSON-CONTENT] ❌ Falha ao salvar progresso');
         toast({
           variant: "destructive",
-          title: "Erro ao salvar progresso",
-          description: "Não foi possível salvar seu progresso no banco de dados. Por favor, tente novamente."
+          title: "Erro ao salvar",
+          description: "Não foi possível salvar seu progresso. Tente novamente."
         });
         return;
       }
       
-      console.log('[LESSON-CONTENT] ✅ Progresso salvo! Abrindo modal de NPS');
+      console.log('[LESSON-CONTENT] ✅ Abrindo modal NPS');
       setCompletionDialogOpen(true);
     } catch (error) {
-      console.error('[LESSON-CONTENT] ❌ Erro ao completar aula:', error);
-      console.error('[LESSON-CONTENT] Stack trace:', error);
-      
+      console.error('[LESSON-CONTENT] ❌ Erro:', error);
       toast({
         variant: "destructive",
         title: "Erro",
-        description: `Erro ao concluir aula: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
+        description: error instanceof Error ? error.message : 'Erro ao concluir aula'
       });
     }
   };

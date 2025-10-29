@@ -1,42 +1,57 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 
 interface LessonCompleteButtonProps {
   isCompleted: boolean;
   onComplete: () => void;
   className?: string;
+  isUpdating?: boolean;
 }
 
 export const LessonCompleteButton: React.FC<LessonCompleteButtonProps> = ({
   isCompleted,
   onComplete,
-  className = ""
+  className = "",
+  isUpdating = false
 }) => {
+  const [isProcessing, setIsProcessing] = useState(false);
+  
   const handleClick = async () => {
-    console.log('[LESSON-COMPLETE-BTN] 🎯 Botão de conclusão clicado:', { isCompleted });
+    if (isCompleted || isProcessing || isUpdating) return;
     
-    if (!isCompleted && onComplete) {
-      try {
-        await onComplete();
-        console.log('[LESSON-COMPLETE-BTN] ✅ Conclusão processada com sucesso');
-      } catch (error) {
-        console.error('[LESSON-COMPLETE-BTN] ❌ Erro ao processar conclusão:', error);
-      }
+    setIsProcessing(true);
+    try {
+      await onComplete();
+    } catch (error) {
+      console.error('[COMPLETE-BTN] ❌ Erro:', error);
+    } finally {
+      setIsProcessing(false);
     }
   };
+
+  const loading = isProcessing || isUpdating;
 
   return (
     <div className={`flex justify-end ${className}`}>
       <Button
         onClick={handleClick}
-        disabled={isCompleted}
+        disabled={isCompleted || loading}
         className="gap-2"
         variant={isCompleted ? "outline" : "default"}
       >
-        <CheckCircle className="h-4 w-4" />
-        {isCompleted ? "Aula concluída" : "Marcar como concluída"}
+        {loading ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Salvando...
+          </>
+        ) : (
+          <>
+            <CheckCircle className="h-4 w-4" />
+            {isCompleted ? "Aula concluída" : "Marcar como concluída"}
+          </>
+        )}
       </Button>
     </div>
   );

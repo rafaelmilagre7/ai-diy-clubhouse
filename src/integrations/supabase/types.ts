@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      _rls_policies_backup_20251029: {
+        Row: {
+          cmd: string | null
+          permissive: string | null
+          policyname: unknown
+          qual: string | null
+          roles: unknown[] | null
+          schemaname: unknown
+          tablename: unknown
+          with_check: string | null
+        }
+        Insert: {
+          cmd?: string | null
+          permissive?: string | null
+          policyname?: unknown
+          qual?: string | null
+          roles?: unknown[] | null
+          schemaname?: unknown
+          tablename?: unknown
+          with_check?: string | null
+        }
+        Update: {
+          cmd?: string | null
+          permissive?: string | null
+          policyname?: unknown
+          qual?: string | null
+          roles?: unknown[] | null
+          schemaname?: unknown
+          tablename?: unknown
+          with_check?: string | null
+        }
+        Relationships: []
+      }
       admin_communications: {
         Row: {
           content: string
