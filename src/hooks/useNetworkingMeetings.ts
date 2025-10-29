@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 
 export interface NetworkingMeeting {
@@ -35,7 +35,7 @@ export interface NetworkingMeeting {
 
 export const useNetworkingMeetings = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const queryClient = useQueryClient();
   const { logEvent } = useNetworkingAnalytics();
 
@@ -106,19 +106,12 @@ export const useNetworkingMeetings = () => {
         }
       });
 
-      toast({
-        title: "Reunião agendada!",
-        description: "Sua reunião foi agendada com sucesso.",
-      });
+      showSuccess("Reunião agendada!", "Sua reunião foi agendada com sucesso.");
       
       queryClient.invalidateQueries({ queryKey: ['networking-meetings'] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao agendar reunião",
-        variant: "destructive"
-      });
+      showError("Erro", "Erro ao agendar reunião");
     }
   });
 
@@ -144,10 +137,7 @@ export const useNetworkingMeetings = () => {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Status atualizado",
-        description: "Status da reunião foi atualizado.",
-      });
+      showSuccess("Status atualizado", "Status da reunião foi atualizado.");
       queryClient.invalidateQueries({ queryKey: ['networking-meetings'] });
     }
   });
@@ -166,10 +156,7 @@ export const useNetworkingMeetings = () => {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Reunião cancelada",
-        description: "A reunião foi cancelada.",
-      });
+      showSuccess("Reunião cancelada", "A reunião foi cancelada.");
       queryClient.invalidateQueries({ queryKey: ['networking-meetings'] });
     }
   });

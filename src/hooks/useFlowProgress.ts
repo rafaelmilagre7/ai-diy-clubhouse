@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useLogging } from '@/hooks/useLogging';
 
 interface FlowProgress {
@@ -23,7 +23,7 @@ export const useFlowProgress = ({
 }: UseFlowProgressProps) => {
   const [progress, setProgress] = useState<FlowProgress>(initialProgress);
   const [isSaving, setIsSaving] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const { log, logError } = useLogging();
 
   // Carregar progresso do banco ao montar
@@ -78,20 +78,13 @@ export const useFlowProgress = ({
 
       log('Flow step completed', { solutionId, stepId });
       
-      toast({
-        title: 'Etapa concluída! ✓',
-        description: 'Seu progresso foi salvo.',
-      });
+      showSuccess('Etapa concluída! ✓', 'Seu progresso foi salvo.');
     } catch (error) {
       logError('Error saving flow progress', error);
       // Reverter mudança local em caso de erro
       setProgress(progress);
       
-      toast({
-        title: 'Erro ao salvar',
-        description: 'Não foi possível salvar o progresso.',
-        variant: 'destructive'
-      });
+      showError('Erro ao salvar', 'Não foi possível salvar o progresso.');
     } finally {
       setIsSaving(false);
     }

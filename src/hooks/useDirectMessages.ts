@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useEffect } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 
 export interface DirectMessage {
@@ -25,7 +25,7 @@ export interface DirectMessage {
 }
 
 export const useDirectMessages = (conversationUserId?: string) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const queryClient = useQueryClient();
   const { logEvent } = useNetworkingAnalytics();
 
@@ -84,11 +84,7 @@ export const useDirectMessages = (conversationUserId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['direct-messages', conversationUserId] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao enviar mensagem",
-        variant: "destructive"
-      });
+      showError("Erro", "Erro ao enviar mensagem");
     }
   });
 

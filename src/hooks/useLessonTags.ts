@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { LessonTag, LearningLessonTag } from '@/lib/supabase/types/learning';
-import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 // Hook para buscar todas as tags
 export const useLessonTags = () => {
@@ -82,6 +82,7 @@ export const useLessonTagsForLesson = (lessonId: string) => {
 // Hook para adicionar tag a uma lição
 export const useAddTagToLesson = () => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   return useMutation({
     mutationFn: async ({ lessonId, tagId }: { lessonId: string; tagId: string }) => {
@@ -96,17 +97,10 @@ export const useAddTagToLesson = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lesson-tags', variables.lessonId] });
-      toast({
-        title: "Tag adicionada",
-        description: "Tag foi adicionada à aula com sucesso.",
-      });
+      showSuccess("Tag adicionada", "Tag foi adicionada à aula com sucesso.");
     },
     onError: (error) => {
-      toast({
-        title: "Erro ao adicionar tag",
-        description: error.message,
-        variant: "destructive",
-      });
+      showError("Erro ao adicionar tag", error.message);
     }
   });
 };
@@ -114,6 +108,7 @@ export const useAddTagToLesson = () => {
 // Hook para remover tag de uma lição
 export const useRemoveTagFromLesson = () => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   return useMutation({
     mutationFn: async ({ lessonId, tagId }: { lessonId: string; tagId: string }) => {
@@ -127,17 +122,10 @@ export const useRemoveTagFromLesson = () => {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['lesson-tags', variables.lessonId] });
-      toast({
-        title: "Tag removida",
-        description: "Tag foi removida da aula com sucesso.",
-      });
+      showSuccess("Tag removida", "Tag foi removida da aula com sucesso.");
     },
     onError: (error) => {
-      toast({
-        title: "Erro ao remover tag",
-        description: error.message,
-        variant: "destructive",
-      });
+      showError("Erro ao remover tag", error.message);
     }
   });
 };
@@ -145,6 +133,7 @@ export const useRemoveTagFromLesson = () => {
 // Hook para criar nova tag (admin)
 export const useCreateTag = () => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   return useMutation({
     mutationFn: async (tagData: Partial<LessonTag>) => {
@@ -160,17 +149,10 @@ export const useCreateTag = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-tags'] });
       queryClient.invalidateQueries({ queryKey: ['lesson-tags-all'] });
-      toast({
-        title: "Tag criada",
-        description: "Nova tag foi criada com sucesso.",
-      });
+      showSuccess("Tag criada", "Nova tag foi criada com sucesso.");
     },
     onError: (error) => {
-      toast({
-        title: "Erro ao criar tag",
-        description: error.message,
-        variant: "destructive",
-      });
+      showError("Erro ao criar tag", error.message);
     }
   });
 };
@@ -178,6 +160,7 @@ export const useCreateTag = () => {
 // Hook para editar tag (admin)
 export const useUpdateTag = () => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   return useMutation({
     mutationFn: async ({ id, tagData }: { id: string; tagData: Partial<LessonTag> }) => {
@@ -194,17 +177,10 @@ export const useUpdateTag = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-tags'] });
       queryClient.invalidateQueries({ queryKey: ['lesson-tags-all'] });
-      toast({
-        title: "Tag atualizada",
-        description: "Tag foi atualizada com sucesso.",
-      });
+      showSuccess("Tag atualizada", "Tag foi atualizada com sucesso.");
     },
     onError: (error) => {
-      toast({
-        title: "Erro ao atualizar tag",
-        description: error.message,
-        variant: "destructive",
-      });
+      showError("Erro ao atualizar tag", error.message);
     }
   });
 };
@@ -212,6 +188,7 @@ export const useUpdateTag = () => {
 // Hook para deletar tag (admin)
 export const useDeleteTag = () => {
   const queryClient = useQueryClient();
+  const { showSuccess, showError } = useToastModern();
 
   return useMutation({
     mutationFn: async (tagId: string) => {
@@ -234,17 +211,10 @@ export const useDeleteTag = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lesson-tags'] });
       queryClient.invalidateQueries({ queryKey: ['lesson-tags-all'] });
-      toast({
-        title: "Tag deletada",
-        description: "Tag foi deletada com sucesso.",
-      });
+      showSuccess("Tag deletada", "Tag foi deletada com sucesso.");
     },
     onError: (error) => {
-      toast({
-        title: "Erro ao deletar tag",
-        description: error.message,
-        variant: "destructive",
-      });
+      showError("Erro ao deletar tag", error.message);
     }
   });
 };

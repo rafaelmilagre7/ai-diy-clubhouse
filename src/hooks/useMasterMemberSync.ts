@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface SyncStats {
   masters_processed: number;
@@ -41,7 +41,7 @@ interface CSVValidation {
 }
 
 export const useMasterMemberSync = () => {
-  const { toast } = useToast();
+  const { showSuccess, showError, showInfo } = useToastModern();
   const [syncing, setSyncing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [syncResult, setSyncResult] = useState<SyncResult | null>(null);
@@ -183,10 +183,10 @@ export const useMasterMemberSync = () => {
       setProgress(0);
       setSyncResult(null);
 
-      toast({
-        title: dryRun ? "🧪 Simulação iniciada" : "📊 Iniciando sincronização",
-        description: dryRun ? "Validando dados sem aplicar mudanças..." : "Processando arquivo CSV..."
-      });
+      showInfo(
+        dryRun ? "🧪 Simulação iniciada" : "📊 Iniciando sincronização",
+        dryRun ? "Validando dados sem aplicar mudanças..." : "Processando arquivo CSV..."
+      );
 
       // Parse CSV
       const csvData = await parseCSVFile(file);
@@ -197,10 +197,7 @@ export const useMasterMemberSync = () => {
 
       setProgress(25);
 
-      toast({
-        title: "🔄 Processando...",
-        description: `${csvData.length} registros encontrados. ${dryRun ? 'Simulando...' : 'Sincronizando...'}`
-      });
+      showInfo("🔄 Processando...", `${csvData.length} registros encontrados. ${dryRun ? 'Simulando...' : 'Sincronizando...'}`);
 
       // Call edge function
       console.log('[FRONTEND] Chamando edge function com', csvData.length, 'registros');
@@ -229,15 +226,9 @@ export const useMasterMemberSync = () => {
       setSyncResult(data);
 
       if (dryRun) {
-        toast({
-          title: "✅ Simulação concluída!",
-          description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros seriam processados.`,
-        });
+        showSuccess("✅ Simulação concluída!", `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros seriam processados.`);
       } else {
-        toast({
-          title: "✅ Sincronização concluída!",
-          description: `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros processados com sucesso.`,
-        });
+        showSuccess("✅ Sincronização concluída!", `${data.stats.masters_processed} masters e ${data.stats.members_processed} membros processados com sucesso.`);
       }
 
       return data;
@@ -247,11 +238,7 @@ export const useMasterMemberSync = () => {
       // ✅ Mensagem de erro mais informativa
       const errorMessage = error.message || error.toString() || 'Erro desconhecido';
       
-      toast({
-        title: "❌ Erro na sincronização",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      showError("❌ Erro na sincronização", errorMessage);
       
       throw error;
     } finally {

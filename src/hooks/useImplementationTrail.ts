@@ -2,12 +2,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '@/contexts/auth';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { ImplementationTrailData } from '@/types/implementationTrail';
 
 export function useImplementationTrail() {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showInfo } = useToastModern();
   
   const [trail, setTrail] = useState<ImplementationTrailData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -60,10 +60,7 @@ export function useImplementationTrail() {
         console.warn('Erro ao limpar cache de soluções:', error);
       }
       
-      toast({
-        title: 'Trilha inteligente gerada!',
-        description: `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`,
-      });
+      showSuccess('Trilha inteligente gerada!', `Personalização: ${Math.round(data.personalization_insights.avg_score)}% de compatibilidade`);
     } catch (err: any) {
       if (!isMountedRef.current) return;
       setError('Não foi possível gerar sua trilha personalizada. Gerando trilha padrão...');
@@ -126,17 +123,13 @@ export function useImplementationTrail() {
 
       if (!isMountedRef.current) return;
       setTrail(fallbackTrail);
-      toast({
-        title: 'Trilha básica criada',
-        description: 'Complete seu perfil para uma experiência mais personalizada.',
-        variant: 'default',
-      });
+      showInfo('Trilha básica criada', 'Complete seu perfil para uma experiência mais personalizada.');
     } finally {
       if (isMountedRef.current) {
         setIsRegenerating(false);
       }
     }
-  }, [user?.id, toast]);
+  }, [user?.id, showSuccess, showInfo]);
 
   const loadTrail = useCallback(async () => {
     if (!user?.id || !isMountedRef.current) return;

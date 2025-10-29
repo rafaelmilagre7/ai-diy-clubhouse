@@ -2,12 +2,12 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { CommunityReport } from '@/lib/supabase/types/implementation';
 
 export const useCommunityReports = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [reports, setReports] = useState<CommunityReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,19 +58,12 @@ export const useCommunityReports = () => {
 
       setReports(prev => [data, ...prev]);
       
-      toast({
-        title: 'Relatório enviado',
-        description: 'Seu relatório foi enviado e será analisado pela equipe.',
-      });
+      showSuccess('Relatório enviado', 'Seu relatório foi enviado e será analisado pela equipe.');
 
       return data;
     } catch (err: any) {
       console.error('Erro ao criar relatório:', err);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível enviar o relatório.',
-        variant: 'destructive',
-      });
+      showError('Erro', 'Não foi possível enviar o relatório.');
       throw err;
     }
   };

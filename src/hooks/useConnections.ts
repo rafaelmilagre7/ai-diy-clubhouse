@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import { useNetworkingAnalytics } from '@/hooks/useNetworkingAnalytics';
 
@@ -32,7 +32,7 @@ export interface Connection {
 }
 
 export const useConnections = () => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const queryClient = useQueryClient();
   const { logEvent } = useNetworkingAnalytics();
 
@@ -123,18 +123,11 @@ export const useConnections = () => {
         event_data: { connection_id: data.id }
       });
 
-      toast({
-        title: "Solicitação enviada",
-        description: "Sua solicitação de conexão foi enviada com sucesso!"
-      });
+      showSuccess("Solicitação enviada", "Sua solicitação de conexão foi enviada com sucesso!");
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: error.message || "Erro ao enviar solicitação de conexão",
-        variant: "destructive"
-      });
+      showError("Erro", error.message || "Erro ao enviar solicitação de conexão");
     }
   });
 
@@ -169,19 +162,12 @@ export const useConnections = () => {
         event_data: { connection_id: data.id }
       });
 
-      toast({
-        title: "Conexão aceita",
-        description: "Vocês agora estão conectados!"
-      });
+      showSuccess("Conexão aceita", "Vocês agora estão conectados!");
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-notifications'] });
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro",
-        description: "Erro ao aceitar conexão",
-        variant: "destructive"
-      });
+      showError("Erro", "Erro ao aceitar conexão");
     }
   });
 
@@ -199,10 +185,7 @@ export const useConnections = () => {
       return data;
     },
     onSuccess: () => {
-      toast({
-        title: "Solicitação rejeitada",
-        description: "A solicitação de conexão foi rejeitada."
-      });
+      showSuccess("Solicitação rejeitada", "A solicitação de conexão foi rejeitada.");
       queryClient.invalidateQueries({ queryKey: ['connections'] });
       queryClient.invalidateQueries({ queryKey: ['connection-notifications'] });
     }
@@ -219,10 +202,7 @@ export const useConnections = () => {
       if (error) throw error;
     },
     onSuccess: () => {
-      toast({
-        title: "Solicitação cancelada",
-        description: "Sua solicitação foi cancelada."
-      });
+      showSuccess("Solicitação cancelada", "Sua solicitação foi cancelada.");
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     }
   });
