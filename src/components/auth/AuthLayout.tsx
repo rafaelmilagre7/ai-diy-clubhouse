@@ -44,6 +44,8 @@ const AuthLayout = () => {
   const navigate = useNavigate();
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [redirectHandled, setRedirectHandled] = useState(false);
+  const [hasLoginError, setHasLoginError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
@@ -67,23 +69,35 @@ const AuthLayout = () => {
 
   const handleFormSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    setHasLoginError(false);
+    setErrorMessage('');
+    
     const formData = new FormData(event.currentTarget);
     const email = formData.get('email') as string;
     const password = formData.get('password') as string;
     
     // Validações de front-end
     if (!email || !password) {
-      showErrorToast('Campos obrigatórios', 'Por favor, preencha email e senha');
+      const message = 'Por favor, preencha email e senha';
+      setHasLoginError(true);
+      setErrorMessage(message);
+      showErrorToast('Campos obrigatórios', message);
       return;
     }
 
     if (!isValidEmail(email)) {
-      showErrorToast('Email inválido', 'Por favor, insira um email válido');
+      const message = 'Por favor, insira um email válido';
+      setHasLoginError(true);
+      setErrorMessage(message);
+      showErrorToast('Email inválido', message);
       return;
     }
 
     if (password.length < 6) {
-      showErrorToast('Senha muito curta', 'A senha deve ter no mínimo 6 caracteres');
+      const message = 'A senha deve ter no mínimo 6 caracteres';
+      setHasLoginError(true);
+      setErrorMessage(message);
+      showErrorToast('Senha muito curta', message);
       return;
     }
 
@@ -97,7 +111,16 @@ const AuthLayout = () => {
         
         // Usar helper de toast com mensagem traduzida
         const userFriendlyMessage = getAuthErrorMessage(error);
+        setHasLoginError(true);
+        setErrorMessage(userFriendlyMessage);
         showErrorToast('Erro no login', userFriendlyMessage);
+        
+        // Limpar campo de senha
+        const form = event.currentTarget;
+        const passwordInput = form.querySelector('input[name="password"]') as HTMLInputElement;
+        if (passwordInput) {
+          passwordInput.value = '';
+        }
         
         return;
       }
@@ -106,10 +129,18 @@ const AuthLayout = () => {
       
     } catch (err) {
       console.error('❌ [AUTH-LAYOUT] Erro inesperado:', err);
-      showErrorToast('Erro inesperado', 'Não foi possível fazer login. Tente novamente');
+      const message = 'Não foi possível fazer login. Tente novamente';
+      setHasLoginError(true);
+      setErrorMessage(message);
+      showErrorToast('Erro inesperado', message);
     } finally {
       setIsSigningIn(false);
     }
+  };
+
+  const handlePasswordChange = () => {
+    setHasLoginError(false);
+    setErrorMessage('');
   };
 
   const handleResetPasswordClick = () => {
@@ -138,6 +169,9 @@ const AuthLayout = () => {
       onSignIn={handleFormSubmit}
       onResetPassword={handleResetPasswordClick}
       isLoading={isSigningIn}
+      hasError={hasLoginError}
+      errorMessage={errorMessage}
+      onPasswordChange={handlePasswordChange}
     />
   );
 };

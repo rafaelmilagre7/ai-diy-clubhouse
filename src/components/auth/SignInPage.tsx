@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { Testimonial } from '@/types/auth';
 
 interface SignInPageProps {
@@ -11,6 +11,9 @@ interface SignInPageProps {
   onSignIn?: (event: React.FormEvent<HTMLFormElement>) => void;
   onResetPassword?: () => void;
   isLoading?: boolean;
+  hasError?: boolean;
+  errorMessage?: string;
+  onPasswordChange?: () => void;
 }
 
 const GlassInputWrapper = ({ children }: { children: React.ReactNode }) => (
@@ -39,6 +42,9 @@ export const SignInPage: React.FC<SignInPageProps> = ({
   onSignIn,
   onResetPassword,
   isLoading = false,
+  hasError = false,
+  errorMessage = '',
+  onPasswordChange,
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -57,6 +63,15 @@ export const SignInPage: React.FC<SignInPageProps> = ({
             <h1 className="animate-element animate-delay-100 text-4xl md:text-5xl font-semibold leading-tight">{title}</h1>
             <p className="animate-element animate-delay-200 text-muted-foreground">{description}</p>
 
+            {hasError && errorMessage && (
+              <div className="animate-element animate-delay-250 flex items-start gap-3 p-4 rounded-xl bg-status-error/10 border border-status-error/30 text-status-error">
+                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium text-sm">{errorMessage}</p>
+                </div>
+              </div>
+            )}
+
             <form className="space-y-5" onSubmit={onSignIn}>
               <div className="animate-element animate-delay-300">
                 <label className="text-sm font-medium text-muted-foreground">Email</label>
@@ -74,16 +89,24 @@ export const SignInPage: React.FC<SignInPageProps> = ({
 
               <div className="animate-element animate-delay-400">
                 <label className="text-sm font-medium text-muted-foreground">Senha</label>
-                <GlassInputWrapper>
+                <div className={`rounded-2xl border transition-colors ${
+                  hasError 
+                    ? 'border-status-error/50 bg-status-error/5 animate-shake' 
+                    : 'border-border bg-foreground/5'
+                } backdrop-blur-sm focus-within:border-aurora-primary/70 focus-within:bg-aurora-primary/10`}>
                   <div className="relative">
                     <input
                       name="password"
                       type={showPassword ? 'text' : 'password'}
                       placeholder="Digite sua senha"
-                      className="w-full bg-transparent text-sm p-4 pr-12 rounded-2xl focus:outline-none"
+                      className="w-full bg-transparent text-sm p-4 pr-20 rounded-2xl focus:outline-none"
                       disabled={isLoading}
+                      onChange={onPasswordChange}
                       required
                     />
+                    {hasError && (
+                      <AlertCircle className="absolute inset-y-0 right-12 flex items-center w-5 h-5 text-status-error" />
+                    )}
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
@@ -97,7 +120,7 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       )}
                     </button>
                   </div>
-                </GlassInputWrapper>
+                </div>
               </div>
 
               <div className="animate-element animate-delay-500 flex items-center justify-end text-sm">
