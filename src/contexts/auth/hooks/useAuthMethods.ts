@@ -29,9 +29,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
           status: error.status,
           name: error.name
         });
-        toast.error('Erro no login', {
-          description: error.message
-        });
+        // Toast será tratado pelo componente que chamou esta função
         return { error };
       }
 
@@ -75,9 +73,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
     } catch (err) {
       console.error('❌ [AUTH] Erro inesperado no login:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');
-      toast.error('Erro inesperado', {
-        description: error.message
-      });
+      // Toast será tratado pelo componente que chamou esta função
       return { error };
     } finally {
       setIsSigningIn(false);
@@ -93,9 +89,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       
       if (error) {
         console.error('❌ [AUTH] Erro no logout:', error);
-        toast.error('Erro ao fazer logout', {
-          description: error.message
-        });
+        // Toast será tratado pelo componente que chamou esta função
         throw error;
       }
 

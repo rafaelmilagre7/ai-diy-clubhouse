@@ -6,10 +6,41 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/auth';
-import { toast } from 'sonner';
+import { showErrorToast, showSuccessToast } from '@/lib/toast-helpers';
 import { useNavigate } from 'react-router-dom';
 import { getUserRoleName } from '@/lib/supabase/types';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, AlertCircle } from 'lucide-react';
+
+// Função para traduzir erros de autenticação
+const getAuthErrorMessage = (error: any): string => {
+  const errorMessage = error?.message || '';
+  
+  // Mapeamento de erros específicos do Supabase
+  if (errorMessage.includes('Invalid login credentials')) {
+    return 'Email ou senha incorretos';
+  }
+  if (errorMessage.includes('Email not confirmed')) {
+    return 'Confirme seu email antes de fazer login';
+  }
+  if (errorMessage.includes('User not found')) {
+    return 'Usuário não cadastrado';
+  }
+  if (errorMessage.includes('Too many requests')) {
+    return 'Muitas tentativas. Aguarde alguns minutos';
+  }
+  if (errorMessage.includes('Invalid email')) {
+    return 'Email inválido';
+  }
+  
+  // Erro genérico
+  return 'Erro ao fazer login. Tente novamente';
+};
+
+// Validação de email
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+};
 
 const AuthLayout = () => {
   const { signIn, user, profile, isLoading } = useAuth();
@@ -18,6 +49,7 @@ const AuthLayout = () => {
   const [password, setPassword] = useState('');
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [redirectHandled, setRedirectHandled] = useState(false);
+  const [hasLoginError, setHasLoginError] = useState(false);
 
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
@@ -41,9 +73,21 @@ const AuthLayout = () => {
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setHasLoginError(false);
     
+    // Validações de front-end
     if (!email || !password) {
-      toast.error('Por favor, preencha todos os campos');
+      showErrorToast('Campos obrigatórios', 'Por favor, preencha email e senha');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showErrorToast('Email inválido', 'Por favor, insira um email válido');
+      return;
+    }
+
+    if (password.length < 6) {
+      showErrorToast('Senha muito curta', 'A senha deve ter no mínimo 6 caracteres');
       return;
     }
 
@@ -54,19 +98,25 @@ const AuthLayout = () => {
       
       if (error) {
         console.error('❌ [AUTH-LAYOUT] Erro no login:', error.message);
-        toast.error('Erro no login', {
-          description: error.message === 'Invalid login credentials' 
-            ? 'Email ou senha incorretos' 
-            : error.message
-        });
+        
+        // Usar helper de toast com mensagem traduzida
+        const userFriendlyMessage = getAuthErrorMessage(error);
+        showErrorToast('Erro no login', userFriendlyMessage);
+        
+        // Limpar senha se for erro de credenciais
+        if (error.message?.includes('Invalid login credentials')) {
+          setPassword('');
+          setHasLoginError(true);
+        }
+        
         return;
       }
 
-      toast.success('Login realizado com sucesso!');
+      // Sucesso - o toast já é mostrado em useAuthMethods
       
     } catch (err) {
       console.error('❌ [AUTH-LAYOUT] Erro inesperado:', err);
-      toast.error('Erro inesperado no login');
+      showErrorToast('Erro inesperado', 'Não foi possível fazer login. Tente novamente');
     } finally {
       setIsSigningIn(false);
     }
@@ -138,17 +188,31 @@ const AuthLayout = () => {
                   <div className="space-y-2">
                     <Label htmlFor="password" className="text-foreground/90 font-medium">Senha</Label>
                     <div className="relative group">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-aurora-primary transition-colors" />
+                      <Lock className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 transition-colors ${
+                        hasLoginError 
+                          ? 'text-destructive' 
+                          : 'text-muted-foreground group-focus-within:text-aurora-primary'
+                      }`} />
                       <Input
                         id="password"
                         type="password"
                         placeholder="Digite sua senha"
                         value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className="pl-10 h-12 bg-card/5 border-border/20 text-foreground placeholder:text-muted-foreground focus:bg-card/10 focus:border-aurora-primary/50 transition-smooth rounded-lg"
+                        onChange={(e) => {
+                          setPassword(e.target.value);
+                          setHasLoginError(false);
+                        }}
+                        className={`pl-10 h-12 bg-card/5 text-foreground placeholder:text-muted-foreground focus:bg-card/10 transition-smooth rounded-lg ${
+                          hasLoginError
+                            ? 'border-destructive focus:border-destructive/70'
+                            : 'border-border/20 focus:border-aurora-primary/50'
+                        }`}
                         disabled={isSigningIn}
                         required
                       />
+                      {hasLoginError && (
+                        <AlertCircle className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-destructive" />
+                      )}
                     </div>
                   </div>
                   <Button
@@ -172,7 +236,11 @@ const AuthLayout = () => {
                   <Button
                     type="button"
                     variant="ghost"
-                    className="text-muted-foreground hover:text-aurora-primary hover:bg-surface-elevated/30 text-sm underline"
+                    className={`text-sm underline transition-smooth ${
+                      hasLoginError
+                        ? 'text-aurora-primary hover:text-aurora-primary/80 hover:bg-aurora-primary/10 font-medium animate-pulse'
+                        : 'text-muted-foreground hover:text-aurora-primary hover:bg-surface-elevated/30'
+                    }`}
                     onClick={() => navigate('/reset-password')}
                     disabled={isSigningIn}
                   >
