@@ -1,7 +1,7 @@
 
 import { useState, useCallback, createContext, useContext, ReactNode } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface LogData {
   [key: string]: any;
@@ -19,7 +19,7 @@ const LoggingContext = createContext<LoggingContextType | undefined>(undefined);
 
 // Provider component
 export const LoggingProvider = ({ children }: { children: ReactNode }) => {
-  const { toast } = useToast();
+  const { showWarning, showError } = useToastModern();
   const [lastError, setLastError] = useState<any>(null);
   
   // Funções de logging independentes de auth
@@ -46,13 +46,9 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     
     // Mostrar toast apenas para avisos críticos
     if (data.critical === true) {
-      toast({
-        title: "Aviso",
-        description: action,
-        variant: "default",
-      });
+      showWarning("Aviso", action);
     }
-  }, [toast]);
+  }, [showWarning, showError]);
   
   const logError = useCallback((action: string, error: any) => {
     if (import.meta.env.DEV) {
@@ -65,11 +61,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     
     // Show toast notification for errors that should be shown
     if (shouldShowToast) {
-      toast({
-        title: "Erro ao carregar conteúdo",
-        description: "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar conteúdo", "Ocorreu um erro ao carregar o conteúdo. Alguns dados podem não estar disponíveis.");
     }
     
     // Armazenar erros apenas se tivermos um user_id
@@ -82,7 +74,7 @@ export const LoggingProvider = ({ children }: { children: ReactNode }) => {
     }
     
     return error;
-  }, [toast]);
+  }, [showWarning, showError]);
   
   const storeLog = async (action: string, data: LogData, level: string, user_id: string) => {
     try {

@@ -8,13 +8,13 @@ import { Progress } from "@/components/ui/progress";
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useProgressTracking } from "@/hooks/implementation/useProgressTracking";
 import { useImplementationData } from "@/hooks/implementation/useImplementationData";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 const ImplementationConfirmation = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   // Carregar dados da solução
@@ -49,21 +49,14 @@ const ImplementationConfirmation = () => {
       
       if (success) {
         // Exibir mensagem de sucesso
-        toast({
-          title: "Implementação concluída!",
-          description: "Parabéns! Você aplicou com sucesso esta solução em seu negócio.",
-        });
+        showSuccess("Implementação concluída!", "Parabéns! Você aplicou com sucesso esta solução em seu negócio.");
         
         // Redirecionar para página de certificado ou dashboard
         navigate(`/solution/${id}/completed`);
       }
     } catch (error) {
       console.error("Erro ao confirmar implementação:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao confirmar a implementação. Tente novamente.",
-        variant: "destructive",
-      });
+      showError("Erro", "Ocorreu um erro ao confirmar a implementação. Tente novamente.");
     } finally {
       setIsSubmitting(false);
     }

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 import {
   Settings,
   MessageSquare,
@@ -150,7 +150,6 @@ const StatusCard: React.FC<{
 };
 
 const WhatsAppDebug: React.FC = () => {
-  const { toast } = useToast();
   
   // Estados principais
   const [diagnostics, setDiagnostics] = useState<DiagnosticsData | null>(null);
@@ -196,10 +195,8 @@ const WhatsAppDebug: React.FC = () => {
 
       if (error) {
         console.error('❌ Erro nos diagnósticos:', error);
-        toast({
-          title: "Erro nos Diagnósticos",
-          description: `Falha ao executar verificações: ${error.message}`,
-          variant: "destructive",
+        toast.error("Erro nos Diagnósticos", {
+          description: `Falha ao executar verificações: ${error.message}`
         });
         return;
       }
@@ -209,24 +206,19 @@ const WhatsAppDebug: React.FC = () => {
       // Toast de resumo
       const { summary } = data;
       if (summary.failed === 0) {
-        toast({
-          title: "✅ Sistema OK",
-          description: `${summary.passed}/${summary.total_checks} verificações passaram`,
+        toast.success("Sistema OK", {
+          description: `${summary.passed}/${summary.total_checks} verificações passaram`
         });
       } else {
-        toast({
-          title: "⚠️ Problemas Encontrados",
-          description: `${summary.failed} verificações falharam`,
-          variant: "destructive",
+        toast.error("Problemas Encontrados", {
+          description: `${summary.failed} verificações falharam`
         });
       }
 
     } catch (error) {
       console.error('❌ Erro na execução:', error);
-      toast({
-        title: "Erro",
-        description: "Falha ao executar diagnósticos",
-        variant: "destructive",
+      toast.error("Erro", {
+        description: "Falha ao executar diagnósticos"
       });
     } finally {
       setLoading(false);
@@ -251,24 +243,13 @@ const WhatsAppDebug: React.FC = () => {
       }
 
       if (data.success) {
-        toast({
-          title: "✅ Template OK",
-          description: "Template 'convitevia' encontrado e aprovado",
-        });
+        toast.success("Template 'convitevia' encontrado e aprovado");
       } else {
-        toast({
-          title: "⚠️ Problema no Template",
-          description: data.errors?.[0] || "Template não está funcionando",
-          variant: "destructive",
-        });
+        toast.error(data.errors?.[0] || "Template não está funcionando");
       }
 
     } catch (error) {
-      toast({
-        title: "Erro no Teste",
-        description: `Falha ao testar template: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Falha ao testar template: ${error.message}`);
     } finally {
       setTestingTemplate(false);
     }
@@ -276,11 +257,7 @@ const WhatsAppDebug: React.FC = () => {
 
   const testSending = async () => {
     if (!testPhone) {
-      toast({
-        title: "Erro",
-        description: "Digite um número de telefone para teste",
-        variant: "destructive",
-      });
+      toast.error("Digite um número de telefone para teste");
       return;
     }
 
@@ -300,24 +277,13 @@ const WhatsAppDebug: React.FC = () => {
       setSendTestResult(data);
 
       if (data.success) {
-        toast({
-          title: "✅ Teste Enviado",
-          description: `Mensagem enviada para ${testPhone}`,
-        });
+        toast.success(`Mensagem enviada para ${testPhone}`);
       } else {
-        toast({
-          title: "❌ Falha no Envio",
-          description: data.errors?.[0] || "Não foi possível enviar a mensagem",
-          variant: "destructive",
-        });
+        toast.error(data.errors?.[0] || "Não foi possível enviar a mensagem");
       }
 
     } catch (error) {
-      toast({
-        title: "Erro no Teste",
-        description: `Falha ao testar envio: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Falha ao testar envio: ${error.message}`);
     } finally {
       setTestingSend(false);
     }
@@ -335,24 +301,13 @@ const WhatsAppDebug: React.FC = () => {
       setAllTemplates(data);
       
       if (data.success) {
-        toast({
-          title: "✅ Templates Carregados",
-          description: `${data.templates?.length || 0} templates encontrados`,
-        });
+        toast.success(`${data.templates?.length || 0} templates encontrados`);
       } else {
-        toast({
-          title: "⚠️ Problema nos Templates",
-          description: data.message || "Erro ao carregar templates",
-          variant: "destructive",
-        });
+        toast.error(data.message || "Erro ao carregar templates");
       }
 
     } catch (error) {
-      toast({
-        title: "Erro ao Carregar Templates",
-        description: `Falha: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Falha: ${error.message}`);
     } finally {
       setLoadingTemplates(false);
     }
@@ -365,11 +320,7 @@ const WhatsAppDebug: React.FC = () => {
 
   const testSpecificTemplate = async () => {
     if (!selectedTemplate || !testPhone) {
-      toast({
-        title: "Erro",
-        description: "Selecione um template e digite um número para teste",
-        variant: "destructive",
-      });
+      toast.error("Selecione um template e digite um número para teste");
       return;
     }
 
@@ -386,24 +337,13 @@ const WhatsAppDebug: React.FC = () => {
       if (error) throw error;
 
       if (data.success) {
-        toast({
-          title: "✅ Template Testado",
-          description: `Template "${selectedTemplate}" enviado para ${testPhone}`,
-        });
+        toast.success(`Template "${selectedTemplate}" enviado para ${testPhone}`);
       } else {
-        toast({
-          title: "❌ Falha no Teste",
-          description: data.errors?.[0] || "Não foi possível testar o template",
-          variant: "destructive",
-        });
+        toast.error(data.errors?.[0] || "Não foi possível testar o template");
       }
 
     } catch (error) {
-      toast({
-        title: "Erro no Teste",
-        description: `Falha: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Falha: ${error.message}`);
     } finally {
       setTestingSpecificTemplate(false);
     }
@@ -411,11 +351,7 @@ const WhatsAppDebug: React.FC = () => {
 
   const testInviteTemplate = async () => {
     if (!inviteEmail || !invitePhone) {
-      toast({
-        title: "Erro",
-        description: "Digite email e telefone para testar",
-        variant: "destructive",
-      });
+      toast.error("Digite email e telefone para testar");
       return;
     }
 
@@ -492,16 +428,9 @@ const WhatsAppDebug: React.FC = () => {
       setTemplateTestResult(result);
 
       if (result.success) {
-        toast({
-          title: "✅ Template de Convite Enviado",
-          description: `Template "convitevia" enviado para ${invitePhone}`,
-        });
+        toast.success(`Template "convitevia" enviado para ${invitePhone}`);
       } else {
-        toast({
-          title: "❌ Erro no Template",
-          description: result.error || 'Erro desconhecido',
-          variant: "destructive",
-        });
+        toast.error(result.error || 'Erro desconhecido');
       }
 
     } catch (error) {
@@ -512,11 +441,7 @@ const WhatsAppDebug: React.FC = () => {
         timestamp: new Date().toISOString()
       };
       setTemplateTestResult(errorResult);
-      toast({
-        title: "Erro no Teste",
-        description: `Falha ao testar template de convite: ${error.message}`,
-        variant: "destructive",
-      });
+      toast.error(`Falha ao testar template de convite: ${error.message}`);
     } finally {
       setTemplateTesting(false);
     }

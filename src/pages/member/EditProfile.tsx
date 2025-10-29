@@ -3,14 +3,14 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProfileImageUpload } from "@/components/profile/ProfileImageUpload";
 
 const EditProfile = () => {
   const { profile, user, setProfile } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const navigate = useNavigate();
 
   const [name, setName] = useState(profile?.name || "");
@@ -26,10 +26,7 @@ const EditProfile = () => {
 
   const handleImageUpdate = (newImageUrl: string) => {
     setAvatarUrl(newImageUrl);
-    toast({
-      title: "Imagem atualizada",
-      description: "Sua imagem de perfil foi alterada. Clique em Salvar para confirmar.",
-    });
+    showSuccess("Imagem atualizada", "Sua imagem de perfil foi alterada. Clique em Salvar para confirmar.");
   };
 
   const handleUpdateProfile = async () => {
@@ -57,19 +54,12 @@ const EditProfile = () => {
         setProfile(data);
       }
 
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso.",
-      });
+      showSuccess("Perfil atualizado", "Suas informações foram atualizadas com sucesso.");
 
       navigate("/profile");
     } catch (error) {
       console.error("Erro ao atualizar perfil:", error);
-      toast({
-        title: "Erro ao atualizar perfil",
-        description: "Não foi possível atualizar suas informações.",
-        variant: "destructive",
-      });
+      showError("Erro ao atualizar perfil", "Não foi possível atualizar suas informações.");
     } finally {
       setIsLoading(false);
     }

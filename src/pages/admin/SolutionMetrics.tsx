@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 import {
@@ -36,7 +36,7 @@ import { chartColors } from '@/lib/chart-utils';
 const SolutionMetrics = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const navigate = useNavigate();
   
   const [solution, setSolution] = useState<Solution | null>(null);
@@ -107,18 +107,14 @@ const SolutionMetrics = () => {
         }
       } catch (error) {
         console.error("Error fetching solution metrics:", error);
-        toast({
-          title: "Erro ao carregar métricas",
-          description: "Ocorreu um erro ao tentar carregar as métricas da solução.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar métricas", "Ocorreu um erro ao tentar carregar as métricas da solução.");
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, [id, toast]);
+  }, [id]);
   
   const generateMetricsFromAnalytics = (analyticsData: any[]) => {
     // Example: count views, starts, completions

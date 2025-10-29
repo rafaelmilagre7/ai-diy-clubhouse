@@ -8,7 +8,7 @@ import { useAutomationRules } from "@/hooks/useAutomationRules";
 import { AutomationCard } from "@/components/automations/AutomationCard";
 import { AdminTable } from "@/components/admin/ui/AdminTable";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useNavigate } from "react-router-dom";
 
 interface AutomationRule {
@@ -26,7 +26,7 @@ interface AutomationRule {
 
 const AdminAutomations = () => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const { data: rules, isLoading, refetch } = useAutomationRules();
 
   const handleToggleRule = async (ruleId: string, isActive: boolean) => {
@@ -38,18 +38,11 @@ const AdminAutomations = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Regra atualizada",
-        description: `Regra ${!isActive ? 'ativada' : 'desativada'} com sucesso`,
-      });
+      showSuccess("Regra atualizada", `Regra ${!isActive ? 'ativada' : 'desativada'} com sucesso`);
       
       refetch();
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a regra",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível atualizar a regra");
     }
   };
 
@@ -64,18 +57,11 @@ const AdminAutomations = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Regra deletada",
-        description: "Regra removida com sucesso",
-      });
+      showSuccess("Regra deletada", "Regra removida com sucesso");
       
       refetch();
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível deletar a regra",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível deletar a regra");
     }
   };
 

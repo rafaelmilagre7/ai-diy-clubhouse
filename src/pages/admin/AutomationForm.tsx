@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/integrations/supabase/client";
 import { UnifiedAutomationForm } from "@/components/automations/UnifiedAutomationForm";
 
@@ -28,7 +28,7 @@ interface AutomationFormData {
 const AutomationForm = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const isEditing = !!id;
 
   const [loading, setLoading] = useState(false);
@@ -80,11 +80,7 @@ const AutomationForm = () => {
         setValue('actions', data.actions);
       }
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível carregar a regra",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível carregar a regra");
       navigate('/admin/automations');
     }
   };
@@ -111,28 +107,18 @@ const AutomationForm = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Sucesso",
-        description: `Regra ${isEditing ? 'atualizada' : 'criada'} com sucesso`,
-      });
+      showSuccess("Sucesso", `Regra ${isEditing ? 'atualizada' : 'criada'} com sucesso`);
 
       navigate('/admin/automations');
     } catch (error) {
-      toast({
-        title: "Erro",
-        description: `Não foi possível ${isEditing ? 'atualizar' : 'criar'} a regra`,
-        variant: "destructive",
-      });
+      showError("Erro", `Não foi possível ${isEditing ? 'atualizar' : 'criar'} a regra`);
     } finally {
       setLoading(false);
     }
   };
 
   const testRule = async () => {
-    toast({
-      title: "Teste iniciado",
-      description: "Executando teste da regra com dados mock...",
-    });
+    showSuccess("Teste iniciado", "Executando teste da regra com dados mock...");
     // TODO: Implementar lógica de teste
   };
 

@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { useSolutionData } from "@/hooks/useSolutionData";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import confetti from "canvas-confetti";
 
@@ -15,7 +15,7 @@ const ImplementationCompleted = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [certificateUrl, setCertificateUrl] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [showConfetti, setShowConfetti] = useState(true);
@@ -76,17 +76,10 @@ const ImplementationCompleted = () => {
       const url = `https://exemplo.com/certificados/${solution.id}-${user.id}.pdf`;
       setCertificateUrl(url);
       
-      toast({
-        title: "Certificado gerado",
-        description: "Seu certificado de implementação está pronto para download.",
-      });
+      showSuccess("Certificado gerado", "Seu certificado de implementação está pronto para download.");
     } catch (error) {
       console.error("Erro ao gerar certificado:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível gerar o certificado. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível gerar o certificado. Tente novamente mais tarde.");
     } finally {
       setIsGenerating(false);
     }

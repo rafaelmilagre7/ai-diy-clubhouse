@@ -7,13 +7,13 @@ import SolutionEditorTabs from "@/components/admin/solution-editor/SolutionEdito
 import { Card, CardContent } from "@/components/ui/card";
 import NavigationButtons from "@/components/admin/solution-editor/NavigationButtons";
 import AuthError from "@/components/admin/solution-editor/AuthError";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useSolutionEditor } from "@/components/admin/solution-editor/useSolutionEditor";
 
 const SolutionEditor = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   
   const {
     solution,
@@ -52,17 +52,10 @@ const SolutionEditor = () => {
         await handleSaveCurrentStep();
       }
       
-      toast({
-        title: "Progresso salvo",
-        description: "Suas alterações foram salvas com sucesso."
-      });
+      showSuccess("Progresso salvo", "Suas alterações foram salvas com sucesso.");
     } catch (error) {
       console.error("Erro ao salvar:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar suas alterações.",
-        variant: "destructive"
-      });
+      showError("Erro ao salvar", "Ocorreu um erro ao salvar suas alterações.");
       throw error;
     }
   };
