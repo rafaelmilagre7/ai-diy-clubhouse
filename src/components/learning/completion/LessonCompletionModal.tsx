@@ -12,6 +12,7 @@ interface LessonCompletionModalProps {
   onNext?: () => void;
   nextLesson?: LearningLesson | null;
   onSaveCompletion?: (score: number, feedback: string) => Promise<void>;
+  isSubmitting?: boolean;
 }
 
 export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
@@ -20,10 +21,10 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   lesson,
   onNext,
   nextLesson,
-  onSaveCompletion
+  onSaveCompletion,
+  isSubmitting
 }) => {
   const [npsSubmitted, setNpsSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { log } = useLogging();
 
   const handleNPSCompleted = async (score: number, feedback: string) => {
@@ -31,8 +32,6 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
       console.error('[MODAL] ❌ onSaveCompletion não definido');
       return;
     }
-
-    setIsSubmitting(true);
     
     try {
       console.log('[MODAL] 📤 Enviando para onSaveCompletion:', { score, feedback });
@@ -51,7 +50,6 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
       }, 1500);
     } catch (error) {
       console.error('[MODAL] ❌ Erro:', error);
-      setIsSubmitting(false);
     }
   };
 
