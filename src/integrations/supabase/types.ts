@@ -8711,6 +8711,15 @@ export type Database = {
           whatsapp_recovered: string
         }[]
       }
+      recover_orphan_users: {
+        Args: never
+        Returns: {
+          error_message: string
+          profile_created: boolean
+          user_email: string
+          user_id: string
+        }[]
+      }
       recover_orphaned_users: { Args: never; Returns: undefined }
       regenerate_recurring_event_dates: { Args: never; Returns: Json }
       register_with_invite: {
