@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useAdminStats } from "./dashboard/useAdminStats";
 import { useEngagementData } from "./dashboard/useEngagementData";
 import { useCompletionRateData } from "./dashboard/useCompletionRateData";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/lib/supabase";
 
 interface RecentActivity {
@@ -15,7 +15,7 @@ interface RecentActivity {
 }
 
 export const useAdminDashboardData = (timeRange: string) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(false);
   
@@ -66,11 +66,7 @@ export const useAdminDashboardData = (timeRange: string) => {
             console.error('Falha ao carregar atividades após 3 tentativas');
             setRecentActivities([]);
             
-            toast({
-              title: "Erro ao carregar atividades",
-              description: "Não foi possível carregar as atividades recentes.",
-              variant: "destructive",
-            });
+            showError("Erro ao carregar atividades", "Não foi possível carregar as atividades recentes.");
           } else {
             // Aguardar antes da próxima tentativa
             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
@@ -84,22 +80,18 @@ export const useAdminDashboardData = (timeRange: string) => {
     };
 
     loadRecentActivities();
-  }, [timeRange, toast]);
+  }, [timeRange]);
 
   // Timeout global expandido para 45 segundos
   useEffect(() => {
     const globalTimeout = setTimeout(() => {
       if (statsLoading || engagementLoading || completionLoading || loading) {
-        toast({
-          title: "Carregamento demorado",
-          description: "Dados reais estão sendo carregados. Isso pode demorar alguns momentos.",
-          variant: "default",
-        });
+        // Removido toast de carregamento demorado
       }
     }, 45000);
 
     return () => clearTimeout(globalTimeout);
-  }, [statsLoading, engagementLoading, completionLoading, loading, toast]);
+  }, [statsLoading, engagementLoading, completionLoading, loading]);
 
   return {
     statsData: statsData || {

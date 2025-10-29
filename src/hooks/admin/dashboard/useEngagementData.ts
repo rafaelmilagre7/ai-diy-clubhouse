@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface EngagementData {
   name: string;
@@ -13,7 +13,7 @@ export const useEngagementData = (timeRange: string) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isDataReal, setIsDataReal] = useState(false);
-  const { toast } = useToast();
+  const { showError } = useToastModern();
 
   useEffect(() => {
     const fetchEngagementData = async () => {
@@ -57,11 +57,7 @@ export const useEngagementData = (timeRange: string) => {
             setEngagementData([]);
             setIsDataReal(false);
             
-            toast({
-              title: "Erro ao carregar dados",
-              description: "Não foi possível carregar dados de engajamento. Verifique sua conexão.",
-              variant: "destructive",
-            });
+            showError("Erro ao carregar dados", "Não foi possível carregar dados de engajamento. Verifique sua conexão.");
           } else {
             // Aguardar antes da próxima tentativa
             await new Promise(resolve => setTimeout(resolve, 1000 * retryCount));
@@ -87,7 +83,7 @@ export const useEngagementData = (timeRange: string) => {
     fetchEngagementData();
 
     return () => clearTimeout(timeoutId);
-  }, [timeRange, toast]);
+  }, [timeRange]);
 
   return { 
     engagementData, 

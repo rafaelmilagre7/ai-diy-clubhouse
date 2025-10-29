@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/lib/supabase";
 
 interface StatsData {
@@ -13,7 +13,7 @@ interface StatsData {
 }
 
 export const useAdminStats = (timeRange: string) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState<StatsData>({
     totalUsers: 0,
@@ -93,18 +93,14 @@ export const useAdminStats = (timeRange: string) => {
 
       } catch (error: any) {
         console.error("Erro ao carregar estatísticas:", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao carregar as estatísticas do dashboard.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar dados", "Ocorreu um erro ao carregar as estatísticas do dashboard.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, [toast, timeRange]);
+  }, [timeRange]);
 
   return { statsData, loading };
 };

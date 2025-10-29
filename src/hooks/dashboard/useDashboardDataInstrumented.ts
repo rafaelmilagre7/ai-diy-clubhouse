@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Solution } from "@/lib/supabase";
 import { perfMonitor, measureAsync } from '@/utils/performanceMonitor';
 
@@ -13,7 +13,7 @@ interface SupabaseResponse<T> {
 
 export const useDashboardData = () => {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<Solution[]>([]);
   const [progressData, setProgressData] = useState<any[]>([]);

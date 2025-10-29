@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Solution } from "@/lib/supabase";
 
 export interface SolutionAnalyticsData {
@@ -24,7 +24,7 @@ export interface SolutionAnalyticsData {
 }
 
 export const useSolutionAnalyticsData = (timeRange: string) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [data, setData] = useState<SolutionAnalyticsData>({
     totalSolutions: 0,
     publishedSolutions: 0,
@@ -89,16 +89,12 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
           error: error.message || "Erro ao carregar dados"
         }));
         
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao carregar os dados analíticos das soluções.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar dados", "Ocorreu um erro ao carregar os dados analíticos das soluções.");
       }
     };
     
     fetchData();
-  }, [timeRange, toast]);
+  }, [timeRange]);
   
   return data;
 };
