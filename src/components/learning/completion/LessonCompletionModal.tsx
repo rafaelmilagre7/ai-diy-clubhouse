@@ -26,13 +26,17 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   const { log } = useLogging();
 
   const handleNPSCompleted = () => {
+    console.log('[LESSON-COMPLETION-MODAL] ✅ NPS enviado com sucesso');
     log('NPS enviado com sucesso para a aula', { lessonId: lesson.id, lessonTitle: lesson.title });
     setNpsSubmitted(true);
     
-    // Automaticamente avança para próxima aula ou fecha o modal após envio
+    // Fechar modal e navegar após feedback visual
     setTimeout(() => {
+      console.log('[LESSON-COMPLETION-MODAL] 🔄 Fechando modal e navegando');
       setIsOpen(false);
-      if (onNext) onNext();
+      if (onNext && nextLesson) {
+        onNext();
+      }
     }, 1500);
   };
 

@@ -63,28 +63,25 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     gcTime: 5 * 60 * 1000 // 5 minutos
   });
   
-  // Mutation para atualizar progresso com toasts e retry
+  // Mutation para atualizar progresso
   const updateProgressMutation = useMutation({
     mutationFn: async (completed: boolean) => {
       if (!lessonId) throw new Error("ID da lição não fornecido");
       
-      console.log("[LESSON-PROGRESS] 🎯 Iniciando atualização:", {
+      console.log("[LESSON-PROGRESS] 🎯 Salvando progresso:", {
         lessonId,
         completed,
-        currentProgress: userProgress?.progress_percentage,
-        timestamp: new Date().toISOString()
+        currentProgress: userProgress?.progress_percentage
       });
       
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Usuário não autenticado");
       
       const timestamp = new Date().toISOString();
-      // CRÍTICO: usar STARTED (5%) para novas aulas, não 1%
       const progressPercentage = completed 
         ? LESSON_PROGRESS.COMPLETED 
         : (userProgress?.progress_percentage || LESSON_PROGRESS.STARTED);
       
-      // UPSERT otimizado
       const { data, error } = await supabase
         .from("learning_progress")
         .upsert({
@@ -103,79 +100,32 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         .select()
         .single();
         
-      if (error) {
-        console.error("[LESSON-PROGRESS] ❌ Erro no UPSERT:", error);
-        
-        // Fallback para UPDATE se UPSERT falhar
-        if (error.code === '23505') {
-          console.log("[LESSON-PROGRESS] 🔄 Tentando UPDATE como fallback");
-          
-          const { data: updateData, error: updateError } = await supabase
-            .from("learning_progress")
-            .update({ 
-              progress_percentage: progressPercentage,
-              updated_at: timestamp,
-              completed_at: completed ? timestamp : userProgress?.completed_at
-            })
-            .eq("user_id", userData.user.id)
-            .eq("lesson_id", lessonId)
-            .select()
-            .single();
-            
-          if (updateError) {
-            console.error("[LESSON-PROGRESS] ❌ Erro no UPDATE:", updateError);
-            throw updateError;
-          }
-          
-          console.log("[LESSON-PROGRESS] ✅ UPDATE bem-sucedido");
-          return { ...updateData, completed };
-        }
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log("[LESSON-PROGRESS] ✅ Progresso salvo:", data);
+      console.log("[LESSON-PROGRESS] ✅ Progresso salvo com sucesso");
       return { ...data, completed };
     },
-    retry: 2, // Retry automático
+    retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
     onSuccess: async (result) => {
-      console.log("[LESSON-PROGRESS] ✅ onSuccess - atualizando estado:", { 
-        completed: result.completed 
-      });
-      
       setIsCompleted(result.completed);
       
-      if (result.completed) {
-        showModernSuccess("Aula concluída!", "Seu progresso foi salvo com sucesso");
-      }
-      
-      // Invalidação hierárquica (específico -> geral) SEM setTimeout
-      console.log("[LESSON-PROGRESS] 🔄 Invalidando caches relacionados");
-      
+      // Invalidar caches
       await queryClient.invalidateQueries({ 
-        queryKey: ["learning-lesson-progress", lessonId],
-        refetchType: 'active'
+        queryKey: ["learning-lesson-progress", lessonId]
       });
-      
       await queryClient.invalidateQueries({ 
-        queryKey: ["learning-user-progress"],
-        refetchType: 'active'
+        queryKey: ["learning-user-progress"]
       });
-      
       await queryClient.invalidateQueries({ 
-        queryKey: ["learning-completed-lessons"],
-        refetchType: 'active'
+        queryKey: ["learning-completed-lessons"]
       });
-      
       await queryClient.invalidateQueries({ 
-        queryKey: ["course-details"],
-        refetchType: 'active'
+        queryKey: ["course-details"]
       });
-      
-      console.log("[LESSON-PROGRESS] ✅ Caches invalidados");
     },
     onError: (error: any) => {
-      console.error("[LESSON-PROGRESS] ❌ Erro ao salvar progresso:", error);
+      console.error("[LESSON-PROGRESS] ❌ Erro ao salvar:", error);
     }
   });
 
@@ -209,36 +159,25 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     }
   };
   
-  // Marcar como concluída com toast e aguardar salvamento
-  const completeLesson = async () => {
-    console.log("[LESSON-PROGRESS] 🎯 Iniciando conclusão");
+  // Marcar como concluída - retorna Promise para controle de fluxo
+  const completeLesson = async (): Promise<void> => {
+    console.log("[LESSON-PROGRESS] 🎯 Iniciando conclusão da aula");
     
     const loadingId = showModernLoading("Concluindo aula...");
     
     try {
-      const result = await updateProgressMutation.mutateAsync(true);
-      console.log("[LESSON-PROGRESS] ✅ Aula concluída com sucesso:", result);
-      
+      await updateProgressMutation.mutateAsync(true);
       dismissModernToast(loadingId);
-      showModernSuccess("Aula concluída!", "Seu progresso foi salvo");
-      
-      return result;
+      console.log("[LESSON-PROGRESS] ✅ Aula concluída - retornando sucesso");
     } catch (error: any) {
-      console.error("[LESSON-PROGRESS] ❌ Erro ao concluir aula:", {
-        error,
-        message: error?.message,
-        code: error?.code,
-        details: error?.details
-      });
-      
       dismissModernToast(loadingId);
+      console.error("[LESSON-PROGRESS] ❌ Erro ao concluir:", error);
       
       const errorMessage = error?.message?.includes('constraint') 
-        ? "Erro de consistência. Tente novamente."
-        : error?.message || "Não foi possível salvar.";
+        ? "Erro de consistência no banco de dados"
+        : error?.message || "Não foi possível salvar";
       
       showModernError("Erro ao concluir aula", errorMessage);
-      
       throw error;
     }
   };

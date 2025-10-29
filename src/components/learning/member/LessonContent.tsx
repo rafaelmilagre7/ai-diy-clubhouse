@@ -69,15 +69,23 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = async () => {
-    if (!isCompleted && onComplete) {
-      try {
-        console.log('[LESSON-CONTENT] 🎯 Iniciando conclusão da aula');
-        await onComplete();
-        console.log('[LESSON-CONTENT] ✅ Aula concluída com sucesso - abrindo modal NPS');
-        setCompletionDialogOpen(true);
-      } catch (error) {
-        console.error('[LESSON-CONTENT] ❌ Erro ao concluir aula:', error);
-      }
+    if (isCompleted) {
+      console.log('[LESSON-CONTENT] ⚠️ Aula já está concluída');
+      return;
+    }
+    
+    if (!onComplete) {
+      console.error('[LESSON-CONTENT] ❌ Função onComplete não foi fornecida');
+      return;
+    }
+    
+    try {
+      console.log('[LESSON-CONTENT] 🎯 Solicitando conclusão da aula');
+      await onComplete();
+      console.log('[LESSON-CONTENT] ✅ Conclusão bem-sucedida - abrindo modal NPS');
+      setCompletionDialogOpen(true);
+    } catch (error) {
+      console.error('[LESSON-CONTENT] ❌ Erro ao concluir aula:', error);
     }
   };
 

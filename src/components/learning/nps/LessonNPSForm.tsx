@@ -57,16 +57,22 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   const [score, setScore] = useState<number | null>(existingNPS?.score || null);
   const [feedback, setFeedback] = useState<string>(existingNPS?.feedback || '');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (score === null) {
+      console.warn('[LESSON-NPS-FORM] ⚠️ Tentativa de envio sem nota selecionada');
       return;
     }
     
+    console.log('[LESSON-NPS-FORM] 🎯 Enviando avaliação:', { score, hasFeedback: !!feedback });
+    
+    // Enviar NPS
     submitNPS(score, feedback);
     
+    // Chamar callback imediatamente (o toast de sucesso vem do hook)
     if (onCompleted) {
+      console.log('[LESSON-NPS-FORM] ✅ Chamando onCompleted');
       onCompleted();
     }
   };

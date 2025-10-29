@@ -121,22 +121,25 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
           });
         }
 
+        console.log('[LESSON-NPS] ✅ NPS salvo com sucesso:', result);
         return result;
       } finally {
         setIsSubmitting(false);
       }
     },
     onSuccess: () => {
+      console.log('[LESSON-NPS] ✅ Mutation onSuccess');
       toast.success('Sua avaliação foi enviada com sucesso!');
       queryClient.invalidateQueries({ queryKey: ['lesson-nps', lessonId, user?.id] });
     },
     onError: (error) => {
-      console.error('Erro ao enviar avaliação:', error);
+      console.error('[LESSON-NPS] ❌ Erro ao enviar avaliação:', error);
       toast.error(`Erro: ${error.message}`);
     }
   });
 
   const submitNPS = (score: number, feedback?: string) => {
+    console.log('[LESSON-NPS] 🎯 Enviando NPS:', { score, feedback: feedback?.substring(0, 50) });
     submitNPSMutation.mutate({ score, feedback });
   };
 
