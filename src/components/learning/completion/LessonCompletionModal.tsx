@@ -27,32 +27,39 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   const { log } = useLogging();
 
   const handleNPSCompleted = async (score: number, feedback: string) => {
-    console.log('[LESSON-COMPLETION-MODAL] 💾 Recebido do form:', { score, feedback, onSaveCompletion: !!onSaveCompletion });
+    console.log('[LESSON-COMPLETION-MODAL] 💾 ==========');
+    console.log('[LESSON-COMPLETION-MODAL] 📥 Recebido:', { score, feedback });
+    console.log('[LESSON-COMPLETION-MODAL] 📋 onSaveCompletion definido?', !!onSaveCompletion);
     
     if (!onSaveCompletion) {
-      console.error('[LESSON-COMPLETION-MODAL] ❌ onSaveCompletion não definido');
+      console.error('[LESSON-COMPLETION-MODAL] ❌ onSaveCompletion não definido - ABORTANDO');
       return;
     }
 
     try {
-      console.log('[LESSON-COMPLETION-MODAL] 🚀 Chamando onSaveCompletion...');
-      // Salvar progresso E NPS ao mesmo tempo
+      console.log('[LESSON-COMPLETION-MODAL] 🚀 Iniciando salvamento...');
       await onSaveCompletion(score, feedback);
       
-      console.log('[LESSON-COMPLETION-MODAL] ✅ Salvamento bem-sucedido');
-      log('NPS e progresso salvos com sucesso', { lessonId: lesson.id, lessonTitle: lesson.title, score });
+      console.log('[LESSON-COMPLETION-MODAL] ✅ Salvamento COMPLETO');
+      log('NPS e progresso salvos', { lessonId: lesson.id, score });
+      
       setNpsSubmitted(true);
       
       // Fechar modal e navegar após delay
       setTimeout(() => {
-        console.log('[LESSON-COMPLETION-MODAL] 🔄 Fechando modal e navegando');
+        console.log('[LESSON-COMPLETION-MODAL] 🔄 Fechando modal...');
         setIsOpen(false);
         if (onNext && nextLesson) {
+          console.log('[LESSON-COMPLETION-MODAL] ➡️ Navegando para próxima aula');
           onNext();
         }
       }, 1500);
     } catch (error) {
-      console.error('[LESSON-COMPLETION-MODAL] ❌ Erro ao salvar:', error);
+      console.error('[LESSON-COMPLETION-MODAL] ❌ ERRO durante salvamento:', error);
+      console.error('[LESSON-COMPLETION-MODAL] ❌ Detalhes:', {
+        errorMessage: error instanceof Error ? error.message : 'Erro desconhecido',
+        errorStack: error instanceof Error ? error.stack : undefined
+      });
       // Modal permanece aberto para usuário tentar novamente
     }
   };

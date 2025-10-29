@@ -3,7 +3,6 @@ import React, { useState } from "react";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { useLessonNPS } from "@/hooks/learning/useLessonNPS";
 import { Loader2, Star, CheckCircle2 } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase";
 
@@ -53,9 +52,8 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   showSuccessMessage = false,
   nextLesson
 }) => {
-  const { existingNPS, isLoading } = useLessonNPS({ lessonId });
-  const [score, setScore] = useState<number | null>(existingNPS?.score || null);
-  const [feedback, setFeedback] = useState<string>(existingNPS?.feedback || '');
+  const [score, setScore] = useState<number | null>(null);
+  const [feedback, setFeedback] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -66,21 +64,22 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
       return;
     }
     
-    console.log('[LESSON-NPS-FORM] 📤 Iniciando envio:', { score, feedback, onCompleted: !!onCompleted });
-    
-    // Passar dados para o componente pai (modal) salvar
-    if (onCompleted) {
-      try {
-        setIsSubmitting(true);
-        console.log('[LESSON-NPS-FORM] 🎯 Chamando onCompleted com:', { score, feedback });
-        await onCompleted(score, feedback);
-        console.log('[LESSON-NPS-FORM] ✅ onCompleted executado com sucesso');
-      } catch (error) {
-        console.error('[LESSON-NPS-FORM] ❌ Erro ao chamar onCompleted:', error);
-        setIsSubmitting(false);
-      }
-    } else {
+    if (!onCompleted) {
       console.error('[LESSON-NPS-FORM] ❌ onCompleted não está definido!');
+      return;
+    }
+    
+    console.log('[LESSON-NPS-FORM] 📤 Iniciando envio:', { score, feedback });
+    setIsSubmitting(true);
+    
+    try {
+      console.log('[LESSON-NPS-FORM] 🎯 Chamando onCompleted...');
+      await onCompleted(score, feedback);
+      console.log('[LESSON-NPS-FORM] ✅ onCompleted executado com sucesso');
+      // NÃO resetar isSubmitting aqui - o componente pai controla o fluxo
+    } catch (error) {
+      console.error('[LESSON-NPS-FORM] ❌ Erro ao chamar onCompleted:', error);
+      setIsSubmitting(false); // Só reseta em caso de erro
     }
   };
 
@@ -90,17 +89,6 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     if (score >= 7) return "Muito bom! 👍";
     return "Podemos melhorar 🤔";
   };
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-12">
-        <div className="text-center space-y-3">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground">Carregando avaliação...</p>
-        </div>
-      </div>
-    );
-  }
 
   if (showSuccessMessage) {
     return (
