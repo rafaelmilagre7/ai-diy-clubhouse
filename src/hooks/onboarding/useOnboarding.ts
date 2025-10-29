@@ -797,6 +797,51 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
     }
   }, [user?.id, state.data, saveStepData, clearLocalStorageBackup]);
 
+  // 🔥 VERIFICAÇÃO CRÍTICA DE CACHE - Sempre buscar do banco na montagem inicial
+  useEffect(() => {
+    const checkOnboardingStateFromDB = async () => {
+      if (!user?.id) return;
+      
+      try {
+        console.log('[ONBOARDING-CACHE] 🔍 Verificando user_type diretamente no banco...');
+        
+        // SEMPRE buscar do banco na primeira montagem
+        const { data: freshData, error } = await supabase
+          .from('onboarding_final')
+          .select('user_type, current_step, is_completed')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        
+        if (error) {
+          console.error('[ONBOARDING-CACHE] ❌ Erro ao buscar dados:', error);
+          return;
+        }
+        
+        console.log('[ONBOARDING-CACHE] 📊 Dados frescos do banco:', freshData);
+        
+        // Se não tem user_type no banco, forçar Step 0
+        if (freshData && !freshData.user_type) {
+          console.log('[ONBOARDING-CACHE] ⚠️ user_type NULL detectado - FORÇANDO Step 0');
+          setState(prev => ({
+            ...prev,
+            current_step: 0,
+            userType: undefined
+          }));
+        }
+        
+        // Se onboarding está completo, redirecionar
+        if (freshData?.is_completed) {
+          console.log('[ONBOARDING-CACHE] ✅ Onboarding completo - redirecionando');
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (err) {
+        console.error('[ONBOARDING-CACHE] ❌ Erro crítico:', err);
+      }
+    };
+    
+    checkOnboardingStateFromDB();
+  }, [user?.id]);
+
   // Carregar dados na inicialização e verificar query params
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);

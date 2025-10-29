@@ -8,6 +8,7 @@ import { RateLimitGuard } from '@/components/security/RateLimitGuard';
 import { useRateLimit } from '@/hooks/security/useRateLimit';
 import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
 import { useToastModern } from '@/hooks/useToastModern';
+import { useQueryClient } from '@tanstack/react-query';
 
 // Removido hook de telemetria para simplificação
 
@@ -24,6 +25,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   prefilledName,
   onSuccess 
 }) => {
+  const queryClient = useQueryClient();
   const [name, setName] = useState(prefilledName || "");
   const [email, setEmail] = useState(prefilledEmail || "");
   const [password, setPassword] = useState("");
@@ -372,6 +374,11 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           );
           return;
         }
+        
+        // 🚀 INVALIDAR CACHE DO REACT QUERY para forçar recarga dos dados de onboarding
+        console.log('[REGISTER] ♻️ Invalidando cache de onboarding...');
+        await queryClient.invalidateQueries({ queryKey: ['onboarding'] });
+        console.log('[REGISTER] ✅ Cache invalidado com sucesso');
         
         if (loadingToastId) dismissToast(loadingToastId);
         showSuccess(
