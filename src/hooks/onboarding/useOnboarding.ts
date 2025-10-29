@@ -592,9 +592,9 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         }
         
         profileSuccess = true;
-        console.log('[ONBOARDING] ✅ profiles OK');
-        
-      } catch (profileError: any) {
+      console.log('[ONBOARDING] ✅ profiles OK');
+      
+    } catch (profileError: any) {
         console.error('[ONBOARDING] ❌ CRÍTICO profiles:', profileError);
         showError("Erro ao finalizar", "Tente novamente.");
         throw profileError;
