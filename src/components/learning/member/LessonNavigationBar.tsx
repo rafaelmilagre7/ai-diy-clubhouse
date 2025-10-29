@@ -55,10 +55,10 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
         <div className="flex justify-center">
           <Button 
             onClick={onComplete} 
-            disabled={isUpdating} 
+            disabled={isCompleted || isUpdating} 
             className={`gap-2 px-6 py-3 font-medium transition-all duration-300 border-0 ${
               isCompleted 
-                ? "bg-operational/20 text-operational hover:bg-operational/30 backdrop-blur-sm" 
+                ? "bg-operational/20 text-operational cursor-not-allowed opacity-80" 
                 : "bg-gradient-to-r from-primary via-primary to-primary/80 text-white hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl backdrop-blur-sm"
             }`}
           >

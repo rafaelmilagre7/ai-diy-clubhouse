@@ -11,6 +11,7 @@ import { LessonCompletionModal } from "../completion/LessonCompletionModal";
 import { LessonDescription } from "./LessonDescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -69,34 +70,37 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = async () => {
-    console.log('[LESSON-CONTENT] 🎯 Iniciando conclusão da aula:', { 
-      isCompleted, 
-      hasOnComplete: !!onComplete 
-    });
+    console.log('[LESSON-CONTENT] 🎯 Botão de conclusão clicado');
     
-    // Se a aula não estava concluída anteriormente, mostrar o modal de conclusão com NPS
-    if (!isCompleted && onComplete) {
-      console.log('[LESSON-CONTENT] ⏳ Salvando progresso...');
-      
-      try {
-        const result = await onComplete(); // Aguardar confirmação de salvamento
-        
-        // Se retornou boolean false explicitamente, houve erro
-        if (result === false) {
-          console.error('[LESSON-CONTENT] ❌ Falha ao salvar progresso');
-          return;
-        }
-        
-        // Caso contrário (true ou undefined/void), consideramos sucesso
-        console.log('[LESSON-CONTENT] ✅ Progresso salvo! Abrindo modal de avaliação');
-        setCompletionDialogOpen(true);
-      } catch (error) {
-        console.error('[LESSON-CONTENT] ❌ Erro ao completar aula:', error);
-      }
-    } else if (isCompleted) {
-      console.log('[LESSON-CONTENT] ℹ️ Aula já estava concluída');
-    } else {
+    if (!onComplete) {
       console.log('[LESSON-CONTENT] ⚠️ Falta onComplete callback');
+      return;
+    }
+    
+    console.log('[LESSON-CONTENT] ⏳ Salvando progresso...');
+    
+    try {
+      const result = await onComplete();
+      
+      if (result === false) {
+        console.error('[LESSON-CONTENT] ❌ Falha ao salvar progresso');
+        toast({
+          variant: "destructive",
+          title: "Erro",
+          description: "Não foi possível salvar seu progresso"
+        });
+        return;
+      }
+      
+      console.log('[LESSON-CONTENT] ✅ Progresso salvo! Abrindo modal de NPS');
+      setCompletionDialogOpen(true);
+    } catch (error) {
+      console.error('[LESSON-CONTENT] ❌ Erro ao completar aula:', error);
+      toast({
+        variant: "destructive",
+        title: "Erro",
+        description: "Erro ao concluir aula"
+      });
     }
   };
 
