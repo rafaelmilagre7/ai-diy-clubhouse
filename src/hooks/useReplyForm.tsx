@@ -1,10 +1,15 @@
 
 import { useState, useRef } from "react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 import { useAuth } from "@/contexts/auth";
 import { useQueryClient } from "@tanstack/react-query";
 import { incrementTopicReplies } from "@/lib/supabase/rpc";
+import { 
+  showModernError, 
+  showModernLoading, 
+  showModernSuccessWithAction,
+  dismissModernToast 
+} from "@/lib/toast-helpers";
 
 interface UseReplyFormProps {
   topicId: string;
@@ -39,14 +44,25 @@ export const useReplyForm = ({
     e.preventDefault();
     
     if (!content.trim()) {
-      toast.error("O conteúdo da resposta não pode estar vazio");
+      showModernError(
+        "Conteúdo obrigatório",
+        "Por favor, escreva sua resposta antes de enviar"
+      );
       return;
     }
     
     if (!user?.id) {
-      toast.error("Você precisa estar logado para enviar uma resposta");
+      showModernError(
+        "Login necessário",
+        "Você precisa estar logado para enviar uma resposta"
+      );
       return;
     }
+    
+    const loadingId = showModernLoading(
+      "Enviando resposta...",
+      "Publicando seu comentário na comunidade"
+    );
     
     try {
       setIsSubmitting(true);
@@ -124,7 +140,22 @@ export const useReplyForm = ({
         textareaRef.current.style.height = 'auto';
       }
       
-      toast.success("Resposta enviada com sucesso!");
+      // Dismiss loading e mostrar sucesso com ação
+      dismissModernToast(loadingId);
+      
+      showModernSuccessWithAction(
+        "Resposta publicada!",
+        "Seu comentário está visível para todos na comunidade",
+        {
+          label: "Ver resposta",
+          onClick: () => {
+            const postElement = document.querySelector(`[data-post-id="${data?.[0]?.id}"]`);
+            if (postElement) {
+              postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+      );
       
       // Atualizar cache do React Query com nomenclatura padronizada
       queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
@@ -137,7 +168,12 @@ export const useReplyForm = ({
       
     } catch (error: any) {
       console.error("Erro ao enviar resposta:", error);
-      toast.error(`Não foi possível enviar sua resposta: ${error.message || "Erro desconhecido"}`);
+      dismissModernToast(loadingId);
+      
+      showModernError(
+        "Não foi possível enviar",
+        error.message || "Tente novamente em alguns instantes"
+      );
     } finally {
       setIsSubmitting(false);
     }

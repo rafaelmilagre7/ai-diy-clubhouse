@@ -8,10 +8,16 @@ import {
   Bold, Italic, Link, Image, Eye, Type,
   List, ListOrdered, Quote, Code, Loader2
 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/lib/supabase";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { MarkdownRenderer } from "./MarkdownRenderer";
+import { 
+  showModernError, 
+  showModernLoading, 
+  showModernSuccessWithAction,
+  showModernSuccess,
+  dismissModernToast 
+} from "@/lib/toast-helpers";
 
 interface ModernPostEditorProps {
   topicId: string;
@@ -36,7 +42,6 @@ export const ModernPostEditor = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
-  const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const createPostMutation = useMutation({
@@ -207,19 +212,31 @@ export const ModernPostEditor = ({
       
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setContent('');
       queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
       queryClient.invalidateQueries({ queryKey: ['community-topic', topicId] });
-      toast({ title: "Resposta enviada com sucesso!" });
+      
+      showModernSuccessWithAction(
+        "Resposta enviada!",
+        "Seu comentário foi publicado com sucesso",
+        {
+          label: "Ver resposta",
+          onClick: () => {
+            const postElement = document.querySelector(`[data-post-id="${data?.id}"]`);
+            if (postElement) {
+              postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        }
+      );
       onSuccess?.();
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro ao enviar resposta",
-        description: error.message || "Tente novamente",
-        variant: "destructive"
-      });
+      showModernError(
+        "Erro ao enviar resposta",
+        error.message || "Não foi possível publicar. Tente novamente."
+      );
     }
   });
 
@@ -242,15 +259,17 @@ export const ModernPostEditor = ({
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['community-posts', topicId] });
-      toast({ title: "Resposta atualizada com sucesso!" });
+      showModernSuccess(
+        "Resposta atualizada!",
+        "Suas alterações foram salvas com sucesso"
+      );
       onSuccess?.();
     },
     onError: (error: any) => {
-      toast({
-        title: "Erro ao atualizar resposta",
-        description: error.message || "Tente novamente",
-        variant: "destructive"
-      });
+      showModernError(
+        "Erro ao atualizar",
+        error.message || "Não foi possível salvar as alterações"
+      );
     }
   });
 
@@ -260,11 +279,10 @@ export const ModernPostEditor = ({
     console.log('🎯 [COMMENT] handleSubmit chamado', { mode, hasContent: !!content.trim() });
     
     if (!content.trim()) {
-      toast({
-        title: "Conteúdo obrigatório",
-        description: "Por favor, escreva sua resposta",
-        variant: "destructive"
-      });
+      showModernError(
+        "Conteúdo obrigatório",
+        "Por favor, escreva sua resposta antes de enviar"
+      );
       return;
     }
 
@@ -279,14 +297,15 @@ export const ModernPostEditor = ({
       
       if (sessionError || !session) {
         console.error('❌ [COMMENT] Sessão inválida no submit:', sessionError);
-        toast({
-          title: "Sessão expirada",
-          description: "Por favor, faça login novamente",
-          variant: "destructive"
-        });
+        showModernError(
+          "Sessão expirada",
+          "Por favor, faça login novamente para continuar"
+        );
         
         // Redirecionar para login
-        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+        setTimeout(() => {
+          window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+        }, 2000);
         return;
       }
       
@@ -299,33 +318,35 @@ export const ModernPostEditor = ({
       }
     } catch (error: any) {
       console.error('❌ [COMMENT] Erro ao validar sessão no submit:', error);
-      toast({
-        title: "Erro de autenticação",
-        description: "Não foi possível validar sua sessão. Tente fazer login novamente.",
-        variant: "destructive"
-      });
+      showModernError(
+        "Erro de autenticação",
+        "Não foi possível validar sua sessão. Tente fazer login novamente."
+      );
     }
   };
 
   const uploadImage = async (file: File) => {
     if (!file.type.startsWith('image/')) {
-      toast({
-        title: "Arquivo inválido",
-        description: "Por favor, selecione apenas arquivos de imagem",
-        variant: "destructive"
-      });
+      showModernError(
+        "Arquivo inválido",
+        "Por favor, selecione apenas arquivos de imagem (JPG, PNG, GIF, etc.)"
+      );
       return;
     }
 
     if (file.size > 50 * 1024 * 1024) {
-      toast({
-        title: "Arquivo muito grande",
-        description: "O arquivo deve ter no máximo 50MB",
-        variant: "destructive"
-      });
+      showModernError(
+        "Arquivo muito grande",
+        "O arquivo deve ter no máximo 50MB. Tente reduzir o tamanho da imagem."
+      );
       return;
     }
 
+    const uploadId = showModernLoading(
+      "Enviando imagem...",
+      "Fazendo upload da imagem para o servidor"
+    );
+    
     setIsUploading(true);
     
     try {
@@ -360,14 +381,18 @@ export const ModernPostEditor = ({
         setContent(prev => prev + '\n\n' + imageMarkdown);
       }
 
-      toast({ title: "Imagem enviada com sucesso!" });
+      dismissModernToast(uploadId);
+      showModernSuccess(
+        "Imagem adicionada!",
+        "A imagem foi inserida no seu comentário"
+      );
     } catch (error: any) {
       console.error('Erro no upload:', error);
-      toast({
-        title: "Erro no upload",
-        description: error.message || "Tente novamente",
-        variant: "destructive"
-      });
+      dismissModernToast(uploadId);
+      showModernError(
+        "Erro no upload",
+        error.message || "Não foi possível enviar a imagem. Tente novamente."
+      );
     } finally {
       setIsUploading(false);
     }

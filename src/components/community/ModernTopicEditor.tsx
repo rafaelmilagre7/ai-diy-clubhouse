@@ -11,8 +11,12 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useMutation, useQueryClient, useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { 
+  showModernError,
+  showModernSuccess, 
+  showModernSuccessWithAction 
+} from '@/lib/toast-helpers';
 import { 
   Save, 
   Eye, 
@@ -76,7 +80,6 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
     markdownText: ''
   });
   
-  const { toast } = useToast();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
 
@@ -188,11 +191,11 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
     const markdownImage = `![${fileName}](${url})`;
     insertMarkdown(`\n\n${markdownImage}\n\n`);
     
-    toast({
-      title: 'Imagem adicionada',
-      description: `${fileName} foi inserida no tópico.`
-    });
-  }, [insertMarkdown, toast]);
+    showModernSuccess(
+      'Imagem adicionada!',
+      `${fileName} foi inserida no tópico com sucesso`
+    );
+  }, [insertMarkdown]);
 
   // Handle image edit
   const handleImageEdit = useCallback((imageMatch: typeof imageMatches[0]) => {
@@ -209,11 +212,11 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
     const newContent = content.replace(imageMatch.fullMatch, '');
     setContent(newContent);
     
-    toast({
-      title: 'Imagem removida',
-      description: 'A imagem foi removida do tópico.'
-    });
-  }, [content, toast]);
+    showModernSuccess(
+      'Imagem removida',
+      'A imagem foi removida do tópico'
+    );
+  }, [content]);
 
   // Save image edit
   const handleSaveImageEdit = useCallback((newAltText: string) => {
@@ -222,11 +225,11 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
     const newContent = content.replace(oldMarkdown, newMarkdown);
     setContent(newContent);
     
-    toast({
-      title: 'Imagem atualizada',
-      description: 'O texto alternativo foi atualizado.'
-    });
-  }, [content, imageEditDialog, toast]);
+    showModernSuccess(
+      'Imagem atualizada',
+      'O texto alternativo foi atualizado com sucesso'
+    );
+  }, [content, imageEditDialog]);
 
   // Mutation para criar tópico
   const createTopicMutation = useMutation({
@@ -249,24 +252,30 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
       queryClient.invalidateQueries({ queryKey: ['community-topics'] });
       queryClient.invalidateQueries({ queryKey: ['community-categories'] });
       
-      toast({
-        title: 'Tópico criado!',
-        description: 'Seu tópico foi publicado com sucesso.'
-      });
+      showModernSuccessWithAction(
+        'Tópico criado!',
+        'Seu tópico foi publicado com sucesso na comunidade',
+        {
+          label: 'Ver tópico',
+          onClick: () => navigate(`/comunidade/topico/${topic.id}`)
+        }
+      );
       
       if (onSuccess) {
         onSuccess();
       } else {
-        navigate(`/comunidade/topico/${topic.id}`);
+        // Navegar após 1.5s para dar tempo de ver o toast
+        setTimeout(() => {
+          navigate(`/comunidade/topico/${topic.id}`);
+        }, 1500);
       }
     },
     onError: (error) => {
       console.error('Erro ao criar tópico:', error);
-      toast({
-        title: 'Erro ao criar tópico',
-        description: 'Ocorreu um erro ao publicar seu tópico. Tente novamente.',
-        variant: 'destructive'
-      });
+      showModernError(
+        'Erro ao criar tópico',
+        error.message || 'Não foi possível publicar seu tópico. Tente novamente.'
+      );
     }
   });
 
@@ -278,11 +287,10 @@ export const ModernTopicEditor: React.FC<ModernTopicEditorProps> = ({
     e.preventDefault();
     
     if (!isValid) {
-      toast({
-        title: 'Campos obrigatórios',
-        description: 'Preencha todos os campos corretamente.',
-        variant: 'destructive'
-      });
+      showModernError(
+        'Campos obrigatórios',
+        'Preencha o título (min. 5 caracteres) e o conteúdo (min. 10 caracteres) antes de publicar'
+      );
       return;
     }
 
