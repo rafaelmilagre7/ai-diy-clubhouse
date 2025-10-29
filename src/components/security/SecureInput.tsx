@@ -155,13 +155,6 @@ export const SecureInput: React.FC<SecureInputProps> = ({
         
         {/* Indicador de segurança */}
         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-          {hasError && (
-            <AlertTriangle 
-              className="h-4 w-4 text-status-error flex-shrink-0" 
-              aria-label="Erro de validação" 
-            />
-          )}
-          
           {type === 'password' && (
             <Button
               type="button"
