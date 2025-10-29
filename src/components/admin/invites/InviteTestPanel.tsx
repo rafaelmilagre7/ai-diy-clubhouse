@@ -14,7 +14,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useInviteSender } from '@/hooks/admin/invites/useInviteSender';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export const InviteTestPanel = () => {
   const [testEmail, setTestEmail] = useState('');
@@ -27,15 +27,11 @@ export const InviteTestPanel = () => {
     processInviteAutomatically,
     resendInvite 
   } = useInviteSender();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
 
   const handleTestEmail = async () => {
     if (!testEmail) {
-      toast({
-        title: "Email necessário",
-        description: "Digite um email para testar",
-        variant: "destructive",
-      });
+      showError("Email necessário", "Digite um email para testar");
       return;
     }
 
@@ -54,11 +50,7 @@ export const InviteTestPanel = () => {
 
   const handleTestWhatsApp = async () => {
     if (!testPhone) {
-      toast({
-        title: "Telefone necessário",
-        description: "Digite um número para testar",
-        variant: "destructive",
-      });
+      showError("Telefone necessário", "Digite um número para testar");
       return;
     }
 
@@ -77,11 +69,7 @@ export const InviteTestPanel = () => {
 
   const handleProcessInvite = async () => {
     if (!testInviteId) {
-      toast({
-        title: "ID necessário",
-        description: "Digite o ID do convite para processar",
-        variant: "destructive",
-      });
+      showError("ID necessário", "Digite o ID do convite para processar");
       return;
     }
 
@@ -90,11 +78,7 @@ export const InviteTestPanel = () => {
 
   const handleResendInvite = async () => {
     if (!testInviteId) {
-      toast({
-        title: "ID necessário",
-        description: "Digite o ID do convite para reenviar",
-        variant: "destructive",
-      });
+      showError("ID necessário", "Digite o ID do convite para reenviar");
       return;
     }
 

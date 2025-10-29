@@ -1,7 +1,7 @@
 
 import React from "react";
 import ResourceUploadCard from "./ResourceUploadCard";
-import { useToast } from "@/hooks/use-toast";
+// Toast não usado diretamente neste componente - gerenciado pelo pai
 import { supabase } from "@/lib/supabase";
 import { ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
@@ -17,9 +17,6 @@ const MaterialUploadSection: React.FC<MaterialUploadSectionProps> = ({
   onUploadComplete,
   bucketReady = true
 }) => {
-  const { toast } = useToast();
-
-
   return (
     <div className="text-foreground">
       <ResourceUploadCard 

@@ -4,7 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Save, Loader2, Upload, LinkIcon } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useResourcesFormData } from "@/components/admin/solution/form/hooks/useResourcesFormData";
 import ResourceMaterialsTab from "@/components/admin/solution/form/components/ResourceMaterialsTab";
 import ResourceLinksTab from "@/components/admin/solution/form/components/ResourceLinksTab";
@@ -20,7 +20,7 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
   onSave,
   saving
 }) => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [activeTab, setActiveTab] = useState("materials");
   const { form, isSaving, handleSaveResources } = useResourcesFormData(solutionId);
 
@@ -29,18 +29,11 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({
       const success = await handleSaveResources();
       if (success) {
         onSave();
-        toast({
-          title: "Recursos salvos",
-          description: "Os materiais e links foram salvos com sucesso.",
-        });
+        showSuccess("Recursos salvos", "Os materiais e links foram salvos com sucesso.");
       }
     } catch (error: any) {
       console.error("Erro ao salvar recursos:", error);
-      toast({
-        title: "Erro ao salvar recursos",
-        description: error.message || "Ocorreu um erro ao tentar salvar os recursos.",
-        variant: "destructive",
-      });
+      showError("Erro ao salvar recursos", error.message || "Ocorreu um erro ao tentar salvar os recursos.");
     }
   };
 

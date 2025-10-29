@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase, Solution } from "@/lib/supabase";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
@@ -13,7 +13,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
   const [activeTab, setActiveTab] = useState("basic");
   const [currentStep, setCurrentStep] = useState(0);
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const totalSteps = 6;
   const stepTitles = [
@@ -66,11 +66,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
 
       } catch (error) {
         console.error("Erro ao carregar solução:", error);
-        toast({
-          title: "Erro ao carregar solução",
-          description: "Não foi possível carregar os dados da solução.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar solução", "Não foi possível carregar os dados da solução.");
       } finally {
         setLoading(false);
       }
@@ -111,18 +107,11 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
         setCurrentValues(values);
       }
 
-      toast({
-        title: "Solução salva",
-        description: "As informações foram salvas com sucesso."
-      });
+      showSuccess("Solução salva", "As informações foram salvas com sucesso.");
 
     } catch (error) {
       console.error("❌ Erro ao salvar solução:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar a solução.",
-        variant: "destructive"
-      });
+      showError("Erro ao salvar", "Ocorreu um erro ao salvar a solução.");
       throw error;
     } finally {
       setSaving(false);
@@ -182,11 +171,7 @@ export const useSolutionEditor = (id: string | undefined, user: any) => {
       
     } catch (error) {
       console.error("❌ Erro ao avançar etapa:", error);
-      toast({
-        title: "Erro ao avançar",
-        description: "Ocorreu um erro ao salvar os dados da etapa atual.",
-        variant: "destructive"
-      });
+      showError("Erro ao avançar", "Ocorreu um erro ao salvar os dados da etapa atual.");
     }
   }, [currentStep, totalSteps, handleSaveCurrentStep, toast]);
 

@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Save, Loader2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { formatFileSize } from "./utils/resourceUtils";
 import { useResourcesManager } from "./hooks/useResourcesManager";
 import ResourceUploadCard from "./components/ResourceUploadCard";
@@ -22,7 +22,7 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
   onSave,
   saving
 }) => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [searchQuery, setSearchQuery] = useState("");
   
   // Use custom hooks
@@ -45,17 +45,10 @@ const ResourcesUploadForm: React.FC<ResourcesUploadFormProps> = ({
       
       onSave();
       
-      toast({
-        title: "Materiais salvos",
-        description: "Os materiais foram salvos com sucesso.",
-      });
+      showSuccess("Materiais salvos", "Os materiais foram salvos com sucesso.");
     } catch (error: any) {
       console.error("Erro ao salvar materiais:", error);
-      toast({
-        title: "Erro ao salvar materiais",
-        description: error.message || "Ocorreu um erro ao tentar salvar os materiais.",
-        variant: "destructive",
-      });
+      showError("Erro ao salvar materiais", error.message || "Ocorreu um erro ao tentar salvar os materiais.");
     } finally {
       setSavingResources(false);
     }

@@ -11,7 +11,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Smartphone, Monitor, Mail, Eye } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+// Toast não usado neste componente - apenas renderização de preview
 import { SendTestEmailButton } from './SendTestEmailButton';
 
 interface TemplateOption {

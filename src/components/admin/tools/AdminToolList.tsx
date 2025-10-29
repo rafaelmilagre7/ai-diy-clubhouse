@@ -45,7 +45,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { supabase } from '@/lib/supabase';
 import { useAdminTools } from '@/hooks/useAdminTools';
 import { ToolCategory } from '@/types/toolTypes';
@@ -72,7 +72,7 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
   const [benefitFilter, setBenefitFilter] = useState<'all' | 'with-benefits' | 'without-benefits'>('all');
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [sortBy, setSortBy] = useState<'name' | 'category' | 'status' | 'clicks'>('name');
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const categories: ToolCategory[] = [
     'Modelos de IA e Interfaces',
@@ -101,20 +101,13 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
 
       if (error) throw error;
       
-      toast({
-        title: "Ferramenta excluída",
-        description: "A ferramenta foi excluída com sucesso.",
-      });
+      showSuccess("Ferramenta excluída", "A ferramenta foi excluída com sucesso.");
       
       await refetch();
       
     } catch (error: any) {
       console.error("Erro ao excluir ferramenta:", error);
-      toast({
-        title: "Erro ao excluir ferramenta",
-        description: error.message || "Ocorreu um erro ao excluir a ferramenta.",
-        variant: "destructive",
-      });
+      showError("Erro ao excluir ferramenta", error.message || "Ocorreu um erro ao excluir a ferramenta.");
     } finally {
       setDeletingId(null);
     }
@@ -129,18 +122,11 @@ export const AdminToolList = ({ refreshTrigger }: AdminToolListProps) => {
 
       if (error) throw error;
 
-      toast({
-        title: `Ferramenta ${!currentStatus ? 'ativada' : 'desativada'}`,
-        description: `Status atualizado com sucesso.`,
-      });
+      showSuccess(`Ferramenta ${!currentStatus ? 'ativada' : 'desativada'}`, `Status atualizado com sucesso.`);
 
       await refetch();
     } catch (error: any) {
-      toast({
-        title: "Erro ao alterar status",
-        description: error.message,
-        variant: "destructive",
-      });
+      showError("Erro ao alterar status", error.message);
     }
   };
 

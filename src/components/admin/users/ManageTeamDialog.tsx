@@ -9,7 +9,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useMasterTeamMembers } from "@/hooks/admin/useMasterTeamMembers";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { getUserRoleName } from "@/lib/supabase/types/members";
 import { AddMemberDialog } from "./AddMemberDialog";
 import { adminRemoveTeamMember } from "@/lib/supabase/rpc";
@@ -31,7 +31,7 @@ interface ManageTeamDialogProps {
 }
 
 export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialogProps) {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [showAddMember, setShowAddMember] = useState(false);
   const [memberToRemove, setMemberToRemove] = useState<UserProfile | null>(null);
   const [isRemoving, setIsRemoving] = useState(false);
@@ -50,25 +50,14 @@ export function ManageTeamDialog({ open, onOpenChange, master }: ManageTeamDialo
       const result = await adminRemoveTeamMember(memberToRemove.id, master.organization_id);
       
       if (result.success) {
-        toast({
-          title: "Membro removido",
-          description: `${memberToRemove.name} foi removido da equipe com sucesso.`,
-        });
+        showSuccess("Membro removido", `${memberToRemove.name} foi removido da equipe com sucesso.`);
         refetch();
       } else {
-        toast({
-          title: "Erro ao remover membro",
-          description: result.error || "Ocorreu um erro ao remover o membro.",
-          variant: "destructive",
-        });
+        showError("Erro ao remover membro", result.error || "Ocorreu um erro ao remover o membro.");
       }
     } catch (error) {
       console.error('[REMOVE_MEMBER] Erro:', error);
-      toast({
-        title: "Erro ao remover membro",
-        description: "Ocorreu um erro inesperado. Tente novamente.",
-        variant: "destructive",
-      });
+      showError("Erro ao remover membro", "Ocorreu um erro inesperado. Tente novamente.");
     } finally {
       setIsRemoving(false);
       setMemberToRemove(null);

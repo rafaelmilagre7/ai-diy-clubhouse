@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Users, AlertCircle, RefreshCw } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface OnboardingStats {
   total_users: number;
@@ -16,7 +16,7 @@ interface OnboardingStats {
 export const OnboardingStatusCard: React.FC = () => {
   const [stats, setStats] = useState<OnboardingStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  const { showError, showInfo } = useToastModern();
 
   useEffect(() => {
     fetchOnboardingStats();
@@ -55,21 +55,14 @@ export const OnboardingStatusCard: React.FC = () => {
       }
     } catch (error) {
       console.error('Erro ao buscar stats do onboarding:', error);
-      toast({
-        title: "Erro ao carregar dados",
-        description: "Não foi possível carregar as estatísticas do onboarding",
-        variant: "destructive"
-      });
+      showError("Erro ao carregar dados", "Não foi possível carregar as estatísticas do onboarding");
     } finally {
       setLoading(false);
     }
   };
 
   const handleNotifyLegacyUsers = async () => {
-    toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "A notificação automática de usuários legacy será implementada em breve!",
-    });
+    showInfo("Funcionalidade em desenvolvimento", "A notificação automática de usuários legacy será implementada em breve!");
   };
 
   if (loading) {

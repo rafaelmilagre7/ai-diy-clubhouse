@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Save, Loader2, Plus, Trash2, Play } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import PandaVideoEmbed from "@/components/formacao/comum/PandaVideoEmbed";
 import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 interface VideoLesson {
@@ -37,9 +37,7 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
   const [pandaThumbnailUrl, setPandaThumbnailUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [savingVideos, setSavingVideos] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { showSuccess, showError } = useToastModern();
   useEffect(() => {
     if (solutionId) {
       fetchVideoLessons();
@@ -72,22 +70,14 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       }
     } catch (error) {
       devWarn("Erro ao carregar vídeo-aulas:", error);
-      toast({
-        title: "Erro ao carregar vídeo-aulas",
-        description: "Não foi possível carregar a lista de vídeo-aulas.",
-        variant: "destructive"
-      });
+      showError("Erro ao carregar vídeo-aulas", "Não foi possível carregar a lista de vídeo-aulas.");
     } finally {
       setLoading(false);
     }
   };
   const handleAddPandaVideo = async () => {
     if (!solutionId || !pandaVideoId || !pandaVideoUrl) {
-      toast({
-        title: "Dados incompletos",
-        description: "Por favor, insira um código de incorporação válido do Panda Video.",
-        variant: "destructive"
-      });
+      showError("Dados incompletos", "Por favor, insira um código de incorporação válido do Panda Video.");
       return;
     }
     try {
@@ -127,17 +117,10 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
         setPandaVideoUrl("");
         setPandaThumbnailUrl("");
       }
-      toast({
-        title: "Vídeo adicionado",
-        description: "O vídeo do Panda foi adicionado com sucesso."
-      });
+      showSuccess("Vídeo adicionado", "O vídeo do Panda foi adicionado com sucesso.");
     } catch (error: any) {
       console.error("Erro ao adicionar vídeo do Panda:", error);
-      toast({
-        title: "Erro ao adicionar vídeo",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o vídeo do Panda.",
-        variant: "destructive"
-      });
+      showError("Erro ao adicionar vídeo", error.message || "Ocorreu um erro ao tentar adicionar o vídeo do Panda.");
     }
   };
   const handlePandaEmbedChange = (embedCode: string, videoId: string, url: string, thumbnailUrl: string) => {
@@ -155,17 +138,10 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
       } = await supabase.from("solution_resources").delete().eq("id", id);
       if (error) throw error;
       setVideoLessons(prev => prev.filter(video => video.id !== id));
-      toast({
-        title: "Vídeo removido",
-        description: "O vídeo foi removido com sucesso."
-      });
+      showSuccess("Vídeo removido", "O vídeo foi removido com sucesso.");
     } catch (error: any) {
       console.error("Erro ao remover vídeo:", error);
-      toast({
-        title: "Erro ao remover vídeo",
-        description: error.message || "Ocorreu um erro ao tentar remover o vídeo.",
-        variant: "destructive"
-      });
+      showError("Erro ao remover vídeo", error.message || "Ocorreu um erro ao tentar remover o vídeo.");
     }
   };
   const saveAndContinue = async () => {
@@ -177,17 +153,10 @@ const VideoLessonsForm: React.FC<VideoLessonsFormProps> = ({
 
       // Chamar a função de salvamento da solução
       onSave();
-      toast({
-        title: "Vídeos salvos",
-        description: "As vídeo-aulas foram salvas com sucesso."
-      });
+      showSuccess("Vídeos salvos", "As vídeo-aulas foram salvas com sucesso.");
     } catch (error: any) {
       console.error("Erro ao salvar vídeos:", error);
-      toast({
-        title: "Erro ao salvar vídeos",
-        description: error.message || "Ocorreu um erro ao tentar salvar as vídeo-aulas.",
-        variant: "destructive"
-      });
+      showError("Erro ao salvar vídeos", error.message || "Ocorreu um erro ao tentar salvar as vídeo-aulas.");
     } finally {
       setSavingVideos(false);
     }

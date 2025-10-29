@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { RefreshCw, CheckCircle, XCircle, AlertCircle, Loader2 } from 'lucide-react';
 
 interface CredentialCheck {
@@ -24,7 +24,7 @@ interface ValidationResult {
 export const CredentialsValidator = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ValidationResult | null>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const validateCredentials = async () => {
     setLoading(true);
@@ -44,19 +44,15 @@ export const CredentialsValidator = () => {
       };
 
       const status = statusMap[data.overall_status];
-      toast({
-        title: 'Validação de Credenciais',
-        description: status.message,
-        variant: status.type
-      });
+      if (status.type === 'destructive') {
+        showError('Validação de Credenciais', status.message);
+      } else {
+        showSuccess('Validação de Credenciais', status.message);
+      }
 
     } catch (error: any) {
       console.error('Erro ao validar credenciais:', error);
-      toast({
-        title: 'Erro na Validação',
-        description: error.message || 'Erro ao verificar credenciais',
-        variant: 'destructive'
-      });
+      showError('Erro na Validação', error.message || 'Erro ao verificar credenciais');
     } finally {
       setLoading(false);
     }

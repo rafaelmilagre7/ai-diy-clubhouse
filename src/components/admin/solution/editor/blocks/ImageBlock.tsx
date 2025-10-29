@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Image, LinkIcon, UploadCloud } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useUnifiedFileUpload } from "@/hooks/useUnifiedFileUpload";
 import { STORAGE_BUCKETS } from "@/lib/supabase/config";
 
@@ -18,7 +18,7 @@ interface ImageBlockProps {
 
 const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
   const [uploading, setUploading] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const { uploadFile, isUploading, progress } = useUnifiedFileUpload({
     bucketName: STORAGE_BUCKETS.SOLUTION_FILES,
@@ -30,18 +30,11 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
         alt: data.alt || fileName
       });
       
-      toast({
-        title: "Upload concluído",
-        description: "A imagem foi enviada com sucesso."
-      });
+      showSuccess("Upload concluído", "A imagem foi enviada com sucesso.");
     },
     onUploadError: (error) => {
       console.error('[IMAGE_BLOCK] Erro no upload:', error);
-      toast({
-        title: "Erro ao fazer upload",
-        description: error || "Ocorreu um erro ao tentar enviar a imagem.",
-        variant: "destructive",
-      });
+      showError("Erro ao fazer upload", error || "Ocorreu um erro ao tentar enviar a imagem.");
     }
   });
 
@@ -51,11 +44,7 @@ const ImageBlock: React.FC<ImageBlockProps> = ({ data, onChange }) => {
     const file = e.target.files[0];
     
     if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Tipo de arquivo inválido",
-        description: "Por favor, selecione uma imagem",
-        variant: "destructive",
-      });
+      showError("Tipo de arquivo inválido", "Por favor, selecione uma imagem");
       return;
     }
     

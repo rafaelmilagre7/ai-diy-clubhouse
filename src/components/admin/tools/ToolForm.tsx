@@ -11,12 +11,12 @@ import { toolFormSchema } from './schema/toolFormSchema';
 import { ToolFormProps, ToolFormValues } from './types/toolFormTypes';
 import { BenefitType } from '@/types/toolTypes';
 import { useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps) => {
   const defaultBenefitType = initialData?.benefit_type as BenefitType | undefined;
   const [hasChanges, setHasChanges] = useState(!initialData); // Novo formulário sempre tem mudanças
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const form = useForm<ToolFormValues>({
     resolver: zodResolver(toolFormSchema),
@@ -64,20 +64,14 @@ export const ToolForm = ({ initialData, onSubmit, isSubmitting }: ToolFormProps)
         setHasChanges(false);
         form.reset(data); // Reset com os novos dados
         
-        toast({
-          title: initialData ? "Ferramenta atualizada" : "Ferramenta criada",
-          description: initialData 
-            ? "As alterações foram salvas com sucesso" 
-            : "A nova ferramenta foi criada com sucesso",
-        });
+        showSuccess(
+          initialData ? "Ferramenta atualizada" : "Ferramenta criada",
+          initialData ? "As alterações foram salvas com sucesso" : "A nova ferramenta foi criada com sucesso"
+        );
       }
     } catch (error) {
       console.error("Erro ao enviar formulário:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao enviar o formulário",
-        variant: "destructive"
-      });
+      showError("Erro ao salvar", "Ocorreu um erro ao enviar o formulário");
     }
   };
 

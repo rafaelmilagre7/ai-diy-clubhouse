@@ -8,7 +8,7 @@ import MaterialUploadSection from "./MaterialUploadSection";
 import MaterialsList from "./MaterialsList";
 import { createStoragePublicPolicy } from "@/lib/supabase/rpc";
 import { useEffect, useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface ResourceMaterialsTabProps {
   form: UseFormReturn<ResourceFormValues>;
@@ -19,7 +19,7 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
   form, 
   solutionId 
 }) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [bucketReady, setBucketReady] = useState(false);
   const [bucketError, setBucketError] = useState<string | null>(null);
 
@@ -43,26 +43,18 @@ const ResourceMaterialsTab: React.FC<ResourceMaterialsTabProps> = ({
           setBucketError(error || 'Erro desconhecido ao preparar o armazenamento');
           
           // Notificar o usuário sobre problemas com o armazenamento
-          toast({
-            title: "Atenção",
-            description: "Houve um problema ao preparar o armazenamento. Uploads podem não funcionar corretamente.",
-            variant: "destructive",
-          });
+          showError("Atenção", "Houve um problema ao preparar o armazenamento. Uploads podem não funcionar corretamente.");
         }
       } catch (err: any) {
         console.error('Exceção ao verificar bucket:', err);
         setBucketError(err.message);
         
-        toast({
-          title: "Erro de armazenamento",
-          description: "Não foi possível inicializar o sistema de armazenamento. Por favor, tente novamente mais tarde.",
-          variant: "destructive",
-        });
+        showError("Erro de armazenamento", "Não foi possível inicializar o sistema de armazenamento. Por favor, tente novamente mais tarde.");
       }
     };
     
     checkBucket();
-  }, [toast]);
+  }, [showError]);
 
   return (
     <div className="space-y-6">

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { supabase } from '@/lib/supabase';
 import { Mail, UserPlus } from 'lucide-react';
 
@@ -24,15 +24,11 @@ export function AddMemberDialog({
 }: AddMemberDialogProps) {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   const handleAddMember = async () => {
     if (!email.trim()) {
-      toast({
-        title: "Email obrigatório",
-        description: "Por favor, informe o email do membro.",
-        variant: "destructive"
-      });
+      showError("Email obrigatório", "Por favor, informe o email do membro.");
       return;
     }
 
@@ -46,38 +42,23 @@ export function AddMemberDialog({
 
       if (error) {
         console.error('Erro RPC:', error);
-        toast({
-          title: "Erro ao adicionar membro",
-          description: "Ocorreu um erro ao processar a solicitação.",
-          variant: "destructive"
-        });
+        showError("Erro ao adicionar membro", "Ocorreu um erro ao processar a solicitação.");
         return;
       }
 
       if (!data.success) {
-        toast({
-          title: "Não foi possível adicionar",
-          description: data.message,
-          variant: "destructive"
-        });
+        showError("Não foi possível adicionar", data.message);
         return;
       }
 
-      toast({
-        title: "Membro adicionado!",
-        description: `${data.member_name || email} foi adicionado à equipe com sucesso.`,
-      });
+      showSuccess("Membro adicionado!", `${data.member_name || email} foi adicionado à equipe com sucesso.`);
 
       setEmail('');
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
       console.error('Erro ao adicionar membro:', error);
-      toast({
-        title: "Erro ao adicionar membro",
-        description: "Ocorreu um erro ao adicionar o membro. Tente novamente.",
-        variant: "destructive"
-      });
+      showError("Erro ao adicionar membro", "Ocorreu um erro ao adicionar o membro. Tente novamente.");
     } finally {
       setIsLoading(false);
     }
