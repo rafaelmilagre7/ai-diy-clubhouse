@@ -7,31 +7,7 @@ import { getUserRoleName } from '@/lib/supabase/types';
 import { Loader2 } from 'lucide-react';
 import { SignInPage } from '@/components/auth/SignInPage';
 import { loginTestimonials } from '@/data/testimonials';
-
-// Função para traduzir erros de autenticação
-const getAuthErrorMessage = (error: any): string => {
-  const errorMessage = error?.message || '';
-  
-  // Mapeamento de erros específicos do Supabase
-  if (errorMessage.includes('Invalid login credentials')) {
-    return 'Email ou senha incorretos';
-  }
-  if (errorMessage.includes('Email not confirmed')) {
-    return 'Confirme seu email antes de fazer login';
-  }
-  if (errorMessage.includes('User not found')) {
-    return 'Usuário não cadastrado';
-  }
-  if (errorMessage.includes('Too many requests')) {
-    return 'Muitas tentativas. Aguarde alguns minutos';
-  }
-  if (errorMessage.includes('Invalid email')) {
-    return 'Email inválido';
-  }
-  
-  // Erro genérico
-  return 'Erro ao fazer login. Tente novamente';
-};
+import { getAuthErrorMessage, AUTH_SUCCESS_MESSAGES } from '@/utils/authMessages';
 
 // Validação de email
 const isValidEmail = (email: string): boolean => {
@@ -46,7 +22,7 @@ const AuthLayout = () => {
   const [redirectHandled, setRedirectHandled] = useState(false);
   const [hasLoginError, setHasLoginError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { showError } = useToastModern();
+  const { showError, showSuccess } = useToastModern();
 
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
@@ -108,13 +84,17 @@ const AuthLayout = () => {
       const { error } = await signIn(email, password);
       
       if (error) {
-        console.error('❌ [AUTH-LAYOUT] Erro no login:', error.message);
+        console.error('❌ [AUTH-LAYOUT] Erro no login:', {
+          message: error.message,
+          status: error.status,
+          code: error.code
+        });
         
-        // Usar mensagem traduzida
-        const userFriendlyMessage = getAuthErrorMessage(error);
+        // Usar utilitário centralizado para mensagem de erro
+        const errorInfo = getAuthErrorMessage(error);
         setHasLoginError(true);
-        setErrorMessage(userFriendlyMessage);
-        showError('Erro no login', userFriendlyMessage, { position: 'top-center', duration: 6000 });
+        setErrorMessage(errorInfo.message);
+        showError(errorInfo.title, errorInfo.message, { position: 'top-center', duration: 6000 });
         
         // Limpar campo de senha
         const form = event.currentTarget;
@@ -126,7 +106,11 @@ const AuthLayout = () => {
         return;
       }
 
-      // Sucesso - o toast já é mostrado em useAuthMethods
+      // Sucesso - exibir feedback padronizado
+      showSuccess(
+        AUTH_SUCCESS_MESSAGES.LOGIN.title, 
+        AUTH_SUCCESS_MESSAGES.LOGIN.message
+      );
       
     } catch (err) {
       console.error('❌ [AUTH-LAYOUT] Erro inesperado:', err);

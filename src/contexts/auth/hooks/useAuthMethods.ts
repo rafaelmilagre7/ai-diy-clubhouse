@@ -27,7 +27,8 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
         console.error('❌ [AUTH] Erro no login:', {
           message: error.message,
           status: error.status,
-          name: error.name
+          name: error.name,
+          code: error.code
         });
         // Toast será tratado pelo componente que chamou esta função
         return { error };
@@ -66,7 +67,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
           // Falha silenciosa
         }
 
-        toast.success('Login realizado com sucesso!');
+        // Toast de sucesso será mostrado pelo componente (AuthLayout ou SecureLoginForm)
       }
 
       return { error: null };
@@ -93,7 +94,7 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
         throw error;
       }
 
-      toast.success('Logout realizado com sucesso!');
+      // Toast de sucesso será mostrado pelo componente que chamou o logout
     } catch (err) {
       console.error('❌ [AUTH] Erro inesperado no logout:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');

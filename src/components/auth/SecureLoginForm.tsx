@@ -12,6 +12,7 @@ import { logger } from '@/utils/logger';
 import { useAuth } from '@/contexts/auth';
 import { Loader2, Shield, AlertTriangle } from 'lucide-react';
 import { useToastModern } from '@/hooks/useToastModern';
+import { getAuthErrorMessage, AUTH_SUCCESS_MESSAGES } from '@/utils/authMessages';
 
 export const SecureLoginForm: React.FC = () => {
   const { signIn } = useAuth();
@@ -123,7 +124,8 @@ export const SecureLoginForm: React.FC = () => {
         method: 'email_password'
       });
       
-      showSuccess('Sucesso', 'Login realizado com sucesso!');
+      // Usar mensagem padronizada de sucesso
+      showSuccess(AUTH_SUCCESS_MESSAGES.LOGIN.title, AUTH_SUCCESS_MESSAGES.LOGIN.message);
       
     } catch (error: any) {
       logger.warn("Falha no login", {
@@ -138,16 +140,9 @@ export const SecureLoginForm: React.FC = () => {
         method: 'email_password'
       });
       
-      // Mensagens de erro seguras (não vazar informações)
-      if (error.message?.includes('Invalid login credentials')) {
-        setError('Email ou senha incorretos');
-      } else if (error.message?.includes('Email not confirmed')) {
-        setError('Confirme seu email antes de fazer login');
-      } else if (error.message?.includes('Too many requests')) {
-        setError('Muitas tentativas. Aguarde alguns minutos antes de tentar novamente.');
-      } else {
-        setError('Erro ao fazer login. Tente novamente.');
-      }
+      // Usar utilitário centralizado para mensagens de erro
+      const errorInfo = getAuthErrorMessage(error);
+      setError(errorInfo.message);
       
     } finally {
       setIsLoading(false);
