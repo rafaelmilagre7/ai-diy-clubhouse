@@ -145,11 +145,6 @@ const navigationItems: NavigationItem[] = [
     icon: MessageSquare,
   },
   {
-    title: "Pipedrive + Discord",
-    href: "/admin/integrations-debug",
-    icon: ArrowLeftRight,
-  },
-  {
     title: "Webhooks Hubla",
     href: "/admin/hubla-webhooks",
     icon: Webhook,

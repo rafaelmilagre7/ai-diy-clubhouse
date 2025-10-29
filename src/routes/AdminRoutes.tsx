@@ -25,7 +25,6 @@ const WhatsAppDebug = lazy(() => import('@/pages/admin/WhatsAppDebug'));
 const AdminCommunications = lazy(() => import('@/pages/admin/AdminCommunications'));
 const SupabaseDiagnostics = lazy(() => import('@/pages/admin/SupabaseDiagnostics'));
 const AdminSecurity = lazy(() => import('@/pages/admin/AdminSecurity'));
-const IntegrationsDebugPage = lazy(() => import('@/pages/admin/IntegrationsDebugPage'));
 const DataAuditPage = lazy(() => import('@/pages/admin/DataAudit'));
 const HublaWebhooks = lazy(() => import('@/pages/admin/HublaWebhooks'));
 const AdminAutomations = lazy(() => import('@/pages/admin/AdminAutomations'));
@@ -90,7 +89,6 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/communications/email-settings", EmailSettings),
   createAdminRoute("/admin/security", AdminSecurity),
   createAdminRoute("/admin/whatsapp-debug", WhatsAppDebug),
-  createAdminRoute("/admin/integrations-debug", IntegrationsDebugPage),
   createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
   
   createAdminRoute("/admin/nps", NPSAnalytics),
