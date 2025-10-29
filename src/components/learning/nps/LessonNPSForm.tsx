@@ -4,7 +4,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useLessonNPS } from "@/hooks/learning/useLessonNPS";
-import { Loader2, Star, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase";
 
 interface NPSRatingButtonProps {
@@ -193,7 +193,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
         <CardFooter className="p-0 pt-6">
           <Button 
             type="submit" 
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium py-3 text-sm shadow-sm transition-all duration-200 hover:shadow-md rounded-lg" 
+            className="w-full font-medium py-3 text-sm shadow-sm transition-all duration-200 hover:shadow-md rounded-lg" 
             disabled={score === null || isSubmitting}
           >
             {isSubmitting ? (
@@ -202,10 +202,7 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
                 Enviando avaliação...
               </>
             ) : (
-              <>
-                <Star className="mr-2 h-4 w-4" />
-                Enviar avaliação
-              </>
+              "Enviar avaliação"
             )}
           </Button>
         </CardFooter>
