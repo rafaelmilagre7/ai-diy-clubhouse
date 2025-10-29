@@ -19,7 +19,6 @@ interface LessonContentProps {
   isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
   onComplete?: () => void;
-  onSaveCompletion?: (score: number, feedback: string) => Promise<void>;
   prevLesson?: any;
   nextLesson?: any;
   courseId?: string;
@@ -36,7 +35,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   isCompleted = false,
   onProgressUpdate,
   onComplete,
-  onSaveCompletion,
   prevLesson,
   nextLesson,
   courseId,
@@ -46,14 +44,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   isUpdating = false
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
-  
-  console.log('[LESSON-CONTENT] 🎬 Componente renderizado com props:', {
-    lessonId: lesson?.id,
-    hasOnSaveCompletion: !!onSaveCompletion,
-    hasOnComplete: !!onComplete,
-    isUpdating,
-    isCompleted
-  });
   
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
@@ -79,12 +69,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
-    console.log('[LESSON-CONTENT] 🎯 handleCompleteLesson chamado:', {
-      hasOnComplete: !!onComplete,
-      hasOnSaveCompletion: !!onSaveCompletion,
-      willOpenModal: true
-    });
-    setCompletionDialogOpen(true);
+    // Se a aula não estava concluída anteriormente, mostrar o modal de conclusão com NPS
+    if (!isCompleted && onComplete) {
+      onComplete(); // Marcar como concluída primeiro
+      setCompletionDialogOpen(true); // Depois abrir o modal de NPS
+    }
   };
 
   // Função para lidar com a navegação para a próxima aula a partir do modal
@@ -182,8 +171,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         lesson={lesson}
         onNext={handleNavigateToNext}
         nextLesson={nextLesson}
-        onSaveCompletion={onSaveCompletion}
-        isSubmitting={isUpdating}
       />
     </div>
   );

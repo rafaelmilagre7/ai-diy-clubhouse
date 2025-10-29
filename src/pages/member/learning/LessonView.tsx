@@ -12,7 +12,6 @@ import { LessonLoadingSkeleton } from "@/components/learning/LessonLoadingSkelet
 import { useLessonData } from "@/hooks/learning/useLessonData";
 import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
 import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
-import { useLessonNPS } from "@/hooks/learning/useLessonNPS";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -79,15 +78,8 @@ const LessonView = () => {
     isCompleted,
     updateProgress,
     completeLesson,
-    isUpdating,
-    refetchProgress
+    isUpdating
   } = useLessonProgress({ lessonId });
-  
-  // Hook de NPS centralizado
-  const { submitNPS, isSubmitting: isSubmittingNPS } = useLessonNPS({ lessonId: lessonId || '' });
-  
-  // Estado combinado de loading
-  const isSaving = isUpdating || isSubmittingNPS;
   
   // Buscar lições completadas para o sidebar
   const { data: completedLessonsData = [] } = useQuery({
@@ -120,43 +112,6 @@ const LessonView = () => {
   // Atualizar progresso quando o usuário interage com a lição
   const handleProgressUpdate = (videoId: string, newProgress: number) => {
     updateProgress(newProgress);
-  };
-
-  // Salvar conclusão (progresso + NPS) quando usuário submeter o formulário
-  const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
-    console.log('[LESSON-VIEW] 🎯 handleSaveCompletionWithNPS CHAMADO:', { 
-      lessonId, 
-      score, 
-      feedbackLength: feedback?.length || 0,
-      timestamp: new Date().toISOString()
-    });
-    
-    try {
-      // 1. Salvar progresso (100%)
-      console.log('[LESSON-VIEW] 📊 Passo 1: Salvando progresso...');
-      await completeLesson();
-      console.log('[LESSON-VIEW] ✅ Progresso salvo com sucesso');
-      
-      // 2. Salvar NPS usando hook centralizado
-      console.log('[LESSON-VIEW] 📝 Passo 2: Chamando submitNPS do hook...');
-      await submitNPS(score, feedback);
-      console.log('[LESSON-VIEW] ✅ NPS salvo com sucesso');
-      
-      // 3. Refetch para garantir UI atualizada
-      console.log('[LESSON-VIEW] 🔄 Passo 3: Refazendo fetch do progresso...');
-      await refetchProgress();
-      console.log('[LESSON-VIEW] ✅ Progresso atualizado na UI');
-      
-      console.log('[LESSON-VIEW] 🎉 SALVAMENTO COMPLETO - Tudo concluído com sucesso');
-      
-    } catch (error: any) {
-      console.error('[LESSON-VIEW] ❌ ERRO NO SALVAMENTO:', {
-        error: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-      throw error;
-    }
   };
 
   if (isLoading) {
@@ -223,14 +178,13 @@ const LessonView = () => {
                   isCompleted={isCompleted}
                   onProgressUpdate={handleProgressUpdate} 
                   onComplete={completeLesson}
-                  onSaveCompletion={handleSaveCompletionWithNPS}
                   prevLesson={prevLesson}
                   nextLesson={nextLesson}
                   courseId={validCourseId} // Usar courseId válido
                   allLessons={safeAllCourseLessons}
                   onNextLesson={navigateToNext}
                   onPreviousLesson={navigateToPrevious}
-                  isUpdating={isSaving}
+                  isUpdating={isUpdating}
                 />
               </Suspense>
             </div>

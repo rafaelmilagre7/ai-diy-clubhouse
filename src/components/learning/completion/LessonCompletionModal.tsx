@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LessonNPSForm } from "../nps/LessonNPSForm";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Star, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { LearningLesson } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
-import { toast } from "sonner";
 
 interface LessonCompletionModalProps {
   isOpen: boolean;
@@ -12,8 +13,6 @@ interface LessonCompletionModalProps {
   lesson: LearningLesson;
   onNext?: () => void;
   nextLesson?: LearningLesson | null;
-  onSaveCompletion?: (score: number, feedback: string) => Promise<void>;
-  isSubmitting?: boolean;
 }
 
 export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
@@ -21,69 +20,43 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   setIsOpen,
   lesson,
   onNext,
-  nextLesson,
-  onSaveCompletion,
-  isSubmitting
+  nextLesson
 }) => {
   const [npsSubmitted, setNpsSubmitted] = useState(false);
   const { log } = useLogging();
 
-  // Log quando modal abre
-  React.useEffect(() => {
-    if (isOpen) {
-      console.log('[MODAL] 🎬 Modal aberto:', {
-        lessonId: lesson.id,
-        hasOnSaveCompletion: !!onSaveCompletion,
-        hasOnNext: !!onNext,
-        hasNextLesson: !!nextLesson,
-        isSubmitting
-      });
-    }
-  }, [isOpen]);
-
-  const handleNPSCompleted = async (score: number, feedback: string) => {
-    if (!onSaveCompletion) {
-      console.error('[MODAL] ❌ onSaveCompletion não definido');
-      toast.error('Erro: função de salvamento não encontrada');
-      return;
-    }
+  const handleNPSCompleted = () => {
+    log('NPS enviado com sucesso para a aula', { lessonId: lesson.id, lessonTitle: lesson.title });
+    setNpsSubmitted(true);
     
-    try {
-      console.log('[MODAL] 📤 Enviando para onSaveCompletion:', { score, feedback });
-      
-      // Aguardar salvamento completo
-      await onSaveCompletion(score, feedback);
-      
-      log('NPS e progresso salvos', { lessonId: lesson.id, score });
-      
-      // Apenas após sucesso, mostrar mensagem de sucesso
-      setNpsSubmitted(true);
-      
-      // Fechar modal e navegar após delay maior para ver o toast
-      setTimeout(() => {
-        setIsOpen(false);
-        setNpsSubmitted(false);
-        if (onNext && nextLesson) {
-          console.log('[MODAL] 🔄 Navegando para próxima aula:', nextLesson.id);
-          onNext();
-        }
-      }, 3000); // 3 segundos para ver o toast
-      
-    } catch (error: any) {
-      console.error('[MODAL] ❌ Erro ao salvar:', error);
-      toast.error(error.message || 'Erro ao salvar. Tente novamente.');
-      // NÃO fechar o modal em caso de erro
-    }
+    // Automaticamente avança para próxima aula ou fecha o modal após envio
+    setTimeout(() => {
+      setIsOpen(false);
+      if (onNext) onNext();
+    }, 1500);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen} modal>
       <DialogContent className="sm:max-w-md border-0 shadow-lg bg-background p-0 overflow-hidden">
+        {/* Close button */}
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute right-3 top-3 z-10 rounded-full h-7 w-7 p-0 text-muted-foreground hover:text-foreground hover:bg-muted"
+          onClick={() => setIsOpen(false)}
+        >
+          <X className="h-4 w-4" />
+        </Button>
+        
         {/* Header with celebration animation */}
         <div className="relative bg-background border-b p-6 text-center">
           <div className="space-y-3">
             <div className="flex justify-center">
-              <CheckCircle2 className="h-12 w-12 text-primary animate-scale-in" />
+              <div className="relative">
+                <CheckCircle2 className="h-12 w-12 text-primary animate-scale-in" />
+                <Star className="h-4 w-4 absolute -top-1 -right-1 text-primary animate-pulse" />
+              </div>
             </div>
             <DialogTitle className="text-xl font-bold text-foreground">
               Parabéns!
@@ -100,7 +73,6 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
             lessonId={lesson.id}
             onCompleted={handleNPSCompleted}
             showSuccessMessage={npsSubmitted}
-            isSubmitting={isSubmitting}
             nextLesson={nextLesson}
           />
         </div>

@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase/types";
 interface LessonNavigationBarProps {
   isCompleted: boolean;
@@ -55,24 +55,15 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
         <div className="flex justify-center">
           <Button 
             onClick={onComplete} 
-            disabled={isCompleted} 
+            disabled={isUpdating} 
             className={`gap-2 px-6 py-3 font-medium transition-all duration-300 border-0 ${
               isCompleted 
                 ? "bg-operational/20 text-operational hover:bg-operational/30 backdrop-blur-sm" 
                 : "bg-gradient-to-r from-primary via-primary to-primary/80 text-white hover:from-primary/90 hover:via-primary/90 hover:to-primary/70 shadow-lg hover:shadow-xl backdrop-blur-sm"
             }`}
           >
-            {isCompleted ? (
-              <>
-                <CheckCircle className="h-4 w-4 text-operational" />
-                Aula Concluída
-              </>
-            ) : (
-              <>
-                <CheckCircle className="h-4 w-4 text-white" />
-                Marcar como Concluída
-              </>
-            )}
+            <CheckCircle className={`h-4 w-4 ${isCompleted ? "text-operational" : "text-white"}`} />
+            {isUpdating ? "Salvando..." : isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
           </Button>
         </div>
 
