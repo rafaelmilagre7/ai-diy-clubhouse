@@ -72,11 +72,7 @@ export const useToolsChecklist = (solutionId: string | null) => {
       }
     } catch (error) {
       console.error("Erro ao carregar ferramentas:", error);
-      toast({
-        title: "Erro ao carregar ferramentas",
-        description: "Não foi possível carregar a lista de ferramentas.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar ferramentas", "Não foi possível carregar a lista de ferramentas.");
     } finally {
       setLoading(false);
     }
@@ -112,23 +108,16 @@ export const useToolsChecklist = (solutionId: string | null) => {
       }
       
       console.log("✅ Ferramentas salvas com sucesso");
-      toast({
-        title: "Ferramentas salvas",
-        description: "As ferramentas foram salvas com sucesso.",
-      });
+      showSuccess("Ferramentas salvas", "As ferramentas foram salvas com sucesso.");
       
     } catch (error: any) {
       console.error("❌ Erro ao salvar ferramentas:", error);
-      toast({
-        title: "Erro ao salvar ferramentas",
-        description: error.message || "Ocorreu um erro ao tentar salvar as ferramentas.",
-        variant: "destructive",
-      });
+      showError("Erro ao salvar ferramentas", error.message || "Ocorreu um erro ao tentar salvar as ferramentas.");
       throw error; // Re-throw para que o componente pai possa tratar
     } finally {
       setSavingTools(false);
     }
-  }, [solutionId, tools, toast]);
+  }, [solutionId, tools, showSuccess, showError]);
 
   return {
     tools,

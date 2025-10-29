@@ -51,11 +51,7 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       return true;
     } catch (error) {
       console.error("❌ Erro ao iniciar implementação:", error);
-      uiToast({
-        title: "Erro ao iniciar implementação",
-        description: "Ocorreu um erro ao tentar iniciar a implementação da solução.",
-        variant: "destructive",
-      });
+      showError("Erro ao iniciar implementação", "Ocorreu um erro ao tentar iniciar a implementação da solução.");
       return false;
     } finally {
       setInitializing(false);

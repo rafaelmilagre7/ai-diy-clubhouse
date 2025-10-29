@@ -88,11 +88,7 @@ export const useUserStatsData = () => {
       } catch (err: any) {
         console.error("Error fetching user stats data:", err);
         setError(err.message || "An unknown error occurred");
-        toast({
-          title: "Erro ao carregar estatísticas",
-          description: "Não foi possível carregar seus dados estatísticos.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar estatísticas", "Não foi possível carregar seus dados estatísticos.");
         
         // Set empty arrays on error
         setSolutions([]);
@@ -104,7 +100,7 @@ export const useUserStatsData = () => {
     };
 
     fetchUserStatsData();
-  }, [user, toast]);
+  }, [user, showError]);
 
   return {
     solutions,

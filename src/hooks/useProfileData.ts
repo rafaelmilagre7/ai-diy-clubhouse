@@ -140,11 +140,7 @@ export const useProfileData = () => {
         console.error("❌ [PROFILE] Erro final após todas as tentativas:", error);
         
         // Mostrar toast de erro apenas após esgotar tentativas
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar seus dados após várias tentativas. Tente novamente mais tarde.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar dados", "Não foi possível carregar seus dados após várias tentativas. Tente novamente mais tarde.");
         
         // Usar dados mock como fallback
         setImplementations([
@@ -168,7 +164,7 @@ export const useProfileData = () => {
     };
     
     fetchUserData();
-  }, [user, toast]);
+  }, [user, showError]);
   
   return {
     loading: loading || statsLoading,

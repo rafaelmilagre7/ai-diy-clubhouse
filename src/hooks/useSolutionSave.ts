@@ -24,11 +24,7 @@ export const useSolutionSave = (
       // Validar o valor da dificuldade antes de salvar
       if (values.difficulty !== "easy" && values.difficulty !== "medium" && values.difficulty !== "advanced") {
         console.error(`Valor inválido para dificuldade: "${values.difficulty}". Deve ser "easy", "medium" ou "advanced"`);
-        toast({
-          title: "Erro na validação",
-          description: `Valor de dificuldade inválido: "${values.difficulty}". Valores aceitos: "easy", "medium", "advanced"`,
-          variant: "destructive",
-        });
+        showError("Erro na validação", `Valor de dificuldade inválido: "${values.difficulty}". Valores aceitos: "easy", "medium", "advanced"`);
         setSaving(false);
         return;
       }
@@ -111,11 +107,7 @@ export const useSolutionSave = (
           
           // Se for um erro com a enum de dificuldade, mostre um erro específico
           if (error.message?.includes('invalid input value for enum difficulty_level')) {
-            toast({
-              title: "Erro com valor de dificuldade",
-              description: `Valor de dificuldade inválido: ${values.difficulty}. Valores aceitos: "easy", "medium", "advanced"`,
-              variant: "destructive",
-            });
+            showError("Erro com valor de dificuldade", `Valor de dificuldade inválido: ${values.difficulty}. Valores aceitos: "easy", "medium", "advanced"`);
             break;
           }
           
@@ -132,10 +124,10 @@ export const useSolutionSave = (
       }
       
       if (success) {
-        toast({
-          title: id ? "Solução atualizada" : "Solução criada",
-          description: id ? "As alterações foram salvas com sucesso." : "A nova solução foi criada com sucesso.",
-        });
+        showSuccess(
+          id ? "Solução atualizada" : "Solução criada",
+          id ? "As alterações foram salvas com sucesso." : "A nova solução foi criada com sucesso."
+        );
       } else {
         throw lastError || new Error("Não foi possível salvar a solução após várias tentativas");
       }
@@ -145,31 +137,15 @@ export const useSolutionSave = (
       // Mensagem de erro mais amigável baseada no tipo de erro
       if (error.message?.includes('duplicate key value violates unique constraint') && 
           error.message?.includes('solutions_slug_key')) {
-        toast({
-          title: "Erro ao salvar solução",
-          description: "Já existe uma solução com este slug. Tente modificar o título para criar um slug único.",
-          variant: "destructive",
-        });
+        showError("Erro ao salvar solução", "Já existe uma solução com este slug. Tente modificar o título para criar um slug único.");
       } else if (error.message?.includes('invalid input value for enum difficulty_level')) {
-        toast({
-          title: "Erro ao salvar solução",
-          description: `Valor de dificuldade inválido. Valores aceitos: "easy", "medium", "advanced"`,
-          variant: "destructive",
-        });
+        showError("Erro ao salvar solução", `Valor de dificuldade inválido. Valores aceitos: "easy", "medium", "advanced"`);
       } else if (error.message?.includes('infinite recursion') || 
           error.message?.includes('policy') || 
           error.code === '42P17') {
-        toast({
-          title: "Erro ao salvar solução",
-          description: "Ocorreu um problema com as permissões de acesso. Estamos trabalhando para resolver isso. Tente novamente em alguns instantes.",
-          variant: "destructive",
-        });
+        showError("Erro ao salvar solução", "Ocorreu um problema com as permissões de acesso. Estamos trabalhando para resolver isso. Tente novamente em alguns instantes.");
       } else {
-        toast({
-          title: "Erro ao salvar solução",
-          description: error.message || "Ocorreu um erro ao tentar salvar a solução.",
-          variant: "destructive",
-        });
+        showError("Erro ao salvar solução", error.message || "Ocorreu um erro ao tentar salvar a solução.");
       }
     } finally {
       setSaving(false);

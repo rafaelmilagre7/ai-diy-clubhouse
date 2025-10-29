@@ -55,11 +55,7 @@ export const useSolutionData = (id: string | undefined) => {
           console.error("Erro ao buscar solução:", fetchError);
           
           if (fetchError.code === "PGRST116" && !isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível no momento.",
-              variant: "destructive"
-            });
+            showError("Solução não disponível", "Esta solução não está disponível no momento.");
             navigate("/solutions");
             return;
           }
@@ -89,20 +85,12 @@ export const useSolutionData = (id: string | undefined) => {
           }
         } else {
           setError("Solução não encontrada");
-          toast({
-            title: "Solução não encontrada",
-            description: "Não foi possível encontrar a solução solicitada.",
-            variant: "destructive"
-          });
+          showError("Solução não encontrada", "Não foi possível encontrar a solução solicitada.");
         }
       } catch (error: any) {
         console.error("Erro em useSolutionData:", error);
         setError(error.message || "Erro ao buscar a solução");
-        toast({
-          title: "Erro ao carregar solução",
-          description: error.message || "Não foi possível carregar os dados da solução.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar solução", error.message || "Não foi possível carregar os dados da solução.");
       } finally {
         setLoading(false);
       }
