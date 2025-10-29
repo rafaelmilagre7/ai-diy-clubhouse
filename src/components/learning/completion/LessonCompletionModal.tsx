@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
 import { LessonNPSForm } from "../nps/LessonNPSForm";
@@ -24,51 +23,35 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
   onSaveCompletion
 }) => {
   const [npsSubmitted, setNpsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { log } = useLogging();
-  
-  console.log('[LESSON-COMPLETION-MODAL] 🔍 Props recebidas:', {
-    isOpen,
-    hasLesson: !!lesson,
-    hasOnNext: !!onNext,
-    hasOnSaveCompletion: !!onSaveCompletion,
-    npsSubmitted
-  });
 
   const handleNPSCompleted = async (score: number, feedback: string) => {
-    console.log('[LESSON-COMPLETION-MODAL] 💾 ==========');
-    console.log('[LESSON-COMPLETION-MODAL] 📥 Recebido:', { score, feedback });
-    console.log('[LESSON-COMPLETION-MODAL] 📋 onSaveCompletion definido?', !!onSaveCompletion);
-    
     if (!onSaveCompletion) {
-      console.error('[LESSON-COMPLETION-MODAL] ❌ onSaveCompletion não definido - ABORTANDO');
+      console.error('[MODAL] ❌ onSaveCompletion não definido');
       return;
     }
 
+    setIsSubmitting(true);
+    
     try {
-      console.log('[LESSON-COMPLETION-MODAL] 🚀 Iniciando salvamento...');
       await onSaveCompletion(score, feedback);
       
-      console.log('[LESSON-COMPLETION-MODAL] ✅ Salvamento COMPLETO');
       log('NPS e progresso salvos', { lessonId: lesson.id, score });
-      
       setNpsSubmitted(true);
+      setIsSubmitting(false);
       
       // Fechar modal e navegar após delay
       setTimeout(() => {
-        console.log('[LESSON-COMPLETION-MODAL] 🔄 Fechando modal...');
         setIsOpen(false);
+        setNpsSubmitted(false); // Reset para próxima vez
         if (onNext && nextLesson) {
-          console.log('[LESSON-COMPLETION-MODAL] ➡️ Navegando para próxima aula');
           onNext();
         }
       }, 1500);
     } catch (error) {
-      console.error('[LESSON-COMPLETION-MODAL] ❌ ERRO durante salvamento:', error);
-      console.error('[LESSON-COMPLETION-MODAL] ❌ Detalhes:', {
-        errorMessage: error instanceof Error ? error.message : 'Erro desconhecido',
-        errorStack: error instanceof Error ? error.stack : undefined
-      });
-      // Modal permanece aberto para usuário tentar novamente
+      console.error('[MODAL] ❌ Erro:', error);
+      setIsSubmitting(false);
     }
   };
 
@@ -96,6 +79,7 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
             lessonId={lesson.id}
             onCompleted={handleNPSCompleted}
             showSuccessMessage={npsSubmitted}
+            isSubmitting={isSubmitting}
             nextLesson={nextLesson}
           />
         </div>

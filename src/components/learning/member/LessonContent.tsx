@@ -47,13 +47,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
-  console.log('[LESSON-CONTENT] 🔍 Props recebidas:', {
-    hasLesson: !!lesson,
-    hasOnComplete: !!onComplete,
-    hasOnSaveCompletion: !!onSaveCompletion,
-    isCompleted
-  });
-  
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
     return (
@@ -78,8 +71,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
-    // Apenas abrir o modal, sem salvar nada
-    console.log('[LESSON-CONTENT] 🎉 Abrindo modal NPS');
     setCompletionDialogOpen(true);
   };
 

@@ -43,6 +43,7 @@ interface LessonNPSFormProps {
   lessonId: string;
   onCompleted?: (score: number, feedback: string) => Promise<void>;
   showSuccessMessage?: boolean;
+  isSubmitting?: boolean;
   nextLesson?: LearningLesson | null;
 }
 
@@ -50,45 +51,18 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   lessonId, 
   onCompleted,
   showSuccessMessage = false,
+  isSubmitting = false,
   nextLesson
 }) => {
   const [score, setScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  console.log('[LESSON-NPS-FORM] 🔍 Props recebidas:', {
-    lessonId,
-    hasOnCompleted: !!onCompleted,
-    showSuccessMessage,
-    score,
-    isSubmitting
-  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (score === null) {
-      console.warn('[LESSON-NPS-FORM] ⚠️ Tentativa de envio sem nota selecionada');
-      return;
-    }
+    if (score === null || !onCompleted) return;
     
-    if (!onCompleted) {
-      console.error('[LESSON-NPS-FORM] ❌ onCompleted não está definido!');
-      return;
-    }
-    
-    console.log('[LESSON-NPS-FORM] 📤 Iniciando envio:', { score, feedback });
-    setIsSubmitting(true);
-    
-    try {
-      console.log('[LESSON-NPS-FORM] 🎯 Chamando onCompleted...');
-      await onCompleted(score, feedback);
-      console.log('[LESSON-NPS-FORM] ✅ onCompleted executado com sucesso');
-      // NÃO resetar isSubmitting aqui - o componente pai controla o fluxo
-    } catch (error) {
-      console.error('[LESSON-NPS-FORM] ❌ Erro ao chamar onCompleted:', error);
-      setIsSubmitting(false); // Só reseta em caso de erro
-    }
+    await onCompleted(score, feedback);
   };
 
   const getScoreLabel = () => {
