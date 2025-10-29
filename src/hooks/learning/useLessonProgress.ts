@@ -51,16 +51,22 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   // Mutation para criar/atualizar progresso (SIMPLIFICADO)
   const updateProgressMutation = useMutation({
     mutationFn: async (completed: boolean) => {
-      if (!lessonId) throw new Error("ID da lição não fornecido");
+      console.log('[MUTATION] 🚀 INICIANDO updateProgressMutation');
+      console.log('[MUTATION] 📊 Params:', { lessonId, completed });
+      
+      if (!lessonId) {
+        console.error('[MUTATION] ❌ lessonId ausente');
+        throw new Error("ID da lição não fornecido");
+      }
       
       const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Usuário não autenticado");
+      if (!userData.user) {
+        console.error('[MUTATION] ❌ Usuário não autenticado');
+        throw new Error("Usuário não autenticado");
+      }
       
-      console.log('[PROGRESS] 💾 Salvando progresso:', {
-        userId: userData.user.id,
-        lessonId,
-        completed
-      });
+      console.log('[MUTATION] ✅ Usuário:', userData.user.id);
+      console.log('[MUTATION] 🔄 Verificando progresso existente...');
       
       const timestamp = new Date().toISOString();
       const progressPercentage = completed ? 100 : 1;
@@ -72,10 +78,13 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         .eq("user_id", userData.user.id)
         .eq("lesson_id", lessonId)
         .maybeSingle();
+      
+      console.log('[MUTATION] 📊 Progresso existente:', existingProgress);
 
       let data, error;
 
       if (existingProgress) {
+        console.log('[MUTATION] 🔄 Executando UPDATE...');
         // UPDATE: Preservar started_at original
         const updateResult = await supabase
           .from("learning_progress")
@@ -92,7 +101,14 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
           
         data = updateResult.data;
         error = updateResult.error;
+        
+        if (error) {
+          console.error('[MUTATION] ❌ Erro no UPDATE:', error);
+        } else {
+          console.log('[MUTATION] ✅ UPDATE concluído com sucesso!', data);
+        }
       } else {
+        console.log('[MUTATION] 🔄 Executando INSERT...');
         // INSERT: Criar novo registro
         const insertResult = await supabase
           .from("learning_progress")
@@ -110,14 +126,20 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
           
         data = insertResult.data;
         error = insertResult.error;
+        
+        if (error) {
+          console.error('[MUTATION] ❌ Erro no INSERT:', error);
+        } else {
+          console.log('[MUTATION] ✅ INSERT concluído com sucesso!', data);
+        }
       }
         
       if (error) {
-        console.error('[PROGRESS] ❌ Erro ao salvar:', error);
+        console.error('[MUTATION] ❌ Erro ao salvar:', error);
         throw new Error(`Erro ao salvar progresso: ${error.message}`);
       }
 
-      console.log('[PROGRESS] ✅ Progresso salvo com sucesso!');
+      console.log('[MUTATION] ✅ Progresso salvo com sucesso!');
       
       return { ...data, completed: completed };
     },
@@ -247,20 +269,27 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   
   // Marcar lição como concluída
   const completeLesson = async (): Promise<boolean> => {
-    console.log('[PROGRESS] 🎯 Marcando como concluída');
+    console.log('[PROGRESS] 🎯 completeLesson INICIADO');
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
+      console.error('[PROGRESS] ❌ Usuário não encontrado');
       toast.error('Você precisa estar logado para marcar a aula como concluída');
       return false;
     }
     
+    console.log('[PROGRESS] ✅ Usuário:', user.id, 'Lesson:', lessonId);
+    
     try {
+      console.log('[PROGRESS] 🔄 Chamando mutateAsync(true)...');
       await updateProgressMutation.mutateAsync(true);
+      
+      console.log('[PROGRESS] ✅ Mutation concluída com sucesso!');
       setIsCompleted(true);
       return true;
     } catch (error) {
-      console.error('[PROGRESS] ❌ Erro:', error);
+      console.error('[PROGRESS] ❌ Erro no mutation:', error);
+      toast.error('Erro ao salvar progresso');
       return false;
     }
   };
