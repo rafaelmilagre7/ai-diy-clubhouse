@@ -27,6 +27,7 @@ interface LessonContentProps {
   onNextLesson?: () => void;
   onPreviousLesson?: () => void;
   isUpdating?: boolean;
+  onResetProgress?: () => void;
 }
 
 export const LessonContent: React.FC<LessonContentProps> = ({ 
@@ -42,7 +43,8 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   allLessons = [],
   onNextLesson,
   onPreviousLesson,
-  isUpdating = false
+  isUpdating = false,
+  onResetProgress
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
@@ -167,6 +169,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           isUpdating={isUpdating}
           currentLessonIndex={currentLessonIndex}
           totalLessons={totalLessons}
+          onResetProgress={onResetProgress}
         />
       </div>
       

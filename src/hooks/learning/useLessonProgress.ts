@@ -12,6 +12,7 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const queryClient = useQueryClient();
   const isCreatingInitialProgress = useRef(false);
+  const mutationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Buscar progresso atual da lição
   const { 
@@ -166,6 +167,11 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     onError: (error: any) => {
       console.error('[PROGRESS] ❌ Erro:', error);
       toast.error('Não foi possível salvar seu progresso. Tente novamente.');
+      
+      // ✅ RESET EXPLÍCITO: Forçar reset da mutation após erro
+      setTimeout(() => {
+        updateProgressMutation.reset();
+      }, 100);
     }
   });
 
@@ -294,6 +300,43 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     }
   };
 
+  // Timeout de segurança para isUpdating travado
+  useEffect(() => {
+    // Se isUpdating ficar travado por mais de 10s, resetar forçadamente
+    if (updateProgressMutation.isPending || initializeProgressMutation.isPending) {
+      mutationTimeoutRef.current = setTimeout(() => {
+        console.warn('[PROGRESS] ⚠️ Timeout detectado! Resetando mutations...');
+        updateProgressMutation.reset();
+        initializeProgressMutation.reset();
+        toast.error('A operação demorou muito. Por favor, tente novamente.');
+      }, 10000); // 10 segundos
+    } else {
+      // Limpar timeout se a mutation concluir normalmente
+      if (mutationTimeoutRef.current) {
+        clearTimeout(mutationTimeoutRef.current);
+        mutationTimeoutRef.current = null;
+      }
+    }
+    
+    return () => {
+      if (mutationTimeoutRef.current) {
+        clearTimeout(mutationTimeoutRef.current);
+      }
+    };
+  }, [updateProgressMutation.isPending, initializeProgressMutation.isPending]);
+
+  // Função para resetar mutations manualmente
+  const resetMutations = () => {
+    console.log('[PROGRESS] 🔄 Reset manual acionado');
+    updateProgressMutation.reset();
+    initializeProgressMutation.reset();
+    if (mutationTimeoutRef.current) {
+      clearTimeout(mutationTimeoutRef.current);
+      mutationTimeoutRef.current = null;
+    }
+    toast.info('Estado resetado. Tente novamente.');
+  };
+
   // Progresso para compatibilidade (retorna 0 ou 100)
   const progress = isCompleted ? 100 : (userProgress ? 1 : 0);
 
@@ -303,6 +346,7 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     userProgress,
     isUpdating: updateProgressMutation.isPending || initializeProgressMutation.isPending,
     updateProgress,
-    completeLesson
+    completeLesson,
+    resetMutations
   };
 }

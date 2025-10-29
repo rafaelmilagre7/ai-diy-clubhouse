@@ -1,6 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, CheckCircle } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase/types";
 interface LessonNavigationBarProps {
   isCompleted: boolean;
@@ -12,6 +12,7 @@ interface LessonNavigationBarProps {
   isUpdating?: boolean;
   currentLessonIndex?: number;
   totalLessons?: number;
+  onResetProgress?: () => void;
 }
 export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
   isCompleted,
@@ -22,8 +23,23 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
   nextLesson,
   isUpdating = false,
   currentLessonIndex = 0,
-  totalLessons = 0
+  totalLessons = 0,
+  onResetProgress
 }) => {
+  const [showResetButton, setShowResetButton] = React.useState(false);
+
+  // Mostrar botão de reset após 5 segundos se ainda estiver salvando
+  React.useEffect(() => {
+    if (isUpdating) {
+      const timer = setTimeout(() => {
+        setShowResetButton(true);
+      }, 5000);
+      return () => clearTimeout(timer);
+    } else {
+      setShowResetButton(false);
+    }
+  }, [isUpdating]);
+
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
       {/* Indicador de progresso */}
@@ -63,7 +79,25 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
             }`}
           >
             <CheckCircle className={`h-4 w-4 ${isCompleted ? "text-operational" : "text-white"}`} />
-            {isUpdating ? "Salvando..." : isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
+            {isUpdating ? (
+              <span className="flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Salvando...
+                {showResetButton && onResetProgress && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onResetProgress();
+                    }}
+                    className="text-xs opacity-50 hover:opacity-100 ml-2 h-auto py-1 px-2"
+                  >
+                    Cancelar
+                  </Button>
+                )}
+              </span>
+            ) : isCompleted ? "Aula Concluída" : "Marcar como Concluída"}
           </Button>
         </div>
 

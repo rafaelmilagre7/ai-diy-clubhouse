@@ -78,7 +78,8 @@ const LessonView = () => {
     isCompleted,
     updateProgress,
     completeLesson,
-    isUpdating
+    isUpdating,
+    resetMutations
   } = useLessonProgress({ lessonId });
   
   // Buscar lições completadas para o sidebar
@@ -185,6 +186,7 @@ const LessonView = () => {
                   onNextLesson={navigateToNext}
                   onPreviousLesson={navigateToPrevious}
                   isUpdating={isUpdating}
+                  onResetProgress={resetMutations}
                 />
               </Suspense>
             </div>
