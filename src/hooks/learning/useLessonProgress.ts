@@ -56,6 +56,14 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       // Verificar autenticação ANTES de tentar salvar
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
+      console.log('[PROGRESS-MUTATION] 🔐 Verificação de sessão:', {
+        hasSession: !!session,
+        sessionError: sessionError?.message,
+        accessToken: session?.access_token ? 'presente' : 'ausente',
+        userId: session?.user?.id,
+        expiresAt: session?.expires_at
+      });
+      
       if (sessionError || !session) {
         console.error('[PROGRESS-MUTATION] ❌ Sessão inválida:', sessionError);
         throw new Error('Sessão expirada. Por favor, faça login novamente.');
@@ -75,75 +83,79 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       const timestamp = new Date().toISOString();
       const progressPercentage = completed ? 100 : 1;
       
-      // Usar UPSERT para evitar conflitos de chave duplicada
-      const { data, error } = await supabase
+      // Verificar se já existe um registro
+      const { data: existingProgress } = await supabase
         .from("learning_progress")
-        .upsert({
-          user_id: userData.user.id,
-          lesson_id: lessonId,
-          progress_percentage: progressPercentage,
-          started_at: timestamp,
-          updated_at: timestamp,
-          completed_at: completed ? timestamp : null,
-          last_position_seconds: 0
-        }, {
-          onConflict: 'user_id,lesson_id',
-          ignoreDuplicates: false
-        })
-        .select()
-        .single();
+        .select("id, started_at")
+        .eq("user_id", userData.user.id)
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
+
+      let data, error;
+
+      if (existingProgress) {
+        // UPDATE: Preservar started_at original
+        console.log('[PROGRESS-MUTATION] 📝 Atualizando progresso existente...');
+        
+        const updateResult = await supabase
+          .from("learning_progress")
+          .update({
+            progress_percentage: progressPercentage,
+            updated_at: timestamp,
+            completed_at: completed ? timestamp : null,
+            last_position_seconds: 0
+          })
+          .eq("user_id", userData.user.id)
+          .eq("lesson_id", lessonId)
+          .select()
+          .single();
+          
+        data = updateResult.data;
+        error = updateResult.error;
+      } else {
+        // INSERT: Criar novo registro
+        console.log('[PROGRESS-MUTATION] 📝 Criando novo progresso...');
+        
+        const insertResult = await supabase
+          .from("learning_progress")
+          .insert({
+            user_id: userData.user.id,
+            lesson_id: lessonId,
+            progress_percentage: progressPercentage,
+            started_at: timestamp,
+            updated_at: timestamp,
+            completed_at: completed ? timestamp : null,
+            last_position_seconds: 0
+          })
+          .select()
+          .single();
+          
+        data = insertResult.data;
+        error = insertResult.error;
+      }
         
       if (error) {
-        console.error('[PROGRESS-MUTATION] ❌ Erro no UPSERT:', {
+        console.error('[PROGRESS-MUTATION] ❌ ERRO DETALHADO:', {
           code: error.code,
           message: error.message,
           details: error.details,
-          hint: error.hint
+          hint: error.hint,
+          errorObject: JSON.stringify(error)
         });
         
-        // Se for erro de RLS/permissão
-        if (error.code === '42501' || error.message.includes('policy')) {
-          throw new Error('Você não tem permissão para atualizar este progresso');
+        // Verificar tipo específico de erro
+        if (error.code === '42501') {
+          throw new Error('Erro de permissão RLS: ' + error.message);
+        } else if (error.code === '23505') {
+          throw new Error('Conflito de chave duplicada: ' + error.message);
+        } else if (error.message.includes('policy')) {
+          throw new Error('Erro de política de segurança: ' + error.message);
+        } else {
+          throw new Error('Erro ao salvar progresso: ' + error.message);
         }
-        
-        // Se ainda houver erro de duplicata, tentar UPDATE específico
-        if (error.code === '23505') {
-          console.log('[PROGRESS-MUTATION] ⚠️ Tentando UPDATE como fallback...');
-          const { error: updateError } = await supabase
-            .from("learning_progress")
-            .update({ 
-              progress_percentage: progressPercentage,
-              updated_at: timestamp,
-              completed_at: completed ? timestamp : userProgress?.completed_at
-            })
-            .eq("user_id", userData.user.id)
-            .eq("lesson_id", lessonId);
-            
-          if (updateError) {
-            console.error('[PROGRESS-MUTATION] ❌ Erro no UPDATE:', updateError);
-            throw updateError;
-          }
-
-          console.log('[PROGRESS-MUTATION] ✅ UPDATE bem-sucedido (fallback)');
-
-          // Log da atualização de progresso
-          await supabase.rpc('log_learning_action', {
-            p_action: completed ? 'lesson_completed' : 'lesson_progress_updated',
-            p_resource_type: 'lesson',
-            p_resource_id: lessonId,
-            p_details: {
-              progress_percentage: progressPercentage,
-              completed: completed,
-              method: 'update'
-            }
-          });
-
-          return { progress_percentage: progressPercentage, completed: completed };
-        }
-        throw error;
       }
 
-      console.log('[PROGRESS-MUTATION] ✅ UPSERT bem-sucedido:', data);
+      console.log('[PROGRESS-MUTATION] ✅ Operação bem-sucedida:', data);
 
       // Log da criação/atualização de progresso
       await supabase.rpc('log_learning_action', {

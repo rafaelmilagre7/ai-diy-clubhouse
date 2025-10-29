@@ -98,8 +98,8 @@ export const LessonContent: React.FC<LessonContentProps> = ({
         console.error('[LESSON-CONTENT] ❌ Falha ao salvar progresso');
         toast({
           variant: "destructive",
-          title: "Erro",
-          description: "Não foi possível salvar seu progresso"
+          title: "Erro ao salvar progresso",
+          description: "Não foi possível salvar seu progresso no banco de dados. Por favor, tente novamente."
         });
         return;
       }
@@ -108,10 +108,12 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       setCompletionDialogOpen(true);
     } catch (error) {
       console.error('[LESSON-CONTENT] ❌ Erro ao completar aula:', error);
+      console.error('[LESSON-CONTENT] Stack trace:', error);
+      
       toast({
         variant: "destructive",
         title: "Erro",
-        description: "Erro ao concluir aula"
+        description: `Erro ao concluir aula: ${error instanceof Error ? error.message : 'Erro desconhecido'}`
       });
     }
   };
