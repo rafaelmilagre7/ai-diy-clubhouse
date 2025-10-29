@@ -18,7 +18,7 @@ interface LessonContentProps {
   resources?: any[];
   isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
-  onComplete?: () => void;
+  onComplete?: () => Promise<boolean> | void;
   prevLesson?: any;
   nextLesson?: any;
   courseId?: string;
@@ -76,16 +76,20 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     
     // Se a aula não estava concluída anteriormente, mostrar o modal de conclusão com NPS
     if (!isCompleted && onComplete) {
-      console.log('[LESSON-CONTENT] ⏳ Chamando onComplete()...');
+      console.log('[LESSON-CONTENT] ⏳ Salvando progresso...');
       
       try {
-        await onComplete(); // Marcar como concluída primeiro e aguardar
+        const result = await onComplete(); // Aguardar confirmação de salvamento
         
-        // Aguardar um pouco para garantir que o estado foi atualizado
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Se retornou boolean false explicitamente, houve erro
+        if (result === false) {
+          console.error('[LESSON-CONTENT] ❌ Falha ao salvar progresso');
+          return;
+        }
         
-        console.log('[LESSON-CONTENT] ✅ onComplete() concluído, abrindo modal');
-        setCompletionDialogOpen(true); // Depois abrir o modal de NPS
+        // Caso contrário (true ou undefined/void), consideramos sucesso
+        console.log('[LESSON-CONTENT] ✅ Progresso salvo! Abrindo modal de avaliação');
+        setCompletionDialogOpen(true);
       } catch (error) {
         console.error('[LESSON-CONTENT] ❌ Erro ao completar aula:', error);
       }

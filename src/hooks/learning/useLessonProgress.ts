@@ -257,20 +257,21 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   };
   
   // Marcar lição como concluída
-  const completeLesson = async () => {
+  const completeLesson = async (): Promise<boolean> => {
     console.log('[USE-LESSON-PROGRESS] 🎯 completeLesson() chamado');
     console.log('[USE-LESSON-PROGRESS] Estado atual:', { isCompleted, lessonId });
     
     try {
       await updateProgressMutation.mutateAsync(true);
       
-      // Atualizar estado local IMEDIATAMENTE
+      // Atualizar estado local IMEDIATAMENTE após salvar
       setIsCompleted(true);
       
-      console.log('[USE-LESSON-PROGRESS] ✅ Mutation completada e estado local atualizado');
+      console.log('[USE-LESSON-PROGRESS] ✅ Aula marcada como concluída com sucesso');
+      return true; // ✅ Retornar sucesso
     } catch (error) {
-      console.error('[USE-LESSON-PROGRESS] ❌ Erro na mutation:', error);
-      throw error;
+      console.error('[USE-LESSON-PROGRESS] ❌ Erro ao marcar como concluída:', error);
+      return false; // ❌ Retornar falha
     }
   };
 
