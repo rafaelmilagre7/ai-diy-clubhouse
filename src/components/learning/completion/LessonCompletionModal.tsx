@@ -25,6 +25,14 @@ export const LessonCompletionModal: React.FC<LessonCompletionModalProps> = ({
 }) => {
   const [npsSubmitted, setNpsSubmitted] = useState(false);
   const { log } = useLogging();
+  
+  console.log('[LESSON-COMPLETION-MODAL] 🔍 Props recebidas:', {
+    isOpen,
+    hasLesson: !!lesson,
+    hasOnNext: !!onNext,
+    hasOnSaveCompletion: !!onSaveCompletion,
+    npsSubmitted
+  });
 
   const handleNPSCompleted = async (score: number, feedback: string) => {
     console.log('[LESSON-COMPLETION-MODAL] 💾 ==========');

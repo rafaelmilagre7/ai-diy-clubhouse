@@ -55,6 +55,14 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   const [score, setScore] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  console.log('[LESSON-NPS-FORM] 🔍 Props recebidas:', {
+    lessonId,
+    hasOnCompleted: !!onCompleted,
+    showSuccessMessage,
+    score,
+    isSubmitting
+  });
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
