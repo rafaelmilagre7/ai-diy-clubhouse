@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Clock, RefreshCw, CheckCircle, AlertCircle, Video, ChevronDown, ChevronUp, GraduationCap, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
+import { showModernError, showModernSuccess, showModernInfo } from '@/lib/toast-helpers';
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/auth";
 import { AccessBlocked } from "@/components/ui/access-blocked";
@@ -66,7 +66,7 @@ export const CourseDurationManager = () => {
         return newSet;
       });
       queryClient.invalidateQueries({ queryKey: ['course-durations'] });
-      toast.success(`Sincronização concluída: ${data.calculatedHours}`);
+      showModernSuccess('Sincronização concluída!', `Duração calculada: ${data.calculatedHours}`);
     },
     onError: (error: any, courseId) => {
       setSyncingCourses(prev => {
@@ -74,7 +74,7 @@ export const CourseDurationManager = () => {
         newSet.delete(courseId);
         return newSet;
       });
-      toast.error(`Erro na sincronização: ${error.message}`);
+      showModernError('Erro na sincronização', error.message);
     }
   });
 

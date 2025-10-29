@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, CheckCircle, XCircle, AlertCircle, Smartphone, Send, RefreshCw } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showModernError, showModernSuccess, showModernInfo } from '@/lib/toast-helpers';
 import { devLog } from '@/utils/devLogger';
 
 interface DiagnosticsResult {
@@ -71,21 +71,21 @@ export function WhatsAppDebugPanel() {
 
       if (error) {
         console.error('Erro:', error);
-        toast.error('Erro ao executar diagnósticos');
+        showModernError('Erro ao executar diagnósticos', 'Tente novamente');
         return;
       }
 
       setDiagnostics(data);
       
       if (data.overall_status === 'success') {
-        toast.success('✅ WhatsApp configurado corretamente!');
+        showModernSuccess('WhatsApp configurado!', 'Tudo funcionando corretamente');
       } else {
-        toast.error('❌ Problemas encontrados na configuração');
+        showModernError('Problemas na configuração', 'Verifique os detalhes abaixo');
       }
 
     } catch (err: any) {
       console.error('❌ [WhatsApp Debug] Erro inesperado:', err);
-      toast.error('Erro inesperado nos diagnósticos');
+      showModernError('Erro inesperado', 'Não foi possível executar diagnósticos');
     } finally {
       setLoading(false);
     }
@@ -93,7 +93,7 @@ export function WhatsAppDebugPanel() {
 
   const testSend = async () => {
     if (!testPhone.trim()) {
-      toast.error('Número de teste obrigatório');
+      showModernError('Número obrigatório', 'Digite um número para teste');
       return;
     }
 
@@ -108,19 +108,19 @@ export function WhatsAppDebugPanel() {
 
       if (error) {
         console.error('❌ [WhatsApp Debug] Erro no teste:', error);
-        toast.error('Erro no teste de envio');
+        showModernError('Erro no teste', 'Não foi possível enviar mensagem');
         return;
       }
 
       if (data?.success) {
-        toast.success(`✅ Teste enviado! ID: ${data.messageId || 'N/A'}`);
+        showModernSuccess('Teste enviado!', `ID da mensagem: ${data.messageId || 'N/A'}`);
       } else {
-        toast.error(`❌ Falha no teste: ${data?.errors?.[0] || 'Erro desconhecido'}`);
+        showModernError('Falha no teste', data?.errors?.[0] || 'Erro desconhecido');
       }
 
     } catch (err: any) {
       console.error('❌ [WhatsApp Debug] Erro inesperado no teste:', err);
-      toast.error('Erro inesperado no teste');
+      showModernError('Erro inesperado', 'Não foi possível executar o teste');
     } finally {
       setTestingPhone(false);
     }

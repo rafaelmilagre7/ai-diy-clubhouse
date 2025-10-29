@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useInviteCreate } from "@/hooks/admin/invites/useInviteCreate";
-import { toast } from "sonner";
+import { showModernError } from '@/lib/toast-helpers';
 import { PhoneInput } from 'react-international-phone';
 import 'react-international-phone/style.css';
 import '@/styles/phone-input.css';
@@ -47,18 +47,18 @@ const CreateInviteContent = memo<CreateInviteContentProps>(({ roles, onInviteCre
 
   const validateForm = useCallback(() => {
     if (!email || !roleId) {
-      toast.error("Email e papel são obrigatórios");
+      showModernError('Campos obrigatórios', 'Preencha email e papel');
       return false;
     }
 
     if ((channelPreference === 'whatsapp' || channelPreference === 'both') && !phone) {
-      toast.error("Telefone é obrigatório para envio via WhatsApp");
+      showModernError('Telefone obrigatório', 'Necessário para envio via WhatsApp');
       return false;
     }
 
     // Validar formato do telefone se fornecido
     if (phone && !validateInternationalPhone(phone)) {
-      toast.error("Formato de telefone internacional inválido");
+      showModernError('Telefone inválido', 'Use formato internacional válido');
       return false;
     }
 

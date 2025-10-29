@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Settings, Save, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export const BuilderRoleLimits: React.FC = () => {
@@ -54,12 +54,12 @@ export const BuilderRoleLimits: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-roles'] });
-      toast.success('Limite atualizado com sucesso!');
+      showModernSuccess('Limite atualizado!', 'Alterações salvas com sucesso');
       setEditingLimits({});
     },
     onError: (error) => {
       console.error('Erro ao atualizar limite:', error);
-      toast.error('Erro ao atualizar limite');
+      showModernError('Erro ao atualizar limite', 'Tente novamente');
     }
   });
 

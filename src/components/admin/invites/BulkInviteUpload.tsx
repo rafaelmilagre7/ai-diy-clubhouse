@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useContactDataCleaner } from "@/hooks/admin/invites/useContactDataCleaner";
 import { useRoleMapping } from "@/hooks/admin/invites/useRoleMapping";
 import { DataCleaningResults } from "./DataCleaningResults";
-import { toast } from "sonner";
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 import { type ContactData, type CleanedContact } from "@/utils/contactDataCleaner";
 
 interface UserRole {
@@ -40,11 +40,11 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
     const file = event.target.files?.[0];
     if (file) {
       if (file.type !== 'text/csv' && !file.name.endsWith('.csv')) {
-        toast.error('Por favor, selecione um arquivo CSV válido');
+        showModernError('Arquivo inválido', 'Selecione um arquivo CSV válido');
         return;
       }
       setCsvFile(file);
-      toast.success('Arquivo CSV carregado com sucesso');
+      showModernSuccess('Arquivo carregado!', 'CSV pronto para processamento');
     }
   }, []);
 
@@ -136,7 +136,7 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
 
   const handleProcessCsv = async () => {
     if (!csvFile) {
-      toast.error('Selecione um arquivo CSV');
+      showModernError('Arquivo obrigatório', 'Selecione um CSV para processar');
       return;
     }
 
@@ -145,20 +145,20 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
       const contacts = parseCsvData(text);
       
       if (contacts.length === 0) {
-        toast.error('Nenhum contato válido encontrado no arquivo');
+        showModernError('Nenhum contato válido', 'Verifique o formato do arquivo');
         return;
       }
 
       setRawContacts(contacts);
       await processContacts(contacts);
     } catch (error: any) {
-      toast.error('Erro ao processar CSV: ' + error.message);
+      showModernError('Erro ao processar CSV', error.message);
     }
   };
 
   const handleProcessManual = async () => {
     if (!manualContacts.trim()) {
-      toast.error('Digite os contatos');
+      showModernError('Contatos obrigatórios', 'Digite os contatos para processar');
       return;
     }
 
@@ -166,14 +166,14 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
       const contacts = parseManualData(manualContacts);
       
       if (contacts.length === 0) {
-        toast.error('Nenhum contato válido encontrado');
+        showModernError('Nenhum contato válido', 'Verifique o formato digitado');
         return;
       }
 
       setRawContacts(contacts);
       await processContacts(contacts);
     } catch (error: any) {
-      toast.error('Erro ao processar contatos: ' + error.message);
+      showModernError('Erro ao processar', error.message);
     }
   };
 
@@ -191,7 +191,7 @@ export function BulkInviteUpload({ roles, rolesLoading = false, onProceedWithCon
         .filter(role => role && !validateRole(role));
 
       if (invalidRoles.length > 0) {
-        toast.error(`Papéis inválidos encontrados: ${invalidRoles.join(', ')}`);
+        showModernError('Papéis inválidos', `Verifique: ${invalidRoles.join(', ')}`);
         return;
       }
     }

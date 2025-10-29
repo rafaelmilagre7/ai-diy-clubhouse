@@ -17,7 +17,7 @@ import {
   Copy,
   RefreshCw
 } from "lucide-react";
-import { toast } from "sonner";
+import { showModernSuccess } from '@/lib/toast-helpers';
 import { Skeleton } from "@/components/ui/skeleton";
 import type { Invite } from "@/hooks/admin/invites/types";
 
@@ -63,7 +63,7 @@ export function InviteDetailsModal({ invite, isOpen, onClose, onResend }: Invite
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast.success(`${label} copiado!`);
+    showModernSuccess(`${label} copiado!`, 'Colado na área de transferência');
   };
 
   return (

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showModernError, showModernSuccess, showModernInfo } from '@/lib/toast-helpers';
 import { devLog } from '@/utils/devLogger';
 
 export const ManualUpdateButton = () => {
@@ -10,7 +10,7 @@ export const ManualUpdateButton = () => {
   const handleManualUpdate = async () => {
     setIsUpdating(true);
     try {
-      toast.info('Iniciando atualização das durações dos vídeos...');
+      showModernInfo('Iniciando atualização', 'Atualizando durações dos vídeos...');
       
       const { data, error } = await supabase.functions.invoke('update-video-durations', {
         body: {}
@@ -18,24 +18,24 @@ export const ManualUpdateButton = () => {
       
       if (error) {
         console.error('Erro na edge function:', error);
-        toast.error('Erro na atualização: ' + error.message);
+        showModernError('Erro na atualização', error.message);
         return;
       }
       
       if (data.success > 0) {
-        toast.success(`${data.success} vídeo(s) atualizados com sucesso!`);
+        showModernSuccess('Atualização concluída!', `${data.success} vídeo(s) atualizados`);
         
         // Recarregar após 3 segundos
         setTimeout(() => {
           window.location.reload();
         }, 3000);
       } else {
-        toast.info('Nenhum vídeo precisou ser atualizado');
+        showModernInfo('Nenhuma atualização', 'Todos os vídeos já estão atualizados');
       }
       
     } catch (error: any) {
       console.error('Erro crítico:', error);
-      toast.error('Erro crítico na atualização: ' + error.message);
+      showModernError('Erro crítico', error.message);
     } finally {
       setIsUpdating(false);
     }

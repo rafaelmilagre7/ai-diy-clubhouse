@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { RefreshCw, Play, CheckCircle, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { showModernError, showModernSuccess, showModernInfo } from '@/lib/toast-helpers';
 
 interface CourseSyncStatus {
   course_title: string;
@@ -69,7 +69,7 @@ export const VideoDurationSyncDashboard = () => {
     setIsRunning(true);
     try {
       // Sincronização iniciada
-      toast.info('Iniciando sincronização de todas as durações...');
+      showModernInfo('Iniciando sincronização', 'Processando todas as durações...');
 
       const { data, error } = await supabase.functions.invoke('update-video-durations', {
         body: {}
@@ -77,31 +77,31 @@ export const VideoDurationSyncDashboard = () => {
 
       if (error) {
         console.error('❌ [DASHBOARD] Erro na sincronização:', error);
-        toast.error(`Erro na sincronização: ${error.message}`);
+        showModernError('Erro na sincronização', error.message);
         return;
       }
 
       // Resultado obtido
       
       if (data.success > 0) {
-        toast.success(`${data.success} vídeos sincronizados com sucesso!`);
+        showModernSuccess('Sincronização concluída!', `${data.success} vídeos sincronizados`);
         
         if (data.failed > 0) {
-          toast.warning(`${data.failed} vídeos falharam na sincronização`);
+          showModernError('Falhas na sincronização', `${data.failed} vídeos falharam`);
         }
 
         // Aguardar um pouco e atualizar o dashboard
         setTimeout(() => {
           refetch();
-          toast.info('Dashboard atualizado com novos dados');
+          showModernInfo('Dashboard atualizado', 'Dados recarregados com sucesso');
         }, 3000);
       } else {
-        toast.info('Nenhum vídeo precisou ser sincronizado');
+        showModernInfo('Nenhuma atualização', 'Todos os vídeos já sincronizados');
       }
 
     } catch (error: any) {
       console.error('💥 [DASHBOARD] Erro crítico:', error);
-      toast.error(`Erro crítico: ${error.message}`);
+      showModernError('Erro crítico', error.message);
     } finally {
       setIsRunning(false);
     }

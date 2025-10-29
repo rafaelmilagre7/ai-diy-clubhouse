@@ -7,7 +7,7 @@ import { Mail, MessageCircle, MoreHorizontal, RefreshCw, Trash2, Calendar, User,
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { formatDistanceToNow, format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
-import { toast } from 'sonner';
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 import { APP_CONFIG } from '@/config/app';
 
 interface OptimizedInvitesListProps {
@@ -38,13 +38,9 @@ const InviteListItem = memo<{
     const inviteUrl = APP_CONFIG.getAppUrl(`/convite/${invite.token}`);
     try {
       await navigator.clipboard.writeText(inviteUrl);
-      toast.success('Link copiado!', {
-        description: 'O link do convite foi copiado para a área de transferência.'
-      });
+      showModernSuccess('Link copiado!', 'Convite pronto para compartilhar');
     } catch (error) {
-      toast.error('Erro ao copiar link', {
-        description: 'Não foi possível copiar o link. Tente novamente.'
-      });
+      showModernError('Erro ao copiar', 'Tente novamente');
     }
   }, [invite.token]);
 

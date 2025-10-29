@@ -20,7 +20,7 @@ import { EventFormDialog } from "./EventFormDialog";
 import { RecurrenceDeleteDialog } from "./RecurrenceDeleteDialog";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+// toast já substituído por showModern* importado na linha 24
 import { showModernSuccess, showModernError } from '@/lib/toast-helpers';
 import type { Event } from "@/types/events";
 import { motion } from "framer-motion";
