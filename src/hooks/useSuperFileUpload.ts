@@ -7,6 +7,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { 
   unifiedUpload, 
   UploadContext, 
@@ -83,7 +84,9 @@ export const useSuperFileUpload = ({
   } | null>(null);
   
   const { toast } = useToast();
+  const { showLoading, showSuccess, showError, dismissToast } = useToastModern();
   const abortControllerRef = useRef<AbortController | null>(null);
+  const loadingToastRef = useRef<string | number | null>(null);
 
   // =============================================
   // FUNÇÃO DE UPLOAD
@@ -96,6 +99,11 @@ export const useSuperFileUpload = ({
     setIsUploading(true);
     setProgress(0);
     onUploadStart?.();
+
+    // Toast de loading (adicional, não substitui lógica existente)
+    if (autoToast) {
+      loadingToastRef.current = showLoading('Upload em andamento', `Enviando ${file.name}...`);
+    }
 
     try {
       abortControllerRef.current = new AbortController();
@@ -126,7 +134,15 @@ export const useSuperFileUpload = ({
       setUploadedFile(uploadData);
       onUploadComplete?.(result.publicUrl, result.fileName, result.fileSize);
 
+      // Dismiss loading toast e mostrar sucesso
       if (autoToast) {
+        if (loadingToastRef.current) {
+          dismissToast(loadingToastRef.current);
+          loadingToastRef.current = null;
+        }
+        showSuccess('Upload concluído!', `${result.fileName} foi enviado com sucesso`);
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: 'Upload concluído',
           description: `Arquivo "${result.fileName}" enviado com sucesso.`,
@@ -137,10 +153,19 @@ export const useSuperFileUpload = ({
       const errorMessage = error.message || 'Erro inesperado durante o upload';
       console.error('[SUPER_UPLOAD_HOOK] Erro:', errorMessage);
       
+      // Dismiss loading toast em caso de erro
+      if (autoToast && loadingToastRef.current) {
+        dismissToast(loadingToastRef.current);
+        loadingToastRef.current = null;
+      }
+      
       setError(errorMessage);
       onUploadError?.(errorMessage);
 
       if (autoToast) {
+        showError('Erro no upload', errorMessage);
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: 'Erro no upload',
           description: errorMessage,
