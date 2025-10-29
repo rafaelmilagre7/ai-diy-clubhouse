@@ -39,7 +39,8 @@ export const CourseCarousel: React.FC<CourseCarouselProps> = ({
     
     if (courseProgress.length === 0) return 0;
     
-    const completedLessons = courseProgress.filter(p => p.completed_at).length;
+    // Usar progress_percentage >= 100 para consistência
+    const completedLessons = courseProgress.filter(p => p.progress_percentage >= 100).length;
     return Math.round((completedLessons / courseProgress.length) * 100);
   };
 

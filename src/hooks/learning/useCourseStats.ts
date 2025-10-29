@@ -66,11 +66,11 @@ export function useCourseStats({ modules, allLessons, userProgress }: CourseStat
     // Extrair IDs de todas as lições do curso
     const allLessonIds = allLessons.map(lesson => lesson.id);
     
-    // Contar lições completadas
+    // Contar lições completadas (usar >= 100 para consistência)
     let completedLessons = 0;
     if (userProgress) {
       userProgress.forEach(progress => {
-        if (allLessonIds.includes(progress.lesson_id) && progress.progress_percentage === 100) {
+        if (allLessonIds.includes(progress.lesson_id) && progress.progress_percentage >= 100) {
           completedLessons++;
         }
       });

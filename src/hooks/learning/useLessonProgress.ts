@@ -2,7 +2,13 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
+import { 
+  showModernLoading, 
+  showModernSuccess, 
+  showModernError,
+  dismissModernToast 
+} from "@/lib/toast-helpers";
+import { LESSON_PROGRESS, isLessonCompleted } from "@/utils/lessonProgressUtils";
 
 interface UseLessonProgressProps {
   lessonId?: string;
@@ -11,7 +17,7 @@ interface UseLessonProgressProps {
 export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   const [isCompleted, setIsCompleted] = useState(false);
   const queryClient = useQueryClient();
-  const isCreatingInitialProgress = useRef(false);
+  const progressInitialized = useRef(false);
 
   // Buscar progresso atual da lição
   const { 
@@ -34,42 +40,58 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         .maybeSingle();
         
       if (error && error.code !== 'PGRST116') {
-        console.error("Erro ao carregar progresso da lição:", error);
+        console.error("[LESSON-PROGRESS] ❌ Erro ao carregar progresso:", error);
         return null;
       }
       
       if (data) {
-        // Progresso binário: considera concluída se >= 100%
-        setIsCompleted(data.progress_percentage >= 100);
+        const completed = isLessonCompleted(data.progress_percentage);
+        setIsCompleted(completed);
+        progressInitialized.current = true;
+        
+        console.log("[LESSON-PROGRESS] 📊 Progresso carregado:", {
+          lessonId,
+          progress_percentage: data.progress_percentage,
+          completed
+        });
       }
       
       return data;
     },
-    enabled: !!lessonId
+    enabled: !!lessonId,
+    staleTime: 1 * 60 * 1000, // 1 minuto
+    gcTime: 5 * 60 * 1000 // 5 minutos
   });
   
-  // Mutation para criar/atualizar progresso (usando UPSERT)
+  // Mutation para atualizar progresso com toasts e retry
   const updateProgressMutation = useMutation({
     mutationFn: async (completed: boolean) => {
       if (!lessonId) throw new Error("ID da lição não fornecido");
+      
+      console.log("[LESSON-PROGRESS] 🎯 Iniciando atualização:", {
+        lessonId,
+        completed,
+        timestamp: new Date().toISOString()
+      });
       
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Usuário não autenticado");
       
       const timestamp = new Date().toISOString();
-      const progressPercentage = completed ? 100 : 1; // 1% para iniciada, 100% para concluída
+      const progressPercentage = completed ? LESSON_PROGRESS.COMPLETED : LESSON_PROGRESS.STARTED;
       
-      // Usar UPSERT para evitar conflitos de chave duplicada
+      // UPSERT otimizado
       const { data, error } = await supabase
         .from("learning_progress")
         .upsert({
           user_id: userData.user.id,
           lesson_id: lessonId,
           progress_percentage: progressPercentage,
-          started_at: timestamp,
+          started_at: userProgress?.started_at || timestamp,
           updated_at: timestamp,
           completed_at: completed ? timestamp : null,
-          last_position_seconds: 0
+          last_position_seconds: userProgress?.last_position_seconds || 0,
+          video_progress: userProgress?.video_progress || {}
         }, {
           onConflict: 'user_id,lesson_id',
           ignoreDuplicates: false
@@ -78,9 +100,13 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         .single();
         
       if (error) {
-        // Se ainda houver erro de duplicata, tentar UPDATE específico
+        console.error("[LESSON-PROGRESS] ❌ Erro no UPSERT:", error);
+        
+        // Fallback para UPDATE se UPSERT falhar
         if (error.code === '23505') {
-          const { error: updateError } = await supabase
+          console.log("[LESSON-PROGRESS] 🔄 Tentando UPDATE como fallback");
+          
+          const { data: updateData, error: updateError } = await supabase
             .from("learning_progress")
             .update({ 
               progress_percentage: progressPercentage,
@@ -88,188 +114,120 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
               completed_at: completed ? timestamp : userProgress?.completed_at
             })
             .eq("user_id", userData.user.id)
-            .eq("lesson_id", lessonId);
+            .eq("lesson_id", lessonId)
+            .select()
+            .single();
             
-          if (updateError) throw updateError;
-
-          // Log da atualização de progresso
-          await supabase.rpc('log_learning_action', {
-            p_action: completed ? 'lesson_completed' : 'lesson_progress_updated',
-            p_resource_type: 'lesson',
-            p_resource_id: lessonId,
-            p_details: {
-              progress_percentage: progressPercentage,
-              completed: completed,
-              method: 'update'
-            }
-          });
-
-          return { progress_percentage: progressPercentage, completed: completed };
+          if (updateError) {
+            console.error("[LESSON-PROGRESS] ❌ Erro no UPDATE:", updateError);
+            throw updateError;
+          }
+          
+          console.log("[LESSON-PROGRESS] ✅ UPDATE bem-sucedido");
+          return { ...updateData, completed };
         }
         throw error;
       }
-
-      // Log da criação/atualização de progresso
-      await supabase.rpc('log_learning_action', {
-        p_action: completed ? 'lesson_completed' : 'lesson_progress_updated',
-        p_resource_type: 'lesson',
-        p_resource_id: lessonId,
-        p_details: {
-          progress_percentage: progressPercentage,
-          completed: completed,
-          method: 'upsert'
-        }
+      
+      console.log("[LESSON-PROGRESS] ✅ Progresso salvo:", data);
+      return { ...data, completed };
+    },
+    retry: 2, // Retry automático
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000),
+    onSuccess: async (result) => {
+      console.log("[LESSON-PROGRESS] ✅ onSuccess - atualizando estado:", { 
+        completed: result.completed 
       });
       
-      return { ...data, completed: completed };
-    },
-    onSuccess: (result) => {
-      console.log('[PROGRESS-LEGACY] ✅ Progresso salvo com sucesso:', { completed: result.completed, lessonId });
-      
       setIsCompleted(result.completed);
-      refetchProgress();
       
-      if (result.completed) {
-        toast.success("Aula concluída com sucesso!");
-      }
+      // Invalidação hierárquica (específico -> geral)
+      console.log("[LESSON-PROGRESS] 🔄 Invalidando caches relacionados");
+      await queryClient.invalidateQueries({ 
+        queryKey: ["learning-lesson-progress", lessonId],
+        refetchType: 'active'
+      });
       
-      // Invalidar TODAS as queries relacionadas
-      console.log('[PROGRESS-LEGACY] 🔄 Invalidando todas as queries relacionadas');
-      queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-lesson-progress"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] });
-      queryClient.invalidateQueries({ queryKey: ["course-details"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-courses"] });
+      await queryClient.invalidateQueries({ 
+        queryKey: ["learning-user-progress"],
+        refetchType: 'active'
+      });
       
-      // Forçar refresh após delay
-      setTimeout(() => {
-        console.log('[PROGRESS-LEGACY] 🔄 Refresh automático das queries');
-        queryClient.refetchQueries({ queryKey: ["learning-lesson-progress", lessonId] });
-        queryClient.refetchQueries({ queryKey: ["course-details"] });
-      }, 500);
+      await queryClient.invalidateQueries({ 
+        queryKey: ["learning-completed-lessons"],
+        refetchType: 'active'
+      });
+      
+      await queryClient.invalidateQueries({ 
+        queryKey: ["course-details"],
+        refetchType: 'active'
+      });
     },
     onError: (error: any) => {
-      console.error("Erro ao salvar progresso:", error);
-      
-      // Não mostrar toast para erros de duplicata - são esperados
-      if (error.code !== '23505') {
-        toast.error("Não foi possível salvar seu progresso");
-      }
+      console.error("[LESSON-PROGRESS] ❌ Erro ao salvar progresso:", error);
     }
   });
 
-  // Mutation específica para inicializar progresso
-  const initializeProgressMutation = useMutation({
-    mutationFn: async () => {
-      if (!lessonId || isCreatingInitialProgress.current) {
-        return null;
-      }
-      
-      isCreatingInitialProgress.current = true;
-      
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Usuário não autenticado");
-      
-      const timestamp = new Date().toISOString();
-      
-      // Verificar se já existe progresso antes de tentar criar
-      const { data: existingProgress } = await supabase
-        .from("learning_progress")
-        .select("id, progress_percentage")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
-        .maybeSingle();
-        
-      if (existingProgress) {
-        setIsCompleted(existingProgress.progress_percentage >= 100);
-        return existingProgress;
-      }
-      
-      // Tentar inserir novo registro com 1% (iniciada)
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .insert({
-          user_id: userData.user.id,
-          lesson_id: lessonId,
-          progress_percentage: 1,
-          started_at: timestamp,
-          updated_at: timestamp
-        })
-        .select()
-        .single();
-        
-      if (error && error.code === '23505') {
-        // Se houve erro de duplicata, buscar o registro existente
-        const { data: existingData } = await supabase
-          .from("learning_progress")
-          .select("*")
-          .eq("user_id", userData.user.id)
-          .eq("lesson_id", lessonId)
-          .single();
-          
-        if (existingData) {
-          setIsCompleted(existingData.progress_percentage >= 100);
-        }
-        return existingData;
-      }
-      
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: (data) => {
-      if (data) {
-        setIsCompleted(data.progress_percentage >= 100);
-        refetchProgress();
-      }
-    },
-    onError: (error: any) => {
-      console.error("Erro ao inicializar progresso:", error);
-    },
-    onSettled: () => {
-      isCreatingInitialProgress.current = false;
-    }
-  });
-
-  // Marcar lição como iniciada quando a página carrega
+  // Inicialização automática quando acessa a aula pela primeira vez
   useEffect(() => {
     if (lessonId && 
         !userProgress && 
         !isLoadingProgress && 
-        !isCreatingInitialProgress.current &&
-        initializeProgressMutation.isIdle) {
+        !progressInitialized.current &&
+        !updateProgressMutation.isPending) {
       
-      // Pequeno delay para evitar múltiplas execuções
       const timer = setTimeout(() => {
-        initializeProgressMutation.mutate();
-      }, 100);
+        console.log("[LESSON-PROGRESS] 🎬 Inicializando progresso da aula");
+        updateProgressMutation.mutate(false);
+      }, 500);
       
       return () => clearTimeout(timer);
     }
-  }, [lessonId, userProgress, isLoadingProgress, initializeProgressMutation]);
+  }, [lessonId, userProgress, isLoadingProgress]);
 
-  // Atualizar progresso quando o usuário interage com a lição
+  // Atualizar progresso (mantém compatibilidade com API antiga)
   const updateProgress = (newProgress: number) => {
-    // Converter para sistema binário
+    // Sistema binário: >= 95% marca como concluída
     const shouldComplete = newProgress >= 95;
-    if (shouldComplete !== isCompleted) {
+    if (shouldComplete !== isCompleted && progressInitialized.current) {
       updateProgressMutation.mutate(shouldComplete);
     }
   };
   
-  // Marcar lição como concluída
+  // Marcar como concluída com toast e aguardar salvamento
   const completeLesson = async () => {
-    await updateProgressMutation.mutateAsync(true);
+    const loadingId = showModernLoading(
+      "Concluindo aula",
+      "Salvando seu progresso..."
+    );
+    
+    try {
+      await updateProgressMutation.mutateAsync(true);
+      dismissModernToast(loadingId);
+      showModernSuccess("Aula concluída!", "Seu progresso foi salvo com sucesso");
+      
+      console.log("[LESSON-PROGRESS] ✅ Aula concluída com sucesso");
+    } catch (error) {
+      dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao concluir aula",
+        "Não foi possível salvar. Tente novamente."
+      );
+      console.error("[LESSON-PROGRESS] ❌ Erro ao concluir aula:", error);
+      throw error; // Re-throw para que o componente saiba que falhou
+    }
   };
 
-  // Progresso para compatibilidade (retorna 0 ou 100)
-  const progress = isCompleted ? 100 : (userProgress ? 1 : 0);
+  // Progresso padronizado (0, 5 ou 100)
+  const progress = isCompleted ? LESSON_PROGRESS.COMPLETED : (userProgress?.progress_percentage || LESSON_PROGRESS.NOT_STARTED);
 
   return {
     progress,
     isCompleted,
     userProgress,
-    isUpdating: updateProgressMutation.isPending || initializeProgressMutation.isPending,
+    isUpdating: updateProgressMutation.isPending,
     updateProgress,
-    completeLesson
+    completeLesson,
+    isLoading: isLoadingProgress
   };
 }
