@@ -116,71 +116,44 @@ const LessonView = () => {
 
   // Salvar conclusão (progresso + NPS) quando usuário submeter o formulário
   const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
-    console.log('[LESSON-VIEW] ========== INICIANDO SALVAMENTO ==========');
-    console.log('[LESSON-VIEW] 📥 Recebido:', { lessonId, score, feedback });
+    console.log('[LESSON-VIEW] Salvando progresso + NPS:', { lessonId, score });
     
     const { showModernLoading, dismissModernToast, showModernSuccess, showModernError } = await import('@/lib/toast-helpers');
     const loadingId = showModernLoading("Salvando avaliação...");
     
     try {
-      // 1. Salvar progresso (marcar como concluída)
-      console.log('[LESSON-VIEW] 📊 PASSO 1: Salvando progresso...');
+      // 1. Salvar progresso
       await completeLesson();
-      console.log('[LESSON-VIEW] ✅ PASSO 1: Progresso salvo com sucesso');
       
       // 2. Salvar NPS
-      console.log('[LESSON-VIEW] 💬 PASSO 2: Salvando NPS...');
       const { data: userData, error: userError } = await supabase.auth.getUser();
       
-      if (userError) {
-        console.error('[LESSON-VIEW] ❌ Erro ao buscar usuário:', userError);
-        throw userError;
-      }
-      
-      if (!userData.user) {
-        console.error('[LESSON-VIEW] ❌ Usuário não autenticado');
+      if (userError || !userData.user) {
         throw new Error('Usuário não autenticado');
       }
       
-      if (!lessonId) {
-        console.error('[LESSON-VIEW] ❌ lessonId inválido');
-        throw new Error('ID da aula inválido');
-      }
-      
-      console.log('[LESSON-VIEW] 📝 Inserindo NPS no banco:', {
-        lesson_id: lessonId,
-        user_id: userData.user.id,
-        score,
-        has_feedback: !!feedback
-      });
-      
-      const { data: npsData, error: npsError } = await supabase
+      const { error: npsError } = await supabase
         .from('learning_lesson_nps')
         .upsert({
-          lesson_id: lessonId,
+          lesson_id: lessonId!,
           user_id: userData.user.id,
           score,
           feedback: feedback || null,
+          response_code: `nps-${score}`,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'user_id,lesson_id'
-        })
-        .select();
+        });
       
       if (npsError) {
-        console.error('[LESSON-VIEW] ❌ Erro ao salvar NPS:', npsError);
+        console.error('[LESSON-VIEW] Erro ao salvar NPS:', npsError);
         throw npsError;
       }
       
-      console.log('[LESSON-VIEW] ✅ PASSO 2: NPS salvo com sucesso:', npsData);
-      
       dismissModernToast(loadingId);
       showModernSuccess("Avaliação enviada!", "Obrigado pelo feedback!");
-      
-      console.log('[LESSON-VIEW] ========== SALVAMENTO COMPLETO ==========');
     } catch (error) {
-      console.error('[LESSON-VIEW] ========== ERRO NO SALVAMENTO ==========');
-      console.error('[LESSON-VIEW] ❌ Detalhes do erro:', error);
+      console.error('[LESSON-VIEW] Erro:', error);
       dismissModernToast(loadingId);
       showModernError("Erro ao salvar", "Tente novamente");
       throw error;
