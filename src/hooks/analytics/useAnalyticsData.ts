@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface AnalyticsData {
   solutionPopularity: Array<{
@@ -36,7 +36,7 @@ interface UseAnalyticsDataParams {
 }
 
 export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'all' }: UseAnalyticsDataParams) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AnalyticsData>({
@@ -118,18 +118,14 @@ export const useAnalyticsData = ({ timeRange, category = 'all', difficulty = 'al
       } catch (error: any) {
         console.error('Erro ao carregar analytics gerais:', error);
         setError(error.message || 'Erro ao carregar dados de analytics');
-        toast({
-          title: "Erro ao carregar analytics",
-          description: "Não foi possível carregar os dados. Verifique sua conexão.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar analytics", "Não foi possível carregar os dados. Verifique sua conexão.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchAnalyticsData();
-  }, [timeRange, category, difficulty, toast]);
+  }, [timeRange, category, difficulty, showError]);
 
   return { data, loading, error };
 };

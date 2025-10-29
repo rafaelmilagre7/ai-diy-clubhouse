@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface RealAnalyticsData {
   userGrowth: any[];
@@ -17,7 +17,7 @@ interface RealAnalyticsData {
 }
 
 export const useRealAnalyticsData = (timeRange: string = '30d') => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<RealAnalyticsData>({
@@ -90,18 +90,14 @@ export const useRealAnalyticsData = (timeRange: string = '30d') => {
       } catch (error: any) {
         console.error('Erro ao carregar analytics:', error);
         setError(error.message || 'Erro ao carregar dados de analytics');
-        toast({
-          title: "Erro ao carregar analytics",
-          description: "Não foi possível carregar os dados. Usando dados de exemplo.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar analytics", "Não foi possível carregar os dados. Usando dados de exemplo.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchRealAnalyticsData();
-  }, [timeRange, toast]);
+  }, [timeRange, showError]);
 
   return { data, loading, error };
 };

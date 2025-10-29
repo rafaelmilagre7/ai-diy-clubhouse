@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface LmsAnalyticsData {
   totalCourses: number;
@@ -21,7 +21,7 @@ interface LmsAnalyticsData {
 }
 
 export const useLmsAnalyticsData = (timeRange: string) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<LmsAnalyticsData>({
@@ -101,18 +101,14 @@ export const useLmsAnalyticsData = (timeRange: string) => {
       } catch (error: any) {
         console.error('Erro ao carregar analytics de LMS:', error);
         setError(error.message || 'Erro ao carregar dados de aprendizado');
-        toast({
-          title: "Erro ao carregar dados de aprendizado",
-          description: "Não foi possível carregar os dados. Verifique sua conexão.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar dados de aprendizado", "Não foi possível carregar os dados. Verifique sua conexão.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchLmsAnalytics();
-  }, [timeRange, toast]);
+  }, [timeRange, showError]);
 
   return { data, loading, error };
 };

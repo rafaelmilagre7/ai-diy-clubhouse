@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface AdminStatsData {
   totalUsers: number;
@@ -24,7 +24,7 @@ interface AdminStatsData {
 }
 
 export const useAdminStatsData = () => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<AdminStatsData>({
@@ -104,18 +104,14 @@ export const useAdminStatsData = () => {
       } catch (error: any) {
         console.error('Erro ao carregar admin stats:', error);
         setError(error.message || 'Erro ao carregar estatísticas administrativas');
-        toast({
-          title: "Erro ao carregar estatísticas",
-          description: "Não foi possível carregar os dados. Verifique sua conexão.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar estatísticas", "Não foi possível carregar os dados. Verifique sua conexão.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchAdminStats();
-  }, [toast]);
+  }, [showError]);
 
   return { data, loading, error };
 };

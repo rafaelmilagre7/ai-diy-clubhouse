@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/components/ui/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useLogging } from "@/hooks/useLogging";
 
 interface SolutionCompletionProps {
@@ -22,14 +22,11 @@ export const useSolutionCompletion = ({
   const [isCompleting, setIsCompleting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const { log, logError } = useLogging();
+  const { showError, showSuccess } = useToastModern();
   
   const handleConfirmImplementation = async (): Promise<boolean> => {
     if (!progressId || !solutionId) {
-      toast({
-        title: "Erro",
-        description: "Não foi possível completar a implementação. Dados de progresso inválidos.",
-        variant: "destructive",
-      });
+      showError("Erro", "Não foi possível completar a implementação. Dados de progresso inválidos.");
       return false;
     }
     
@@ -74,19 +71,12 @@ export const useSolutionCompletion = ({
       setCompletedModules(prev => [...new Set([...prev, moduleIdx])]);
       setIsCompleted(true);
       
-      toast({
-        title: "Parabéns!",
-        description: "Você concluiu com sucesso a implementação desta solução.",
-      });
+      showSuccess("Parabéns!", "Você concluiu com sucesso a implementação desta solução.");
       
       return true;
     } catch (error) {
       logError("Error confirming implementation", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao tentar completar a implementação. Tente novamente.",
-        variant: "destructive",
-      });
+      showError("Erro", "Ocorreu um erro ao tentar completar a implementação. Tente novamente.");
       return false;
     } finally {
       setIsCompleting(false);

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface SolutionAnalyticsData {
   totalSolutions: number;
@@ -25,7 +25,7 @@ interface SolutionAnalyticsData {
 }
 
 export const useSolutionAnalyticsData = (timeRange: string) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<SolutionAnalyticsData>({
@@ -117,18 +117,14 @@ export const useSolutionAnalyticsData = (timeRange: string) => {
       } catch (error: any) {
         console.error('Erro ao carregar analytics de soluções:', error);
         setError(error.message || 'Erro ao carregar dados de soluções');
-        toast({
-          title: "Erro ao carregar dados de soluções",
-          description: "Não foi possível carregar os dados. Verifique sua conexão.",
-          variant: "destructive"
-        });
+        showError("Erro ao carregar dados de soluções", "Não foi possível carregar os dados. Verifique sua conexão.");
       } finally {
         setLoading(false);
       }
     };
 
     fetchSolutionAnalytics();
-  }, [timeRange, toast]);
+  }, [timeRange, showError]);
 
   return { data, loading, error };
 };
