@@ -348,7 +348,7 @@ export const useOnboarding = () => {
 
       const updateData = {
         user_id: user.id,
-        current_step: step,
+        current_step: step === 5 && state.current_step === 6 ? 6 : step, // Não voltar ao step 5 se já estamos no 6
         completed_steps: newCompletedSteps,
         [fieldName]: stepData,
       };
@@ -389,7 +389,7 @@ export const useOnboarding = () => {
       // Atualizar estado local
       setState(prev => ({
         ...prev,
-        current_step: step,
+        current_step: step === 5 && prev.current_step === 6 ? 6 : step, // Não voltar ao step 5 se já estamos no 6
         completed_steps: newCompletedSteps,
         data: {
           ...prev.data,
@@ -505,14 +505,18 @@ export const useOnboarding = () => {
       setIsSaving(true);
       setLoadingMessage('Finalizando sua configuração...');
       
-      // Salvar dados do step 5 primeiro
-      console.log('[ONBOARDING] ⏱️ Salvando step 5...');
-      const stepStartTime = performance.now();
-      const success = await saveStepData(5, finalStepData);
-      console.log('[ONBOARDING] ⏱️ Step 5 salvo em:', performance.now() - stepStartTime, 'ms');
-      
-      if (!success) {
-        throw new Error('Falha ao salvar dados do step 5');
+      // Salvar dados do step 5 APENAS se ainda não estamos no step 6
+      if (state.current_step < 6) {
+        console.log('[ONBOARDING] ⏱️ Salvando step 5...');
+        const stepStartTime = performance.now();
+        const success = await saveStepData(5, finalStepData);
+        console.log('[ONBOARDING] ⏱️ Step 5 salvo em:', performance.now() - stepStartTime, 'ms');
+        
+        if (!success) {
+          throw new Error('Falha ao salvar dados do step 5');
+        }
+      } else {
+        console.log('[ONBOARDING] ℹ️ Já estamos no step 6, pulando salvamento do step 5');
       }
       
       setLoadingMessage('Gerando sua experiência personalizada...');

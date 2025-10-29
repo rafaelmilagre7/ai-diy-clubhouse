@@ -295,12 +295,22 @@ const OnboardingPage: React.FC = () => {
             ninaMessage={nina_message}
             userName={data.personal_info?.name || profile?.name || "Usuário"}
             onFinish={async () => {
-              // Se já está completo, apenas mostrar celebração e redirecionar
-              if (is_completed) {
+              // Se já está completo OU já está no step 6, apenas mostrar celebração
+              if (is_completed || current_step === 6) {
+                console.log('[ONBOARDING_PAGE] Step 6 - usuário já finalizado, apenas celebrando');
+                
+                // Marcar como completo se ainda não foi
+                if (!is_completed) {
+                  console.log('[ONBOARDING_PAGE] Marcando onboarding como completo...');
+                  const success = await completeOnboarding(data.personalization);
+                  return success;
+                }
+                
                 return true; 
               }
               
               // Se não está completo, finalizar o processo
+              console.log('[ONBOARDING_PAGE] Finalizando onboarding pela primeira vez');
               const success = await completeOnboarding(data.personalization);
               return success;
             }}
