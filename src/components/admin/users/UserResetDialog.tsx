@@ -2,14 +2,13 @@
 import React from 'react';
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { UserProfile } from "@/lib/supabase";
 
 interface UserResetDialogProps {
@@ -35,22 +34,24 @@ export const UserResetDialog: React.FC<UserResetDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
-      <AlertDialogContent>
+      <AlertDialogContent className="aurora-glass">
         <AlertDialogHeader>
-          <AlertDialogTitle>Resetar Configuração Inicial</AlertDialogTitle>
+          <AlertDialogTitle className="aurora-text-gradient">Resetar Configuração Inicial</AlertDialogTitle>
           <AlertDialogDescription>
-            Tem certeza que deseja resetar a configuração inicial de {userName}?
+            Tem certeza que deseja resetar a configuração inicial de <span className="font-semibold text-foreground">{userName}</span>?
             Esta ação irá remover todos os dados de configuração e o usuário precisará
             refazer o processo de configuração inicial.
-            
-            Esta ação não pode ser desfeita.
+            <br /><br />
+            <span className="text-destructive font-medium">Esta ação não pode ser desfeita.</span>
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-          <AlertDialogAction onClick={handleConfirm} className="bg-destructive text-destructive-foreground">
+          <AdminButton variant="outline" onClick={() => onOpenChange(false)}>
+            Cancelar
+          </AdminButton>
+          <AdminButton variant="destructive" onClick={handleConfirm}>
             Sim, resetar configuração
-          </AlertDialogAction>
+          </AdminButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

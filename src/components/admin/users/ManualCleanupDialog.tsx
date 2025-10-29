@@ -2,21 +2,19 @@
 import React, { useState } from 'react';
 import {
   AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Button } from "@/components/ui/button";
+import { AdminButton } from "@/components/admin/ui/AdminButton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LoadingSpinner } from "@/components/common/LoadingSpinner";
 import { manualCompleteUserCleanup, ManualCleanupResult } from "@/utils/manualUserCleanup";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, AlertTriangle, Trash2 } from "lucide-react";
+import { AuroraCard } from "@/components/ui/AuroraCard";
+import { CheckCircle, AlertTriangle, Trash2, XCircle } from "lucide-react";
 
 interface ManualCleanupDialogProps {
   open: boolean;
@@ -68,11 +66,11 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
 
   return (
     <AlertDialog open={open} onOpenChange={handleClose}>
-      <AlertDialogContent className="max-w-2xl">
+      <AlertDialogContent className="max-w-2xl aurora-glass">
         <AlertDialogHeader>
-          <AlertDialogTitle className="flex items-center gap-2">
-            <Trash2 className="h-5 w-5 text-status-error" />
-            🧹 Limpeza Manual Completa
+          <AlertDialogTitle className="flex items-center gap-2 aurora-text-gradient">
+            <Trash2 className="h-5 w-5 text-destructive" />
+            Limpeza Manual Completa
           </AlertDialogTitle>
           <AlertDialogDescription className="space-y-4">
             <p>
@@ -93,19 +91,22 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
             </div>
 
             {result && (
-              <div className={`p-4 rounded-md border ${
-                result.success 
-                  ? 'bg-operational/10 border-operational/30' 
-                  : 'bg-status-error/10 border-status-error/30'
-              }`}>
+              <AuroraCard 
+                variant="glass" 
+                className={`p-4 ${
+                  result.success 
+                    ? 'border-emerald-500/30' 
+                    : 'border-destructive/30'
+                }`}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   {result.success ? (
-                    <CheckCircle className="h-4 w-4 text-operational" />
+                    <CheckCircle className="h-4 w-4 text-emerald-500 aurora-glow" />
                   ) : (
-                    <AlertTriangle className="h-4 w-4 text-status-error" />
+                    <AlertTriangle className="h-4 w-4 text-destructive" />
                   )}
                   <p className={`text-sm font-medium ${
-                    result.success ? 'text-operational' : 'text-status-error'
+                    result.success ? 'text-emerald-600 dark:text-emerald-400' : 'text-destructive'
                   }`}>
                     {result.message}
                   </p>
@@ -139,35 +140,46 @@ export const ManualCleanupDialog: React.FC<ManualCleanupDialogProps> = ({
                 )}
                 
                 <div className="mt-2 flex items-center gap-2">
-                  <Badge variant={result.details.emailLiberated ? "default" : "destructive"} className="text-xs">
-                    {result.details.emailLiberated ? "✅ Email liberado" : "❌ Email não liberado"}
+                  <Badge 
+                    variant="outline" 
+                    className={`text-xs flex items-center gap-1 ${
+                      result.details.emailLiberated 
+                        ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 dark:text-emerald-400' 
+                        : 'bg-destructive/10 border-destructive/30 text-destructive'
+                    }`}
+                  >
+                    {result.details.emailLiberated ? (
+                      <><CheckCircle className="h-3 w-3" /> Email liberado</>
+                    ) : (
+                      <><XCircle className="h-3 w-3" /> Email não liberado</>
+                    )}
                   </Badge>
                 </div>
-              </div>
+              </AuroraCard>
             )}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isProcessing}>
+          <AdminButton
+            variant="outline"
+            onClick={handleClose}
+            disabled={isProcessing}
+          >
             Cancelar
-          </AlertDialogCancel>
-          <AlertDialogAction
+          </AdminButton>
+          <AdminButton
+            variant="destructive"
             onClick={(e) => {
               e.preventDefault();
               handleCleanup();
             }}
             disabled={isProcessing || !email.trim()}
-            className="bg-status-error hover:bg-status-error/90"
+            icon={<Trash2 />}
+            loading={isProcessing}
+            loadingText="Processando..."
           >
-            {isProcessing ? (
-              <>
-                <LoadingSpinner className="mr-2 h-4 w-4" />
-                Processando...
-              </>
-            ) : (
-              "🧹 Limpar Completamente"
-            )}
-          </AlertDialogAction>
+            Limpar Completamente
+          </AdminButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

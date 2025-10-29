@@ -3,10 +3,13 @@ import React, { useState, useMemo } from 'react';
 import { AdminButton } from '@/components/admin/ui/AdminButton';
 import { AdminCard } from '@/components/admin/ui/AdminCard';
 import { AdminStatsCard } from '@/components/admin/ui/AdminStatsCard';
+import { AuroraCard } from '@/components/ui/AuroraCard';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 import { 
   AlertCircle,
   RefreshCw, 
@@ -212,68 +215,67 @@ export default function AdminUsers() {
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
       
-      <div className="relative space-y-8">
+      <div className="relative space-y-6">
         {/* Modern Header with Aurora Style */}
-        <div className="aurora-glass rounded-2xl p-8 border border-aurora-primary/20 backdrop-blur-md">
-          <div className="flex flex-col lg:flex-row justify-between items-start gap-6">
-            <div className="flex items-start gap-4">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-16 bg-gradient-to-b from-aurora-primary via-operational to-strategy rounded-full aurora-glow"></div>
-                <div>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="p-3 rounded-xl bg-gradient-to-br from-aurora-primary/20 to-operational/10 aurora-glass">
-                      <Users className="h-6 w-6 text-aurora-primary" />
-                    </div>
-                    <h1 className="text-4xl font-bold aurora-text-gradient">
-                      Gestão de Usuários
-                    </h1>
-                  </div>
-                  <p className="text-lg text-muted-foreground font-medium">
-                    Gerencie {stats.total_users} usuários, permissões e equipes da plataforma
-                  </p>
-                </div>
-              </div>
+        <div className="flex items-start gap-4">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20">
+              <Users className="h-6 w-6 text-aurora-primary" />
             </div>
-            
-            <div className="flex items-center gap-3">
-              <AdminButton
-                onClick={() => exportUsers(users, searchQuery)}
-                disabled={isExporting || users.length === 0}
-                variant="outline"
-                size="lg"
-                icon={<Download className={isExporting ? 'animate-pulse' : ''} />}
-              >
-                Exportar
-              </AdminButton>
-              <AdminButton
-                onClick={fetchUsers}
-                disabled={isRefreshing}
-                variant="outline"
-                size="lg"
-                icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
-              >
-                Atualizar
-              </AdminButton>
+            <div className="flex-1">
+              <h1 className="text-3xl font-bold aurora-text-gradient">Gestão de Usuários</h1>
+              <p className="text-muted-foreground mt-1">
+                Gerencie {stats.total_users} usuários, permissões e equipes da plataforma
+              </p>
             </div>
+          </div>
+          
+          <div className="flex items-center gap-2 ml-auto">
+            <AdminButton
+              onClick={() => exportUsers(users, searchQuery)}
+              disabled={isExporting || users.length === 0}
+              variant="outline"
+              icon={<Download className={isExporting ? 'animate-pulse' : ''} />}
+            >
+              Exportar
+            </AdminButton>
+            <AdminButton
+              onClick={fetchUsers}
+              disabled={isRefreshing}
+              variant="outline"
+              icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
+            >
+              Atualizar
+            </AdminButton>
           </div>
         </div>
 
-      {/* Tabs System */}
-      <Tabs defaultValue="usuarios" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 lg:w-auto">
-          <TabsTrigger value="usuarios" className="flex items-center gap-2">
-            <Users className="h-4 w-4" />
-            <span className="hidden sm:inline">Usuários</span>
-          </TabsTrigger>
-          <TabsTrigger value="sincronizacao" className="flex items-center gap-2">
-            <RefreshCcw className="h-4 w-4" />
-            <span className="hidden sm:inline">Sincronização</span>
-          </TabsTrigger>
-          <TabsTrigger value="historico" className="flex items-center gap-2">
-            <History className="h-4 w-4" />
-            <span className="hidden sm:inline">Histórico</span>
-          </TabsTrigger>
-        </TabsList>
+
+        {/* Tabs System */}
+        <Tabs defaultValue="usuarios" className="w-full">
+          <TabsList className="aurora-glass p-1 border border-aurora-primary/10">
+            <TabsTrigger 
+              value="usuarios" 
+              className="gap-2 data-[state=active]:bg-aurora-primary/10 data-[state=active]:text-aurora-primary aurora-focus"
+            >
+              <Users className="h-4 w-4" />
+              <span className="hidden sm:inline">Usuários</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="sincronizacao" 
+              className="gap-2 data-[state=active]:bg-aurora-primary/10 data-[state=active]:text-aurora-primary aurora-focus"
+            >
+              <RefreshCcw className="h-4 w-4" />
+              <span className="hidden sm:inline">Sincronização</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="historico" 
+              className="gap-2 data-[state=active]:bg-aurora-primary/10 data-[state=active]:text-aurora-primary aurora-focus"
+            >
+              <History className="h-4 w-4" />
+              <span className="hidden sm:inline">Histórico</span>
+            </TabsTrigger>
+          </TabsList>
 
         {/* Tab: Usuários */}
         <TabsContent value="usuarios" className="space-y-4 mt-4">
@@ -407,20 +409,20 @@ export default function AdminUsers() {
                 ))}
               </div>
               {masterGroupsWithMembers.length > 0 && (
-                <div className="text-sm text-muted-foreground bg-info/10 border border-info/30 rounded-lg p-4 mt-4">
-                  <div className="flex items-start gap-2">
-                    <div className="text-info mt-0.5">💡</div>
+                <AuroraCard variant="glass" className="p-4 border-aurora-primary/20">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-aurora-primary mt-0.5" />
                     <div>
-                      <p className="font-medium text-info mb-1">
-                        Visualização Hierárquica:
+                      <p className="font-medium text-foreground mb-1">
+                        Visualização Hierárquica
                       </p>
-                      <p className="text-info/80">
+                      <p className="text-sm text-muted-foreground">
                         Este filtro exibe todos os masters com seus respectivos membros de equipe organizados hierarquicamente. 
                         Expanda cada card do master para ver os detalhes de sua equipe.
                       </p>
                     </div>
                   </div>
-                </div>
+                </AuroraCard>
               )}
             </div>
           ) : (

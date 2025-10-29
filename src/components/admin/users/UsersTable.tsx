@@ -9,7 +9,9 @@ import {
   DropdownMenuSeparator 
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AuroraCard } from "@/components/ui/AuroraCard";
+import { CardContent, CardHeader } from "@/components/ui/card";
+import { AdminCard } from "@/components/admin/ui/AdminCard";
 import { 
   MoreHorizontal, 
   UserCog, 
@@ -94,24 +96,11 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 p-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {Array.from({ length: 6 }).map((_, i) => (
-          <Card key={i} className="surface-elevated border-0 shadow-aurora">
-            <CardHeader className="pb-3">
-              <div className="flex items-center space-x-3">
-                <div className="skeleton h-12 w-12 rounded-full" />
-                <div className="space-y-2">
-                  <div className="skeleton h-4 w-32" />
-                  <div className="skeleton h-3 w-48" />
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="skeleton h-4 w-20" />
-              <div className="skeleton h-4 w-16" />
-              <div className="skeleton h-8 w-full" />
-            </CardContent>
-          </Card>
+          <AdminCard key={i} loading={true}>
+            <div className="h-32" />
+          </AdminCard>
         ))}
       </div>
     );
@@ -119,15 +108,15 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
   if (users.length === 0) {
     return (
-      <div className="text-center py-12">
-        <div className="p-4 rounded-xl bg-gradient-to-r from-muted/20 to-muted/10 backdrop-blur-sm border border-muted/20 inline-block mb-4">
-          <UserCog className="h-8 w-8 text-muted-foreground" />
+      <AuroraCard variant="glass" className="p-12 text-center">
+        <div className="p-4 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20 inline-block mb-4">
+          <UserCog className="h-8 w-8 text-aurora-primary aurora-glow" />
         </div>
-        <h3 className="text-heading-3 text-foreground mb-2">Nenhum usuário encontrado</h3>
-        <p className="text-body text-muted-foreground">
+        <h3 className="text-xl font-semibold aurora-text-gradient mb-2">Nenhum usuário encontrado</h3>
+        <p className="text-muted-foreground">
           Tente ajustar os filtros ou aguarde novos usuários se cadastrarem
         </p>
-      </div>
+      </AuroraCard>
     );
   }
 
@@ -147,33 +136,37 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               animate={{ opacity: 1, y: 0 }}
               transition={{ 
                 duration: 0.3, 
-                delay: index * 0.1,
+                delay: index * 0.05,
                 ease: 'easeOut' 
               }}
             >
-              <Card className="surface-elevated border-0 shadow-aurora transition-all duration-slow hover:shadow-aurora-strong group">
+              <AuroraCard 
+                variant="interactive" 
+                glow={true} 
+                className="group h-full"
+              >
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3 flex-1">
                       <div className="relative">
-                        <Avatar className="h-12 w-12 ring-2 ring-primary/10 transition-all duration-slow group-hover:ring-primary/20">
+                        <Avatar className="h-12 w-12 ring-2 ring-aurora-primary/10 transition-all aurora-glow group-hover:ring-aurora-primary/20">
                           <AvatarImage src={user.avatar_url || undefined} />
                           <AvatarFallback className="bg-gradient-to-br from-aurora-primary/20 to-operational/20 text-aurora-primary font-semibold">
                             {user.name?.charAt(0)?.toUpperCase() || user.email?.charAt(0)?.toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         {isNewUser && (
-                          <div className="absolute -top-1 -right-1 h-4 w-4 bg-gradient-to-r from-operational to-revenue rounded-full animate-pulse" />
+                          <div className="absolute -top-1 -right-1 h-3 w-3 bg-emerald-500 rounded-full animate-pulse aurora-glow" />
                         )}
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-body-large font-semibold text-foreground truncate">
+                          <h3 className="font-semibold text-foreground truncate aurora-text-gradient">
                             {user.name || 'Sem nome'}
                           </h3>
                           {isNewUser && (
-                            <Badge variant="outline" className="text-xs bg-operational/10 text-operational border-operational/20">
+                            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
                               Novo
                             </Badge>
                           )}
@@ -190,13 +183,13 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                       <DropdownMenuTrigger asChild>
                         <Button 
                           variant="ghost" 
-                          className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity"
+                          className="h-8 w-8 p-0 opacity-60 hover:opacity-100 transition-opacity aurora-focus"
                         >
                           <span className="sr-only">Abrir menu</span>
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end" className="surface-elevated border-0 shadow-aurora">
+                      <DropdownMenuContent align="end" className="z-50 aurora-glass border-aurora-primary/20 backdrop-blur-xl">
                         {canEditRoles && (
                           <DropdownMenuItem onClick={() => onEditRole(user)} className="cursor-pointer">
                             <UserCog className="mr-2 h-4 w-4" />
@@ -254,25 +247,25 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                 <CardContent className="space-y-4">
                   {/* Status and Role */}
                   <div className="flex items-center justify-between">
-                    <div className="space-y-1">
+                  <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <Badge 
-                          variant={roleName === 'admin' ? 'default' : 'secondary'}
+                          variant="outline"
                           className={
                             roleName === 'admin' 
-                              ? 'bg-gradient-to-r from-revenue to-strategy text-primary-foreground border-0' 
-                              : 'bg-surface-accent/20 text-surface-accent border-surface-accent/30'
+                              ? 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30' 
+                              : 'bg-muted/50 text-foreground border-border'
                           }
                         >
                           {roleName}
                         </Badge>
                         
                         <Badge 
-                          variant={isActive ? 'default' : 'destructive'}
+                          variant="outline"
                           className={
                             isActive 
-                              ? 'bg-gradient-to-r from-operational to-aurora-primary text-primary-foreground border-0' 
-                              : 'bg-destructive/20 text-destructive border-destructive/30'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
+                              : 'bg-destructive/10 text-destructive border-destructive/30'
                           }
                         >
                           {isActive ? 'Ativo' : 'Inativo'}
@@ -289,7 +282,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                     </div>
                     
                     {user.onboarding_completed && (
-                      <div className="flex items-center gap-2 text-operational">
+                      <div className="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                         <CheckCircle className="h-3 w-3" />
                         <span className="text-xs">Onboarding completo</span>
                       </div>
@@ -335,7 +328,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                     )}
                   </div>
                 </CardContent>
-              </Card>
+              </AuroraCard>
             </motion.div>
           );
         })}
