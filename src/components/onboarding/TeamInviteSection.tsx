@@ -15,6 +15,8 @@ interface TeamInviteSectionProps {
 }
 
 export const TeamInviteSection: React.FC<TeamInviteSectionProps> = ({ onComplete, onSkip }) => {
+  console.log('[TEAM_INVITE] 🎬 Componente montado', { onComplete: typeof onComplete, onSkip: typeof onSkip });
+  
   const { isLoading, planLimits, checkPlanLimits, sendTeamInvites } = useOnboardingTeamInvites();
   const [invites, setInvites] = useState<TeamInviteData[]>([]);
   const [currentEmail, setCurrentEmail] = useState('');
@@ -24,8 +26,10 @@ export const TeamInviteSection: React.FC<TeamInviteSectionProps> = ({ onComplete
 
   useEffect(() => {
     const checkLimits = async () => {
+      console.log('[TEAM_INVITE] 🔍 Verificando limites do plano...');
       setIsChecking(true);
-      await checkPlanLimits();
+      const limits = await checkPlanLimits();
+      console.log('[TEAM_INVITE] 📊 Limites obtidos:', limits);
       setIsChecking(false);
     };
     checkLimits();
@@ -88,22 +92,40 @@ export const TeamInviteSection: React.FC<TeamInviteSectionProps> = ({ onComplete
     }
   };
 
+  // Sempre permitir continuar, mesmo durante loading
+  const handleContinue = () => {
+    console.log('[TEAM_INVITE] 🚀 Botão Continuar clicado - chamando onSkip');
+    onSkip();
+  };
+
   if (isChecking) {
+    console.log('[TEAM_INVITE] ⏳ Ainda verificando limites...');
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="w-5 h-5" />
+            Adicionar Membros da Equipe
+          </CardTitle>
+          <CardDescription>
+            Verificando limites do seu plano...
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+          </div>
+          <Button onClick={handleContinue} variant="outline" className="w-full">
+            Pular Esta Etapa
+          </Button>
+        </CardContent>
+      </Card>
     );
   }
 
   // Se não pode adicionar membros, pular esta seção
   if (!planLimits?.canAddMembers) {
     console.log('[TEAM_INVITE] ⚠️ Plano não permite adicionar membros', planLimits);
-    
-    const handleContinue = () => {
-      console.log('[TEAM_INVITE] 🚀 Botão Continuar clicado - chamando onSkip');
-      onSkip();
-    };
     
     return (
       <Card>
