@@ -1,21 +1,17 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { ResourceFormValues } from "../utils/resourceFormSchema";
 
 export function useSaveResources() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   
   const saveResources = async (solutionId: string | null, values: ResourceFormValues) => {
     if (!solutionId) {
-      toast({
-        title: "Salve a solução primeiro",
-        description: "Você precisa salvar as informações básicas antes de adicionar recursos.",
-        variant: "destructive",
-      });
+      showError("Salve a solução primeiro", "Você precisa salvar as informações básicas antes de adicionar recursos.");
       return false;
     }
     
@@ -82,20 +78,13 @@ export function useSaveResources() {
         if (insertError) throw insertError;
       }
       
-      toast({
-        title: "Recursos salvos",
-        description: "Os recursos da solução foram salvos com sucesso.",
-      });
+      showSuccess("Recursos salvos", "Os recursos da solução foram salvos com sucesso.");
       
       return true;
     } catch (saveError: any) {
       console.error('Error saving resources:', saveError);
       setError(saveError.message || 'Erro ao salvar recursos. Por favor, tente novamente.');
-      toast({
-        title: "Erro ao salvar recursos",
-        description: saveError.message || "Ocorreu um erro ao tentar salvar os recursos da solução.",
-        variant: "destructive",
-      });
+      showError("Erro ao salvar recursos", saveError.message || "Ocorreu um erro ao tentar salvar os recursos da solução.");
       return false;
     } finally {
       setIsSaving(false);

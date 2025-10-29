@@ -1,12 +1,12 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Resource } from "../types/ResourceTypes";
 import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 
 export const useMaterialsState = (solutionId: string | null) => {
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [materials, setMaterials] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -37,11 +37,7 @@ export const useMaterialsState = (solutionId: string | null) => {
       }
     } catch (error) {
       console.error("Error fetching materials:", error);
-      toast({
-        title: "Erro ao carregar materiais",
-        description: "Não foi possível carregar a lista de materiais.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar materiais", "Não foi possível carregar a lista de materiais.");
     } finally {
       setLoading(false);
     }

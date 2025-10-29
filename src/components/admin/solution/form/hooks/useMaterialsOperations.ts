@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/lib/supabase";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName } from "../utils/resourceUtils";
@@ -9,7 +9,7 @@ export const useMaterialsOperations = (
   solutionId: string | null,
   setMaterials: React.Dispatch<React.SetStateAction<Resource[]>>
 ) => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [savingResources, setSavingResources] = useState(false);
 
   const handleUploadComplete = async (url: string, fileName: string, fileSize: number) => {
@@ -54,17 +54,10 @@ export const useMaterialsOperations = (
         setMaterials(prev => [...prev, data as Resource]);
       }
       
-      toast({
-        title: "Material adicionado",
-        description: "O material foi adicionado com sucesso.",
-      });
+      showSuccess("Material adicionado", "O material foi adicionado com sucesso.");
     } catch (error: any) {
       console.error("Erro ao adicionar material:", error);
-      toast({
-        title: "Erro ao adicionar material",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o material.",
-        variant: "destructive",
-      });
+      showError("Erro ao adicionar material", error.message || "Ocorreu um erro ao tentar adicionar o material.");
     }
   };
 
@@ -88,17 +81,10 @@ export const useMaterialsOperations = (
       
       setMaterials(prev => prev.filter(material => material.id !== id));
       
-      toast({
-        title: "Material removido",
-        description: "O material foi removido com sucesso.",
-      });
+      showSuccess("Material removido", "O material foi removido com sucesso.");
     } catch (error: any) {
       console.error("Erro ao remover material:", error);
-      toast({
-        title: "Erro ao remover material",
-        description: error.message || "Ocorreu um erro ao tentar remover o material.",
-        variant: "destructive",
-      });
+      showError("Erro ao remover material", error.message || "Ocorreu um erro ao tentar remover o material.");
     }
   };
 

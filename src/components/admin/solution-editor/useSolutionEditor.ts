@@ -1,14 +1,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase, Solution } from "@/lib/supabase";
 import { User } from "@supabase/supabase-js";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 
 export const useSolutionEditor = (id: string | undefined, user: User | null) => {
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   
   const [solution, setSolution] = useState<Solution | null>(null);
   const [loading, setLoading] = useState(true);
@@ -82,24 +82,16 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
         setCurrentValues(solutionValues);
         dataLoadedRef.current = true;
       } else {
-        toast({
-          title: "Solução não encontrada",
-          description: "Não foi possível encontrar a solução solicitada.",
-          variant: "destructive"
-        });
+        showError("Solução não encontrada", "Não foi possível encontrar a solução solicitada.");
         navigate("/admin/solutions");
       }
     } catch (error: any) {
       console.error("❌ useSolutionEditor: Erro geral:", error);
-      toast({
-        title: "Erro ao carregar solução",
-        description: "Ocorreu um erro ao carregar os dados da solução.",
-        variant: "destructive"
-      });
+      showError("Erro ao carregar solução", "Ocorreu um erro ao carregar os dados da solução.");
     } finally {
       setLoading(false);
     }
-  }, [id, user, navigate, toast]);
+  }, [id, user, navigate, showError]);
 
   // Carregar dados na inicialização
   useEffect(() => {
@@ -139,22 +131,15 @@ export const useSolutionEditor = (id: string | undefined, user: User | null) => 
       // Recarregar dados da solução
       await fetchSolution();
       
-      toast({
-        title: "Solução salva",
-        description: "As informações foram salvas com sucesso.",
-      });
+      showSuccess("Solução salva", "As informações foram salvas com sucesso.");
     } catch (error: any) {
       console.error("❌ useSolutionEditor: Erro ao salvar:", error);
-      toast({
-        title: "Erro ao salvar",
-        description: "Ocorreu um erro ao salvar a solução.",
-        variant: "destructive"
-      });
+      showError("Erro ao salvar", "Ocorreu um erro ao salvar a solução.");
       throw error;
     } finally {
       setSaving(false);
     }
-  }, [id, user, toast, fetchSolution]);
+  }, [id, user, showSuccess, showError, fetchSolution]);
 
   // Registrar função de salvamento para uma etapa
   const handleStepSaveRegistration = useCallback((stepSaveFunction: () => Promise<void>) => {

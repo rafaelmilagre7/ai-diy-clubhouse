@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 import { detectFileType } from "../utils/resourceUtils";
 
@@ -10,7 +10,7 @@ export function useResourcesManager(solutionId: string | null) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingResources, setSavingResources] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   
   // Fetch resources on component mount
   useEffect(() => {
@@ -42,11 +42,7 @@ export function useResourcesManager(solutionId: string | null) {
       }
     } catch (error: any) {
       console.error("Error fetching resources:", error);
-      toast({
-        title: "Erro ao carregar materiais",
-        description: error.message || "Ocorreu um erro ao tentar carregar os materiais.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar materiais", error.message || "Ocorreu um erro ao tentar carregar os materiais.");
     } finally {
       setLoading(false);
     }
@@ -114,18 +110,11 @@ export function useResourcesManager(solutionId: string | null) {
         
         setResources(prev => [...prev, resource]);
         
-        toast({
-          title: "Material adicionado",
-          description: "O material foi adicionado com sucesso.",
-        });
+        showSuccess("Material adicionado", "O material foi adicionado com sucesso.");
       }
     } catch (error: any) {
       console.error("Error adding resource:", error);
-      toast({
-        title: "Erro ao adicionar material",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o material.",
-        variant: "destructive",
-      });
+      showError("Erro ao adicionar material", error.message || "Ocorreu um erro ao tentar adicionar o material.");
       throw error;
     }
   };
@@ -146,17 +135,10 @@ export function useResourcesManager(solutionId: string | null) {
       // Remove from state
       setResources(prev => prev.filter(resource => resource.id !== id));
       
-      toast({
-        title: "Material removido",
-        description: "O material foi removido com sucesso.",
-      });
+      showSuccess("Material removido", "O material foi removido com sucesso.");
     } catch (error: any) {
       console.error("Error removing resource:", error);
-      toast({
-        title: "Erro ao remover material",
-        description: error.message || "Ocorreu um erro ao tentar remover o material.",
-        variant: "destructive",
-      });
+      showError("Erro ao remover material", error.message || "Ocorreu um erro ao tentar remover o material.");
       throw error;
     }
   };

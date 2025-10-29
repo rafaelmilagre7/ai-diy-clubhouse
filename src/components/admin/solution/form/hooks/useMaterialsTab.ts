@@ -1,14 +1,14 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Resource, ResourceMetadata } from "../types/ResourceTypes";
 import { detectFileType, getFileFormatName, formatFileSize } from "../utils/resourceUtils";
 import { parseResourceMetadata } from "../utils/resourceMetadataUtils";
 
 export function useMaterialsTab(solutionId: string | null, 
   updateFormValue: (resources: Resource[]) => void) {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [materials, setMaterials] = useState<Resource[]>([]);
   const [loading, setLoading] = useState(true);
   
@@ -46,11 +46,7 @@ export function useMaterialsTab(solutionId: string | null,
       }
     } catch (error) {
       console.error("Error fetching materials:", error);
-      toast({
-        title: "Erro ao carregar materiais",
-        description: "Não foi possível carregar a lista de materiais.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar materiais", "Não foi possível carregar a lista de materiais.");
     } finally {
       setLoading(false);
     }
@@ -58,11 +54,7 @@ export function useMaterialsTab(solutionId: string | null,
 
   const handleUploadComplete = async (url: string, fileName: string, fileSize: number) => {
     if (!solutionId) {
-      toast({
-        title: "Erro",
-        description: "É necessário salvar a solução antes de adicionar materiais.",
-        variant: "destructive",
-      });
+      showError("Erro", "É necessário salvar a solução antes de adicionar materiais.");
       return;
     }
     
@@ -111,17 +103,10 @@ export function useMaterialsTab(solutionId: string | null,
         updateFormValue(newMaterials);
       }
       
-      toast({
-        title: "Material adicionado",
-        description: "O material foi adicionado com sucesso.",
-      });
+      showSuccess("Material adicionado", "O material foi adicionado com sucesso.");
     } catch (error: any) {
       console.error("Erro ao adicionar material:", error);
-      toast({
-        title: "Erro ao adicionar material",
-        description: error.message || "Ocorreu um erro ao tentar adicionar o material.",
-        variant: "destructive",
-      });
+      showError("Erro ao adicionar material", error.message || "Ocorreu um erro ao tentar adicionar o material.");
     }
   };
 
@@ -159,17 +144,10 @@ export function useMaterialsTab(solutionId: string | null,
       setMaterials(updatedMaterials);
       updateFormValue(updatedMaterials);
       
-      toast({
-        title: "Material removido",
-        description: "O material foi removido com sucesso.",
-      });
+      showSuccess("Material removido", "O material foi removido com sucesso.");
     } catch (error: any) {
       console.error("Erro ao remover material:", error);
-      toast({
-        title: "Erro ao remover material",
-        description: error.message || "Ocorreu um erro ao tentar remover o material.",
-        variant: "destructive",
-      });
+      showError("Erro ao remover material", error.message || "Ocorreu um erro ao tentar remover o material.");
     }
   };
 

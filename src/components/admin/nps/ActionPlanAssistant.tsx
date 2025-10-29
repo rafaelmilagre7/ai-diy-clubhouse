@@ -18,7 +18,7 @@ import {
   Zap
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/components/ui/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface ActionPlanAssistantProps {
   npsData: {
@@ -60,7 +60,7 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
   feedbackData,
   timeRange
 }) => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -91,20 +91,13 @@ export const ActionPlanAssistant: React.FC<ActionPlanAssistantProps> = ({
 
       setAnalysisResult(data);
       
-      toast({
-        title: "✅ Plano de Ação Gerado",
-        description: "Análise completa com recomendações específicas criada com sucesso",
-      });
+      showSuccess("✅ Plano de Ação Gerado", "Análise completa com recomendações específicas criada com sucesso");
 
     } catch (err: any) {
       console.error('❌ Erro ao gerar plano de ação:', err);
       setError(err.message || 'Erro interno ao gerar análise');
       
-      toast({
-        title: "❌ Erro na Análise",
-        description: err.message || 'Não foi possível gerar o plano de ação',
-        variant: "destructive",
-      });
+      showError("❌ Erro na Análise", err.message || 'Não foi possível gerar o plano de ação');
     } finally {
       setIsAnalyzing(false);
     }

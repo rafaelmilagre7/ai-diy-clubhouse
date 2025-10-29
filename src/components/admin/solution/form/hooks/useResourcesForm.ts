@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { resourceFormSchema, ResourceFormValues } from "../utils/resourceFormSchema";
@@ -13,7 +13,7 @@ export function useResourcesForm(solutionId: string | null) {
   const [modules, setModules] = useState<any[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   
   const form = useForm<ResourceFormValues>({
     resolver: zodResolver(resourceFormSchema),
@@ -68,6 +68,7 @@ export function useResourcesForm(solutionId: string | null) {
     } catch (fetchError) {
       console.error('Error fetching resources:', fetchError);
       setError('Erro ao carregar recursos. Por favor, tente novamente.');
+      showError('Erro ao carregar recursos', 'Por favor, tente novamente.');
     } finally {
       setIsLoading(false);
     }
