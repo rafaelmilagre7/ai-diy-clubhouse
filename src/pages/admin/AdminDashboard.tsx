@@ -12,7 +12,7 @@ import { NotificationHealthMonitor } from "@/components/admin/notifications/Noti
 import { devLog } from "@/utils/devLogger";
 
 import { RefreshCw, Users, Activity, CheckCircle, TrendingUp, BarChart3, Zap, Star, Info } from "lucide-react";
-import { VideoDurationSync } from "@/components/admin/VideoDurationSync";
+
 const AdminDashboard = () => {
   const [timeRange, setTimeRange] = useState('30d');
   const [lastRefresh, setLastRefresh] = useState(new Date());
@@ -296,11 +296,6 @@ const AdminDashboard = () => {
           {/* Monitor de Notificações */}
           <div className="grid gap-6 grid-cols-1">
             <NotificationHealthMonitor />
-          </div>
-
-          {/* Sincronização de Durações dos Vídeos */}
-          <div className="grid gap-6 grid-cols-1">
-            <VideoDurationSync />
           </div>
         </div>
       </div>

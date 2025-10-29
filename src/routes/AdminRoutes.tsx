@@ -38,6 +38,10 @@ const AdminBuilder = lazy(() => import('@/pages/admin/AdminBuilder'));
 const NPSAnalytics = lazy(() => import('@/pages/admin/NPSAnalytics'));
 const CertificateTemplates = lazy(() => import('@/pages/admin/CertificateTemplates'));
 const CourseCertificateManager = lazy(() => import('@/pages/admin/CourseCertificateManager'));
+const CertificatesDashboard = lazy(() => import('@/pages/admin/certificates/CertificatesDashboard'));
+const SolutionCertificatesManager = lazy(() => import('@/pages/admin/certificates/SolutionCertificatesManager'));
+const VideoSyncManager = lazy(() => import('@/pages/admin/certificates/VideoSyncManager'));
+const RetroactiveCertificatesManager = lazy(() => import('@/pages/admin/certificates/RetroactiveCertificatesManager'));
 const NotificationsStats = lazy(() => import('@/pages/admin/NotificationsStats'));
 const AdminNotifications = lazy(() => import('@/pages/admin/AdminNotifications'));
 const EmailDashboard = lazy(() => import('@/pages/admin/communications/EmailDashboard'));
@@ -90,8 +94,19 @@ export const adminRoutes: RouteObject[] = [
   createAdminRoute("/admin/diagnostics", SupabaseDiagnostics),
   
   createAdminRoute("/admin/nps", NPSAnalytics),
+  
+  // Certificados - Nova Seção Organizada
+  createAdminRoute("/admin/certificates", CertificatesDashboard),
+  createAdminRoute("/admin/certificates/templates", CertificateTemplates),
+  createAdminRoute("/admin/certificates/courses", CourseCertificateManager),
+  createAdminRoute("/admin/certificates/solutions", SolutionCertificatesManager),
+  createAdminRoute("/admin/certificates/video-sync", VideoSyncManager),
+  createAdminRoute("/admin/certificates/retroactive", RetroactiveCertificatesManager),
+  
+  // Rotas antigas mantidas para compatibilidade (redirecionar para novas)
   createAdminRoute("/admin/certificate-templates", CertificateTemplates),
   createAdminRoute("/admin/course-certificates", CourseCertificateManager),
+  
   createAdminRoute("/admin/notifications", AdminNotifications),
   createAdminRoute("/admin/notifications/stats", NotificationsStats),
   createAdminRoute("/admin/notifications/broadcast", AdminBroadcast),
