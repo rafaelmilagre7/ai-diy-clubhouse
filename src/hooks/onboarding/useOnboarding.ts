@@ -565,7 +565,10 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       try {
         // 1. Atualizar onboarding_final
         console.log('[ONBOARDING] 📝 Atualizando onboarding_final...');
-        const { error: onboardingError } = await supabase
+        console.log('[ONBOARDING] 🔍 user.id:', user.id);
+        console.log('[ONBOARDING] 🔍 ninaMessage:', ninaMessage?.substring(0, 50) + '...');
+        
+        const { data: updateData, error: onboardingError } = await supabase
           .from('onboarding_final')
           .update({
             is_completed: true,
@@ -575,13 +578,21 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
             nina_message: ninaMessage,
             updated_at: new Date().toISOString()
           })
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .select();
+        
+        console.log('[ONBOARDING] 📊 Update result:', { data: updateData, error: onboardingError });
         
         if (onboardingError) {
-          console.error('[ONBOARDING] ❌ Erro ao atualizar onboarding_final:', onboardingError);
+          console.error('[ONBOARDING] ❌ Erro ao atualizar onboarding_final:', {
+            message: onboardingError.message,
+            details: onboardingError.details,
+            hint: onboardingError.hint,
+            code: onboardingError.code
+          });
           showError(
             "Erro ao salvar progresso",
-            "Não foi possível atualizar seus dados de onboarding."
+            `Erro: ${onboardingError.message}`
           );
           throw onboardingError;
         }
@@ -590,19 +601,27 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         
         // 2. Atualizar profiles
         console.log('[ONBOARDING] 📝 Atualizando profiles...');
-        const { error: profileError } = await supabase
+        const { data: profileData, error: profileError } = await supabase
           .from('profiles')
           .update({
             onboarding_completed: true,
             updated_at: new Date().toISOString()
           })
-          .eq('id', user.id);
+          .eq('id', user.id)
+          .select();
+        
+        console.log('[ONBOARDING] 📊 Profile update result:', { data: profileData, error: profileError });
         
         if (profileError) {
-          console.error('[ONBOARDING] ❌ Erro ao atualizar profiles:', profileError);
+          console.error('[ONBOARDING] ❌ Erro ao atualizar profiles:', {
+            message: profileError.message,
+            details: profileError.details,
+            hint: profileError.hint,
+            code: profileError.code
+          });
           showError(
             "Erro ao atualizar perfil",
-            "Não foi possível marcar seu perfil como completo."
+            `Erro: ${profileError.message}`
           );
           throw profileError;
         }
@@ -612,11 +631,16 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         const rpcDuration = performance.now() - rpcStartTime;
         console.log('[ONBOARDING] ⏱️ Finalização concluída em:', rpcDuration, 'ms');
         
-      } catch (updateError) {
-        console.error('[ONBOARDING] ❌ Erro ao finalizar onboarding:', updateError);
+      } catch (updateError: any) {
+        console.error('[ONBOARDING] ❌ ERRO CRÍTICO ao finalizar:', {
+          error: updateError,
+          message: updateError?.message,
+          stack: updateError?.stack,
+          name: updateError?.name
+        });
         showError(
           "Erro ao finalizar",
-          "Ocorreu um erro ao finalizar seu onboarding. Tente novamente."
+          `${updateError?.message || 'Erro desconhecido'}`
         );
         throw updateError;
       }

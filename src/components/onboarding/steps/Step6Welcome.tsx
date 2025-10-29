@@ -20,11 +20,6 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   userType,
   userName = "Usuário"
 }) => {
-  console.log('='.repeat(80));
-  console.log('[STEP6] 🎬 COMPONENTE RENDERIZADO - Versão atualizada!');
-  console.log('[STEP6] Timestamp:', new Date().toISOString());
-  console.log('='.repeat(80));
-  
   const navigate = useNavigate();
   const { showLoading, showSuccess: showSuccessToast, showError } = useToastModern();
   const [isCompleting, setIsCompleting] = useState(false);
@@ -33,17 +28,13 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
   
   const handleContinueToTeamInvites = () => {
-    // ALERT TEMPORÁRIO para debug
-    alert('🚀 BOTÃO CLICADO! Verifique o console.');
-    
     console.log('='.repeat(80));
-    console.log('[STEP6] 🚀🚀🚀 BOTÃO CONTINUAR CLICADO!!! 🚀🚀🚀');
+    console.log('[STEP6] 🚀 BOTÃO CONTINUAR CLICADO');
     console.log('[STEP6] Timestamp:', new Date().toISOString());
     console.log('[STEP6] isCompleting:', isCompleting);
-    console.log('[STEP6] onFinish type:', typeof onFinish);
     console.log('='.repeat(80));
     
-    // Pular direto para finalização ao invés de mostrar team invites
+    // Pular direto para finalização
     handleFinish();
   };
 
