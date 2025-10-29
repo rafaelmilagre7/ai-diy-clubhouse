@@ -212,40 +212,42 @@ export default function AdminUsers() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-6 space-y-8 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-aurora-primary/5 p-4 md:p-6 lg:p-8 space-y-6 md:space-y-8 relative overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-aurora-primary/5 via-transparent to-transparent" />
       
-      <div className="relative space-y-6">
+      <div className="relative space-y-4 md:space-y-6 max-w-[1600px] mx-auto">
         {/* Modern Header with Aurora Style */}
-        <div className="flex items-start gap-4">
-          <div className="flex items-center gap-3">
-            <div className="p-3 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20">
-              <Users className="h-6 w-6 text-aurora-primary" />
+        <div className="flex flex-col lg:flex-row lg:items-start gap-4 lg:gap-6">
+          <div className="flex items-center gap-3 flex-1">
+            <div className="p-2.5 md:p-3 rounded-xl bg-aurora-primary/10 border border-aurora-primary/20 shrink-0">
+              <Users className="h-5 w-5 md:h-6 md:w-6 text-aurora-primary" />
             </div>
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold aurora-text-gradient">Gestão de Usuários</h1>
-              <p className="text-muted-foreground mt-1">
-                Gerencie {stats.total_users} usuários, permissões e equipes da plataforma
+            <div className="flex-1 min-w-0">
+              <h1 className="text-2xl md:text-3xl font-bold aurora-text-gradient truncate">Gestão de Usuários</h1>
+              <p className="text-sm md:text-base text-muted-foreground mt-0.5 md:mt-1">
+                Gerencie {stats.total_users} usuários e equipes
               </p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-2 shrink-0">
             <AdminButton
               onClick={() => exportUsers(users, searchQuery)}
               disabled={isExporting || users.length === 0}
               variant="outline"
+              size="sm"
               icon={<Download className={isExporting ? 'animate-pulse' : ''} />}
             >
-              Exportar
+              <span className="hidden md:inline">Exportar</span>
             </AdminButton>
             <AdminButton
               onClick={fetchUsers}
               disabled={isRefreshing}
               variant="outline"
+              size="sm"
               icon={<RefreshCw className={isRefreshing ? 'animate-spin' : ''} />}
             >
-              Atualizar
+              <span className="hidden md:inline">Atualizar</span>
             </AdminButton>
           </div>
         </div>
@@ -281,7 +283,7 @@ export default function AdminUsers() {
         <TabsContent value="usuarios" className="space-y-4 mt-4">
 
         {/* Enhanced Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 lg:gap-6">
           <div 
             onClick={() => handleFilterByType('all')}
             className="cursor-pointer"

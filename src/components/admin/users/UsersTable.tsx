@@ -122,7 +122,7 @@ export const UsersTable: React.FC<UsersTableProps> = ({
 
   return (
     <>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6 auto-rows-fr">
         {users.map((user, index) => {
           const roleName = getUserRoleName(user);
           const isActive = (user.status || 'active') === 'active';
@@ -143,9 +143,9 @@ export const UsersTable: React.FC<UsersTableProps> = ({
               <AuroraCard 
                 variant="interactive" 
                 glow={true} 
-                className="group h-full"
+                className="group h-full flex flex-col"
               >
-                <CardHeader className="pb-3">
+                <CardHeader className="pb-3 flex-none">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-3 flex-1">
                       <div className="relative">
@@ -162,17 +162,17 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-foreground truncate aurora-text-gradient">
+                          <h3 className="text-base md:text-lg font-semibold text-foreground truncate aurora-text-gradient">
                             {user.name || 'Sem nome'}
                           </h3>
                           {isNewUser && (
-                            <Badge variant="outline" className="text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20">
+                            <Badge variant="outline" className="text-[10px] md:text-xs bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20 px-1.5 py-0">
                               Novo
                             </Badge>
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-1 text-body-small text-muted-foreground truncate">
+                        <div className="flex items-center gap-1 text-xs md:text-sm text-muted-foreground truncate">
                           <Mail className="h-3 w-3 flex-shrink-0" />
                           <span className="truncate">{user.email}</span>
                         </div>
@@ -244,29 +244,29 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                   </div>
                 </CardHeader>
                 
-                <CardContent className="space-y-4">
+                <CardContent className="space-y-3 md:space-y-4 flex-1 flex flex-col">
                   {/* Status and Role */}
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between flex-none">
                   <div className="space-y-1">
-                      <div className="flex items-center gap-2">
+                      <div className="flex flex-wrap items-center gap-2">
                         <Badge 
                           variant="outline"
-                          className={
+                          className={`text-[10px] md:text-xs px-2 py-0.5 ${
                             roleName === 'admin' 
                               ? 'bg-aurora-primary/10 text-aurora-primary border-aurora-primary/30' 
                               : 'bg-muted/50 text-foreground border-border'
-                          }
+                          }`}
                         >
                           {roleName}
                         </Badge>
                         
                         <Badge 
                           variant="outline"
-                          className={
+                          className={`text-[10px] md:text-xs px-2 py-0.5 ${
                             isActive 
                               ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' 
                               : 'bg-destructive/10 text-destructive border-destructive/30'
-                          }
+                          }`}
                         >
                           {isActive ? 'Ativo' : 'Inativo'}
                         </Badge>
@@ -275,10 +275,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                   </div>
 
                   {/* Additional Info */}
-                  <div className="space-y-2 text-body-small">
+                  <div className="space-y-2 text-xs md:text-sm flex-none">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <Calendar className="h-3 w-3" />
-                      <span>Criado em {createdDate.toLocaleDateString('pt-BR')}</span>
+                      <span className="text-xs">{createdDate.toLocaleDateString('pt-BR')}</span>
                     </div>
                     
                     {user.onboarding_completed && (
@@ -290,16 +290,16 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                   </div>
 
                   {/* Quick Actions */}
-                  <div className="flex gap-2 pt-2">
+                  <div className="flex gap-2 pt-2 mt-auto">
                     {canEditRoles && (
                       <Button 
                         variant="outline" 
                         size="sm" 
                         onClick={() => onEditRole(user)}
-                        className="flex-1 h-8 text-xs aurora-focus"
+                        className="flex-1 h-8 text-[10px] md:text-xs aurora-focus"
                       >
                         <UserCog className="h-3 w-3 mr-1" />
-                        Papel
+                        <span className="hidden sm:inline">Papel</span>
                       </Button>
                     )}
                     
@@ -308,10 +308,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         variant="outline" 
                         size="sm" 
                         onClick={() => onResetPassword(user)}
-                        className="flex-1 h-8 text-xs aurora-focus"
+                        className="flex-1 h-8 text-[10px] md:text-xs aurora-focus"
                       >
                         <Key className="h-3 w-3 mr-1" />
-                        Reset
+                        <span className="hidden sm:inline">Reset</span>
                       </Button>
                     )}
                     
@@ -320,10 +320,10 @@ export const UsersTable: React.FC<UsersTableProps> = ({
                         variant="outline" 
                         size="sm" 
                         onClick={() => handleDeleteUser(user)}
-                        className="flex-1 h-8 text-xs aurora-focus hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                        className="flex-1 h-8 text-[10px] md:text-xs aurora-focus hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
                       >
                         <Trash2 className="h-3 w-3 mr-1" />
-                        Deletar
+                        <span className="hidden sm:inline">Deletar</span>
                       </Button>
                     )}
                   </div>
