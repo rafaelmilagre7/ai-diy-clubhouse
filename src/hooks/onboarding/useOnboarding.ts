@@ -179,13 +179,32 @@ export const useOnboarding = () => {
           return;
         }
         
-        // PRIORIDADE 2: Se não tem user_type, começar do zero
+        // PRIORIDADE 2: Se não tem user_type, começar do zero (SEMPRE)
         if (!data.user_type) {
           console.log('[ONBOARDING] user_type é NULL - redirecionando para step 0');
           nextStep = 0;
-        } 
+          // ✅ Early return - não continuar verificando dados se não tem tipo
+          setState({
+            id: data.id,
+            userType: undefined,
+            current_step: 0,
+            completed_steps: data.completed_steps || [],
+            is_completed: data.is_completed,
+            nina_message: data.nina_message,
+            data: {
+              personal_info: data.personal_info || {},
+              professional_info: data.professional_info || {},
+              ai_experience: data.ai_experience || {},
+              goals_info: data.goals_info || {},
+              personalization: data.personalization || {},
+            },
+          });
+          setIsLoading(false);
+          return;
+        }
+        
         // PRIORIDADE 3: Se tem step 6 nos completed_steps, ir direto para celebração
-        else if (completedSteps.includes(6)) {
+        if (completedSteps.includes(6)) {
           console.log('[ONBOARDING] 🎯 STEP 6 JÁ COMPLETADO - indo para celebração final');
           nextStep = 6;
         }
@@ -196,10 +215,22 @@ export const useOnboarding = () => {
         } 
         // PRIORIDADE 5: Determinar próximo step baseado no progresso
         else {
-          // Função para verificar se um objeto tem dados válidos
+          // ✅ Função CORRIGIDA para verificar se um objeto tem dados válidos
+          // Ignorar dados auto-inicializados (marcados com auto_initialized: true)
           const hasValidData = (obj: any) => {
             if (!obj || typeof obj !== 'object') return false;
-            const keys = Object.keys(obj);
+            
+            // ⚠️ IGNORAR se for auto-inicializado
+            if (obj.auto_initialized === true) {
+              console.log('[ONBOARDING] Dados ignorados (auto_initialized):', obj);
+              return false;
+            }
+            
+            const keys = Object.keys(obj).filter(key => 
+              // Ignorar campos de controle
+              key !== 'auto_initialized' && key !== 'initialized_at'
+            );
+            
             return keys.length > 0 && keys.some(key => obj[key] && obj[key] !== '');
           };
           
