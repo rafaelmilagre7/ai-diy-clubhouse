@@ -41,37 +41,57 @@ export const ModernPostEditor = ({
 
   const createPostMutation = useMutation({
     mutationFn: async (content: string) => {
-      const userId = (await supabase.auth.getUser()).data.user?.id;
+      console.log('🚀 [COMMENT] Iniciando envio de resposta...');
       
+      // ✅ VALIDAR userId ANTES do INSERT
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.id) {
+        console.error('❌ [COMMENT] Usuário não autenticado');
+        throw new Error('Você precisa estar logado para enviar uma resposta');
+      }
+      
+      console.log('✅ [COMMENT] Usuário autenticado:', user.id);
+      
+      // INSERT da resposta
       const { data, error } = await supabase
         .from('community_posts')
         .insert([{
           content: content.trim(),
           topic_id: topicId,
-          user_id: userId
+          user_id: user.id
         }])
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [COMMENT] Erro no INSERT:', error);
+        throw error;
+      }
       
-      // Incrementar contador de respostas
-      await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+      console.log('✅ [COMMENT] Resposta inserida com sucesso:', data.id);
+      
+      // ⚠️ Incrementar contador de respostas (não crítico)
+      try {
+        await supabase.rpc('increment_topic_replies', { topic_id: topicId });
+        console.log('✅ [COMMENT] Contador incrementado com sucesso');
+      } catch (rpcError) {
+        console.error('⚠️ [COMMENT] Erro ao incrementar contador (não crítico):', rpcError);
+      }
 
-      // 📢 Criar notificação para o autor do tópico (se não for o próprio usuário)
-      if (data && userId) {
+      // ⚠️ Criar notificação (não crítico)
+      try {
         const { data: topicData } = await supabase
           .from("community_topics")
           .select("user_id, title")
           .eq("id", topicId)
           .single();
 
-        if (topicData && topicData.user_id !== userId) {
-          // Buscar nome do usuário que respondeu
+        if (topicData && topicData.user_id !== user.id) {
           const { data: profile } = await supabase
             .from("profiles")
             .select("name")
-            .eq("id", userId)
+            .eq("id", user.id)
             .single();
 
           const contentPreview = content.trim().substring(0, 100);
@@ -87,7 +107,11 @@ export const ModernPostEditor = ({
               category: "community",
               priority: 2
             });
+          
+          console.log('✅ [COMMENT] Notificação criada com sucesso');
         }
+      } catch (notifError) {
+        console.error('⚠️ [COMMENT] Erro ao criar notificação (não crítico):', notifError);
       }
       
       return data;

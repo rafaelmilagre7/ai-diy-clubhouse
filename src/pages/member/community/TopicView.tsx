@@ -177,11 +177,7 @@ const TopicView = () => {
             <div className="bg-card shadow-sm border-none p-6 rounded-lg">
               <h3 className="text-lg font-semibold mb-4">Responder</h3>
               <NewPostForm 
-                topicId={topic.id} 
-                onSuccess={() => {
-                  // Recarregar as respostas
-                  window.location.reload();
-                }}
+                topicId={topic.id}
               />
             </div>
           )}
