@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase, Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { SolutionFormValues } from "@/components/admin/solution/form/solutionFormSchema";
 import { slugify } from "@/utils/slugify";
 
@@ -10,7 +10,7 @@ export const useSolutionSave = (
   id: string | undefined,
   setSolution: (solution: Solution) => void
 ) => {
-  const { toast } = useToast();
+  const { showError, showSuccess } = useToastModern();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 

@@ -3,12 +3,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { toast } from "sonner";
 
 export const useSolutionInteractions = (solutionId: string | undefined, progress: any) => {
   const { user } = useAuth();
-  const { toast: uiToast } = useToast();
+  const { showError } = useToastModern();
   const navigate = useNavigate();
   
   const [initializing, setInitializing] = useState(false);

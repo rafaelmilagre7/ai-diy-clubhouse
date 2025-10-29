@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useUserStats } from "@/hooks/useUserStats";
 
 export interface Implementation {
@@ -72,7 +72,7 @@ const executeWithRetry = async <T>(
 
 export const useProfileData = () => {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const { stats, loading: statsLoading } = useUserStats();
   
   const [loading, setLoading] = useState(true);

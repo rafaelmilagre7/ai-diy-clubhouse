@@ -12,13 +12,13 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { supabase, Solution } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useAuth } from "@/contexts/auth";
 import { useNavigate } from "react-router-dom";
 
 export const useSolutionData = (id: string | undefined) => {
   const { user, profile, isLoading: authLoading } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const navigate = useNavigate();
   const [solution, setSolution] = useState<Solution | null>(null);
   const [progress, setProgress] = useState<any | null>(null);

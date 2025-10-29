@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 // Tipos simplificados para evitar deep instantiation
 interface SimpleSolution {
@@ -31,7 +31,7 @@ interface SimpleAnalytics {
 
 export const useUserStatsData = () => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const [loading, setLoading] = useState(true);
   const [solutions, setSolutions] = useState<SimpleSolution[]>([]);
   const [progressData, setProgressData] = useState<SimpleProgress[]>([]);

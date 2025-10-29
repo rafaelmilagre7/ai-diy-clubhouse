@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useQuery } from "@tanstack/react-query";
 import { Tool } from "@/types/toolTypes";
 
@@ -13,7 +13,7 @@ export const useToolsChecklist = (solutionId: string | null) => {
   const [tools, setTools] = useState<SelectedTool[]>([]);
   const [loading, setLoading] = useState(true);
   const [savingTools, setSavingTools] = useState(false);
-  const { toast } = useToast();
+  const { showError, showSuccess } = useToastModern();
 
   const { data: availableTools = [] } = useQuery({
     queryKey: ['tools'],
