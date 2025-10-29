@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { supabase, Module } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useNavigate } from "react-router-dom";
 
 /**
@@ -13,7 +13,7 @@ export const useModuleEditing = (
 ) => {
   const [selectedModuleIndex, setSelectedModuleIndex] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const navigate = useNavigate();
 
   // Função para editar um módulo específico
@@ -57,10 +57,7 @@ export const useModuleEditing = (
         return updatedModules;
       });
 
-      toast({
-        title: "Módulo atualizado",
-        description: "As alterações no módulo foram salvas com sucesso.",
-      });
+      showSuccess("Módulo atualizado", "As alterações no módulo foram salvas com sucesso.");
 
       // Opcional: voltar para a lista de módulos após salvar
       // Comentado porque podemos querer continuar editando
@@ -68,11 +65,7 @@ export const useModuleEditing = (
       // setSelectedModuleIndex(null);
     } catch (error) {
       console.error("Error saving module:", error);
-      toast({
-        title: "Erro ao salvar módulo",
-        description: "Ocorreu um erro ao tentar salvar as alterações do módulo.",
-        variant: "destructive",
-      });
+      showError("Erro ao salvar módulo", "Ocorreu um erro ao tentar salvar as alterações do módulo.");
     }
   };
 
@@ -105,11 +98,7 @@ export const useModuleEditing = (
     if (solutionId) {
       navigate(`/implement/${solutionId}/0`);
     } else {
-      toast({
-        title: "Impossível pré-visualizar",
-        description: "Salve a solução primeiro para poder pré-visualizar a implementação.",
-        variant: "destructive",
-      });
+      showError("Impossível pré-visualizar", "Salve a solução primeiro para poder pré-visualizar a implementação.");
     }
   };
 

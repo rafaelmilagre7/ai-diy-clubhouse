@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { Solution } from "@/lib/supabase";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -30,7 +30,7 @@ export const useModuleImplementation = () => {
   const moduleIdxNumber = parseInt(currentModuleIdx);
   
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showError, showSuccess, showInfo } = useToastModern();
   const navigate = useNavigate();
   const { log, logError } = useLogging();
   
@@ -58,21 +58,13 @@ export const useModuleImplementation = () => {
         
         if (solutionError) {
           logError("Erro ao buscar solução:", solutionError);
-          toast({
-            title: "Erro ao carregar solução",
-            description: "Não foi possível encontrar a solução solicitada.",
-            variant: "destructive"
-          });
+          showError("Erro ao carregar solução", "Não foi possível encontrar a solução solicitada.");
           navigate("/solutions");
           return;
         }
         
         if (!solutionData) {
-          toast({
-            title: "Solução não encontrada",
-            description: "Não foi possível encontrar a solução solicitada.",
-            variant: "destructive"
-          });
+          showError("Solução não encontrada", "Não foi possível encontrar a solução solicitada.");
           navigate("/solutions");
           return;
         }
@@ -262,18 +254,14 @@ export const useModuleImplementation = () => {
         }
       } catch (error) {
         logError("Erro no useModuleImplementation:", error);
-        toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao carregar os dados de implementação.",
-          variant: "destructive"
-        });
+        showError("Erro", "Ocorreu um erro ao carregar os dados de implementação.");
       } finally {
         setLoading(false);
       }
     };
     
     fetchData();
-  }, [id, moduleIdxNumber, user, toast, navigate, log, logError]);
+  }, [id, moduleIdxNumber, user, showError, showSuccess, showInfo, navigate, log, logError]);
   
   return {
     solution,

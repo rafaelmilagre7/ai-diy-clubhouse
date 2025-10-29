@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { supabase, Progress } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useLogging } from "@/hooks/useLogging";
 import { validateModuleInteraction, logProgressEvent } from "./utils/progressUtils";
 
@@ -31,7 +31,7 @@ export const useModuleCompletion = ({
   requireUserConfirmation
 }: UseModuleCompletionProps) => {
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { showError, showSuccess, showInfo } = useToastModern();
   const { log, logError } = useLogging();
   const [showConfirmationModal, setShowConfirmationModal] = useState(false);
   
@@ -51,11 +51,7 @@ export const useModuleCompletion = ({
     const validation = validateModuleInteraction(hasInteracted, requireUserConfirmation);
     if (!validation.isValid) {
       log("User hasn't interacted with content yet", { hasInteracted });
-      toast({
-        title: "Interação necessária",
-        description: validation.message,
-        variant: "default",
-      });
+      showInfo("Interação necessária", validation.message);
       return;
     }
     
@@ -90,10 +86,7 @@ export const useModuleCompletion = ({
         // Update local state
         setCompletedModules(updatedCompletedModules);
         
-        toast({
-          title: "Módulo concluído!",
-          description: "Este módulo foi marcado como concluído com sucesso.",
-        });
+        showSuccess("Módulo concluído!", "Este módulo foi marcado como concluído com sucesso.");
         
         logProgressEvent(log, "Module marked as completed successfully", { 
           moduleIdx, 
@@ -107,11 +100,7 @@ export const useModuleCompletion = ({
       }
     } catch (error) {
       logError("Error marking module as completed", error);
-      toast({
-        title: "Erro ao marcar módulo",
-        description: "Ocorreu um erro ao tentar marcar o módulo como concluído.",
-        variant: "destructive",
-      });
+      showError("Erro ao marcar módulo", "Ocorreu um erro ao tentar marcar o módulo como concluído.");
       return false;
     }
   };

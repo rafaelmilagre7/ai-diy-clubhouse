@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { supabase, Module } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 /**
  * Hook for fetching module data from Supabase
@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 export const useModuleFetch = (solutionId: string | null) => {
   const [modules, setModules] = useState<Module[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { showError } = useToastModern();
 
   // Function to fetch modules from Supabase
   // CORREÇÃO: A tabela 'modules' não existe - criando módulos mock baseados nos recursos
@@ -50,11 +50,7 @@ export const useModuleFetch = (solutionId: string | null) => {
       }
     } catch (error) {
       console.error("Error fetching modules:", error);
-      toast({
-        title: "Erro ao carregar módulos",
-        description: "Não foi possível carregar os módulos desta solução.",
-        variant: "destructive",
-      });
+      showError("Erro ao carregar módulos", "Não foi possível carregar os módulos desta solução.");
     } finally {
       setIsLoading(false);
     }

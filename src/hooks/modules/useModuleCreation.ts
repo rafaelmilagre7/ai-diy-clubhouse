@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { supabase, Module } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { moduleTypes } from "@/components/admin/solution/moduleTypes";
 
 /**
@@ -13,7 +13,7 @@ export const useModuleCreation = (
   setModules: React.Dispatch<React.SetStateAction<Module[]>>
 ) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
 
   // Create default modules structure or specific types
   const handleCreateDefaultModules = async (specificTypes?: string[]) => {
@@ -59,21 +59,15 @@ export const useModuleCreation = (
         setModules(prev => [...prev, ...(data as Module[])].sort((a, b) => a.module_order - b.module_order));
       }
       
-      toast({
-        title: specificTypes && specificTypes.length === 1 
-          ? "Módulo criado" 
-          : "Módulos criados",
-        description: specificTypes && specificTypes.length === 1 
+      showSuccess(
+        specificTypes && specificTypes.length === 1 ? "Módulo criado" : "Módulos criados",
+        specificTypes && specificTypes.length === 1 
           ? "O novo módulo foi criado com sucesso." 
-          : "A estrutura de módulos foi criada com sucesso.",
-      });
+          : "A estrutura de módulos foi criada com sucesso."
+      );
     } catch (error) {
       console.error("Error creating modules:", error);
-      toast({
-        title: "Erro ao criar módulos",
-        description: "Não foi possível criar os módulos para esta solução.",
-        variant: "destructive",
-      });
+      showError("Erro ao criar módulos", "Não foi possível criar os módulos para esta solução.");
     } finally {
       setIsLoading(false);
     }

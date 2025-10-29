@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Progress } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { useLogging } from "@/hooks/useLogging";
 
 // Definindo o tipo Module baseado na estrutura da tabela learning_modules
@@ -21,7 +21,7 @@ interface Module {
 export const useImplementationData = () => {
   const { id } = useParams<{ id: string }>();
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const navigate = useNavigate();
   const { log, logError } = useLogging();
   const isAdmin = profile?.role === 'admin';
@@ -57,11 +57,7 @@ export const useImplementationData = () => {
           logError("Erro ao buscar solução:", solutionError);
           // Se a solução não for encontrada ou não estiver publicada (para membros)
           if (!isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível para implementação.",
-              variant: "destructive"
-            });
+            showError("Solução não disponível", "Esta solução não está disponível para implementação.");
             navigate("/solutions");
             return;
           }
@@ -70,11 +66,7 @@ export const useImplementationData = () => {
         }
         
         if (!solutionData) {
-          toast({
-            title: "Solução não encontrada",
-            description: "Esta solução não está disponível.",
-            variant: "destructive"
-          });
+          showError("Solução não encontrada", "Esta solução não está disponível.");
           navigate("/solutions");
           return;
         }
@@ -229,11 +221,7 @@ export const useImplementationData = () => {
         }
       } catch (error) {
         logError("Error fetching data:", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar dados", "Ocorreu um erro ao tentar carregar os dados da implementação.");
         navigate("/solutions");
       } finally {
         setLoading(false);

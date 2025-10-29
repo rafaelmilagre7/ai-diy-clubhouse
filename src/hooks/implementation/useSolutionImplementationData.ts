@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Progress } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 
 interface SolutionModule {
   id: string;
@@ -20,7 +20,7 @@ interface SolutionModule {
 export const useSolutionImplementationData = () => {
   const { id } = useParams<{ id: string }>();
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const navigate = useNavigate();
   const isAdmin = profile?.role === 'admin';
   
@@ -52,11 +52,7 @@ export const useSolutionImplementationData = () => {
         
         if (solutionError) {
           if (solutionError.code === "PGRST116" && !isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível para implementação.",
-              variant: "destructive"
-            });
+            showError("Solução não disponível", "Esta solução não está disponível para implementação.");
             navigate("/solutions");
             return;
           }
@@ -186,11 +182,7 @@ export const useSolutionImplementationData = () => {
         }
       } catch (error) {
         console.error("Error fetching data:", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar dados", "Ocorreu um erro ao tentar carregar os dados da implementação.");
         navigate("/solutions");
       } finally {
         setLoading(false);
@@ -198,7 +190,7 @@ export const useSolutionImplementationData = () => {
     };
     
     fetchData();
-  }, [id, user, toast, navigate, isAdmin, profile?.role]);
+  }, [id, user, showError, navigate, isAdmin, profile?.role]);
   
   return {
     solution,

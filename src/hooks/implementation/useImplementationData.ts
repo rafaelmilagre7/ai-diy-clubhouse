@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth";
 import { supabase, Solution, Progress } from "@/lib/supabase";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { devLog, devWarn } from "@/hooks/useOptimizedLogging";
 
 interface SolutionModule {
@@ -21,7 +21,7 @@ interface SolutionModule {
 export const useImplementationData = () => {
   const { id } = useParams<{ id: string }>();
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  const { showError } = useToastModern();
   const navigate = useNavigate();
   const isAdmin = profile?.role === 'admin';
   
@@ -53,11 +53,7 @@ export const useImplementationData = () => {
         
         if (solutionError || !solutionData) {
           if (!isAdmin) {
-            toast({
-              title: "Solução não disponível",
-              description: "Esta solução não está disponível para implementação.",
-              variant: "destructive"
-            });
+            showError("Solução não disponível", "Esta solução não está disponível para implementação.");
             navigate("/solutions");
             return;
           }
@@ -207,11 +203,7 @@ export const useImplementationData = () => {
         }
       } catch (error) {
         devWarn("Error fetching data:", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Ocorreu um erro ao tentar carregar os dados da implementação.",
-          variant: "destructive",
-        });
+        showError("Erro ao carregar dados", "Ocorreu um erro ao tentar carregar os dados da implementação.");
         navigate("/solutions");
       } finally {
         setLoading(false);
@@ -219,7 +211,7 @@ export const useImplementationData = () => {
     };
     
     fetchData();
-  }, [id, user, toast, navigate, isAdmin, profile?.role]);
+  }, [id, user, showError, navigate, isAdmin, profile?.role]);
   
   return {
     solution,
