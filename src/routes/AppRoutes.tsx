@@ -87,7 +87,17 @@ const AppRoutes = () => {
             <InvitePage />
           </Suspense>
         } />
+        <Route path="/invite/:token" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <InvitePage />
+          </Suspense>
+        } />
         <Route path="/convite" element={
+          <Suspense fallback={<OptimizedLoadingScreen />}>
+            <InvitePage />
+          </Suspense>
+        } />
+        <Route path="/invite" element={
           <Suspense fallback={<OptimizedLoadingScreen />}>
             <InvitePage />
           </Suspense>

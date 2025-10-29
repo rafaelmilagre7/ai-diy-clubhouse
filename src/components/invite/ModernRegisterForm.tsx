@@ -109,13 +109,20 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         const { data: inviteCheck } = await supabase
           .from('invites')
           .select('id, expires_at, used_at')
-          .ilike('token', inviteToken.trim())
+          .eq('token', inviteToken.trim())
           .maybeSingle();
         
+        // Se não encontrar, tentar validação via RPC como fallback
         if (!inviteCheck) {
-          toast.error("Convite inválido. Solicite um novo convite ao administrador.");
-          setError("Convite não encontrado ou inválido");
-          return;
+          const { data: rpcValidation } = await supabase.rpc('validate_invite_token_safe', {
+            p_token: inviteToken.trim()
+          });
+          
+          if (!rpcValidation?.valid) {
+            toast.error("Convite inválido ou expirado");
+            setError("Convite não encontrado");
+            return;
+          }
         }
         
         if (inviteCheck.used_at) {
