@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth';
-import { showErrorToast } from '@/lib/toast-helpers';
 import { useNavigate } from 'react-router-dom';
+import { useToastModern } from '@/hooks/useToastModern';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { Loader2 } from 'lucide-react';
 import { SignInPage } from '@/components/auth/SignInPage';
@@ -46,6 +46,7 @@ const AuthLayout = () => {
   const [redirectHandled, setRedirectHandled] = useState(false);
   const [hasLoginError, setHasLoginError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const { showError } = useToastModern();
 
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
@@ -78,18 +79,18 @@ const AuthLayout = () => {
     
     // Validações de front-end
     if (!email || !password) {
-      const message = 'Por favor, preencha email e senha';
+      const message = 'Por favor, preencha e-mail e senha';
       setHasLoginError(true);
       setErrorMessage(message);
-      showErrorToast('Campos obrigatórios', message);
+      showError('Campos obrigatórios', message, { position: 'top-center', duration: 4000 });
       return;
     }
 
     if (!isValidEmail(email)) {
-      const message = 'Por favor, insira um email válido';
+      const message = 'Por favor, insira um e-mail válido';
       setHasLoginError(true);
       setErrorMessage(message);
-      showErrorToast('Email inválido', message);
+      showError('E-mail inválido', message, { position: 'top-center', duration: 4000 });
       return;
     }
 
@@ -97,7 +98,7 @@ const AuthLayout = () => {
       const message = 'A senha deve ter no mínimo 6 caracteres';
       setHasLoginError(true);
       setErrorMessage(message);
-      showErrorToast('Senha muito curta', message);
+      showError('Senha muito curta', message, { position: 'top-center', duration: 4000 });
       return;
     }
 
@@ -109,11 +110,11 @@ const AuthLayout = () => {
       if (error) {
         console.error('❌ [AUTH-LAYOUT] Erro no login:', error.message);
         
-        // Usar helper de toast com mensagem traduzida
+        // Usar mensagem traduzida
         const userFriendlyMessage = getAuthErrorMessage(error);
         setHasLoginError(true);
         setErrorMessage(userFriendlyMessage);
-        showErrorToast('Erro no login', userFriendlyMessage);
+        showError('Erro no login', userFriendlyMessage, { position: 'top-center', duration: 6000 });
         
         // Limpar campo de senha
         const form = event.currentTarget;
@@ -132,7 +133,7 @@ const AuthLayout = () => {
       const message = 'Não foi possível fazer login. Tente novamente';
       setHasLoginError(true);
       setErrorMessage(message);
-      showErrorToast('Erro inesperado', message);
+      showError('Erro inesperado', message, { position: 'top-center', duration: 6000 });
     } finally {
       setIsSigningIn(false);
     }

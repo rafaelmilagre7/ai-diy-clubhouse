@@ -4,10 +4,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, Lock, User, Eye, EyeOff, ArrowRight, CheckCircle } from "lucide-react";
 import { supabase } from "@/lib/supabase";
-import { toast } from "sonner";
 import { RateLimitGuard } from '@/components/security/RateLimitGuard';
 import { useRateLimit } from '@/hooks/security/useRateLimit';
 import { useSecurityMetrics } from '@/hooks/security/useSecurityMetrics';
+import { useToastModern } from '@/hooks/useToastModern';
 
 // Removido hook de telemetria para simplificação
 
@@ -35,8 +35,16 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
   const [step, setStep] = useState<'form' | 'success'>('form');
   const { checkRateLimit } = useRateLimit();
   const { logSecurityViolation } = useSecurityMetrics();
-  
-  // Removido hook de telemetria para simplificação
+  const { 
+    showError, 
+    showSuccess, 
+    showWarning, 
+    showLoading, 
+    dismissToast,
+    showErrorWithAction,
+    showErrorWithRetry 
+  } = useToastModern();
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
 
   const validatePassword = (password: string) => {
     const checks = {
@@ -86,20 +94,32 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     });
 
     if (!rateLimitAllowed) {
-      toast.error("Aguarde alguns minutos antes de tentar novamente.");
-      setError('Rate limit atingido. Aguarde antes de tentar novamente.');
+      showWarning(
+        "Muitas tentativas",
+        "Por favor, aguarde alguns minutos antes de tentar novamente",
+        { position: 'top-center', duration: 6000 }
+      );
+      setError('Muitas tentativas. Aguarde antes de tentar novamente.');
       return;
     }
     
     console.log('🚀 [REGISTER] Iniciando processo de registro');
     
     if (!name || !email || !password || !confirmPassword) {
-      toast.error("Por favor, preencha todos os campos.");
+      showError(
+        "Campos obrigatórios",
+        "Por favor, preencha todos os campos para continuar",
+        { position: 'top-center', duration: 4000 }
+      );
       return;
     }
     
     if (!passwordsMatch) {
-      toast.error("As senhas digitadas são diferentes. Verifique e tente novamente.");
+      showError(
+        "Senhas diferentes",
+        "As senhas digitadas são diferentes. Verifique e tente novamente",
+        { position: 'top-center', duration: 5000 }
+      );
       return;
     }
     
@@ -119,20 +139,36 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
           });
           
           if (!rpcValidation?.valid) {
-            toast.error("Convite inválido ou expirado");
+            showError(
+              "Convite inválido",
+              "Este convite não foi encontrado ou já expirou. Solicite um novo convite",
+              { position: 'top-center', duration: 6000 }
+            );
             setError("Convite não encontrado");
             return;
           }
         }
         
         if (inviteCheck.used_at) {
-          toast.error("Este convite já foi utilizado. Solicite um novo convite.");
+          showError(
+            "Convite já utilizado",
+            "Este convite já foi usado por outro usuário. Solicite um novo convite",
+            { position: 'top-center', duration: 6000 }
+          );
           setError("Convite já utilizado");
           return;
         }
         
         if (new Date(inviteCheck.expires_at) < new Date()) {
-          toast.error("Este convite expirou. Solicite um novo convite ao administrador.");
+          showErrorWithAction(
+            "Convite expirado",
+            "Este convite expirou. Solicite um novo convite ao administrador",
+            {
+              label: "Falar com suporte",
+              onClick: () => window.open('/suporte', '_blank')
+            },
+            { position: 'top-center', duration: 8000 }
+          );
           setError("Convite expirado");
           return;
         }
@@ -150,7 +186,11 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         passwordScore: passwordValidation.score,
         passwordStrength: passwordValidation.strength
       });
-      toast.error("Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos.");
+      showWarning(
+        "Senha fraca",
+        "Por favor, crie uma senha que atenda pelo menos 4 dos 5 requisitos de segurança",
+        { position: 'top-center', duration: 6000 }
+      );
       return;
     }
 
@@ -158,7 +198,11 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
     const serverValidation = await validatePasswordOnServer(password);
     if (serverValidation && !serverValidation.is_valid) {
       console.log('❌ [REGISTER] Senha rejeitada pelo servidor:', serverValidation);
-      toast.error("Sua senha não atende aos critérios de segurança. Evite senhas comuns e use uma combinação mais forte.");
+      showWarning(
+        "Senha muito comum",
+        "Esta senha é conhecida e fácil de adivinhar. Evite senhas comuns como 'senha123' ou 'password'",
+        { position: 'top-center', duration: 8000 }
+      );
       return;
     }
     
@@ -171,7 +215,12 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         console.log('💾 [REGISTER] Token salvo no sessionStorage:', inviteToken.substring(0, 6) + '***');
       }
       
-      toast.loading("Criando sua conta... Por favor, aguarde enquanto preparamos tudo para você.");
+      const toastId = showLoading(
+        "Criando sua conta...",
+        "Por favor, aguarde enquanto preparamos tudo para você",
+        { position: 'top-center', duration: Infinity }
+      );
+      setLoadingToastId(toastId);
       
       // 🎯 NOVO FLUXO SIMPLIFICADO: Apenas signUp - o trigger handle_new_user cuida do resto
       const { data, error } = await supabase.auth.signUp({
@@ -199,11 +248,20 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       
       if (error) {
         console.error('❌ [REGISTER] Erro no signUp:', error);
+        if (loadingToastId) dismissToast(loadingToastId);
         
         // Tratamento específico para usuário já existente
         if (error.message?.includes("User already registered") || error.message?.includes("already been registered")) {
           setError("Este email já possui uma conta. Tente fazer login ou use 'Esqueci minha senha'.");
-          toast.error("Email já cadastrado. Faça login ou recupere sua senha.");
+          showErrorWithAction(
+            "E-mail já cadastrado",
+            "Este e-mail já está cadastrado na plataforma. Faça login ou recupere sua senha",
+            {
+              label: "Ir para login",
+              onClick: () => window.location.href = '/login'
+            },
+            { position: 'top-center', duration: 8000 }
+          );
           return;
         }
         
@@ -217,7 +275,11 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
             
             if (rateLimitInfo) {
               setError(rateLimitInfo.user_message);
-              toast.error(rateLimitInfo.user_message);
+              showError(
+                "Limite de e-mails atingido",
+                rateLimitInfo.user_message || "Muitas tentativas de envio de e-mail. Aguarde alguns minutos",
+                { position: 'top-center', duration: 8000 }
+              );
               
               // Log da tentativa para monitoramento
               await supabase.rpc('log_registration_attempt', {
@@ -238,20 +300,26 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         }
         
         let userMessage = "Não foi possível criar sua conta. ";
+        let errorTitle = "Erro no cadastro";
+        
         if (error.message?.includes("User already registered")) {
-          userMessage = "Este email já possui uma conta. Tente fazer login ou usar 'Esqueci minha senha'.";
+          errorTitle = "E-mail já cadastrado";
+          userMessage = "Este e-mail já possui uma conta. Tente fazer login ou usar 'Esqueci minha senha'";
         } else if (error.message?.includes("signup disabled")) {
-          userMessage = "O cadastro está temporariamente desabilitado. Entre em contato com o suporte.";
+          errorTitle = "Cadastro desabilitado";
+          userMessage = "O cadastro está temporariamente desabilitado. Entre em contato com o suporte";
         } else if (error.message?.includes("refresh_token")) {
-          userMessage = "Problema com a sessão detectado. Recarregue a página e tente novamente.";
+          errorTitle = "Erro de sessão";
+          userMessage = "Problema com a sessão detectado. Recarregue a página e tente novamente";
         } else if (error.message?.includes("rate limit")) {
-          userMessage = "Muitas tentativas de cadastro. Aguarde alguns minutos e tente novamente.";
+          errorTitle = "Muitas tentativas";
+          userMessage = "Muitas tentativas de cadastro. Aguarde alguns minutos e tente novamente";
         } else {
-          userMessage += `Erro: ${error.message}`;
+          userMessage = error.message || "Erro desconhecido. Tente novamente";
         }
         
         setError(userMessage);
-        toast.error(userMessage);
+        showError(errorTitle, userMessage, { position: 'top-center', duration: 8000 });
         
         // Log da tentativa para monitoramento
         try {
@@ -295,11 +363,26 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         
         if (!profileCreated) {
           console.warn('⚠️ [REGISTER] Profile não criado após 3 tentativas - fluxo pode ter problema');
-          toast.error("Houve um atraso na criação da sua conta. Tente fazer login em alguns instantes.");
+          if (loadingToastId) dismissToast(loadingToastId);
+          showErrorWithRetry(
+            "Erro ao criar perfil",
+            "Houve um atraso na criação da sua conta. Aguarde alguns instantes e tente fazer login",
+            () => window.location.href = '/login',
+            { position: 'top-center', duration: 8000 }
+          );
           return;
         }
         
-        toast.success("Conta criada com sucesso! 🎉 Bem-vindo à plataforma!");
+        if (loadingToastId) dismissToast(loadingToastId);
+        showSuccess(
+          "Conta criada com sucesso!",
+          "🎉 Bem-vindo à plataforma! Redirecionando...",
+          { 
+            position: 'bottom-right',
+            highlightTitle: true,
+            duration: 4000 
+          }
+        );
         
         // Sucesso - chamar callback
         onSuccess?.();
@@ -307,8 +390,13 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
       
     } catch (error: any) {
       console.error('❌ [REGISTER] Erro:', error);
-      const errorMessage = error.message || "Erro ao criar conta. Tente novamente.";
-      toast.error(errorMessage);
+      if (loadingToastId) dismissToast(loadingToastId);
+      const errorMessage = error.message || "Erro ao criar conta. Tente novamente";
+      showError(
+        "Erro inesperado",
+        errorMessage,
+        { position: 'top-center', duration: 6000 }
+      );
     } finally {
       setIsLoading(false);
     }
