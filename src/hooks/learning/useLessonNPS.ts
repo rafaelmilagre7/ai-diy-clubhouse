@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/contexts/auth';
@@ -17,7 +17,6 @@ interface SubmitNPSData {
 export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
 
   // Buscar avaliação NPS existente para esta aula e usuário
   const { data: existingNPS, isLoading } = useQuery({
@@ -47,28 +46,22 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
     mutationFn: async ({ score, feedback }: SubmitNPSData) => {
       if (!user) throw new Error('Usuário não autenticado');
       
-      setIsSubmitting(true);
+      // ✅ USAR FUNÇÃO SECURITY DEFINER para bypass de RLS
+      // A função safe_insert_or_update_lesson_nps já faz UPDATE se existir
+      console.log('[LESSON-NPS] 💾 Salvando via RPC safe_insert_or_update_lesson_nps...');
+      const { data: result, error } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
+        p_lesson_id: lessonId,
+        p_score: score,
+        p_feedback: feedback || null
+      });
       
-      try {
-        // ✅ USAR FUNÇÃO SECURITY DEFINER para bypass de RLS
-        // A função safe_insert_or_update_lesson_nps já faz UPDATE se existir
-        console.log('[LESSON-NPS] 💾 Salvando via RPC safe_insert_or_update_lesson_nps...');
-        const { data: result, error } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
-          p_lesson_id: lessonId,
-          p_score: score,
-          p_feedback: feedback || null
-        });
-        
-        if (error) {
-          console.error('[LESSON-NPS] ❌ Erro na RPC:', error);
-          throw error;
-        }
-
-        console.log('[LESSON-NPS] ✅ NPS salvo com sucesso:', result);
-        return result;
-      } finally {
-        setIsSubmitting(false);
+      if (error) {
+        console.error('[LESSON-NPS] ❌ Erro na RPC:', error);
+        throw error;
       }
+
+      console.log('[LESSON-NPS] ✅ NPS salvo com sucesso:', result);
+      return result;
     },
     onSuccess: () => {
       console.log('[LESSON-NPS] ✅ Mutation onSuccess');
@@ -89,7 +82,7 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
   return {
     existingNPS,
     isLoading,
-    isSubmitting,
+    isSubmitting: submitNPSMutation.isPending,
     submitNPS
   };
 };
