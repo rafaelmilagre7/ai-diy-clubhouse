@@ -26,8 +26,8 @@ export const useRealtimeComments = (
       .on('postgres_changes', { 
         event: 'INSERT', 
         schema: 'public', 
-        table: 'tool_comments',
-        filter: `tool_id=eq.${solutionId}`
+        table: 'solution_comments',
+        filter: `solution_id=eq.${solutionId}`
       }, (payload) => {
         log('Novo comentário detectado', { payload });
         invalidateComments();
@@ -35,8 +35,8 @@ export const useRealtimeComments = (
       .on('postgres_changes', { 
         event: 'UPDATE', 
         schema: 'public', 
-        table: 'tool_comments',
-        filter: `tool_id=eq.${solutionId}`
+        table: 'solution_comments',
+        filter: `solution_id=eq.${solutionId}`
       }, (payload) => {
         log('Comentário atualizado', { payload });
         invalidateComments();
@@ -44,8 +44,8 @@ export const useRealtimeComments = (
       .on('postgres_changes', { 
         event: 'DELETE', 
         schema: 'public', 
-        table: 'tool_comments',
-        filter: `tool_id=eq.${solutionId}`
+        table: 'solution_comments',
+        filter: `solution_id=eq.${solutionId}`
       }, (payload) => {
         log('Comentário removido', { payload });
         invalidateComments();
@@ -53,7 +53,7 @@ export const useRealtimeComments = (
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'tool_comment_likes'
+        table: 'solution_comment_likes'
       }, () => {
         log('Curtida modificada, invalidando queries', { solutionId, moduleId });
         invalidateComments();
