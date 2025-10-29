@@ -25,7 +25,9 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   const [showTeamInvites, setShowTeamInvites] = useState(false);
   
   const handleContinueToTeamInvites = () => {
-    setShowTeamInvites(true);
+    console.log('[STEP6] 🚀 Botão "Continuar" clicado - iniciando finalização');
+    // Pular direto para finalização ao invés de mostrar team invites
+    handleFinish();
   };
 
   const handleTeamInvitesComplete = async () => {
@@ -39,17 +41,30 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
 
   const handleFinish = async () => {
     console.log('[STEP6] 🎯 handleFinish chamado - iniciando processo');
+    
+    if (isCompleting) {
+      console.log('[STEP6] ⚠️ Já está completando, ignorando...');
+      return;
+    }
+    
     setIsCompleting(true);
     
-    console.log('[STEP6] 🔄 Chamando onFinish...');
-    const success = await onFinish();
-    console.log('[STEP6] 📊 onFinish retornou:', success);
-    
-    if (success) {
-      console.log('[STEP6] ✅ Sucesso! Mostrando animação de celebração');
-      setShowSuccess(true);
-    } else {
-      console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
+    try {
+      console.log('[STEP6] 🔄 Chamando onFinish...');
+      const success = await onFinish();
+      console.log('[STEP6] 📊 onFinish retornou:', success);
+      
+      if (success) {
+        console.log('[STEP6] ✅ Sucesso! Mostrando animação de celebração');
+        setShowSuccess(true);
+      } else {
+        console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
+        alert('Erro ao finalizar onboarding. Por favor, tente novamente.');
+        setIsCompleting(false);
+      }
+    } catch (error) {
+      console.error('[STEP6] ❌ ERRO CRÍTICO:', error);
+      alert('Erro crítico ao finalizar onboarding');
       setIsCompleting(false);
     }
   };
