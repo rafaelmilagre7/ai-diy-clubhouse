@@ -59,12 +59,10 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
         setShowSuccess(true);
       } else {
         console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
-        alert('Erro ao finalizar onboarding. Por favor, tente novamente.');
         setIsCompleting(false);
       }
     } catch (error) {
       console.error('[STEP6] ❌ ERRO CRÍTICO:', error);
-      alert('Erro crítico ao finalizar onboarding');
       setIsCompleting(false);
     }
   };

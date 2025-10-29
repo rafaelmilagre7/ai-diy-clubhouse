@@ -558,30 +558,56 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
       setLoadingMessage('Aplicando configurações finais...');
       
-      // Finalizar onboarding com função RPC
-      console.log('[ONBOARDING] 🎯 Chamando RPC complete_onboarding_final_flow...');
-      console.log('[ONBOARDING] 📤 Parâmetros:', { p_user_id: user.id });
+      // Finalizar onboarding SEM usar RPC - atualizar direto no banco
+      console.log('[ONBOARDING] 🎯 Finalizando onboarding (sem RPC)...');
       const rpcStartTime = performance.now();
       
-      const { data: rpcResult, error: rpcError } = await supabase.rpc('complete_onboarding_final_flow', {
-        p_user_id: user.id,
-      });
-      
-      const rpcDuration = performance.now() - rpcStartTime;
-      console.log('[ONBOARDING] ⏱️ RPC finalizado em:', rpcDuration, 'ms');
-      console.log('[ONBOARDING] 📥 Resposta RPC:', rpcResult);
-
-      if (rpcError) {
-        console.error('[ONBOARDING] ❌ Erro na RPC complete_onboarding_final_flow:', rpcError);
-        throw rpcError;
+      try {
+        // 1. Atualizar onboarding_final
+        console.log('[ONBOARDING] 📝 Atualizando onboarding_final...');
+        const { error: onboardingError } = await supabase
+          .from('onboarding_final')
+          .update({
+            is_completed: true,
+            completed_at: new Date().toISOString(),
+            current_step: 6,
+            completed_steps: [0, 1, 2, 3, 4, 5, 6],
+            nina_message: ninaMessage,
+            updated_at: new Date().toISOString()
+          })
+          .eq('user_id', user.id);
+        
+        if (onboardingError) {
+          console.error('[ONBOARDING] ❌ Erro ao atualizar onboarding_final:', onboardingError);
+          throw onboardingError;
+        }
+        
+        console.log('[ONBOARDING] ✅ onboarding_final atualizado');
+        
+        // 2. Atualizar profiles
+        console.log('[ONBOARDING] 📝 Atualizando profiles...');
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .update({
+            onboarding_completed: true,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+        
+        if (profileError) {
+          console.error('[ONBOARDING] ❌ Erro ao atualizar profiles:', profileError);
+          throw profileError;
+        }
+        
+        console.log('[ONBOARDING] ✅ profiles atualizado');
+        
+        const rpcDuration = performance.now() - rpcStartTime;
+        console.log('[ONBOARDING] ⏱️ Finalização concluída em:', rpcDuration, 'ms');
+        
+      } catch (updateError) {
+        console.error('[ONBOARDING] ❌ Erro ao finalizar onboarding:', updateError);
+        throw updateError;
       }
-      
-      if (rpcResult && !rpcResult.success) {
-        console.error('[ONBOARDING] ❌ RPC retornou sucesso=false:', rpcResult);
-        throw new Error(rpcResult.error || 'Erro desconhecido ao finalizar onboarding');
-      }
-      
-      console.log('[ONBOARDING] ✅ RPC executada com sucesso');
 
       // Invalidar AMBOS os caches antes de sincronizar
       console.log('[ONBOARDING] ⏱️ Invalidando caches...');
