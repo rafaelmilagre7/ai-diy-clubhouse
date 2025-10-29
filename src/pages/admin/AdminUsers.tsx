@@ -35,6 +35,7 @@ import { EnhancedUserStats } from '@/components/admin/users/EnhancedUserStats';
 import { MasterHierarchyCard } from '@/components/admin/users/MasterHierarchyCard';
 import { MasterMemberSyncPanel } from '@/components/master/sync/MasterMemberSyncPanel';
 import { ManageTeamDialog } from '@/components/admin/users/ManageTeamDialog';
+import { SyncHistoryTable } from '@/components/admin/users/SyncHistoryTable';
 import { getUserRoleName } from '@/lib/supabase/types';
 import { toast } from 'sonner';
 
@@ -482,20 +483,7 @@ export default function AdminUsers() {
 
         {/* Tab: Histórico de Sincronizações */}
         <TabsContent value="historico" className="space-y-6 mt-6">
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center">
-                <History className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-xl font-semibold mb-2">Histórico de Sincronizações</h3>
-                <p className="text-muted-foreground">
-                  Visualize logs e relatórios de sincronizações anteriores
-                </p>
-                <p className="text-sm text-muted-foreground mt-4">
-                  Em breve: relatórios detalhados de todas as sincronizações executadas
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+          <SyncHistoryTable />
         </TabsContent>
       </Tabs>
       </div>
