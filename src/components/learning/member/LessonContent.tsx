@@ -47,6 +47,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
+  console.log('[LESSON-CONTENT] 🎬 Componente renderizado com props:', {
+    lessonId: lesson?.id,
+    hasOnSaveCompletion: !!onSaveCompletion,
+    hasOnComplete: !!onComplete,
+    isUpdating,
+    isCompleted
+  });
+  
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
     return (
@@ -71,6 +79,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
+    console.log('[LESSON-CONTENT] 🎯 handleCompleteLesson chamado:', {
+      hasOnComplete: !!onComplete,
+      hasOnSaveCompletion: !!onSaveCompletion,
+      willOpenModal: true
+    });
     setCompletionDialogOpen(true);
   };
 

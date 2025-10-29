@@ -60,22 +60,40 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    console.log('[NPS-FORM] 📝 Submetendo formulário:', { 
+    console.log('[NPS-FORM] 🚀 handleSubmit INICIADO');
+    console.log('[NPS-FORM] 📊 Estado atual:', { 
       score, 
       feedbackLength: feedback.length,
-      hasOnCompleted: !!onCompleted 
+      hasOnCompleted: !!onCompleted,
+      isSubmitting 
     });
     
-    if (score === null || !onCompleted) {
-      console.warn('[NPS-FORM] ⚠️ Validação falhou:', { score, onCompleted: !!onCompleted });
+    // Validação detalhada com toasts
+    if (score === null) {
+      console.error('[NPS-FORM] ❌ Score é null');
       return;
     }
     
+    if (!onCompleted) {
+      console.error('[NPS-FORM] ❌ onCompleted não foi passado como prop');
+      return;
+    }
+    
+    console.log('[NPS-FORM] ✅ Validações passaram, chamando onCompleted...');
+    
+    // Timeout de segurança
+    const timeoutId = setTimeout(() => {
+      console.error('[NPS-FORM] ⏱️ TIMEOUT: Nada aconteceu após 8s');
+    }, 8000);
+    
     try {
       await onCompleted(score, feedback);
+      clearTimeout(timeoutId);
       console.log('[NPS-FORM] ✅ onCompleted executado com sucesso');
     } catch (error) {
+      clearTimeout(timeoutId);
       console.error('[NPS-FORM] ❌ Erro em onCompleted:', error);
+      throw error;
     }
   };
 

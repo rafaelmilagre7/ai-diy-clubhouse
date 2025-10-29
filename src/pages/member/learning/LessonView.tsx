@@ -124,28 +124,37 @@ const LessonView = () => {
 
   // Salvar conclusão (progresso + NPS) quando usuário submeter o formulário
   const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
-    console.log('[LESSON-VIEW] 💾 Iniciando salvamento:', { lessonId, score });
+    console.log('[LESSON-VIEW] 🎯 handleSaveCompletionWithNPS CHAMADO:', { 
+      lessonId, 
+      score, 
+      feedbackLength: feedback?.length || 0,
+      timestamp: new Date().toISOString()
+    });
     
     try {
       // 1. Salvar progresso (100%)
-      console.log('[LESSON-VIEW] 📊 Salvando progresso...');
+      console.log('[LESSON-VIEW] 📊 Passo 1: Salvando progresso...');
       await completeLesson();
-      console.log('[LESSON-VIEW] ✅ Progresso salvo');
+      console.log('[LESSON-VIEW] ✅ Progresso salvo com sucesso');
       
       // 2. Salvar NPS usando hook centralizado
-      console.log('[LESSON-VIEW] 📝 Chamando submitNPS do hook...');
+      console.log('[LESSON-VIEW] 📝 Passo 2: Chamando submitNPS do hook...');
       await submitNPS(score, feedback);
-      console.log('[LESSON-VIEW] ✅ NPS salvo');
+      console.log('[LESSON-VIEW] ✅ NPS salvo com sucesso');
       
       // 3. Refetch para garantir UI atualizada
-      console.log('[LESSON-VIEW] 🔄 Refazendo fetch do progresso...');
+      console.log('[LESSON-VIEW] 🔄 Passo 3: Refazendo fetch do progresso...');
       await refetchProgress();
       console.log('[LESSON-VIEW] ✅ Progresso atualizado na UI');
       
-      console.log('[LESSON-VIEW] ✅ Salvamento concluído com sucesso');
+      console.log('[LESSON-VIEW] 🎉 SALVAMENTO COMPLETO - Tudo concluído com sucesso');
       
     } catch (error: any) {
-      console.error('[LESSON-VIEW] ❌ Erro ao salvar:', error);
+      console.error('[LESSON-VIEW] ❌ ERRO NO SALVAMENTO:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       throw error;
     }
   };
