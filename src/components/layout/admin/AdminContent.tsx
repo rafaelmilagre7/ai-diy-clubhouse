@@ -1,4 +1,5 @@
-
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { AdminUserMenu } from "./AdminUserMenu";
@@ -12,7 +13,27 @@ interface AdminContentProps {
   setSidebarOpen: (open: boolean) => void;
 }
 
+const getPageTitle = (pathname: string): string => {
+  if (pathname === "/admin") return "Dashboard";
+  if (pathname.includes("/users")) return "Gerenciar Usuários";
+  if (pathname.includes("/tools")) return "Ferramentas";
+  if (pathname.includes("/solutions")) return "Soluções";
+  if (pathname.includes("/roles")) return "Gerenciar Roles";
+  if (pathname.includes("/courses")) return "Cursos";
+  if (pathname.includes("/categories")) return "Categorias";
+  if (pathname.includes("/communications")) return "Comunicações";
+  if (pathname.includes("/security")) return "Segurança";
+  if (pathname.includes("/nps")) return "NPS Analytics";
+  if (pathname.includes("/automations")) return "Automações";
+  return "Painel Administrativo";
+};
+
 export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminContentProps) => {
+  const location = useLocation();
+  
+  useEffect(() => {
+    console.log("📍 [ADMIN-CONTENT] Conteúdo renderizado para:", location.pathname);
+  }, [location.pathname]);
   return (
     <main 
       className={cn(
@@ -36,7 +57,7 @@ export const AdminContent = ({ children, sidebarOpen, setSidebarOpen }: AdminCon
         <Separator orientation="vertical" className="mr-sm h-4" />
         
         <div className="flex-1">
-          <h1 className="font-semibold">Painel Administrativo</h1>
+          <h1 className="font-semibold">{getPageTitle(location.pathname)}</h1>
         </div>
 
         <div 

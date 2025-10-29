@@ -57,7 +57,7 @@ const createAdminRoute = (path: string, Component: React.LazyExoticComponent<Rea
     <AdminProtectedRoutes>
       <AdminLayout>
         <Suspense fallback={<OptimizedLoadingScreen />}>
-          <Component />
+          <Component key={path} />
         </Suspense>
       </AdminLayout>
     </AdminProtectedRoutes>

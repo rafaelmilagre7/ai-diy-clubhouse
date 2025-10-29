@@ -1,20 +1,25 @@
-
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import { AdminSidebar } from "./AdminSidebar";
 import { AdminContent } from "./AdminContent";
 import { useSidebarControl } from "@/hooks/useSidebarControl";
+import { ScrollToTop } from "@/components/routing/ScrollToTop";
 
 interface AdminLayoutProps {
   children?: React.ReactNode;
 }
 
 const AdminLayout = ({ children }: AdminLayoutProps) => {
+  const location = useLocation();
   const { sidebarOpen, setSidebarOpen } = useSidebarControl();
 
-  // AdminProtectedRoutes já garante que apenas admins chegam aqui
-  // Removi toda a lógica complexa de verificação
+  useEffect(() => {
+    console.log("🔄 [ADMIN-LAYOUT] Rota mudou:", location.pathname);
+  }, [location.pathname]);
+
   return (
     <div className="flex min-h-screen w-full bg-background dark" data-admin-area>
+      <ScrollToTop />
       {/* Overlay mobile */}
       {typeof window !== 'undefined' && window.innerWidth < 768 && sidebarOpen && (
         <div 
@@ -32,7 +37,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         sidebarOpen={sidebarOpen}
         setSidebarOpen={setSidebarOpen}
       >
-        {children || <Outlet />}
+        <div key={location.pathname}>
+          {children || <Outlet />}
+        </div>
       </AdminContent>
     </div>
   );
