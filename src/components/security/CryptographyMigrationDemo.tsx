@@ -14,7 +14,7 @@ import { secureTokenStorage } from '@/utils/secureTokenStorage';
 import { runCompleteCryptographyMigration, auditDataSecurity } from '@/utils/security/cryptographyMigrationHelper';
 import { useSecureTokenStorage } from '@/hooks/useSecureTokenStorage';
 import { AlertTriangle, Shield, CheckCircle, XCircle } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 const CryptographyMigrationDemo: React.FC = () => {
   const { user } = useAuth();
@@ -35,11 +35,7 @@ const CryptographyMigrationDemo: React.FC = () => {
 
   const executeMigration = async () => {
     if (!user) {
-      toast({
-        title: "❌ Usuário necessário",
-        description: "Faça login para executar a migração",
-        variant: "destructive",
-      });
+      toast.error("Faça login para executar a migração");
       return;
     }
 
@@ -48,17 +44,13 @@ const CryptographyMigrationDemo: React.FC = () => {
       const result = await runCompleteCryptographyMigration(user.id);
       setMigrationResult(result);
       
-      toast({
-        title: result.success ? "✅ Migração concluída" : "⚠️ Migração parcial",
-        description: `${result.migratedKeys.length} itens migrados com sucesso`,
-        variant: result.success ? "default" : "destructive",
-      });
+      if (result.success) {
+        toast.success(`${result.migratedKeys.length} itens migrados com sucesso`);
+      } else {
+        toast.warning(`Migração parcial: ${result.migratedKeys.length} itens migrados`);
+      }
     } catch (error) {
-      toast({
-        title: "❌ Erro na migração",
-        description: error instanceof Error ? error.message : "Erro desconhecido",
-        variant: "destructive",
-      });
+      toast.error(error instanceof Error ? error.message : "Erro desconhecido");
     } finally {
       setIsLoading(false);
     }
@@ -71,11 +63,11 @@ const CryptographyMigrationDemo: React.FC = () => {
 
   const detectInsecureData = () => {
     const insecureKeys = secureTokenStorage.detectInsecureData();
-    toast({
-      title: `🔍 Auditoria concluída`,
-      description: `Encontrados ${insecureKeys.length} itens com criptografia falsa`,
-      variant: insecureKeys.length > 0 ? "destructive" : "default",
-    });
+    if (insecureKeys.length > 0) {
+      toast.error(`Encontrados ${insecureKeys.length} itens com criptografia falsa`);
+    } else {
+      toast.success('Auditoria concluída - todos os dados estão seguros');
+    }
   };
 
   const testSecureStorage = async () => {
@@ -86,10 +78,7 @@ const CryptographyMigrationDemo: React.FC = () => {
     };
 
     await setSecureData(testData);
-    toast({
-      title: "✅ Dados salvos com AES-256-GCM",
-      description: "Dados criptografados e armazenados com segurança",
-    });
+    toast.success("Dados criptografados e armazenados com segurança usando AES-256-GCM");
   };
 
   return (

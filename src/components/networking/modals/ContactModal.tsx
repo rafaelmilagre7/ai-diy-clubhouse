@@ -4,7 +4,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Copy, Mail, Phone, Linkedin, MessageCircle, X } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { SwipeCard } from '@/hooks/networking/useSwipeCards';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,16 +16,13 @@ interface ContactModalProps {
 }
 
 export const ContactModal = ({ isOpen, onClose, card }: ContactModalProps) => {
-  const { toast } = useToast();
+  const { showSuccess } = useToastModern();
 
   if (!card) return null;
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: 'Copiado!',
-      description: `${label} copiado para a área de transferência`,
-    });
+    showSuccess('Copiado!', `${label} copiado para a área de transferência`);
   };
 
   const openWhatsApp = () => {

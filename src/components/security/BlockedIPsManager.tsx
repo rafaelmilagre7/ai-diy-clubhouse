@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { supabase } from '@/lib/supabase';
 import { useSecurityMonitoring } from '@/hooks/security/useSecurityMonitoring';
 import { format } from 'date-fns';
@@ -33,7 +33,7 @@ interface BlockedIP {
 }
 
 export const BlockedIPsManager = () => {
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const { unblockIP } = useSecurityMonitoring();
   const [blockedIPs, setBlockedIPs] = useState<BlockedIP[]>([]);
   const [loading, setLoading] = useState(true);
@@ -52,11 +52,7 @@ export const BlockedIPsManager = () => {
       setBlockedIPs(data || []);
     } catch (error) {
       console.error('Erro ao buscar IPs bloqueados:', error);
-      toast({
-        title: 'Erro',
-        description: 'Não foi possível carregar os IPs bloqueados',
-        variant: 'destructive',
-      });
+      showError('Erro', 'Não foi possível carregar os IPs bloqueados');
     } finally {
       setLoading(false);
     }
@@ -70,17 +66,10 @@ export const BlockedIPsManager = () => {
     const result = await unblockIP(ip);
     
     if (result.success) {
-      toast({
-        title: '✅ IP Desbloqueado',
-        description: `O IP ${ip} foi desbloqueado com sucesso`,
-      });
+      showSuccess('IP Desbloqueado', `O IP ${ip} foi desbloqueado com sucesso`);
       fetchBlockedIPs();
     } else {
-      toast({
-        title: '❌ Erro',
-        description: result.error || 'Não foi possível desbloquear o IP',
-        variant: 'destructive',
-      });
+      showError('Erro', result.error || 'Não foi possível desbloquear o IP');
     }
   };
 

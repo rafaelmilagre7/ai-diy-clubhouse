@@ -9,10 +9,9 @@ import { useMasterMemberSync } from '@/hooks/useMasterMemberSync';
 import { CSVPreview } from './CSVPreview';
 import { DryRunResults } from './DryRunResults';
 import { supabase } from '@/lib/supabase';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 export const MasterMemberSyncPanel: React.FC = () => {
-  const { toast } = useToast();
   const { 
     syncing, 
     progress, 
@@ -66,32 +65,21 @@ export const MasterMemberSyncPanel: React.FC = () => {
       
       // Validação principal: verificar se logs foram salvos
       if (logsSavedToDb > 0) {
-        toast({
-          title: '✅ Sincronização concluída com sucesso!',
-          description: `${mastersProcessed} masters e ${membersProcessed} membros processados. ${logsSavedToDb} operações registradas.`,
+        toast.success(`${mastersProcessed} masters e ${membersProcessed} membros processados. ${logsSavedToDb} operações registradas.`, {
           duration: 5000
         });
       } else if (mastersProcessed > 0 || membersProcessed > 0) {
         // Dados processados mas logs não salvos
-        toast({
-          title: '⚠️ Sincronização realizada com aviso',
-          description: `Dados processados (${mastersProcessed} masters, ${membersProcessed} membros), mas logs podem não ter sido salvos completamente.`,
-          variant: 'default',
+        toast.warning(`Dados processados (${mastersProcessed} masters, ${membersProcessed} membros), mas logs podem não ter sido salvos completamente.`, {
           duration: 7000
         });
       } else {
-        toast({
-          title: '❌ Sincronização sem alterações',
-          description: 'Nenhum dado foi processado. Verifique se os emails do CSV existem no sistema.',
-          variant: 'destructive',
+        toast.error('Nenhum dado foi processado. Verifique se os emails do CSV existem no sistema.', {
           duration: 5000
         });
       }
     } else {
-      toast({
-        title: '❌ Erro na sincronização',
-        description: result?.error || 'Ocorreu um erro desconhecido',
-        variant: 'destructive',
+      toast.error(result?.error || 'Ocorreu um erro desconhecido', {
         duration: 5000
       });
     }

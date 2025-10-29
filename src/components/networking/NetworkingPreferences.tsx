@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useNetworkingPreferences } from '@/hooks/useNetworkingPreferences';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 const MATCH_TYPES = [
   { value: 'customer', label: 'Potenciais Clientes', icon: Users },
@@ -45,7 +45,7 @@ const LOCATIONS = [
 
 export const NetworkingPreferences = () => {
   const { preferences, isLoading, updatePreferences, createDefaultPreferences, isUpdating } = useNetworkingPreferences();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   
   const [localPrefs, setLocalPrefs] = useState({
     lookingFor: {
@@ -92,16 +92,9 @@ export const NetworkingPreferences = () => {
         is_active: localPrefs.isActive
       });
 
-      toast({
-        title: "Preferências salvas!",
-        description: "Suas configurações de networking foram atualizadas.",
-      });
+      showSuccess("Preferências salvas!", "Suas configurações de networking foram atualizadas.");
     } catch (error) {
-      toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar suas preferências. Tente novamente.",
-        variant: "destructive"
-      });
+      showError("Erro ao salvar", "Não foi possível salvar suas preferências. Tente novamente.");
     }
   };
 

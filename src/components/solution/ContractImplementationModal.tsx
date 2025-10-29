@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { UserCheck, Mail, Phone, Briefcase, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/auth";
 import { Badge } from "@/components/ui/badge";
-import { useToast } from "@/hooks/use-toast";
+import { useToastModern } from "@/hooks/useToastModern";
 import { supabase } from "@/integrations/supabase/client";
 
 interface ContractImplementationModalProps {
@@ -24,7 +24,7 @@ export const ContractImplementationModal = ({
   solutionId 
 }: ContractImplementationModalProps) => {
   const { profile } = useAuth();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userEmail, setUserEmail] = useState(profile?.email || "");
   const [userPhone, setUserPhone] = useState("");
@@ -35,20 +35,12 @@ export const ContractImplementationModal = ({
     try {
       // Validação básica
       if (!userEmail || !profile?.name) {
-        toast({
-          title: "Erro",
-          description: "Nome e email são obrigatórios",
-          variant: "destructive",
-        });
+        showError("Erro", "Nome e email são obrigatórios");
         return;
       }
 
       if (!solutionId) {
-        toast({
-          title: "Erro", 
-          description: "ID da solução não encontrado",
-          variant: "destructive",
-        });
+        showError("Erro", "ID da solução não encontrado");
         return;
       }
 
@@ -71,19 +63,12 @@ export const ContractImplementationModal = ({
 
       if (error) {
         console.error("Edge function error:", error);
-        toast({
-          title: "Erro ao processar solicitação",
-          description: error.message || "Tente novamente em alguns minutos",
-          variant: "destructive",
-        });
+        showError("Erro ao processar solicitação", error.message || "Tente novamente em alguns minutos");
         return;
       }
 
       if (data?.success) {
-        toast({
-          title: "Solicitação enviada com sucesso! 🎉",
-          description: data.message || "Nossa equipe entrará em contato em breve",
-        });
+        showSuccess("Solicitação enviada! 🎉", data.message || "Nossa equipe entrará em contato em breve");
         
         console.log("Solicitação processada:", {
           requestId: data.requestId,
@@ -93,20 +78,12 @@ export const ContractImplementationModal = ({
         
         onClose();
       } else {
-        toast({
-          title: "Erro",
-          description: data?.error || "Erro inesperado ao processar solicitação",
-          variant: "destructive",
-        });
+        showError("Erro", data?.error || "Erro inesperado ao processar solicitação");
       }
       
     } catch (error) {
       console.error("Erro ao enviar solicitação:", error);
-      toast({
-        title: "Erro de conexão",
-        description: "Verifique sua conexão e tente novamente",
-        variant: "destructive",
-      });
+      showError("Erro de conexão", "Verifique sua conexão e tente novamente");
     } finally {
       setIsSubmitting(false);
     }

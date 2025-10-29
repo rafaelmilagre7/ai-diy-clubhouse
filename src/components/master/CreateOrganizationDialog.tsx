@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from "@/hooks/useToastModern";
 import { useOrganization } from '@/hooks/useOrganization';
 import { Building, Users, Crown } from 'lucide-react';
 
@@ -24,7 +24,7 @@ export const CreateOrganizationDialog = ({
   onOpenChange 
 }: CreateOrganizationDialogProps) => {
   const { createOrganization } = useOrganization();
-  const { toast } = useToast();
+  const { showSuccess, showError } = useToastModern();
   const [loading, setLoading] = useState(false);
 
   const {
@@ -71,18 +71,11 @@ export const CreateOrganizationDialog = ({
     try {
       const result = await createOrganization(data.name, data.planType);
       if (result) {
-        toast({
-          title: "Organização criada!",
-          description: `${data.name} foi criada com sucesso.`,
-        });
+        showSuccess("Organização criada!", `${data.name} foi criada com sucesso.`);
         onOpenChange(false);
       }
     } catch (error) {
-      toast({
-        title: "Erro ao criar organização",
-        description: "Tente novamente em alguns instantes.",
-        variant: "destructive",
-      });
+      showError("Erro ao criar organização", "Tente novamente em alguns instantes.");
     } finally {
       setLoading(false);
     }

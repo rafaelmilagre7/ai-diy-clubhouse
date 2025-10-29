@@ -19,7 +19,7 @@ import {
   Lock
 } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useToast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 import { useRequestNetworkingContact } from '@/hooks/useRequestNetworkingContact';
 
 interface ContactModalProps {
@@ -92,7 +92,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
   const [contactData, setContactData] = useState<ContactData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDataRevealed, setIsDataRevealed] = useState(false);
-  const { toast } = useToast();
+  const { showSuccess } = useToastModern();
   const requestContact = useRequestNetworkingContact();
 
   useEffect(() => {
@@ -143,10 +143,7 @@ export const ContactModal = ({ isOpen, onClose, userId, userName, initialData }:
 
   const copyToClipboard = (text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    toast({
-      title: "Copiado!",
-      description: `${label} copiado para a área de transferência.`,
-    });
+    showSuccess("Copiado!", `${label} copiado para a área de transferência.`);
   };
 
   const getDisplayData = () => {
