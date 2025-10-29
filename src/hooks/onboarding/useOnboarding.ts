@@ -179,20 +179,33 @@ export const useOnboarding = () => {
           return;
         }
         
-        // PRIORIDADE 2: Se não tem user_type, começar do zero (SEMPRE)
-        if (!data.user_type) {
-          console.log('[ONBOARDING] user_type é NULL - redirecionando para step 0');
+        // PRIORIDADE 2: Se não tem user_type OU se tem apenas dados auto-inicializados, começar do zero (SEMPRE)
+        const hasOnlyAutoInitializedData = data.personal_info?.auto_initialized === true && 
+          Object.keys(data.personal_info || {}).filter(k => 
+            k !== 'auto_initialized' && 
+            k !== 'initialized_at' && 
+            k !== 'email' && 
+            k !== 'name'
+          ).length === 0;
+
+        if (!data.user_type || hasOnlyAutoInitializedData) {
+          console.log('[ONBOARDING] Sem user_type ou apenas dados auto-inicializados - redirecionando para step 0');
           nextStep = 0;
           // ✅ Early return - não continuar verificando dados se não tem tipo
           setState({
             id: data.id,
-            userType: undefined,
+            userType: data.user_type as UserType || undefined,
             current_step: 0,
             completed_steps: data.completed_steps || [],
             is_completed: data.is_completed,
             nina_message: data.nina_message,
             data: {
-              personal_info: data.personal_info || {},
+              personal_info: {
+                name: '',
+                phone: '',
+                state: '',
+                city: ''
+              },
               professional_info: data.professional_info || {},
               ai_experience: data.ai_experience || {},
               goals_info: data.goals_info || {},

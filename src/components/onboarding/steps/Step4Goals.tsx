@@ -155,27 +155,6 @@ export const Step4Goals: React.FC<Step4GoalsProps> = ({
           )}
         </div>
 
-        <div className="space-y-2">
-          <Label className="flex items-center gap-2">
-            <Clock className="w-4 h-4" />
-            Em quanto tempo espera ver resultados?
-          </Label>
-           <Select 
-             value={form.getValues('timeline')}
-             onValueChange={(value) => form.setValue('timeline', value)}
-           >
-             <SelectTrigger className="h-12">
-               <SelectValue placeholder="Selecione o prazo esperado" />
-             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="1_month">1 mês</SelectItem>
-              <SelectItem value="3_months">3 meses</SelectItem>
-              <SelectItem value="6_months">6 meses</SelectItem>
-              <SelectItem value="1_year">1 ano</SelectItem>
-              <SelectItem value="long_term">Longo prazo (2+ anos)</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
 
         <div className="space-y-4">
           <Label className="flex items-center gap-2">
