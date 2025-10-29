@@ -32,9 +32,10 @@ export interface Connection {
 }
 
 export const useConnections = () => {
-  const { showSuccess, showError } = useToastModern();
+  const { showSuccess, showError, showLoading, dismissToast } = useToastModern();
   const queryClient = useQueryClient();
   const { logEvent } = useNetworkingAnalytics();
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
 
   // Buscar conexões do usuário atual
   const { data: connections, isLoading } = useQuery({
@@ -82,6 +83,10 @@ export const useConnections = () => {
   // Enviar solicitação de conexão
   const sendConnectionRequest = useMutation({
     mutationFn: async (recipientId: string) => {
+      // Toast de loading (adicional, não substitui lógica existente)
+      const toastId = showLoading('Enviando convite', 'Conectando com o usuário...');
+      setLoadingToastId(toastId);
+      
       const { data: user } = await supabase.auth.getUser();
       if (!user.user) throw new Error('Usuário não autenticado');
 
@@ -116,6 +121,12 @@ export const useConnections = () => {
       return data;
     },
     onSuccess: (data, recipientId) => {
+      // Dismiss loading toast
+      if (loadingToastId) {
+        dismissToast(loadingToastId);
+        setLoadingToastId(null);
+      }
+      
       // Log evento de conexão enviada
       logEvent.mutate({
         event_type: 'connection_sent',
@@ -127,6 +138,12 @@ export const useConnections = () => {
       queryClient.invalidateQueries({ queryKey: ['connections'] });
     },
     onError: (error: any) => {
+      // Dismiss loading toast em caso de erro
+      if (loadingToastId) {
+        dismissToast(loadingToastId);
+        setLoadingToastId(null);
+      }
+      
       showError("Erro", error.message || "Erro ao enviar solicitação de conexão");
     }
   });

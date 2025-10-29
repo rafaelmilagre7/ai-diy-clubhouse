@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 export const useSolutionInteractions = (solutionId: string | undefined, progress: any) => {
   const { user } = useAuth();
-  const { showError } = useToastModern();
+  const { showError, showLoading, showSuccess, dismissToast } = useToastModern();
   const navigate = useNavigate();
   
   const [initializing, setInitializing] = useState(false);
@@ -18,6 +18,9 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       toast.error("Você precisa estar logado para implementar esta solução");
       return false;
     }
+    
+    // Toast de loading (adicional, não substitui lógica existente)
+    const loadingToastId = showLoading('Iniciando implementação', 'Preparando sua jornada...');
     
     try {
       setInitializing(true);
@@ -46,11 +49,20 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       // Navigate to the implementation page starting at module 0
       const implementationUrl = `/implement/${solutionId}/0`;
       
+      // Dismiss loading toast e mostrar sucesso
+      dismissToast(loadingToastId);
+      showSuccess('Implementação iniciada!', 'Vamos começar sua jornada');
+      
+      // Mantém toast legado para compatibilidade
       toast.success("Redirecionando para a implementação...");
       navigate(implementationUrl);
       return true;
     } catch (error) {
       console.error("❌ Erro ao iniciar implementação:", error);
+      
+      // Dismiss loading toast em caso de erro
+      dismissToast(loadingToastId);
+      
       showError("Erro ao iniciar implementação", "Ocorreu um erro ao tentar iniciar a implementação da solução.");
       return false;
     } finally {
@@ -64,6 +76,9 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       return false;
     }
     
+    // Toast de loading (adicional, não substitui lógica existente)
+    const loadingToastId = showLoading('Continuando implementação', 'Redirecionando para onde você parou...');
+    
     try {
       setInitializing(true);
       
@@ -71,11 +86,20 @@ export const useSolutionInteractions = (solutionId: string | undefined, progress
       const currentModule = progress.current_module || 0;
       const implementationUrl = `/implement/${solutionId}/${currentModule}`;
       
+      // Dismiss loading toast
+      dismissToast(loadingToastId);
+      showSuccess('Continuando jornada', 'Voltando ao seu progresso');
+      
+      // Mantém toast legado para compatibilidade
       toast.success("Redirecionando para onde você parou...");
       navigate(implementationUrl);
       return true;
     } catch (error) {
       console.error("❌ Erro ao continuar implementação:", error);
+      
+      // Dismiss loading toast em caso de erro
+      dismissToast(loadingToastId);
+      
       toast.error("Erro ao continuar implementação");
       return false;
     } finally {
