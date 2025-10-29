@@ -258,7 +258,20 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   
   // Marcar lição como concluída
   const completeLesson = async () => {
-    await updateProgressMutation.mutateAsync(true);
+    console.log('[USE-LESSON-PROGRESS] 🎯 completeLesson() chamado');
+    console.log('[USE-LESSON-PROGRESS] Estado atual:', { isCompleted, lessonId });
+    
+    try {
+      await updateProgressMutation.mutateAsync(true);
+      
+      // Atualizar estado local IMEDIATAMENTE
+      setIsCompleted(true);
+      
+      console.log('[USE-LESSON-PROGRESS] ✅ Mutation completada e estado local atualizado');
+    } catch (error) {
+      console.error('[USE-LESSON-PROGRESS] ❌ Erro na mutation:', error);
+      throw error;
+    }
   };
 
   // Progresso para compatibilidade (retorna 0 ou 100)

@@ -5,7 +5,6 @@ import { VideoPlayer } from '@/components/formacao/aulas/VideoPlayer';
 import { VideoPlaylist } from './VideoPlaylist';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useVideoProgress } from '@/hooks/useVideoProgress';
 import { useRobustVideoQuery } from '@/hooks/learning/useRobustVideoQuery';
 import { useClearLearningCache } from '@/hooks/learning/useClearLearningCache';
 import { devLog, devWarn } from '@/hooks/useOptimizedLogging';
@@ -152,7 +151,8 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   }
 
   // Hook para gerenciar progresso do vídeo
-  const { updateVideoProgress } = useVideoProgress(lessonId);
+  // DESABILITADO: conflita com useLessonProgress (sistema binário)
+  // const { updateVideoProgress } = useVideoProgress(lessonId);
 
   const handleVideoSelect = (index: number) => {
     setCurrentVideoIndex(index);
@@ -161,9 +161,11 @@ export const LessonVideoPlayer: React.FC<LessonVideoPlayerProps> = ({
   const handleTimeUpdate = (currentTime: number, duration: number) => {
     if (duration > 0 && currentVideo) {
       const progress = (currentTime / duration) * 100;
-      updateVideoProgress(currentVideo.id, progress, effectiveVideos);
       
-      // Callback para componente pai
+      // DESABILITADO: conflita com sistema binário
+      // updateVideoProgress(currentVideo.id, progress, effectiveVideos);
+      
+      // Callback para componente pai (sistema binário)
       if (onProgress) {
         const binaryProgress = progress >= 95 ? 100 : 0;
         onProgress(currentVideo.id, binaryProgress);

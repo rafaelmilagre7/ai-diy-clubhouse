@@ -69,10 +69,30 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = async () => {
+    console.log('[LESSON-CONTENT] 🎯 Iniciando conclusão da aula:', { 
+      isCompleted, 
+      hasOnComplete: !!onComplete 
+    });
+    
     // Se a aula não estava concluída anteriormente, mostrar o modal de conclusão com NPS
     if (!isCompleted && onComplete) {
-      await onComplete(); // Marcar como concluída primeiro e aguardar
-      setCompletionDialogOpen(true); // Depois abrir o modal de NPS
+      console.log('[LESSON-CONTENT] ⏳ Chamando onComplete()...');
+      
+      try {
+        await onComplete(); // Marcar como concluída primeiro e aguardar
+        
+        // Aguardar um pouco para garantir que o estado foi atualizado
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        console.log('[LESSON-CONTENT] ✅ onComplete() concluído, abrindo modal');
+        setCompletionDialogOpen(true); // Depois abrir o modal de NPS
+      } catch (error) {
+        console.error('[LESSON-CONTENT] ❌ Erro ao completar aula:', error);
+      }
+    } else if (isCompleted) {
+      console.log('[LESSON-CONTENT] ℹ️ Aula já estava concluída');
+    } else {
+      console.log('[LESSON-CONTENT] ⚠️ Falta onComplete callback');
     }
   };
 
