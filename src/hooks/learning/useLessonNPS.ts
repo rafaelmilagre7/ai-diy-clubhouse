@@ -62,63 +62,17 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
           }
         }
 
-        let result;
+        // ✅ USAR FUNÇÃO SECURITY DEFINER para bypass de RLS
+        console.log('[LESSON-NPS] 💾 Salvando via RPC safe_insert_or_update_lesson_nps...');
+        const { data: result, error } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
+          p_lesson_id: lessonId,
+          p_score: score,
+          p_feedback: feedback || null
+        });
         
-        // Se já existe uma avaliação, atualiza
-        if (existingNPS) {
-          const { data, error } = await supabase
-            .from('learning_lesson_nps')
-            .update({ 
-              score, 
-              feedback: feedback || null,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingNPS.id)
-            .select()
-            .single();
-            
-          if (error) throw error;
-          result = data;
-
-          // Log da atualização
-          await supabase.rpc('log_learning_action', {
-            p_action: 'nps_updated',
-            p_resource_type: 'lesson',
-            p_resource_id: lessonId,
-            p_details: {
-              score,
-              feedback_length: feedback?.length || 0,
-              previous_score: existingNPS.score
-            }
-          });
-        } 
-        // Caso contrário, cria nova
-        else {
-          const { data, error } = await supabase
-            .from('learning_lesson_nps')
-            .insert({
-              lesson_id: lessonId,
-              user_id: user.id,
-              score,
-              feedback: feedback || null
-            })
-            .select()
-            .single();
-            
-          if (error) throw error;
-          result = data;
-
-          // Log da nova avaliação
-          await supabase.rpc('log_learning_action', {
-            p_action: 'nps_created',
-            p_resource_type: 'lesson',
-            p_resource_id: lessonId,
-            p_details: {
-              score,
-              feedback_length: feedback?.length || 0,
-              nps_id: data.id
-            }
-          });
+        if (error) {
+          console.error('[LESSON-NPS] ❌ Erro na RPC:', error);
+          throw error;
         }
 
         console.log('[LESSON-NPS] ✅ NPS salvo com sucesso:', result);

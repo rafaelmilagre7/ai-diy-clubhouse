@@ -8739,6 +8739,10 @@ export type Database = {
       }
       reset_user_complete: { Args: { target_user_id: string }; Returns: Json }
       reset_user_onboarding: { Args: { target_user_id: string }; Returns: Json }
+      safe_insert_or_update_lesson_nps: {
+        Args: { p_feedback?: string; p_lesson_id: string; p_score: number }
+        Returns: Json
+      }
       search_users: {
         Args: {
           limit_count?: number
