@@ -4,9 +4,15 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { toast } from "sonner";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
+import { 
+  showModernLoading, 
+  showModernSuccess, 
+  showModernSuccessWithAction,
+  showModernError,
+  dismissModernToast 
+} from "@/lib/toast-helpers";
 import { EventBasicInfo } from "./form/EventBasicInfo";
 import { EventDateTime } from "./form/EventDateTime";
 import { EventLocation } from "./form/EventLocation";
@@ -99,6 +105,11 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
   };
 
   const handleSubmit = async (data: EventFormData, recurrenceChoice: 'this' | 'future' | 'all') => {
+    const loadingId = showModernLoading(
+      event ? 'Atualizando evento...' : 'Criando evento...',
+      'Salvando informações e configurando acessos'
+    );
+    
     try {
       setIsSubmitting(true);
 
@@ -175,12 +186,31 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
           // Acesso configurado
         } catch (accessError) {
           console.error('Erro ao salvar controle de acesso:', accessError);
-          toast.error("Evento salvo, mas houve erro no controle de acesso.");
+          dismissModernToast(loadingId);
+          showModernError(
+            "Evento salvo com aviso",
+            "O evento foi criado mas houve erro ao configurar os acessos. Configure manualmente."
+          );
           return;
         }
       }
 
-      toast.success(event ? "Evento atualizado com sucesso!" : "Evento criado com sucesso!");
+      dismissModernToast(loadingId);
+      
+      const eventTitle = result.data?.title || 'o evento';
+      showModernSuccessWithAction(
+        event ? 'Evento atualizado!' : 'Evento criado!',
+        event 
+          ? `"${eventTitle}" foi atualizado com sucesso` 
+          : `"${eventTitle}" foi criado e está disponível`,
+        {
+          label: 'Ver eventos',
+          onClick: () => {
+            // Fechar dialog e navegar
+            if (onSuccess) onSuccess();
+          }
+        }
+      );
       
       // Invalidar queries para atualizar a lista
       queryClient.invalidateQueries({ queryKey: ["events"] });
@@ -191,7 +221,11 @@ export const EventForm = ({ event, onSuccess }: EventFormProps) => {
 
     } catch (error) {
       console.error("Erro ao salvar evento:", error);
-      toast.error("Erro ao salvar evento. Tente novamente.");
+      dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao salvar evento",
+        error instanceof Error ? error.message : "Não foi possível salvar. Verifique os dados e tente novamente."
+      );
     } finally {
       setIsSubmitting(false);
     }

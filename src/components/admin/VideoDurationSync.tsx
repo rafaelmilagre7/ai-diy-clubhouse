@@ -5,8 +5,15 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { RefreshCw, CheckCircle, AlertCircle, Clock, Video } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 import { useVideoDurationRefresh } from '@/hooks/useVideoDurationRefresh';
+import {
+  showModernLoading,
+  showModernSuccess,
+  showModernError,
+  showModernWarning,
+  dismissModernToast,
+  showModernInfo
+} from '@/lib/toast-helpers';
 
 // Importar funções de teste em desenvolvimento
 if (import.meta.env.DEV) {
@@ -31,13 +38,18 @@ export const VideoDurationSync = () => {
   const { refreshAfterSync } = useVideoDurationRefresh();
 
   const handleSync = async () => {
+    let loadingId: any;
+    
     try {
       setIsLoading(true);
       setProgress(10);
       setResult(null);
 
       // Sincronização iniciada
-      toast.info('Iniciando sincronização com a API do Panda Video...');
+      loadingId = showModernLoading(
+        'Sincronizando com Panda Video...',
+        'Conectando com a API e processando vídeos'
+      );
 
       setProgress(30);
 
@@ -56,26 +68,49 @@ export const VideoDurationSync = () => {
       setProgress(100);
       setResult(data);
 
+      // Dismiss loading toast
+      dismissModernToast(loadingId);
+
       if (data.success > 0) {
-        toast.success(`✅ ${data.success} vídeo(s) sincronizados com sucesso!`);
+        showModernSuccess(
+          `${data.success} vídeo(s) sincronizados!`,
+          `Total processado: ${data.totalProcessed} vídeos`
+        );
         
         // Invalidar caches após sincronização bem-sucedida
         await refreshAfterSync();
         
         if (data.failed > 0) {
-          toast.warning(`⚠️ ${data.failed} vídeo(s) falharam na sincronização`);
+          showModernWarning(
+            `${data.failed} vídeo(s) falharam`,
+            'Alguns vídeos não puderam ser sincronizados. Verifique os logs para mais detalhes.'
+          );
         }
       } else if (data.totalProcessed === 0) {
-        toast.info('ℹ️ Todos os vídeos já possuem durações atualizadas');
+        showModernInfo(
+          'Nada para sincronizar',
+          'Todos os vídeos já possuem durações atualizadas'
+        );
       } else {
-        toast.error('❌ Nenhum vídeo foi sincronizado com sucesso');
+        showModernError(
+          'Sincronização falhou',
+          'Nenhum vídeo foi sincronizado com sucesso'
+        );
       }
 
       // Sincronização concluída
 
     } catch (error: any) {
       console.error('💥 Erro na sincronização:', error);
-      toast.error(`Erro: ${error.message || 'Falha na sincronização'}`);
+      
+      if (loadingId) {
+        dismissModernToast(loadingId);
+      }
+      
+      showModernError(
+        'Erro na sincronização',
+        error.message || 'Não foi possível sincronizar com a API do Panda Video'
+      );
     } finally {
       setIsLoading(false);
       setTimeout(() => setProgress(0), 2000);

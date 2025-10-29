@@ -1,6 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { updateVideoDurations } from '@/triggers/updateVideoDurations';
-import { toast } from 'sonner';
+import { 
+  showModernLoading,
+  showModernSuccess,
+  showModernError,
+  dismissModernToast
+} from '@/lib/toast-helpers';
 
 /**
  * Hook para atualizar durações de vídeos com feedback visual e invalidação de cache
@@ -11,13 +16,11 @@ export const useVideoDurationUpdate = () => {
   return useMutation({
     mutationFn: async (lessonId?: string) => {
       console.log('🎯 Iniciando atualização de durações...', { lessonId });
-      toast.info('Iniciando atualização das durações dos vídeos...');
       
       const result = await updateVideoDurations(lessonId);
       
       if (result) {
         console.log('✅ Atualização concluída com sucesso!');
-        toast.success('Durações dos vídeos atualizadas com sucesso!');
         
         // Invalidar caches relacionados para recarregar dados
         await Promise.all([
@@ -35,12 +38,45 @@ export const useVideoDurationUpdate = () => {
       
       throw new Error('Atualização falhou');
     },
-    onSuccess: () => {
-      console.log('🎉 Hook de atualização concluído com sucesso!');
+    onMutate: () => {
+      const loadingId = showModernLoading(
+        'Sincronizando vídeos...',
+        'Atualizando durações com API do Panda Video'
+      );
+      return { loadingId };
     },
-    onError: (error: any) => {
+    onSuccess: (data, variables, context) => {
+      console.log('🎉 Hook de atualização concluído com sucesso!');
+      
+      if (context?.loadingId) {
+        dismissModernToast(context.loadingId);
+      }
+      
+      // Tentar extrair estatísticas do resultado
+      let totalUpdated = 0;
+      let totalSkipped = 0;
+      
+      if (typeof data === 'object' && data !== null) {
+        totalUpdated = (data as any).updated || (data as any).success || 0;
+        totalSkipped = (data as any).skipped || 0;
+      }
+      
+      showModernSuccess(
+        'Sincronização concluída!',
+        `${totalUpdated} vídeo(s) atualizados${totalSkipped > 0 ? `, ${totalSkipped} já sincronizados` : ''}`
+      );
+    },
+    onError: (error: any, variables, context) => {
       console.error('❌ Erro no hook de atualização:', error);
-      toast.error(`Erro na atualização: ${error.message || 'Erro desconhecido'}`);
+      
+      if (context?.loadingId) {
+        dismissModernToast(context.loadingId);
+      }
+      
+      showModernError(
+        'Erro na sincronização',
+        error.message || 'Não foi possível atualizar as durações dos vídeos'
+      );
     }
   });
 };
