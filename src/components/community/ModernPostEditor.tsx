@@ -43,6 +43,12 @@ export const ModernPostEditor = ({
     mutationFn: async (content: string) => {
       console.log('🚀 [COMMENT] Iniciando envio de resposta...');
       
+      // ✅ VALIDAR topicId ANTES do INSERT
+      if (!topicId) {
+        console.error('❌ [COMMENT] ID do tópico não fornecido');
+        throw new Error('ID do tópico não fornecido');
+      }
+      
       // ✅ VALIDAR userId ANTES do INSERT
       const { data: { user } } = await supabase.auth.getUser();
       
@@ -65,7 +71,13 @@ export const ModernPostEditor = ({
         .single();
 
       if (error) {
-        console.error('❌ [COMMENT] Erro no INSERT:', error);
+        console.error('❌ [COMMENT] Erro no INSERT:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          fullError: JSON.stringify(error, null, 2)
+        });
         throw error;
       }
       
@@ -100,6 +112,7 @@ export const ModernPostEditor = ({
             .from("notifications")
             .insert({
               user_id: topicData.user_id,
+              actor_id: user.id,
               type: "community_reply",
               title: `${profile?.name || "Alguém"} respondeu seu tópico`,
               message: `"${contentPreview}${content.trim().length > 100 ? "..." : ""}"`,
@@ -181,11 +194,20 @@ export const ModernPostEditor = ({
       } else {
         await updatePostMutation.mutateAsync(content);
       }
-    } catch (error) {
-      console.error('❌ [COMMENT] Erro ao enviar resposta:', error);
+    } catch (error: any) {
+      console.error('❌ [COMMENT] Erro ao enviar resposta:', {
+        code: error?.code,
+        message: error?.message,
+        details: error?.details,
+        hint: error?.hint,
+        fullError: JSON.stringify(error, null, 2)
+      });
+      
+      const errorMessage = error?.message || error?.details || "Não foi possível enviar sua resposta";
+      
       toast({
         title: "Erro ao enviar",
-        description: error instanceof Error ? error.message : "Não foi possível enviar sua resposta",
+        description: errorMessage,
         variant: "destructive"
       });
     }
