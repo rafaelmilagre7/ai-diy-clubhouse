@@ -8743,6 +8743,16 @@ export type Database = {
         Args: { p_feedback?: string; p_lesson_id: string; p_score: number }
         Returns: Json
       }
+      safe_upsert_learning_progress: {
+        Args: {
+          p_completed_at?: string
+          p_last_position_seconds?: number
+          p_lesson_id: string
+          p_progress_percentage: number
+          p_video_progress?: Json
+        }
+        Returns: Json
+      }
       search_users: {
         Args: {
           limit_count?: number

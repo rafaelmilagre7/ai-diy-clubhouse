@@ -68,7 +68,7 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     mutationFn: async (completed: boolean) => {
       if (!lessonId) throw new Error("ID da lição não fornecido");
       
-      console.log("[LESSON-PROGRESS] 🎯 Salvando progresso:", {
+      console.log("[LESSON-PROGRESS] 🎯 Salvando via RPC safe_upsert_learning_progress:", {
         lessonId,
         completed,
         currentProgress: userProgress?.progress_percentage
@@ -82,27 +82,21 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         ? LESSON_PROGRESS.COMPLETED 
         : (userProgress?.progress_percentage || LESSON_PROGRESS.STARTED);
       
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .upsert({
-          user_id: userData.user.id,
-          lesson_id: lessonId,
-          progress_percentage: progressPercentage,
-          started_at: userProgress?.started_at || timestamp,
-          updated_at: timestamp,
-          completed_at: completed ? timestamp : null,
-          last_position_seconds: userProgress?.last_position_seconds || 0,
-          video_progress: userProgress?.video_progress || {}
-        }, {
-          onConflict: 'user_id,lesson_id',
-          ignoreDuplicates: false
-        })
-        .select()
-        .single();
+      // ✅ Usar RPC em vez de upsert direto para bypassar RLS
+      const { data, error } = await supabase.rpc('safe_upsert_learning_progress', {
+        p_lesson_id: lessonId,
+        p_progress_percentage: progressPercentage,
+        p_completed_at: completed ? timestamp : null,
+        p_last_position_seconds: userProgress?.last_position_seconds || 0,
+        p_video_progress: userProgress?.video_progress || {}
+      });
         
-      if (error) throw error;
+      if (error) {
+        console.error('[LESSON-PROGRESS] ❌ Erro na RPC:', error);
+        throw error;
+      }
       
-      console.log("[LESSON-PROGRESS] ✅ Progresso salvo com sucesso");
+      console.log("[LESSON-PROGRESS] ✅ Progresso salvo:", data);
       return { ...data, completed };
     },
     retry: 2,

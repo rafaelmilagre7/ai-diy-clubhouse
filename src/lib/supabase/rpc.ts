@@ -173,3 +173,26 @@ export const getChecklistTemplate = async (solutionId: string, checklistType: st
   
   return data;
 };
+
+export const safeUpsertLearningProgress = async (params: {
+  lessonId: string;
+  progressPercentage: number;
+  completedAt?: string | null;
+  lastPositionSeconds?: number;
+  videoProgress?: any;
+}) => {
+  const { data, error } = await supabase.rpc('safe_upsert_learning_progress', {
+    p_lesson_id: params.lessonId,
+    p_progress_percentage: params.progressPercentage,
+    p_completed_at: params.completedAt || null,
+    p_last_position_seconds: params.lastPositionSeconds || 0,
+    p_video_progress: params.videoProgress || {}
+  });
+  
+  if (error) {
+    console.error('Erro ao salvar progresso de aula:', error);
+    throw error;
+  }
+  
+  return data;
+};
