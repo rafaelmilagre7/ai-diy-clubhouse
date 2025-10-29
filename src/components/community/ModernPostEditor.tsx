@@ -175,10 +175,19 @@ export const ModernPostEditor = ({
       return;
     }
 
-    if (mode === 'create') {
-      await createPostMutation.mutateAsync(content);
-    } else {
-      await updatePostMutation.mutateAsync(content);
+    try {
+      if (mode === 'create') {
+        await createPostMutation.mutateAsync(content);
+      } else {
+        await updatePostMutation.mutateAsync(content);
+      }
+    } catch (error) {
+      console.error('❌ [COMMENT] Erro ao enviar resposta:', error);
+      toast({
+        title: "Erro ao enviar",
+        description: error instanceof Error ? error.message : "Não foi possível enviar sua resposta",
+        variant: "destructive"
+      });
     }
   };
 
@@ -389,10 +398,10 @@ export const ModernPostEditor = ({
         <div className="flex justify-end">
           <Button
             type="submit"
-            disabled={isSubmitting || !content.trim()}
+            disabled={createPostMutation.isPending || updatePostMutation.isPending || !content.trim()}
             className="min-w-button"
           >
-            {isSubmitting ? (
+            {(createPostMutation.isPending || updatePostMutation.isPending) ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 {mode === 'create' ? 'Enviando...' : 'Salvando...'}
