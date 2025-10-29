@@ -127,66 +127,20 @@ const LessonView = () => {
       await completeLesson();
       console.log('[LESSON-VIEW] ✅ Progresso salvo');
       
-      // 2. Buscar usuário autenticado
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      
-      if (userError || !userData.user) {
-        throw new Error('Usuário não autenticado');
-      }
-      
-      console.log('[LESSON-VIEW] 👤 Usuário autenticado:', userData.user.id);
-      
-      // 3. Verificar se já existe avaliação
-      console.log('[LESSON-VIEW] 🔍 Verificando avaliação existente...');
-      const { data: existing, error: checkError } = await supabase
-        .from('learning_lesson_nps')
-        .select('id, response_code')
-        .eq('lesson_id', lessonId!)
-        .eq('user_id', userData.user.id)
-        .maybeSingle();
-      
-      if (checkError) {
-        console.error('[LESSON-VIEW] ❌ Erro ao verificar avaliação:', checkError);
-        throw checkError;
-      }
-      
-      let npsError;
-      
-      if (existing) {
-        // UPDATE: já existe avaliação
-        console.log('[LESSON-VIEW] 🔄 Atualizando avaliação existente:', existing.id);
-        const { error } = await supabase
-          .from('learning_lesson_nps')
-          .update({
-            score,
-            feedback: feedback || null
-            // response_code e updated_at gerenciados automaticamente
-          })
-          .eq('id', existing.id);
-        
-        npsError = error;
-      } else {
-        // INSERT: primeira avaliação
-        console.log('[LESSON-VIEW] ➕ Criando nova avaliação');
-        const { error } = await supabase
-          .from('learning_lesson_nps')
-          .insert({
-            lesson_id: lessonId!,
-            user_id: userData.user.id,
-            score,
-            feedback: feedback || null
-            // response_code será gerado pelo trigger automaticamente
-          });
-        
-        npsError = error;
-      }
+      // 2. Salvar NPS usando função SECURITY DEFINER (bypassa RLS)
+      console.log('[LESSON-VIEW] 💾 Salvando NPS via RPC safe_insert_or_update_lesson_nps...');
+      const { data: npsResult, error: npsError } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
+        p_lesson_id: lessonId!,
+        p_score: score,
+        p_feedback: feedback || null
+      });
       
       if (npsError) {
         console.error('[LESSON-VIEW] ❌ Erro ao salvar NPS:', npsError);
         throw npsError;
       }
       
-      console.log('[LESSON-VIEW] ✅ NPS salvo com sucesso');
+      console.log('[LESSON-VIEW] ✅ NPS salvo com sucesso:', npsResult);
       
       // 4. Feedback visual de sucesso
       dismissModernToast(loadingId);
