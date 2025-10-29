@@ -53,11 +53,27 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     mutationFn: async (completed: boolean) => {
       if (!lessonId) throw new Error("ID da lição não fornecido");
       
+      // Verificar autenticação ANTES de tentar salvar
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('[PROGRESS-MUTATION] ❌ Sessão inválida:', sessionError);
+        throw new Error('Sessão expirada. Por favor, faça login novamente.');
+      }
+      
       const { data: userData } = await supabase.auth.getUser();
       if (!userData.user) throw new Error("Usuário não autenticado");
       
+      console.log('[PROGRESS-MUTATION] 📝 Tentando salvar progresso:', {
+        userId: userData.user.id,
+        email: userData.user.email,
+        lessonId,
+        completed,
+        hasSession: !!session
+      });
+      
       const timestamp = new Date().toISOString();
-      const progressPercentage = completed ? 100 : 1; // 1% para iniciada, 100% para concluída
+      const progressPercentage = completed ? 100 : 1;
       
       // Usar UPSERT para evitar conflitos de chave duplicada
       const { data, error } = await supabase
@@ -78,8 +94,21 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         .single();
         
       if (error) {
+        console.error('[PROGRESS-MUTATION] ❌ Erro no UPSERT:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
+        
+        // Se for erro de RLS/permissão
+        if (error.code === '42501' || error.message.includes('policy')) {
+          throw new Error('Você não tem permissão para atualizar este progresso');
+        }
+        
         // Se ainda houver erro de duplicata, tentar UPDATE específico
         if (error.code === '23505') {
+          console.log('[PROGRESS-MUTATION] ⚠️ Tentando UPDATE como fallback...');
           const { error: updateError } = await supabase
             .from("learning_progress")
             .update({ 
@@ -90,7 +119,12 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
             .eq("user_id", userData.user.id)
             .eq("lesson_id", lessonId);
             
-          if (updateError) throw updateError;
+          if (updateError) {
+            console.error('[PROGRESS-MUTATION] ❌ Erro no UPDATE:', updateError);
+            throw updateError;
+          }
+
+          console.log('[PROGRESS-MUTATION] ✅ UPDATE bem-sucedido (fallback)');
 
           // Log da atualização de progresso
           await supabase.rpc('log_learning_action', {
@@ -108,6 +142,8 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         }
         throw error;
       }
+
+      console.log('[PROGRESS-MUTATION] ✅ UPSERT bem-sucedido:', data);
 
       // Log da criação/atualização de progresso
       await supabase.rpc('log_learning_action', {
@@ -158,11 +194,15 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       }, 300);
     },
     onError: (error: any) => {
-      console.error("Erro ao salvar progresso:", error);
+      console.error('[PROGRESS-MUTATION] ❌ Erro ao salvar progresso:', error);
       
-      // Não mostrar toast para erros de duplicata - são esperados
-      if (error.code !== '23505') {
-        toast.error("Não foi possível salvar seu progresso");
+      // Mostrar mensagem específica baseada no erro
+      if (error.message.includes('Sessão expirada')) {
+        toast.error('Sua sessão expirou. Por favor, faça login novamente.');
+      } else if (error.message.includes('permissão')) {
+        toast.error('Você não tem permissão para atualizar este progresso');
+      } else if (error.code !== '23505') {
+        toast.error('Não foi possível salvar seu progresso. Tente novamente.');
       }
     }
   });
@@ -268,6 +308,21 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   // Marcar lição como concluída
   const completeLesson = async (): Promise<boolean> => {
     console.log('[USE-LESSON-PROGRESS] 🎯 completeLesson() chamado');
+    
+    // Verificar autenticação ANTES de tentar salvar
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('[USE-LESSON-PROGRESS] ❌ Usuário não autenticado:', authError);
+      toast.error('Você precisa estar logado para marcar a aula como concluída');
+      return false;
+    }
+    
+    console.log('[USE-LESSON-PROGRESS] ✅ Usuário autenticado:', { 
+      userId: user.id, 
+      email: user.email 
+    });
+    
     console.log('[USE-LESSON-PROGRESS] Estado atual:', { isCompleted, lessonId });
     
     try {
@@ -277,10 +332,10 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       setIsCompleted(true);
       
       console.log('[USE-LESSON-PROGRESS] ✅ Aula marcada como concluída com sucesso');
-      return true; // ✅ Retornar sucesso
+      return true;
     } catch (error) {
       console.error('[USE-LESSON-PROGRESS] ❌ Erro ao marcar como concluída:', error);
-      return false; // ❌ Retornar falha
+      return false;
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LearningLesson } from "@/lib/supabase";
+import { LearningLesson, supabase } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
@@ -72,12 +72,24 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const handleCompleteLesson = async () => {
     console.log('[LESSON-CONTENT] 🎯 Botão de conclusão clicado');
     
+    // Verificar se usuário está autenticado
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      console.error('[LESSON-CONTENT] ❌ Usuário não autenticado');
+      toast({
+        variant: "destructive",
+        title: "Erro de Autenticação",
+        description: "Você precisa estar logado para marcar a aula como concluída"
+      });
+      return;
+    }
+    
     if (!onComplete) {
       console.log('[LESSON-CONTENT] ⚠️ Falta onComplete callback');
       return;
     }
     
-    console.log('[LESSON-CONTENT] ⏳ Salvando progresso...');
+    console.log('[LESSON-CONTENT] ⏳ Salvando progresso para usuário:', user.email);
     
     try {
       const result = await onComplete();
