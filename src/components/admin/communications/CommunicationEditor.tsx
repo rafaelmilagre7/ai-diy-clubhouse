@@ -11,8 +11,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Save, Send, Eye, Users, Mail, Bell, Calendar } from 'lucide-react';
 import { useCommunications, AdminCommunication } from '@/hooks/admin/useCommunications';
-import { toast } from 'sonner';
 import { supabase } from '@/lib/supabase';
+import { showModernError } from '@/lib/toast-helpers';
 
 interface CommunicationEditorProps {
   communication?: AdminCommunication | null;
@@ -118,17 +118,26 @@ export const CommunicationEditor: React.FC<CommunicationEditorProps> = ({
 
   const handleSave = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
-      toast.error('Título e conteúdo são obrigatórios');
+      showModernError(
+        'Campos obrigatórios',
+        'Preencha o título e o conteúdo antes de salvar'
+      );
       return;
     }
 
     if (formData.target_roles.length === 0) {
-      toast.error('Selecione pelo menos um role de destino');
+      showModernError(
+        'Selecione destinatários',
+        'Escolha pelo menos um grupo de usuários para receber o comunicado'
+      );
       return;
     }
 
     if (formData.delivery_channels.length === 0) {
-      toast.error('Selecione pelo menos um canal de entrega');
+      showModernError(
+        'Selecione canal de entrega',
+        'Escolha pelo menos um canal (notificação ou email) para envio'
+      );
       return;
     }
 

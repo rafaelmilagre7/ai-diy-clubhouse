@@ -1,7 +1,14 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { 
+  showModernSuccess,
+  showModernError,
+  showModernLoading,
+  showModernSuccessWithAction,
+  dismissModernToast,
+  showModernWarning
+} from '@/lib/toast-helpers';
 
 export interface AdminCommunication {
   id: string;
@@ -70,12 +77,19 @@ export const useCommunications = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
-      toast.success('Comunicado criado com sucesso!');
+      
+      showModernSuccess(
+        'Comunicado criado!',
+        'Seu comunicado foi salvo como rascunho com sucesso'
+      );
     },
     onError: (error: any) => {
-      toast.error('Erro ao criar comunicado: ' + error.message);
+      showModernError(
+        'Erro ao criar comunicado',
+        error.message || 'Não foi possível criar o comunicado. Tente novamente.'
+      );
     },
   });
 
@@ -93,10 +107,16 @@ export const useCommunications = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
-      toast.success('Comunicado atualizado com sucesso!');
+      showModernSuccess(
+        'Comunicado atualizado!',
+        'Suas alterações foram salvas com sucesso'
+      );
     },
     onError: (error: any) => {
-      toast.error('Erro ao atualizar comunicado: ' + error.message);
+      showModernError(
+        'Erro ao atualizar',
+        error.message || 'Não foi possível atualizar o comunicado.'
+      );
     },
   });
 
@@ -108,13 +128,20 @@ export const useCommunications = () => {
         .eq('id', communicationId);
 
       if (error) throw error;
+      return communicationId;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
-      toast.success('Comunicado deletado com sucesso!');
+      showModernSuccess(
+        'Comunicado excluído!',
+        'O comunicado foi removido permanentemente'
+      );
     },
     onError: (error: any) => {
-      toast.error('Erro ao deletar comunicado: ' + error.message);
+      showModernError(
+        'Erro ao excluir',
+        error.message || 'Não foi possível excluir o comunicado.'
+      );
     },
   });
 
@@ -133,12 +160,42 @@ export const useCommunications = () => {
       if (error) throw error;
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
-      toast.success('Comunicado enviado com sucesso!');
+    onMutate: async (communicationId) => {
+      // Mostrar toast de loading
+      const loadingId = showModernLoading(
+        'Enviando comunicado...',
+        'Processando e enviando para todos os destinatários'
+      );
+      
+      return { loadingId };
     },
-    onError: (error: any) => {
-      toast.error('Erro ao enviar comunicado: ' + error.message);
+    onSuccess: (data, variables, context) => {
+      // Dismiss loading toast
+      if (context?.loadingId) {
+        dismissModernToast(context.loadingId);
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
+      
+      const totalRecipients = data?.totalRecipients || 0;
+      const emailsSent = data?.emailsSent || 0;
+      const notificationsSent = data?.notificationsSent || 0;
+      
+      showModernSuccess(
+        'Comunicado enviado!',
+        `Enviado com sucesso para ${totalRecipients} usuários (${emailsSent} emails, ${notificationsSent} notificações)`
+      );
+    },
+    onError: (error: any, variables, context) => {
+      // Dismiss loading toast
+      if (context?.loadingId) {
+        dismissModernToast(context.loadingId);
+      }
+      
+      showModernError(
+        'Erro ao enviar comunicado',
+        error.message || 'Não foi possível enviar o comunicado. Verifique os logs para mais detalhes.'
+      );
     },
   });
 
@@ -158,10 +215,16 @@ export const useCommunications = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-communications'] });
-      toast.success('Envio cancelado com sucesso!');
+      showModernWarning(
+        'Envio cancelado',
+        'O envio do comunicado foi interrompido. Destinatários restantes não receberão a mensagem.'
+      );
     },
     onError: (error: any) => {
-      toast.error('Erro ao cancelar: ' + error.message);
+      showModernError(
+        'Erro ao cancelar',
+        error.message || 'Não foi possível cancelar o envio.'
+      );
     },
   });
 
