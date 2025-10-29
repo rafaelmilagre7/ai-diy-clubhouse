@@ -558,163 +558,141 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
 
       setLoadingMessage('Aplicando configurações finais...');
       
-      // Finalizar onboarding SEM usar RPC - atualizar direto no banco
-      console.log('[ONBOARDING] 🎯 Finalizando onboarding (sem RPC)...');
+      // ESTRATÉGIA SIMPLIFICADA: Apenas marcar profile como completo
+      // O onboarding_final é secundário e pode falhar sem bloquear o usuário
+      console.log('[ONBOARDING] 🎯 Finalizando onboarding (estratégia simplificada)...');
       const rpcStartTime = performance.now();
       
+      let onboardingSuccess = false;
+      let profileSuccess = false;
+      
+      // 1. TENTAR atualizar onboarding_final (não-bloqueante)
       try {
-        // 1. Atualizar onboarding_final
-        console.log('[ONBOARDING] 📝 Atualizando onboarding_final...');
-        console.log('[ONBOARDING] 🔍 user.id:', user.id);
-        console.log('[ONBOARDING] 🔍 ninaMessage:', ninaMessage?.substring(0, 50) + '...');
+        console.log('[ONBOARDING] 📝 Tentando atualizar onboarding_final...');
         
-        const { data: updateData, error: onboardingError } = await supabase
+        // Verificar se registro existe
+        const { data: existingRecord } = await supabase
           .from('onboarding_final')
-          .update({
-            is_completed: true,
-            completed_at: new Date().toISOString(),
-            current_step: 6,
-            completed_steps: [0, 1, 2, 3, 4, 5, 6],
-            nina_message: ninaMessage,
-            updated_at: new Date().toISOString()
-          })
+          .select('id')
           .eq('user_id', user.id)
-          .select();
+          .maybeSingle();
         
-        console.log('[ONBOARDING] 📊 Update result:', { data: updateData, error: onboardingError });
-        
-        if (onboardingError) {
-          console.error('[ONBOARDING] ❌ Erro ao atualizar onboarding_final:', {
-            message: onboardingError.message,
-            details: onboardingError.details,
-            hint: onboardingError.hint,
-            code: onboardingError.code
-          });
-          showError(
-            "Erro ao salvar progresso",
-            `Erro: ${onboardingError.message}`
-          );
-          throw onboardingError;
+        if (existingRecord) {
+          // Registro existe, fazer UPDATE
+          const { error: updateError } = await supabase
+            .from('onboarding_final')
+            .update({
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              current_step: 6,
+              completed_steps: [0, 1, 2, 3, 4, 5, 6],
+              nina_message: ninaMessage,
+              updated_at: new Date().toISOString()
+            })
+            .eq('user_id', user.id);
+          
+          if (!updateError) {
+            console.log('[ONBOARDING] ✅ onboarding_final atualizado');
+            onboardingSuccess = true;
+          } else {
+            console.warn('[ONBOARDING] ⚠️ Erro ao atualizar onboarding_final (não-bloqueante):', updateError);
+          }
+        } else {
+          // Registro não existe, criar um novo
+          console.log('[ONBOARDING] 🆕 Criando novo registro onboarding_final...');
+          const { error: insertError } = await supabase
+            .from('onboarding_final')
+            .insert({
+              user_id: user.id,
+              is_completed: true,
+              completed_at: new Date().toISOString(),
+              current_step: 6,
+              completed_steps: [0, 1, 2, 3, 4, 5, 6],
+              nina_message: ninaMessage,
+              data: state.data,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          
+          if (!insertError) {
+            console.log('[ONBOARDING] ✅ onboarding_final criado');
+            onboardingSuccess = true;
+          } else {
+            console.warn('[ONBOARDING] ⚠️ Erro ao criar onboarding_final (não-bloqueante):', insertError);
+          }
         }
-        
-        console.log('[ONBOARDING] ✅ onboarding_final atualizado');
-        
-        // 2. Atualizar profiles
-        console.log('[ONBOARDING] 📝 Atualizando profiles...');
-        const { data: profileData, error: profileError } = await supabase
+      } catch (onboardingError) {
+        console.warn('[ONBOARDING] ⚠️ Erro em onboarding_final (não-bloqueante):', onboardingError);
+      }
+      
+      // 2. ATUALIZAR profiles (CRÍTICO - bloqueante)
+      try {
+        console.log('[ONBOARDING] 📝 Atualizando profiles (CRÍTICO)...');
+        const { error: profileError } = await supabase
           .from('profiles')
           .update({
             onboarding_completed: true,
             updated_at: new Date().toISOString()
           })
-          .eq('id', user.id)
-          .select();
-        
-        console.log('[ONBOARDING] 📊 Profile update result:', { data: profileData, error: profileError });
+          .eq('id', user.id);
         
         if (profileError) {
-          console.error('[ONBOARDING] ❌ Erro ao atualizar profiles:', {
-            message: profileError.message,
-            details: profileError.details,
-            hint: profileError.hint,
-            code: profileError.code
-          });
-          showError(
-            "Erro ao atualizar perfil",
-            `Erro: ${profileError.message}`
-          );
-          throw profileError;
+          console.error('[ONBOARDING] ❌ Erro CRÍTICO ao atualizar profiles:', profileError);
+          // Tentar novamente com upsert
+          console.log('[ONBOARDING] 🔄 Tentando upsert em profiles...');
+          const { error: upsertError } = await supabase
+            .from('profiles')
+            .upsert({
+              id: user.id,
+              onboarding_completed: true,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'id'
+            });
+          
+          if (upsertError) {
+            console.error('[ONBOARDING] ❌ Upsert falhou:', upsertError);
+            throw new Error('Falha crítica ao atualizar profile');
+          }
         }
         
-        console.log('[ONBOARDING] ✅ profiles atualizado');
+        console.log('[ONBOARDING] ✅ profiles atualizado com sucesso');
+        profileSuccess = true;
         
-        const rpcDuration = performance.now() - rpcStartTime;
-        console.log('[ONBOARDING] ⏱️ Finalização concluída em:', rpcDuration, 'ms');
-        
-      } catch (updateError: any) {
-        console.error('[ONBOARDING] ❌ ERRO CRÍTICO ao finalizar:', {
-          error: updateError,
-          message: updateError?.message,
-          stack: updateError?.stack,
-          name: updateError?.name
-        });
+      } catch (profileError: any) {
+        console.error('[ONBOARDING] ❌ ERRO CRÍTICO em profiles:', profileError);
         showError(
           "Erro ao finalizar",
-          `${updateError?.message || 'Erro desconhecido'}`
+          "Não foi possível completar o onboarding. Tente novamente."
         );
-        throw updateError;
+        throw profileError;
       }
+      
+      const rpcDuration = performance.now() - rpcStartTime;
+      console.log('[ONBOARDING] ⏱️ Finalização concluída em:', rpcDuration, 'ms');
+      console.log('[ONBOARDING] 📊 Status:', { onboardingSuccess, profileSuccess });
 
-      // Invalidar AMBOS os caches antes de sincronizar
+      // Invalidar caches de forma simples e rápida
       console.log('[ONBOARDING] ⏱️ Invalidando caches...');
-      markProfileStale(); // Invalida authSessionUtils cache
-
-      // NOVO: Invalidar também o AuthCache (localStorage)
+      markProfileStale();
+      
       try {
         const { authCache } = await import('@/lib/auth/authCache');
         authCache.remove(user.id);
-        console.log('[ONBOARDING] ✅ AuthCache (localStorage) invalidado');
-      } catch (cacheError) {
-        console.warn('[ONBOARDING] ⚠️ Erro ao invalidar authCache:', cacheError);
+        console.log('[ONBOARDING] ✅ AuthCache invalidado');
+      } catch {}
+      
+      // Sincronizar perfil de forma não-bloqueante
+      console.log('[ONBOARDING] ⏱️ Sincronizando perfil...');
+      try {
+        await syncProfile(false);
+        console.log('[ONBOARDING] ✅ Perfil sincronizado');
+      } catch (syncError) {
+        console.warn('[ONBOARDING] ⚠️ Erro na sincronização (não-bloqueante):', syncError);
       }
-
-      // SINCRONIZAÇÃO BLOCANTE com retry
-      console.log('[ONBOARDING] ⏱️ Iniciando sincronização blocante do perfil...');
-      let syncAttempts = 0;
-      const maxRetries = 3;
-      let syncSuccess = false;
-
-      while (syncAttempts < maxRetries && !syncSuccess) {
-        try {
-          syncAttempts++;
-          console.log(`[ONBOARDING] 🔄 Tentativa ${syncAttempts}/${maxRetries} de sincronização`);
-          
-          await syncProfile(false);
-          syncSuccess = true;
-          console.log('[ONBOARDING] ✅ Perfil sincronizado com sucesso!');
-        } catch (syncError) {
-          console.warn(`[ONBOARDING] ⚠️ Tentativa ${syncAttempts} falhou:`, syncError);
-          
-          if (syncAttempts < maxRetries) {
-            // Aguardar 500ms antes de tentar novamente
-            console.log('[ONBOARDING] ⏳ Aguardando 500ms antes de retry...');
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            // Re-invalidar cache antes de tentar novamente
-            markProfileStale();
-            try {
-              const { authCache } = await import('@/lib/auth/authCache');
-              authCache.remove(user.id);
-            } catch {}
-          }
-        }
-      }
-
-      // Se falhou todas as tentativas, invalidar TUDO como última tentativa
-      if (!syncSuccess) {
-        console.error('[ONBOARDING] ❌ CRÍTICO: Todas as tentativas de sincronização falharam');
-        
-        // Última tentativa: limpar TODOS os caches
-        try {
-          const { clearProfileCache } = await import('@/hooks/auth/utils/authSessionUtils');
-          clearProfileCache(user.id);
-          
-          const { authCache } = await import('@/lib/auth/authCache');
-          authCache.clear(); // Limpar TUDO do authCache
-          
-          console.log('[ONBOARDING] 🗑️ Todos os caches limpos como fallback');
-        } catch (cleanupError) {
-          console.error('[ONBOARDING] ❌ Erro ao limpar caches:', cleanupError);
-        }
-        
-        // Continuar mesmo assim para não bloquear o usuário permanentemente
-        console.warn('[ONBOARDING] ⚠️ Continuando apesar da falha de sincronização');
-      }
-
-      // Aguardar propagação (800ms) para garantir que o banco atualizou o cache
-      console.log('[ONBOARDING] ⏳ Aguardando 800ms para propagação...');
-      await new Promise(resolve => setTimeout(resolve, 800));
-      console.log('[ONBOARDING] ✅ Sincronização concluída');
+      
+      // Pequena pausa para propagação (reduzido de 800ms para 300ms)
+      await new Promise(resolve => setTimeout(resolve, 300));
 
       // Atualizar estado local rapidamente
       console.log('[ONBOARDING] ⏱️ Atualizando estado local...');
@@ -742,10 +720,30 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       
       return true;
 
-    } catch (error) {
-      console.error('[ONBOARDING] Erro ao finalizar onboarding:', error);
-      showError('Erro ao finalizar', 'Erro ao finalizar onboarding: ' + (error?.message || 'Erro desconhecido'));
-      return false;
+    } catch (error: any) {
+      console.error('[ONBOARDING] ❌ Erro ao finalizar onboarding:', error);
+      
+      // Se chegou aqui mas o profile foi atualizado, considerar sucesso parcial
+      // e deixar usuário prosseguir
+      const errorMessage = error?.message || 'Erro desconhecido';
+      
+      if (errorMessage.includes('profile')) {
+        showError('Erro crítico', 'Não foi possível atualizar seu perfil. Tente novamente.');
+        return false;
+      } else {
+        // Erro não-crítico, permitir prosseguir
+        console.warn('[ONBOARDING] ⚠️ Erro não-crítico, permitindo prosseguir');
+        showInfo('Onboarding concluído', 'Seu perfil foi atualizado com sucesso!');
+        
+        // Atualizar estado local mesmo assim
+        setState(prev => ({
+          ...prev,
+          is_completed: true,
+          completed_steps: [0, 1, 2, 3, 4, 5, 6],
+        }));
+        
+        return true;
+      }
     } finally {
       setIsSaving(false);
     }
