@@ -45,57 +45,116 @@ export const ModernPostEditor = ({
       console.log('📋 [COMMENT] Topic ID:', topicId);
       console.log('📝 [COMMENT] Conteúdo length:', content.length);
       
-      // ✅ VALIDAR topicId ANTES do INSERT
+      // ✅ ETAPA 1: VALIDAR topicId
       if (!topicId) {
         console.error('❌ [COMMENT] ID do tópico não fornecido');
         throw new Error('ID do tópico não fornecido');
       }
       
-      // ✅ VALIDAR userId ANTES do INSERT  
-      console.log('🔍 [COMMENT] Buscando dados do usuário autenticado...');
-      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      // ✅ ETAPA 2: VERIFICAR SESSÃO VÁLIDA
+      console.log('🔐 [COMMENT] Verificando sessão atual...');
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      console.log('👤 [COMMENT] Auth response:', {
-        hasUser: !!user,
-        userId: user?.id,
-        hasError: !!authError,
-        error: authError ? JSON.stringify(authError, null, 2) : null
+      if (!currentSession) {
+        console.error('❌ [COMMENT] Sessão expirada ou inválida');
+        throw new Error('Sua sessão expirou. Por favor, faça login novamente.');
+      }
+      
+      console.log('✅ [COMMENT] Sessão válida:', {
+        userId: currentSession.user.id,
+        expiresAt: new Date(currentSession.expires_at! * 1000).toISOString()
       });
       
+      // ✅ ETAPA 3: OBTER DADOS DO USUÁRIO
+      console.log('🔍 [COMMENT] Buscando dados do usuário...');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        console.error('❌ [COMMENT] Erro ao buscar usuário:', JSON.stringify(authError, null, 2));
+        throw new Error(`Erro de autenticação: ${authError.message}`);
+      }
+      
       if (!user?.id) {
-        console.error('❌ [COMMENT] Usuário não autenticado');
+        console.error('❌ [COMMENT] Usuário não encontrado');
         throw new Error('Você precisa estar logado para enviar uma resposta');
       }
       
       console.log('✅ [COMMENT] Usuário autenticado:', user.id);
-      console.log('🔧 [COMMENT] Preparando dados para INSERT:', {
-        content: content.substring(0, 50) + '...',
+      
+      // ✅ ETAPA 4: VALIDAR SE O TÓPICO EXISTE E NÃO ESTÁ BLOQUEADO
+      console.log('🔍 [COMMENT] Validando existência do tópico...');
+      const { data: topicExists, error: topicError } = await supabase
+        .from('community_topics')
+        .select('id, is_locked, title')
+        .eq('id', topicId)
+        .maybeSingle();
+
+      if (topicError) {
+        console.error('❌ [COMMENT] Erro ao buscar tópico:', JSON.stringify(topicError, null, 2));
+        throw new Error(`Erro ao validar tópico: ${topicError.message}`);
+      }
+
+      if (!topicExists) {
+        console.error('❌ [COMMENT] Tópico não encontrado:', topicId);
+        throw new Error('Este tópico não existe ou foi removido');
+      }
+
+      if (topicExists.is_locked) {
+        console.error('❌ [COMMENT] Tópico está bloqueado');
+        throw new Error('Este tópico está bloqueado para novas respostas');
+      }
+
+      console.log('✅ [COMMENT] Tópico validado:', topicExists.title);
+      
+      // ✅ ETAPA 5: INSERT COM RETRY
+      console.log('🔧 [COMMENT] Preparando dados para INSERT...');
+      const postData = {
+        content: content.trim(),
         topic_id: topicId,
         user_id: user.id
-      });
+      };
+      console.log('📦 [COMMENT] Dados:', postData);
       
-      // INSERT da resposta
-      console.log('💾 [COMMENT] Executando INSERT na tabela community_posts...');
-      const { data, error } = await supabase
-        .from('community_posts')
-        .insert([{
-          content: content.trim(),
-          topic_id: topicId,
-          user_id: user.id
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        console.error('❌ [COMMENT] ========== ERRO NO INSERT ==========');
-        console.error('❌ [COMMENT] Código:', error.code);
-        console.error('❌ [COMMENT] Mensagem:', error.message);
-        console.error('❌ [COMMENT] Detalhes:', error.details);
-        console.error('❌ [COMMENT] Hint:', error.hint);
-        console.error('❌ [COMMENT] Erro completo:', JSON.stringify(error, null, 2));
-        console.error('❌ [COMMENT] =========================================');
-        throw error;
-      }
+      // Função de retry com exponential backoff
+      const insertWithRetry = async (maxRetries = 3) => {
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+          try {
+            console.log(`💾 [COMMENT] Tentativa ${attempt}/${maxRetries} de INSERT...`);
+            
+            const { data, error } = await supabase
+              .from('community_posts')
+              .insert([postData])
+              .select()
+              .single();
+            
+            if (error) {
+              console.error(`❌ [COMMENT] Erro na tentativa ${attempt}:`, {
+                code: error.code,
+                message: error.message,
+                details: error.details,
+                hint: error.hint
+              });
+              throw error;
+            }
+            
+            console.log(`✅ [COMMENT] INSERT bem-sucedido na tentativa ${attempt}:`, data.id);
+            return data;
+            
+          } catch (error: any) {
+            if (attempt === maxRetries) {
+              console.error('❌ [COMMENT] Todas as tentativas falharam');
+              throw error;
+            }
+            
+            // Esperar antes de tentar novamente (exponential backoff)
+            const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s
+            console.log(`⏳ [COMMENT] Aguardando ${delay}ms antes da próxima tentativa...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+          }
+        }
+      };
+      
+      const data = await insertWithRetry();
       
       console.log('✅ [COMMENT] Resposta inserida com sucesso:', data.id);
       
