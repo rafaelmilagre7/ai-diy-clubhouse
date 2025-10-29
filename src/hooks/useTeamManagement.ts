@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { toast } from '@/hooks/use-toast';
+import { useToastModern } from '@/hooks/useToastModern';
 
 export interface TeamMember {
   id: string;
@@ -29,6 +30,7 @@ export interface TeamStats {
 
 export const useTeamManagement = () => {
   const { user } = useAuth();
+  const { showSuccess, showError, showInfo } = useToastModern();
   const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
   const [teamInvites, setTeamInvites] = useState<TeamInvite[]>([]);
   const [teamStats, setTeamStats] = useState<TeamStats | null>(null);
@@ -134,6 +136,9 @@ export const useTeamManagement = () => {
 
     } catch (error) {
       console.error('Erro ao buscar dados da equipe:', error);
+      showError("Erro", "Não foi possível carregar os dados da equipe");
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Erro",
         description: "Não foi possível carregar os dados da equipe",
@@ -150,6 +155,9 @@ export const useTeamManagement = () => {
     try {
       // Verificar limite da equipe
       if (teamStats && teamStats.current_members + teamStats.pending_invites >= teamStats.max_members) {
+        showError("Limite atingido", `Seu plano permite até ${teamStats.max_members} membros`);
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: "Limite atingido",
           description: `Seu plano permite até ${teamStats.max_members} membros`,
@@ -177,6 +185,9 @@ export const useTeamManagement = () => {
         roleName === 'membro_club';
 
       if (!profile?.organization_id || !isMasterUser) {
+        showError("Erro", "Apenas usuários master podem convidar membros");
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: "Erro",
           description: "Apenas usuários master podem convidar membros",
@@ -193,6 +204,9 @@ export const useTeamManagement = () => {
         .single();
 
       if (!handsOnRole) {
+        showError("Erro de configuração", "Role 'hands_on' não encontrado no sistema");
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: "Erro de configuração",
           description: "Role 'hands_on' não encontrado no sistema",
@@ -236,12 +250,18 @@ export const useTeamManagement = () => {
 
           if (sendError) {
             console.error('❌ Erro no envio do email:', sendError);
+            showError("Convite criado, mas email não foi enviado", "Você pode reenviar o convite manualmente");
+            
+            // Mantém toast legado para compatibilidade
             toast({
               title: "Convite criado, mas email não foi enviado",
               description: "Você pode reenviar o convite manualmente",
               variant: "destructive"
             });
           } else {
+            showSuccess("Convite enviado!", `Email enviado para ${email}`);
+            
+            // Mantém toast legado para compatibilidade
             toast({
               title: "✅ Convite enviado",
               description: `Email enviado para ${email}`,
@@ -253,6 +273,9 @@ export const useTeamManagement = () => {
       }, 100);
 
       // Feedback imediato
+      showInfo("Convite criado", `Processando envio para ${email}...`);
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Convite criado",
         description: `Processando envio para ${email}...`,
@@ -263,6 +286,9 @@ export const useTeamManagement = () => {
 
     } catch (error: any) {
       console.error('Erro ao enviar convite:', error);
+      showError("Erro ao enviar convite", error.message || "Não foi possível enviar o convite");
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Erro ao enviar convite",
         description: error.message || "Não foi possível enviar o convite",
@@ -294,6 +320,9 @@ export const useTeamManagement = () => {
         roleName === 'membro_club';
 
       if (!isMasterUser) {
+        showError("Erro", "Apenas usuários master podem remover membros");
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: "Erro",
           description: "Apenas usuários master podem remover membros",
@@ -304,6 +333,9 @@ export const useTeamManagement = () => {
 
       // Não permitir remover a si mesmo
       if (memberId === user.id) {
+        showError("Erro", "Você não pode remover a si mesmo da equipe");
+        
+        // Mantém toast legado para compatibilidade
         toast({
           title: "Erro",
           description: "Você não pode remover a si mesmo da equipe",
@@ -320,6 +352,9 @@ export const useTeamManagement = () => {
 
       if (error) throw error;
 
+      showSuccess("Membro removido", "Membro removido da equipe com sucesso");
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Membro removido",
         description: "Membro removido da equipe com sucesso",
@@ -331,6 +366,9 @@ export const useTeamManagement = () => {
 
     } catch (error: any) {
       console.error('Erro ao remover membro:', error);
+      showError("Erro", error.message || "Não foi possível remover o membro");
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Erro",
         description: error.message || "Não foi possível remover o membro",
@@ -352,6 +390,9 @@ export const useTeamManagement = () => {
 
       if (error) throw error;
 
+      showSuccess("Convite cancelado", "O convite foi cancelado com sucesso");
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Convite cancelado",
         description: "O convite foi cancelado com sucesso",
@@ -363,6 +404,9 @@ export const useTeamManagement = () => {
 
     } catch (error: any) {
       console.error('Erro ao cancelar convite:', error);
+      showError("Erro ao cancelar convite", error.message || "Não foi possível cancelar o convite");
+      
+      // Mantém toast legado para compatibilidade
       toast({
         title: "Erro ao cancelar convite",
         description: error.message || "Não foi possível cancelar o convite",
