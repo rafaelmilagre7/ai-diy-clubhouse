@@ -50,19 +50,8 @@ export const useLessonNPS = ({ lessonId }: LessonNPSOptions) => {
       setIsSubmitting(true);
       
       try {
-        // Verificar rate limiting para novas avaliações
-        if (!existingNPS) {
-          const { data: canRate } = await supabase.rpc('check_nps_rate_limit', {
-            p_user_id: user.id,
-            p_lesson_id: lessonId
-          });
-
-          if (!canRate) {
-            throw new Error('Você já avaliou esta aula hoje. Tente novamente amanhã.');
-          }
-        }
-
         // ✅ USAR FUNÇÃO SECURITY DEFINER para bypass de RLS
+        // A função safe_insert_or_update_lesson_nps já faz UPDATE se existir
         console.log('[LESSON-NPS] 💾 Salvando via RPC safe_insert_or_update_lesson_nps...');
         const { data: result, error } = await supabase.rpc('safe_insert_or_update_lesson_nps', {
           p_lesson_id: lessonId,
