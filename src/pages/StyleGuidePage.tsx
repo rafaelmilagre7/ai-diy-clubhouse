@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   Palette, Type, Stars, Layout, Zap, Shield, Search,
   Box, Circle, Square, Layers, Eye, Moon, Sun, Check, BarChart3,
-  AlertCircle, ArrowRight, Code, Lightbulb, CheckCircle2, XCircle, Play
+  AlertCircle, ArrowRight, Code, Lightbulb, CheckCircle2, XCircle, Play, Bell
 } from 'lucide-react';
 import { ColorPalette, ColorSwatch } from '@/components/style-guide/ColorPalette';
 import { ComponentShowcase } from '@/components/style-guide/ComponentShowcase';
@@ -23,6 +23,7 @@ import { Progress } from '@/components/ui/progress';
 import { StatusBadge } from '@/components/ui/status-badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { NotificationsSection } from '@/components/style-guide/NotificationsSection';
 
 /**
  * 🎨 DESIGN SYSTEM 2.0 - DOCUMENTAÇÃO VISUAL COMPLETA
@@ -247,6 +248,10 @@ export default function StyleGuidePage() {
               <TabsTrigger value="workflow" className="gap-sm">
                 <Play className="w-4 h-4" />
                 Workflow
+              </TabsTrigger>
+              <TabsTrigger value="notificacoes" className="gap-sm">
+                <Bell className="w-4 h-4" />
+                Notificações
               </TabsTrigger>
             </TabsList>
           </ScrollArea>
@@ -1901,6 +1906,11 @@ spacing: {
                 language="css"
               />
             </section>
+          </TabsContent>
+
+          {/* NOTIFICAÇÕES TAB */}
+          <TabsContent value="notificacoes" className="space-y-lg">
+            <NotificationsSection />
           </TabsContent>
         </Tabs>
 
