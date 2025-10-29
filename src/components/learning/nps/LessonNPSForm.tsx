@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Star, CheckCircle2 } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface NPSRatingButtonProps {
   value: number;
@@ -81,18 +82,26 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
     
     console.log('[NPS-FORM] ✅ Validações passaram, chamando onCompleted...');
     
+    // Toast de loading
+    const loadingToastId = toast.loading('Salvando sua avaliação...');
+    
     // Timeout de segurança
     const timeoutId = setTimeout(() => {
       console.error('[NPS-FORM] ⏱️ TIMEOUT: Nada aconteceu após 8s');
+      toast.dismiss(loadingToastId);
+      toast.error('A operação está demorando muito. Por favor, tente novamente.');
     }, 8000);
     
     try {
       await onCompleted(score, feedback);
+      toast.dismiss(loadingToastId);
       clearTimeout(timeoutId);
       console.log('[NPS-FORM] ✅ onCompleted executado com sucesso');
     } catch (error) {
+      toast.dismiss(loadingToastId);
       clearTimeout(timeoutId);
       console.error('[NPS-FORM] ❌ Erro em onCompleted:', error);
+      toast.error('Erro ao salvar avaliação');
       throw error;
     }
   };
