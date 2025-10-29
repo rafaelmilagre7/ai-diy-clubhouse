@@ -25,7 +25,15 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { showSuccess, showError } = useToastModern();
+  const { 
+    showSuccess, 
+    showError, 
+    showLoading, 
+    dismissToast,
+    showErrorWithAction,
+    showErrorWithRetry
+  } = useToastModern();
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
 
   const {
     register,
@@ -42,10 +50,28 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
 
   const email = watch('email');
 
-  const onSubmit = async (data: ResetPasswordFormData) => {
+  const handleSubmit_internal = async (data: ResetPasswordFormData) => {
+    // Validação frontend de email
+    if (!data.email || !data.email.includes('@')) {
+      showError(
+        "E-mail inválido",
+        "Digite um endereço de e-mail válido",
+        { position: 'top-center', duration: 4000 }
+      );
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Toast de loading
+      const toastId = showLoading(
+        "Enviando e-mail...",
+        "Aguarde enquanto preparamos seu link de recuperação",
+        { position: 'top-center', duration: Infinity }
+      );
+      setLoadingToastId(toastId);
       
       // Usar sempre o domínio personalizado para reset de senha
       const redirectUrl = APP_CONFIG.getAppUrl('/set-new-password');
@@ -60,33 +86,61 @@ export const ResetPasswordForm = ({ onBackToLogin }: ResetPasswordFormProps) => 
 
       if (error) {
         console.error("Erro detalhado no reset de senha:", error);
+        dismissToast(toastId);
         
         // Verificar se o erro está relacionado ao e-mail não verificado
         if (error.message && error.message.includes("not verified")) {
           setError("Erro de configuração: O e-mail de envio não está verificado. Por favor, contacte o administrador.");
-          showError("Erro", "Erro de configuração no servidor de e-mail. Entre em contato com o suporte.");
+          
+          showErrorWithAction(
+            "Erro de configuração",
+            "O servidor de e-mail não está configurado. Contacte o suporte",
+            {
+              label: "Suporte",
+              onClick: () => window.open('/suporte', '_blank')
+            },
+            { position: 'top-center', duration: 8000 }
+          );
           return;
         }
         
         throw error;
       }
 
+      dismissToast(toastId);
       setSubmitted(true);
       
-      showSuccess("Sucesso", "E-mail de recuperação enviado! Verifique sua caixa de entrada e spam.");
+      showSuccess(
+        "E-mail enviado!",
+        "Verifique sua caixa de entrada e spam. O link expira em 5 minutos",
+        { 
+          position: 'bottom-right',
+          highlightTitle: true,
+          duration: 6000 
+        }
+      );
       
     } catch (error: any) {
       console.error("Erro completo ao solicitar reset de senha:", error);
+      if (loadingToastId) dismissToast(loadingToastId);
       
       // Não revelar se o e-mail existe ou não por segurança
-      setError(
-        "Não foi possível enviar o e-mail de recuperação. Verifique se o e-mail está correto ou tente novamente mais tarde."
-      );
+      const errorMessage = "Não foi possível enviar o e-mail de recuperação. Verifique se o e-mail está correto ou tente novamente mais tarde.";
+      setError(errorMessage);
       
-      showError("Erro", "Erro ao enviar e-mail de recuperação. Tente novamente.");
+      showErrorWithRetry(
+        "Falha ao enviar",
+        "Não foi possível enviar o e-mail. Verifique sua conexão e tente novamente",
+        () => handleSubmit_internal(data),
+        { position: 'top-center', duration: 6000 }
+      );
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onSubmit = (data: ResetPasswordFormData) => {
+    handleSubmit_internal(data);
   };
 
   if (submitted) {

@@ -1,6 +1,10 @@
+'use client'
+
 import { forwardRef, useImperativeHandle } from 'react';
 import { motion } from 'framer-motion';
-import { toast as sonnerToast } from 'sonner';
+import {
+  toast as sonnerToast,
+} from 'sonner';
 import {
   CheckCircle,
   AlertCircle,
@@ -13,8 +17,8 @@ import {
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
-type Variant = 'default' | 'success' | 'error' | 'warning' | 'info' | 'loading';
-type Position =
+export type ToastModernVariant = 'default' | 'success' | 'error' | 'warning' | 'info' | 'loading';
+export type ToastModernPosition =
   | 'top-left'
   | 'top-center'
   | 'top-right'
@@ -22,59 +26,56 @@ type Position =
   | 'bottom-center'
   | 'bottom-right';
 
-interface ActionButton {
+export interface ToastModernActionButton {
   label: string;
   onClick: () => void;
-  variant?: 'default' | 'outline' | 'ghost' | 'destructive';
+  variant?: 'default' | 'outline' | 'ghost';
 }
 
 export interface ToastModernProps {
   title?: string;
   message: string;
-  variant?: Variant;
+  variant?: ToastModernVariant;
   duration?: number;
-  position?: Position;
-  action?: ActionButton;
+  position?: ToastModernPosition;
+  action?: ToastModernActionButton;
   onDismiss?: () => void;
   highlightTitle?: boolean;
-  showProgress?: boolean;
-  icon?: React.ComponentType<{ className?: string }>;
 }
 
 export interface ToastModernRef {
   show: (props: ToastModernProps) => string | number;
   dismiss: (toastId: string | number) => void;
-  updateProgress?: (toastId: string | number, progress: number, message?: string) => void;
 }
 
-const variantStyles: Record<Variant, string> = {
+const variantStyles: Record<ToastModernVariant, string> = {
   default: 'bg-card border-border text-foreground',
-  success: 'bg-card border-status-success/50 shadow-lg shadow-status-success/10',
-  error: 'bg-card border-status-error/50 shadow-lg shadow-status-error/10',
-  warning: 'bg-card border-status-warning/50 shadow-lg shadow-status-warning/10',
-  info: 'bg-card border-status-info/50 shadow-lg shadow-status-info/10',
-  loading: 'bg-card border-border shadow-lg',
+  success: 'bg-card border-operational/50',
+  error: 'bg-card border-status-error/50',
+  warning: 'bg-card border-amber-600/50',
+  info: 'bg-card border-aurora-primary/50',
+  loading: 'bg-card border-aurora-primary/50',
 };
 
-const titleColor: Record<Variant, string> = {
+const titleColor: Record<ToastModernVariant, string> = {
   default: 'text-foreground',
-  success: 'text-status-success',
+  success: 'text-operational',
   error: 'text-status-error',
-  warning: 'text-status-warning',
-  info: 'text-status-info',
-  loading: 'text-foreground',
+  warning: 'text-amber-600 dark:text-amber-400',
+  info: 'text-aurora-primary',
+  loading: 'text-aurora-primary',
 };
 
-const iconColor: Record<Variant, string> = {
+const iconColor: Record<ToastModernVariant, string> = {
   default: 'text-muted-foreground',
-  success: 'text-status-success',
+  success: 'text-operational',
   error: 'text-status-error',
-  warning: 'text-status-warning',
-  info: 'text-status-info',
-  loading: 'text-primary',
+  warning: 'text-amber-600 dark:text-amber-400',
+  info: 'text-aurora-primary',
+  loading: 'text-aurora-primary',
 };
 
-const variantIcons: Record<Variant, React.ComponentType<{ className?: string }>> = {
+const variantIcons: Record<ToastModernVariant, React.ComponentType<{ className?: string }>> = {
   default: Info,
   success: CheckCircle,
   error: AlertCircle,
@@ -89,7 +90,7 @@ const toastAnimation = {
   exit: { opacity: 0, y: 50, scale: 0.95 },
 };
 
-export const ToastModern = forwardRef<ToastModernRef, { defaultPosition?: Position }>(
+export const ToastModern = forwardRef<ToastModernRef, { defaultPosition?: ToastModernPosition }>(
   ({ defaultPosition = 'bottom-right' }, ref) => {
     useImperativeHandle(ref, () => ({
       show({
@@ -101,11 +102,11 @@ export const ToastModern = forwardRef<ToastModernRef, { defaultPosition?: Positi
         action,
         onDismiss,
         highlightTitle,
-        icon: CustomIcon,
-      }: ToastModernProps) {
-        const Icon = CustomIcon || variantIcons[variant];
+      }) {
+        const Icon = variantIcons[variant];
+        const isLoading = variant === 'loading';
 
-        const toastId = sonnerToast.custom(
+        return sonnerToast.custom(
           (toastId) => (
             <motion.div
               variants={toastAnimation}
@@ -114,37 +115,35 @@ export const ToastModern = forwardRef<ToastModernRef, { defaultPosition?: Positi
               exit="exit"
               transition={{ duration: 0.3, ease: 'easeOut' }}
               className={cn(
-                'flex items-center justify-between w-full max-w-md p-4 rounded-xl border backdrop-blur-sm',
+                'flex items-center justify-between w-full max-w-sm p-3 rounded-xl border shadow-lg',
                 variantStyles[variant]
               )}
             >
-              <div className="flex items-start gap-3 flex-1">
+              <div className="flex items-start gap-2 flex-1 min-w-0">
                 <Icon 
                   className={cn(
-                    'h-5 w-5 mt-0.5 flex-shrink-0',
+                    'h-4 w-4 mt-0.5 flex-shrink-0', 
                     iconColor[variant],
-                    variant === 'loading' && 'animate-spin'
+                    isLoading && 'animate-spin'
                   )} 
                 />
-                <div className="space-y-1 flex-1 min-w-0">
+                <div className="space-y-0.5 flex-1 min-w-0">
                   {title && (
                     <h3
                       className={cn(
-                        'text-sm font-semibold leading-tight',
+                        'text-sm font-semibold leading-none',
                         highlightTitle ? titleColor['success'] : titleColor[variant]
                       )}
                     >
                       {title}
                     </h3>
                   )}
-                  <p className="text-xs text-muted-foreground leading-relaxed break-words">
-                    {message}
-                  </p>
+                  <p className="text-xs text-muted-foreground leading-relaxed break-words">{message}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-2 ml-3 flex-shrink-0">
-                {action && (
+              <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+                {action?.label && (
                   <Button
                     variant={action.variant || 'outline'}
                     size="sm"
@@ -153,38 +152,39 @@ export const ToastModern = forwardRef<ToastModernRef, { defaultPosition?: Positi
                       sonnerToast.dismiss(toastId);
                     }}
                     className={cn(
-                      'h-7 px-3 text-xs font-medium',
-                      variant === 'success' && 'border-status-success/50 text-status-success hover:bg-status-success/10',
-                      variant === 'error' && 'border-status-error/50 text-status-error hover:bg-status-error/10',
-                      variant === 'warning' && 'border-status-warning/50 text-status-warning hover:bg-status-warning/10',
-                      variant === 'info' && 'border-status-info/50 text-status-info hover:bg-status-info/10'
+                      'cursor-pointer h-7 px-2 text-xs',
+                      variant === 'success'
+                        ? 'text-operational border-operational hover:bg-operational/10'
+                        : variant === 'error'
+                        ? 'text-status-error border-status-error hover:bg-status-error/10'
+                        : variant === 'warning'
+                        ? 'text-amber-600 border-amber-600 hover:bg-amber-600/10'
+                        : 'text-foreground border-border hover:bg-muted/10'
                     )}
                   >
                     {action.label}
                   </Button>
                 )}
 
-                {variant !== 'loading' && (
+                {!isLoading && (
                   <button
                     onClick={() => {
                       sonnerToast.dismiss(toastId);
                       onDismiss?.();
                     }}
-                    className="rounded-lg p-1.5 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
+                    className="rounded-full p-1 hover:bg-muted/50 transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
                     aria-label="Fechar notificação"
                   >
-                    <X className="h-3.5 w-3.5 text-muted-foreground" />
+                    <X className="h-3 w-3 text-muted-foreground" />
                   </button>
                 )}
               </div>
             </motion.div>
           ),
-          { duration: variant === 'loading' ? Infinity : duration, position }
+          { duration: isLoading ? Infinity : duration, position }
         );
-
-        return toastId;
       },
-      dismiss(toastId: string | number) {
+      dismiss(toastId) {
         sonnerToast.dismiss(toastId);
       },
     }));

@@ -41,7 +41,17 @@ export const SetNewPasswordForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { showSuccess, showError } = useToastModern();
+  const { 
+    showSuccess, 
+    showError, 
+    showWarning, 
+    showLoading, 
+    dismissToast,
+    showErrorWithAction,
+    showWarningWithAction,
+    showSuccessWithAction 
+  } = useToastModern();
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
 
   const {
     register,
@@ -67,6 +77,14 @@ export const SetNewPasswordForm = () => {
       try {
         setIsProcessingTokens(true);
         setSessionError(null);
+        
+        // Toast de loading
+        const toastId = showLoading(
+          "Verificando link...",
+          "Aguarde enquanto validamos seu link de redefinição",
+          { position: 'top-center', duration: Infinity }
+        );
+        setLoadingToastId(toastId);
 
         // Função para extrair parâmetros do hash
         const getTokensFromHash = () => {
@@ -96,12 +114,25 @@ export const SetNewPasswordForm = () => {
           // Sem tokens válidos - verificar se já existe uma sessão ativa
           const { data: { session } } = await supabase.auth.getSession();
           if (!session) {
+            if (loadingToastId) dismissToast(loadingToastId);
             setSessionError('Link de redefinição inválido ou expirado');
             setIsValidSession(false);
+            
+            // Toast de erro com ação
+            showErrorWithAction(
+              "Link inválido",
+              "O link de redefinição expirou ou é inválido. Solicite um novo link",
+              {
+                label: "Solicitar novo link",
+                onClick: () => navigate('/reset-password')
+              },
+              { position: 'top-center' }
+            );
             return;
           }
           
           // Sessão já existe, pode proceder
+          if (loadingToastId) dismissToast(loadingToastId);
           setIsValidSession(true);
           return;
         }
@@ -114,34 +145,88 @@ export const SetNewPasswordForm = () => {
 
         if (error) {
           console.error('❌ [RESET-PASSWORD] Erro ao estabelecer sessão:', error);
+          if (loadingToastId) dismissToast(loadingToastId);
           setSessionError('Link de redefinição inválido ou expirado');
           setIsValidSession(false);
+          
+          showErrorWithAction(
+            "Link inválido",
+            "O link de redefinição expirou ou é inválido",
+            {
+              label: "Solicitar novo link",
+              onClick: () => navigate('/reset-password')
+            },
+            { position: 'top-center' }
+          );
           return;
         }
 
         if (!data.session) {
+          if (loadingToastId) dismissToast(loadingToastId);
           setSessionError('Não foi possível estabelecer sessão de redefinição');
           setIsValidSession(false);
+          
+          showError(
+            "Erro de sessão",
+            "Não foi possível estabelecer sessão. Tente novamente",
+            { position: 'top-center' }
+          );
           return;
         }
 
+        if (loadingToastId) dismissToast(loadingToastId);
         setIsValidSession(true);
 
       } catch (error: any) {
         console.error('❌ [RESET-PASSWORD] Erro inesperado:', error);
+        if (loadingToastId) dismissToast(loadingToastId);
         setSessionError('Erro ao processar link de redefinição');
         setIsValidSession(false);
+        
+        showError(
+          "Erro inesperado",
+          "Não foi possível processar o link. Tente novamente",
+          { position: 'top-center' }
+        );
       } finally {
         setIsProcessingTokens(false);
       }
     };
 
     processResetTokens();
-  }, [searchParams]);
+  }, [searchParams, showLoading, dismissToast, showErrorWithAction, showError, navigate]);
 
   const onSubmit = async (data: SetNewPasswordForm) => {
     if (!isValidSession) {
-      showError("Erro", "Sessão inválida. Solicite um novo link de redefinição.");
+      showErrorWithAction(
+        "Sessão inválida",
+        "Sua sessão expirou. Solicite um novo link",
+        {
+          label: "Solicitar novo link",
+          onClick: () => navigate('/reset-password')
+        },
+        { position: 'top-center' }
+      );
+      return;
+    }
+
+    // Validar se senhas coincidem
+    if (data.password !== data.confirmPassword) {
+      showError(
+        "Senhas diferentes",
+        "As senhas digitadas não são iguais. Verifique e tente novamente",
+        { position: 'top-center', duration: 5000 }
+      );
+      return;
+    }
+
+    // Validar requisitos
+    if (!passwordValidation.isValid) {
+      showWarning(
+        "Senha inválida",
+        "A senha não atende aos requisitos mínimos de segurança. Verifique os requisitos abaixo",
+        { position: 'top-center', duration: 6000 }
+      );
       return;
     }
 
@@ -156,19 +241,47 @@ export const SetNewPasswordForm = () => {
       if (error) {
         console.error("❌ [SET-PASSWORD] Erro do Supabase:", error);
         
-        // Tratar erro de senha fraca especificamente
-        if (error.message?.includes('weak') || error.message?.includes('known')) {
-          showError("Erro", "Senha muito comum. Esta senha é conhecida e fácil de adivinhar. Por favor, escolha outra mais forte e única.");
+        // Tratar erro de senha fraca/comum especificamente
+        if (error.message?.includes('weak') || error.message?.includes('known') || error.message?.includes('common')) {
+          showWarningWithAction(
+            "Senha rejeitada",
+            "Esta senha é muito comum e fácil de adivinhar. Escolha uma senha mais forte e única",
+            {
+              label: "Ver dicas",
+              onClick: () => {
+                // Scroll para os requisitos
+                const requirementsElement = document.querySelector('[class*="PasswordRequirements"]');
+                requirementsElement?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            },
+            { position: 'top-center', duration: 8000 }
+          );
           return;
         }
         
         // Outros erros
-        showError("Erro", "Erro ao atualizar senha: " + (error.message || "Tente novamente."));
+        showError(
+          "Erro ao atualizar",
+          error.message || "Não foi possível atualizar a senha. Tente novamente",
+          { position: 'top-center', duration: 6000 }
+        );
         return;
       }
 
       setIsSuccess(true);
-      showSuccess("Sucesso", "Senha atualizada com sucesso! Você será redirecionado para o login.");
+      showSuccessWithAction(
+        "Senha atualizada!",
+        "Sua senha foi alterada com sucesso. Redirecionando...",
+        {
+          label: "Ir para login",
+          onClick: () => performCleanupAndRedirect('/login', 'manual_redirect_from_reset')
+        },
+        { 
+          position: 'bottom-right',
+          highlightTitle: true,
+          duration: 4000
+        }
+      );
       
       // Fazer logout completo da sessão temporária e redirecionar
       setTimeout(async () => {
@@ -177,7 +290,11 @@ export const SetNewPasswordForm = () => {
       
     } catch (error: any) {
       console.error("❌ [SET-PASSWORD] Erro inesperado:", error);
-      showError("Erro", "Erro inesperado: " + (error.message || "Tente novamente mais tarde."));
+      showError(
+        "Erro inesperado",
+        error.message || "Ocorreu um erro. Tente novamente mais tarde",
+        { position: 'top-center', duration: 6000 }
+      );
     } finally {
       setIsLoading(false);
     }

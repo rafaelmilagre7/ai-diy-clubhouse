@@ -1,5 +1,5 @@
 import { useRef, useCallback } from 'react';
-import type { ToastModernRef, ToastModernProps } from '@/components/ui/toast-modern';
+import type { ToastModernRef, ToastModernProps, ToastModernActionButton } from '@/components/ui/toast-modern';
 
 type ToastId = string | number;
 
@@ -14,13 +14,25 @@ interface UseToastModernReturn {
   showSuccessWithAction: (
     title: string,
     message: string,
-    action: { label: string; onClick: () => void },
+    action: ToastModernActionButton,
     options?: Partial<ToastModernProps>
   ) => ToastId;
   showErrorWithRetry: (
     title: string,
     message: string,
     onRetry: () => void,
+    options?: Partial<ToastModernProps>
+  ) => ToastId;
+  showErrorWithAction: (
+    title: string,
+    message: string,
+    action: ToastModernActionButton,
+    options?: Partial<ToastModernProps>
+  ) => ToastId;
+  showWarningWithAction: (
+    title: string,
+    message: string,
+    action: ToastModernActionButton,
     options?: Partial<ToastModernProps>
   ) => ToastId;
 }
@@ -120,7 +132,7 @@ export const useToastModern = (): UseToastModernReturn => {
     (
       title: string,
       message: string,
-      action: { label: string; onClick: () => void },
+      action: ToastModernActionButton,
       options?: Partial<ToastModernProps>
     ): ToastId => {
       return showToast({
@@ -159,6 +171,46 @@ export const useToastModern = (): UseToastModernReturn => {
     [showToast]
   );
 
+  const showErrorWithAction = useCallback(
+    (
+      title: string,
+      message: string,
+      action: ToastModernActionButton,
+      options?: Partial<ToastModernProps>
+    ): ToastId => {
+      return showToast({
+        title,
+        message,
+        variant: 'error',
+        action,
+        position: 'top-center',
+        duration: 8000,
+        ...options,
+      });
+    },
+    [showToast]
+  );
+
+  const showWarningWithAction = useCallback(
+    (
+      title: string,
+      message: string,
+      action: ToastModernActionButton,
+      options?: Partial<ToastModernProps>
+    ): ToastId => {
+      return showToast({
+        title,
+        message,
+        variant: 'warning',
+        action,
+        position: 'top-center',
+        duration: 8000,
+        ...options,
+      });
+    },
+    [showToast]
+  );
+
   return {
     showToast,
     dismissToast,
@@ -169,5 +221,7 @@ export const useToastModern = (): UseToastModernReturn => {
     showLoading,
     showSuccessWithAction,
     showErrorWithRetry,
+    showErrorWithAction,
+    showWarningWithAction,
   };
 };
