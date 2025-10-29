@@ -35,6 +35,11 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       }
 
       if (data.user) {
+        // Toast de sucesso no login
+        toast.success("Login realizado!", {
+          description: "Bem-vindo de volta!"
+        });
+        
         // Buscar e atualizar role do usuário no metadata
         try {
           const { data: profile } = await supabase
@@ -61,6 +66,8 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
               await supabase.auth.updateUser({
                 data: { role: roleName }
               });
+              
+              console.log('✅ [AUTH] Role atualizado:', roleName);
             }
           }
         } catch (metadataError) {
@@ -90,11 +97,15 @@ export const useAuthMethods = ({ setIsLoading }: AuthMethodsParams) => {
       
       if (error) {
         console.error('❌ [AUTH] Erro no logout:', error);
-        // Toast será tratado pelo componente que chamou esta função
+        toast.error("Erro ao fazer logout", {
+          description: "Tente novamente em alguns instantes."
+        });
         throw error;
       }
 
-      // Toast de sucesso será mostrado pelo componente que chamou o logout
+      toast.success("Logout realizado!", {
+        description: "Você foi desconectado com sucesso."
+      });
     } catch (err) {
       console.error('❌ [AUTH] Erro inesperado no logout:', err);
       const error = err instanceof Error ? err : new Error('Erro inesperado');

@@ -22,7 +22,7 @@ const AuthLayout = () => {
   const [redirectHandled, setRedirectHandled] = useState(false);
   const [hasLoginError, setHasLoginError] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
-  const { showError, showSuccess } = useToastModern();
+  const { showError, showSuccess, showInfo } = useToastModern();
 
   // Redirecionamento controlado após login bem-sucedido
   useEffect(() => {
@@ -81,6 +81,12 @@ const AuthLayout = () => {
     try {
       setIsSigningIn(true);
       
+      // Toast de loading
+      showInfo('Fazendo login...', 'Aguarde enquanto verificamos suas credenciais.', {
+        position: 'top-center',
+        duration: 2000
+      });
+      
       const { error } = await signIn(email, password);
       
       if (error) {
@@ -129,6 +135,10 @@ const AuthLayout = () => {
   };
 
   const handleResetPasswordClick = () => {
+    showInfo('Recuperação de senha', 'Você será redirecionado para recuperar sua senha.', {
+      position: 'top-center',
+      duration: 2000
+    });
     navigate('/reset-password');
   };
 

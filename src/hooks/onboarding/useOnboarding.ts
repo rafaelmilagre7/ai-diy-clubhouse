@@ -482,9 +482,10 @@ export const useOnboarding = () => {
   // Navegar para step anterior
   const goToPrevStep = useCallback(() => {
     if (state.current_step > 1) {
+      showInfo('Voltando etapa anterior', 'Você pode revisar suas respostas.');
       setState(prev => ({ ...prev, current_step: prev.current_step - 1 }));
     }
-  }, [state.current_step]);
+  }, [state.current_step, showInfo]);
 
   // Salvar tipo de usuário (Step 0)
   const saveUserType = useCallback(async (userType: UserType) => {
@@ -495,6 +496,8 @@ export const useOnboarding = () => {
 
     try {
       console.log('[ONBOARDING] Salvando user_type:', userType);
+      
+      showInfo('Salvando sua escolha...', 'Aguarde um momento.');
       
       const updateData = {
         user_id: user.id,
@@ -542,6 +545,7 @@ export const useOnboarding = () => {
       }));
 
       console.log('[ONBOARDING] UserType salvo com sucesso:', userType);
+      showSuccess('Tipo de usuário salvo!', 'Vamos começar sua jornada.');
       return true;
     } catch (error) {
       console.error('[ONBOARDING] Erro ao salvar user_type:', error);
@@ -761,6 +765,9 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
       const totalTime = performance.now() - startTime;
       console.log('[ONBOARDING] ⏱️ Tempo total de execução:', totalTime, 'ms');
       console.log('[ONBOARDING] Onboarding concluído com sucesso!');
+      
+      // Toast celebratório
+      showSuccess('🎉 Onboarding concluído!', 'Bem-vindo à sua jornada personalizada!');
       
       // Aguardar tempo para celebração completa
       console.log('[ONBOARDING] ⏱️ Onboarding finalizado - celebração será gerenciada pelo componente');

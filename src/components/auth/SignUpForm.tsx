@@ -89,8 +89,16 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       return;
     }
     
+    let loadingToast;
+    
     try {
       setIsLoading(true);
+      
+      // Toast de loading
+      loadingToast = toast.loading("Criando sua conta...", {
+        description: "Por favor, aguarde enquanto processamos seu cadastro."
+      });
+      
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
@@ -107,6 +115,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       
       if (error) {
         console.error("[SIGNUP] Erro no registro:", error);
+        toast.dismiss(loadingToast);
         
         if (error.message?.includes('already registered')) {
           toast.error("Este email já está em uso. Tente fazer login ou use outro email.");
@@ -128,6 +137,10 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
         
         if (!profileCheck) {
           console.warn('⚠️ [SIGNUP-FALLBACK] Profile não criado - criando manualmente');
+          
+          toast.info("Preparando seu perfil...", {
+            description: "Estamos configurando sua conta."
+          });
           
           const { data: defaultRole } = await supabase
             .from('user_roles')
@@ -171,6 +184,9 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
               toast.error("Conta criada, porém houve um problema com o convite. Entre em contato conosco.");
             } else if (inviteResult?.success) {
               console.log('✅ [SIGNUP] Convite aplicado - role atualizado');
+              toast.success("Convite aplicado!", {
+                description: "Suas permissões foram configuradas."
+              });
             } else {
               console.warn('⚠️ [SIGNUP] Convite não foi aplicado:', inviteResult?.message);
             }
@@ -179,7 +195,10 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
           }
         }
         
-        toast.success("Conta criada! Verifique seu email para confirmar e depois faça login.");
+        toast.dismiss(loadingToast);
+        toast.success("Conta criada com sucesso!", {
+          description: "Verifique seu email para confirmar e depois faça login."
+        });
         
         // Voltar para o login após um tempo
         setTimeout(() => {
@@ -189,6 +208,7 @@ const SignUpForm = ({ onBackToLogin }: SignUpFormProps) => {
       
     } catch (error: any) {
       console.error("[SIGNUP] Erro no processo de registro:", error);
+      toast.dismiss(loadingToast);
       toast.error(error.message || "Não foi possível criar a conta. Tente novamente.");
     } finally {
       setIsLoading(false);
