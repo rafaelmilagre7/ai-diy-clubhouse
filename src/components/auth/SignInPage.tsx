@@ -104,9 +104,6 @@ export const SignInPage: React.FC<SignInPageProps> = ({
                       onChange={onPasswordChange}
                       required
                     />
-                    {hasError && (
-                      <AlertCircle className="absolute inset-y-0 right-12 flex items-center w-5 h-5 text-status-error" />
-                    )}
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
