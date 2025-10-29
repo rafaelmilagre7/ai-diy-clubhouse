@@ -41,7 +41,9 @@ export const ModernPostEditor = ({
 
   const createPostMutation = useMutation({
     mutationFn: async (content: string) => {
-      console.log('🚀 [COMMENT] Iniciando envio de resposta...');
+      console.log('🚀 [COMMENT] === INICIANDO ENVIO DE RESPOSTA ===');
+      console.log('📋 [COMMENT] Topic ID:', topicId);
+      console.log('📝 [COMMENT] Conteúdo length:', content.length);
       
       // ✅ VALIDAR topicId ANTES do INSERT
       if (!topicId) {
@@ -49,8 +51,16 @@ export const ModernPostEditor = ({
         throw new Error('ID do tópico não fornecido');
       }
       
-      // ✅ VALIDAR userId ANTES do INSERT
-      const { data: { user } } = await supabase.auth.getUser();
+      // ✅ VALIDAR userId ANTES do INSERT  
+      console.log('🔍 [COMMENT] Buscando dados do usuário autenticado...');
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      console.log('👤 [COMMENT] Auth response:', {
+        hasUser: !!user,
+        userId: user?.id,
+        hasError: !!authError,
+        error: authError ? JSON.stringify(authError, null, 2) : null
+      });
       
       if (!user?.id) {
         console.error('❌ [COMMENT] Usuário não autenticado');
@@ -58,8 +68,14 @@ export const ModernPostEditor = ({
       }
       
       console.log('✅ [COMMENT] Usuário autenticado:', user.id);
+      console.log('🔧 [COMMENT] Preparando dados para INSERT:', {
+        content: content.substring(0, 50) + '...',
+        topic_id: topicId,
+        user_id: user.id
+      });
       
       // INSERT da resposta
+      console.log('💾 [COMMENT] Executando INSERT na tabela community_posts...');
       const { data, error } = await supabase
         .from('community_posts')
         .insert([{
@@ -71,13 +87,13 @@ export const ModernPostEditor = ({
         .single();
 
       if (error) {
-        console.error('❌ [COMMENT] Erro no INSERT:', {
-          code: error.code,
-          message: error.message,
-          details: error.details,
-          hint: error.hint,
-          fullError: JSON.stringify(error, null, 2)
-        });
+        console.error('❌ [COMMENT] ========== ERRO NO INSERT ==========');
+        console.error('❌ [COMMENT] Código:', error.code);
+        console.error('❌ [COMMENT] Mensagem:', error.message);
+        console.error('❌ [COMMENT] Detalhes:', error.details);
+        console.error('❌ [COMMENT] Hint:', error.hint);
+        console.error('❌ [COMMENT] Erro completo:', JSON.stringify(error, null, 2));
+        console.error('❌ [COMMENT] =========================================');
         throw error;
       }
       
