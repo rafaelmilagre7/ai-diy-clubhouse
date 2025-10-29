@@ -7321,6 +7321,10 @@ export type Database = {
         }
         Returns: string
       }
+      create_community_post_secure: {
+        Args: { p_content: string; p_parent_id?: string; p_topic_id: string }
+        Returns: Json
+      }
       create_invite: {
         Args: {
           p_email: string

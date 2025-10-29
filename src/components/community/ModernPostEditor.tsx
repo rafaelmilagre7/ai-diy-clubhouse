@@ -41,27 +41,128 @@ export const ModernPostEditor = ({
 
   const createPostMutation = useMutation({
     mutationFn: async (content: string) => {
+      console.log('🚀 [COMMENT] Iniciando envio de comentário...');
+      
       if (!topicId) {
+        console.error('❌ [COMMENT] topicId não fornecido');
         throw new Error('ID do tópico não fornecido');
       }
       
+      // 1️⃣ VALIDAR SESSÃO PRIMEIRO
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('🔍 [COMMENT] Verificação de sessão:', {
+        hasSession: !!session,
+        sessionError: sessionError?.message,
+        userId: session?.user?.id,
+        expiresAt: session?.expires_at,
+        hasAccessToken: !!session?.access_token
+      });
+      
+      if (sessionError || !session) {
+        console.error('❌ [COMMENT] Sessão inválida:', sessionError);
+        throw new Error('Sua sessão expirou. Faça login novamente.');
+      }
+      
+      // 2️⃣ RENOVAR SESSÃO SE ESTIVER PRÓXIMA DE EXPIRAR
+      const expiresAt = new Date(session.expires_at || 0).getTime();
+      const now = Date.now();
+      const timeToExpire = expiresAt - now;
+      
+      if (timeToExpire < 5 * 60 * 1000) {
+        console.log('⚠️ [COMMENT] Sessão próxima de expirar, renovando...');
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error('❌ [COMMENT] Erro ao renovar sessão:', refreshError);
+          throw new Error('Não foi possível renovar sua sessão. Faça login novamente.');
+        }
+        
+        console.log('✅ [COMMENT] Sessão renovada com sucesso');
+      }
+      
+      // 3️⃣ PEGAR USUÁRIO
       const { data: { user }, error: authError } = await supabase.auth.getUser();
       
+      console.log('👤 [COMMENT] Usuário:', {
+        hasUser: !!user,
+        userId: user?.id,
+        authError: authError?.message
+      });
+      
       if (authError || !user?.id) {
+        console.error('❌ [COMMENT] Erro de autenticação:', authError);
         throw new Error('Você precisa estar logado para enviar uma resposta');
       }
       
-      const { data, error } = await supabase
-        .from('community_posts')
-        .insert([{
-          content: content.trim(),
-          topic_id: topicId,
-          user_id: user.id
-        }])
-        .select()
-        .single();
+      console.log('📝 [COMMENT] Tentando inserir post direto...');
       
-      if (error) throw error;
+      // 4️⃣ TENTAR INSERT DIRETO
+      let data, error;
+      
+      try {
+        const insertResult = await supabase
+          .from('community_posts')
+          .insert([{
+            content: content.trim(),
+            topic_id: topicId,
+            user_id: user.id
+          }])
+          .select()
+          .single();
+        
+        data = insertResult.data;
+        error = insertResult.error;
+        
+        console.log('📊 [COMMENT] Resultado do insert direto:', {
+          hasData: !!data,
+          hasError: !!error,
+          errorMessage: error?.message,
+          errorDetails: error?.details,
+          errorHint: error?.hint,
+          errorCode: error?.code
+        });
+      } catch (insertError: any) {
+        console.error('❌ [COMMENT] Exceção no insert direto:', insertError);
+        error = insertError;
+      }
+      
+      // 5️⃣ SE FALHOU, TENTAR VIA RPC
+      if (error) {
+        console.warn('⚠️ [COMMENT] Insert direto falhou, tentando via RPC...', error);
+        
+        try {
+          const { data: rpcData, error: rpcError } = await supabase
+            .rpc('create_community_post_secure', {
+              p_topic_id: topicId,
+              p_content: content.trim()
+            });
+          
+          console.log('📊 [COMMENT] Resultado do RPC:', {
+            hasData: !!rpcData,
+            hasError: !!rpcError,
+            errorMessage: rpcError?.message
+          });
+          
+          if (rpcError) {
+            console.error('❌ [COMMENT] RPC também falhou:', rpcError);
+            throw rpcError;
+          }
+          
+          data = rpcData;
+          console.log('✅ [COMMENT] Post criado via RPC com sucesso!');
+        } catch (rpcError: any) {
+          console.error('❌ [COMMENT] Erro crítico no RPC:', rpcError);
+          throw rpcError;
+        }
+      } else {
+        console.log('✅ [COMMENT] Post criado via insert direto com sucesso!');
+      }
+      
+      if (!data) {
+        console.error('❌ [COMMENT] Nenhum dado retornado após insert/RPC');
+        throw new Error('Erro ao criar post: nenhum dado retornado');
+      }
       
       // Incrementar contador de respostas
       try {
@@ -156,6 +257,8 @@ export const ModernPostEditor = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🎯 [COMMENT] handleSubmit chamado', { mode, hasContent: !!content.trim() });
+    
     if (!content.trim()) {
       toast({
         title: "Conteúdo obrigatório",
@@ -165,10 +268,42 @@ export const ModernPostEditor = ({
       return;
     }
 
-    if (mode === 'create') {
-      createPostMutation.mutate(content);
-    } else {
-      updatePostMutation.mutate(content);
+    // ✅ VERIFICAR SESSÃO ANTES DE SUBMETER
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      console.log('🔐 [COMMENT] Validação de sessão no submit:', {
+        hasSession: !!session,
+        sessionError: sessionError?.message
+      });
+      
+      if (sessionError || !session) {
+        console.error('❌ [COMMENT] Sessão inválida no submit:', sessionError);
+        toast({
+          title: "Sessão expirada",
+          description: "Por favor, faça login novamente",
+          variant: "destructive"
+        });
+        
+        // Redirecionar para login
+        window.location.href = '/login?redirect=' + encodeURIComponent(window.location.pathname);
+        return;
+      }
+      
+      console.log('✅ [COMMENT] Sessão válida, prosseguindo com mutation...');
+
+      if (mode === 'create') {
+        createPostMutation.mutate(content);
+      } else {
+        updatePostMutation.mutate(content);
+      }
+    } catch (error: any) {
+      console.error('❌ [COMMENT] Erro ao validar sessão no submit:', error);
+      toast({
+        title: "Erro de autenticação",
+        description: "Não foi possível validar sua sessão. Tente fazer login novamente.",
+        variant: "destructive"
+      });
     }
   };
 
