@@ -53,9 +53,10 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
   showSuccessMessage = false,
   nextLesson
 }) => {
-  const { existingNPS, isLoading, isSubmitting, submitNPS } = useLessonNPS({ lessonId });
+  const { existingNPS, isLoading } = useLessonNPS({ lessonId });
   const [score, setScore] = useState<number | null>(existingNPS?.score || null);
   const [feedback, setFeedback] = useState<string>(existingNPS?.feedback || '');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,12 +66,21 @@ export const LessonNPSForm: React.FC<LessonNPSFormProps> = ({
       return;
     }
     
-    console.log('[LESSON-NPS-FORM] 📤 Enviando dados para modal pai:', { score, hasFeedback: !!feedback });
+    console.log('[LESSON-NPS-FORM] 📤 Iniciando envio:', { score, feedback, onCompleted: !!onCompleted });
     
     // Passar dados para o componente pai (modal) salvar
     if (onCompleted) {
-      console.log('[LESSON-NPS-FORM] ✅ Chamando onCompleted');
-      await onCompleted(score, feedback);
+      try {
+        setIsSubmitting(true);
+        console.log('[LESSON-NPS-FORM] 🎯 Chamando onCompleted com:', { score, feedback });
+        await onCompleted(score, feedback);
+        console.log('[LESSON-NPS-FORM] ✅ onCompleted executado com sucesso');
+      } catch (error) {
+        console.error('[LESSON-NPS-FORM] ❌ Erro ao chamar onCompleted:', error);
+        setIsSubmitting(false);
+      }
+    } else {
+      console.error('[LESSON-NPS-FORM] ❌ onCompleted não está definido!');
     }
   };
 

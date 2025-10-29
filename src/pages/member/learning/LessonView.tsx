@@ -116,32 +116,49 @@ const LessonView = () => {
 
   // Salvar conclusão (progresso + NPS) quando usuário submeter o formulário
   const handleSaveCompletionWithNPS = async (score: number, feedback: string) => {
-    console.log('[LESSON-VIEW] 💾 Salvando progresso + NPS', { score, hasFeedback: !!feedback });
+    console.log('[LESSON-VIEW] 💾 Iniciando salvamento:', { lessonId, score, hasFeedback: !!feedback });
     
     const { showModernLoading, dismissModernToast, showModernSuccess, showModernError } = await import('@/lib/toast-helpers');
     const loadingId = showModernLoading("Salvando avaliação...");
     
     try {
       // 1. Salvar progresso (marcar como concluída)
+      console.log('[LESSON-VIEW] 📊 Salvando progresso...');
       await completeLesson();
+      console.log('[LESSON-VIEW] ✅ Progresso salvo');
       
       // 2. Salvar NPS
+      console.log('[LESSON-VIEW] 💬 Salvando NPS...');
       const { data: userData } = await supabase.auth.getUser();
       if (userData.user && lessonId) {
-        await supabase
+        const { data, error } = await supabase
           .from('learning_lesson_nps')
           .upsert({
             lesson_id: lessonId,
             user_id: userData.user.id,
             score,
-            feedback: feedback || null
-          });
+            feedback: feedback || null,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'user_id,lesson_id'
+          })
+          .select();
+        
+        if (error) {
+          console.error('[LESSON-VIEW] ❌ Erro ao salvar NPS:', error);
+          throw error;
+        }
+        
+        console.log('[LESSON-VIEW] ✅ NPS salvo:', data);
+      } else {
+        console.error('[LESSON-VIEW] ❌ Usuário ou lessonId inválido');
+        throw new Error('Usuário não autenticado ou aula inválida');
       }
       
       dismissModernToast(loadingId);
       showModernSuccess("Avaliação enviada!", "Obrigado pelo feedback!");
       
-      console.log('[LESSON-VIEW] ✅ Tudo salvo com sucesso');
+      console.log('[LESSON-VIEW] ✅ Salvamento completo com sucesso');
     } catch (error) {
       dismissModernToast(loadingId);
       showModernError("Erro ao salvar", "Tente novamente");
