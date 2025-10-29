@@ -8,7 +8,7 @@ import { NotificationCard } from '@/components/notifications/NotificationCard';
 import { EmptyNotifications } from '@/components/notifications/EmptyNotifications';
 import { NotificationsSkeleton } from '@/components/notifications/NotificationsSkeleton';
 import { AnimatePresence } from 'framer-motion';
-import { toast } from 'sonner';
+import { showModernSuccess, showModernError } from '@/lib/toast-helpers';
 
 export default function Notifications() {
   const [filter, setFilter] = useState<'all' | 'unread' | 'mentions'>('all');
@@ -37,9 +37,9 @@ export default function Notifications() {
   const handleDeleteNotification = async (id: string) => {
     try {
       await deleteNotification(id);
-      toast.success('Notificação removida');
+      showModernSuccess('Notificação removida', '');
     } catch (error) {
-      toast.error('Erro ao remover notificação');
+      showModernError('Erro ao remover', 'Tente novamente');
     }
   };
   
@@ -47,7 +47,7 @@ export default function Notifications() {
     try {
       await markAsRead(ids);
     } catch (error) {
-      toast.error('Erro ao marcar como lida');
+      showModernError('Erro ao marcar como lida', 'Tente novamente');
     }
   };
   

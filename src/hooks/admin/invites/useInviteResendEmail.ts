@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { Invite } from './types';
 import { useInviteEmailService } from './useInviteEmailService';
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 
 export function useInviteResendEmail() {
   const [isSending, setIsSending] = useState(false);
@@ -16,7 +16,7 @@ export function useInviteResendEmail() {
 
       // Verificar se não expirou
       if (new Date(invite.expires_at) < new Date()) {
-        toast.error("Convite expirado - crie um novo convite");
+        showModernError('Convite expirado', 'Crie um novo convite para este usuário');
         return null;
       }
 
@@ -46,7 +46,7 @@ export function useInviteResendEmail() {
       });
 
       if (result.success) {
-        toast.success(`Email reenviado para ${invite.email}`);
+        showModernSuccess('Email reenviado!', `Enviado para ${invite.email}`);
       } else {
         throw new Error(result.error || 'Falha no envio do email');
       }
@@ -56,7 +56,7 @@ export function useInviteResendEmail() {
     } catch (err: any) {
       console.error('❌ Erro ao reenviar email:', err);
       setSendError(err);
-      toast.error(`Erro ao reenviar email: ${err.message}`);
+      showModernError('Erro ao reenviar email', err.message, { duration: 6000 });
       return null;
     } finally {
       setIsSending(false);

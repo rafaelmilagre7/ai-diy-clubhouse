@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { Invite } from './types';
 import { APP_CONFIG } from '@/config/app';
+import { showModernError, showModernSuccess } from '@/lib/toast-helpers';
 
 export function useInviteResendWhatsApp() {
   const [isSending, setIsSending] = useState(false);
@@ -15,13 +15,13 @@ export function useInviteResendWhatsApp() {
 
       // Verificar se não expirou
       if (new Date(invite.expires_at) < new Date()) {
-        toast.error("Convite expirado - crie um novo convite");
+        showModernError('Convite expirado', 'Crie um novo convite para este usuário');
         return null;
       }
 
       // Verificar se tem telefone
       if (!invite.whatsapp_number) {
-        toast.error("Convite não possui número de telefone");
+        showModernError('Telefone não cadastrado', 'Este convite não possui número de telefone');
         return null;
       }
 
@@ -56,9 +56,11 @@ export function useInviteResendWhatsApp() {
         throw new Error(data?.message || data?.error || 'Resposta inválida da função');
       }
 
-      toast.success(`WhatsApp reenviado para ${invite.whatsapp_number}`, {
-        description: `Template "convitevia" enviado com sucesso`
-      });
+      showModernSuccess(
+        'WhatsApp reenviado!',
+        `Enviado para ${invite.whatsapp_number}`,
+        { duration: 4000 }
+      );
 
       return {
         success: true,
@@ -69,7 +71,7 @@ export function useInviteResendWhatsApp() {
     } catch (err: any) {
       console.error('❌ Erro ao reenviar WhatsApp:', err);
       setSendError(err);
-      toast.error(`Erro ao reenviar WhatsApp: ${err.message}`);
+      showModernError('Erro ao reenviar WhatsApp', err.message, { duration: 6000 });
       return null;
     } finally {
       setIsSending(false);

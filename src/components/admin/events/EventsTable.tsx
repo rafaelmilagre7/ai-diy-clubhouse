@@ -21,6 +21,7 @@ import { RecurrenceDeleteDialog } from "./RecurrenceDeleteDialog";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { showModernSuccess, showModernError } from '@/lib/toast-helpers';
 import type { Event } from "@/types/events";
 import { motion } from "framer-motion";
 
@@ -71,7 +72,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
           .eq("id", eventId);
         
         if (error) throw error;
-        toast.success("Evento excluído com sucesso!");
+        showModernSuccess("Evento excluído!", "Removido com sucesso");
         
       } else if (choice === 'future') {
         const parentId = event.parent_event_id || event.id;
@@ -82,7 +83,7 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
           .or(`id.eq.${eventId},and(parent_event_id.eq.${parentId},start_time.gte.${event.start_time})`);
         
         if (error) throw error;
-        toast.success("Eventos futuros excluídos com sucesso!");
+        showModernSuccess("Eventos futuros excluídos!", "Série atualizada");
         
       } else if (choice === 'all') {
         const parentId = event.parent_event_id || event.id;
@@ -93,13 +94,13 @@ export const EventsTable = ({ events: propEvents }: EventsTableProps) => {
           .or(`id.eq.${parentId},parent_event_id.eq.${parentId}`);
         
         if (error) throw error;
-        toast.success("Série de eventos excluída com sucesso!");
+        showModernSuccess("Série excluída!", "Todos os eventos removidos");
       }
 
       queryClient.invalidateQueries({ queryKey: ["events"] });
     } catch (error) {
       console.error("Erro ao excluir evento:", error);
-      toast.error("Erro ao excluir evento");
+      showModernError("Erro ao excluir evento", "Tente novamente");
     }
   };
 

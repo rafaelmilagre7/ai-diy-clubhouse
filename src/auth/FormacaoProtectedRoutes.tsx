@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useEffect, useState, useRef, ReactNode } from "react";
 import { useAuth } from "@/contexts/auth";
 import LoadingScreen from "@/components/common/LoadingScreen";
-import { toast } from "sonner";
+import { showModernError, showModernInfo } from '@/lib/toast-helpers';
 
 interface FormacaoProtectedRoutesProps {
   children: ReactNode;
@@ -42,20 +42,19 @@ export const FormacaoProtectedRoutes = ({ children }: FormacaoProtectedRoutesPro
 
   // Se o usuário não estiver autenticado, redireciona para a página de login
   if (!user) {
-    toast.error("Por favor, faça login para acessar esta página");
+    showModernError('Acesso negado', 'Faça login para acessar esta página');
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   // CRÍTICO: Verificar se usuário completou onboarding antes de verificar permissões
   if (user && profile && profile.onboarding_completed !== true) {
-    // Onboarding pendente
-    toast.info("Complete seu onboarding primeiro para acessar esta área");
+    showModernInfo('Onboarding pendente', 'Complete seu cadastro para acessar');
     return <Navigate to="/onboarding" replace />;
   }
 
   // CORREÇÃO: Verificar se usuário tem acesso à formação (admin ou formacao)
   if (!isAdmin && !isFormacao) {
-    toast.error("Você não tem permissão para acessar esta área");
+    showModernError('Permissão negada', 'Você não tem acesso a esta área');
     return <Navigate to="/dashboard" replace />;
   }
 

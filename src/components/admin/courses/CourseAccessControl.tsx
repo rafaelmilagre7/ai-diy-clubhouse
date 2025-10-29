@@ -14,7 +14,7 @@ import { LearningCourse } from "@/lib/supabase";
 import { useCourseAccess } from "@/hooks/learning/useCourseAccess";
 import { usePermissions } from "@/hooks/auth/usePermissions";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
+import { showModernSuccess, showModernError } from '@/lib/toast-helpers';
 
 interface CourseAccessControlProps {
   open: boolean;
@@ -71,11 +71,11 @@ export function CourseAccessControl({
         await manageCourseAccess(course.id, role.id, shouldHaveAccess);
       }
       
-      toast.success("Configurações de acesso salvas com sucesso");
+      showModernSuccess("Acesso configurado!", "Permissões salvas com sucesso");
       onOpenChange(false);
     } catch (error) {
       console.error("Erro ao salvar configurações de acesso:", error);
-      toast.error("Erro ao salvar configurações de acesso");
+      showModernError("Erro ao salvar", "Não foi possível atualizar permissões");
     } finally {
       setIsSaving(false);
     }

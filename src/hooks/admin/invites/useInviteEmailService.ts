@@ -1,10 +1,10 @@
 
 import { useCallback, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
 import { SendInviteResponse } from './types';
 import { APP_CONFIG } from '@/config/app';
 import { useInvitePerformanceOptimizer } from './useInvitePerformanceOptimizer';
+import { showModernSuccess, showModernError } from '@/lib/toast-helpers';
 
 interface SendInviteEmailParams {
   email: string;
@@ -72,29 +72,25 @@ export function useInviteEmailService() {
       }
 
       // Feedback específico baseado na estratégia usada
-      let successMessage = 'Convite enviado com sucesso!';
+      let successMessage = 'Convite enviado!';
       let description = '';
       
       switch (data.strategy) {
         case 'resend_primary':
-          successMessage = 'Convite enviado com design profissional!';
-          description = 'Email enviado via Resend com template da Viver de IA';
+          successMessage = 'Convite enviado com sucesso';
+          description = 'Email enviado via Resend';
           break;
         case 'supabase_recovery':
           successMessage = 'Link de recuperação enviado';
-          description = 'Usuário existente - link de acesso enviado';
+          description = 'Link de acesso enviado';
           break;
         case 'supabase_auth':
-          successMessage = 'Convite enviado via Supabase Auth';
-          description = 'Sistema alternativo ativado com sucesso';
+          successMessage = 'Convite enviado';
+          description = 'Via Supabase Auth';
           break;
       }
 
-      // Mostrar toast de sucesso com detalhes
-      toast.success(successMessage, {
-        description,
-        duration: 5000,
-      });
+      showModernSuccess(successMessage, description, { duration: 4000 });
 
       return {
         success: true,
@@ -113,30 +109,20 @@ export function useInviteEmailService() {
       let description = '';
       
       if (err.message?.includes('Email inválido')) {
-        errorMessage = 'Formato de email inválido';
-        description = 'Verifique se o email está correto';
+        errorMessage = 'Email inválido';
+        description = 'Verifique o formato do email';
       } else if (err.message?.includes('Todas as estratégias falharam')) {
-        errorMessage = 'Falha completa do sistema de email';
-        description = 'Verifique as configurações do Resend e tente novamente';
+        errorMessage = 'Falha no sistema de email';
+        description = 'Verifique as configurações';
       } else if (err.message?.includes('URL do convite')) {
-        errorMessage = 'Erro interno na geração do link';
+        errorMessage = 'Erro na geração do link';
         description = 'Tente recriar o convite';
       } else if (err.message?.includes('Resend falhou')) {
-        errorMessage = 'Erro no sistema principal de email';
-        description = 'Sistema de fallback pode ter sido usado';
+        errorMessage = 'Erro no envio de email';
+        description = 'Sistema de fallback ativado';
       }
 
-      // Toast de erro com ação sugerida
-      toast.error(errorMessage, {
-        description,
-        duration: 8000,
-        action: {
-          label: 'Tentar Novamente',
-          onClick: () => {
-            // Re-trigger do envio seria implementado aqui
-          },
-        },
-      });
+      showModernError(errorMessage, description, { duration: 6000 });
 
       return {
         success: false,

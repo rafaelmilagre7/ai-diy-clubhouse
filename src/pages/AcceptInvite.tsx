@@ -18,6 +18,7 @@ import {
 import { Loader2, UserCheck, AlertCircle, CheckCircle, Mail } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { showModernSuccess, showModernError } from '@/lib/toast-helpers';
 
 const acceptInviteSchema = z.object({
   name: z
@@ -196,7 +197,7 @@ const AcceptInvite: React.FC = () => {
 
         if (inviteError) {
           console.error('❌ [ACCEPT-INVITE] Erro ao aplicar convite:', inviteError);
-          toast.error('Conta criada mas houve problema ao aplicar o convite. Entre em contato.');
+          showModernError('Problema ao aplicar convite', 'Conta criada mas houve erro. Entre em contato.');
         } else if (inviteResult?.success) {
           console.log('✅ [ACCEPT-INVITE] Convite aplicado - role atualizado e convite marcado como usado');
         } else {
@@ -206,14 +207,14 @@ const AcceptInvite: React.FC = () => {
         console.error('❌ [ACCEPT-INVITE] Erro crítico ao aplicar convite:', err);
       }
 
-      toast.success('Conta criada com sucesso! Verifique seu email para confirmar.');
+      showModernSuccess('Conta criada!', 'Verifique seu email para confirmar');
       
       // Redirecionar para login
       navigate('/auth?message=account-created');
 
     } catch (err: any) {
       console.error('Erro ao aceitar convite:', err);
-      toast.error(`Erro ao criar conta: ${err.message}`);
+      showModernError('Erro ao criar conta', err.message, { duration: 6000 });
     } finally {
       setIsSubmitting(false);
     }
