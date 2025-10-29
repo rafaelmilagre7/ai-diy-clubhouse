@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { LearningModule } from "@/lib/supabase";
-import { toast } from "sonner";
+import { showModernLoading, showModernSuccess, showModernError, dismissModernToast } from '@/lib/toast-helpers';
 import {
   Dialog,
   DialogContent,
@@ -95,9 +95,13 @@ export const ModuloFormDialog = ({
   const onSubmit = async (values: ModuloFormValues) => {
     setIsSubmitting(true);
     
+    const loadingId = showModernLoading(
+      isEditing ? "Atualizando módulo" : "Criando módulo",
+      "Salvando informações"
+    );
+    
     try {
       if (isEditing) {
-        // Atualizando módulo existente
         const { error } = await supabase
           .from('learning_modules')
           .update({
@@ -112,10 +116,9 @@ export const ModuloFormDialog = ({
           
         if (error) throw error;
         
-        toast.success("Módulo atualizado com sucesso!");
+        dismissModernToast(loadingId);
+        showModernSuccess("Módulo atualizado", "Alterações salvas com sucesso");
       } else {
-        // Criando novo módulo
-        // Primeiro, verificamos a ordem máxima atual
         const { data: maxOrderData, error: maxOrderError } = await supabase
           .from('learning_modules')
           .select('order_index')
@@ -143,14 +146,19 @@ export const ModuloFormDialog = ({
           
         if (error) throw error;
         
-        toast.success("Módulo criado com sucesso!");
+        dismissModernToast(loadingId);
+        showModernSuccess("Módulo criado", "Novo módulo adicionado com sucesso");
       }
       
       onSuccess();
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar módulo:", error);
-      toast.error("Ocorreu um erro ao salvar o módulo. Tente novamente.");
+      dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao salvar módulo",
+        error.message || "Não foi possível salvar. Tente novamente."
+      );
     } finally {
       setIsSubmitting(false);
     }

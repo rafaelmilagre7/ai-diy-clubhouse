@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { LearningCourse } from "@/lib/supabase";
-import { toast } from "sonner";
+import { showModernLoading, showModernSuccess, showModernError, dismissModernToast } from '@/lib/toast-helpers';
 import {
   Dialog,
   DialogContent,
@@ -83,9 +83,13 @@ export const CursoFormDialog = ({
   const onSubmit = async (values: CursoFormValues) => {
     setIsSubmitting(true);
     
+    const loadingId = showModernLoading(
+      isEditing ? "Atualizando curso" : "Criando curso",
+      "Salvando informações"
+    );
+    
     try {
       if (isEditing) {
-        // Atualizando curso existente
         const { error } = await supabase
           .from('learning_courses')
           .update({
@@ -98,9 +102,10 @@ export const CursoFormDialog = ({
           .eq('id', curso.id);
           
         if (error) throw error;
-        toast.success("Curso atualizado com sucesso!");
+        
+        dismissModernToast(loadingId);
+        showModernSuccess("Curso atualizado", "Alterações salvas com sucesso");
       } else {
-        // Criando novo curso
         const slug = slugify(values.title);
         
         const { error } = await supabase
@@ -115,14 +120,20 @@ export const CursoFormDialog = ({
           });
           
         if (error) throw error;
-        toast.success("Curso criado com sucesso!");
+        
+        dismissModernToast(loadingId);
+        showModernSuccess("Curso criado", "Novo curso adicionado com sucesso");
       }
       
       onSuccess();
       form.reset();
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar curso:", error);
-      toast.error("Ocorreu um erro ao salvar o curso. Tente novamente.");
+      dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao salvar curso",
+        error.message || "Não foi possível salvar. Tente novamente."
+      );
     } finally {
       setIsSubmitting(false);
     }

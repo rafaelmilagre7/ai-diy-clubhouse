@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { supabase } from "@/lib/supabase";
 import { LearningResource } from "@/lib/supabase";
-import { toast } from "sonner";
+import { showModernLoading, showModernSuccess, showModernError, dismissModernToast } from '@/lib/toast-helpers';
 import {
   Dialog,
   DialogContent,
@@ -74,9 +74,13 @@ export const RecursoFormDialog = ({
     setIsSubmitting(true);
     setError(null);
     
+    const loadingId = showModernLoading(
+      isEditing ? "Atualizando material" : "Adicionando material",
+      "Salvando informações"
+    );
+    
     try {
       if (isEditing) {
-        // Atualizando recurso existente
         const { error } = await supabase
           .from('learning_resources')
           .update({
@@ -93,9 +97,9 @@ export const RecursoFormDialog = ({
           throw error;
         }
         
-        toast.success("Material atualizado com sucesso!");
+        dismissModernToast(loadingId);
+        showModernSuccess("Material atualizado", "Alterações salvas com sucesso");
       } else {
-        // Primeiro, verificamos a ordem máxima atual
         const { data: maxOrderData, error: maxOrderError } = await supabase
           .from('learning_resources')
           .select('order_index')
@@ -112,7 +116,6 @@ export const RecursoFormDialog = ({
           ? (maxOrderData[0].order_index + 1) 
           : 0;
         
-        // Criando novo recurso
         const { data, error } = await supabase
           .from('learning_resources')
           .insert({
@@ -131,7 +134,8 @@ export const RecursoFormDialog = ({
           throw error;
         }
         
-        toast.success("Material adicionado com sucesso!");
+        dismissModernToast(loadingId);
+        showModernSuccess("Material adicionado", "Novo material disponível com sucesso");
       }
       
       onSuccess();
@@ -140,7 +144,11 @@ export const RecursoFormDialog = ({
     } catch (error: any) {
       console.error("Erro ao salvar material:", error);
       setError(error.message || "Não foi possível salvar o material. Tente novamente.");
-      toast.error(`Erro ao salvar o material: ${error.message || "Tente novamente."}`);
+      dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao salvar material",
+        error.message || "Não foi possível salvar. Tente novamente."
+      );
     } finally {
       setIsSubmitting(false);
     }

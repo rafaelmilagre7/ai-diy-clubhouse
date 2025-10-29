@@ -13,6 +13,7 @@ import { Loader2, Info } from 'lucide-react';
 import { PermissionCategory } from './PermissionCategory';
 import { defaultPermissions, permissionCategories } from './permissionConfig';
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { showModernLoading, showModernSuccess, showModernError, dismissModernToast } from '@/lib/toast-helpers';
 
 interface RoleFormProps {
   role?: Role | null;
@@ -58,6 +59,11 @@ export const RoleForm: React.FC<RoleFormProps> = ({ role, onSave, onCancel }) =>
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    const loadingId = showModernLoading(
+      role ? "Atualizando papel" : "Criando papel",
+      "Salvando informações e permissões"
+    );
+    
     try {
       let savedRoleId = role?.id;
       let savedRoleName = formData.name;
@@ -79,11 +85,22 @@ export const RoleForm: React.FC<RoleFormProps> = ({ role, onSave, onCancel }) =>
         await syncRolePermissions(savedRoleId, savedRoleName);
       }
       
+      dismissModernToast(loadingId);
+      showModernSuccess(
+        role ? "Papel atualizado" : "Papel criado",
+        "Permissões configuradas com sucesso"
+      );
+      
       if (onSave) {
         onSave();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao salvar role:', error);
+      dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao salvar papel",
+        error.message || "Não foi possível salvar. Verifique os dados."
+      );
     }
   };
 

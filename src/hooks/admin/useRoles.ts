@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { toast } from 'sonner';
+import { showModernError } from '@/lib/toast-helpers';
 import { useAuth } from '@/contexts/auth';
 
 export interface Role {
@@ -43,7 +43,7 @@ export const useRoles = () => {
       setRoles(rolesWithPermissions);
     } catch (error: any) {
       console.error('Erro ao carregar roles:', error);
-      toast.error('Erro ao carregar roles');
+      showModernError('Erro ao carregar papéis', 'Não foi possível carregar a lista de papéis');
     } finally {
       setLoading(false);
     }
@@ -60,12 +60,10 @@ export const useRoles = () => {
 
       if (error) throw error;
 
-      toast.success('Role criada com sucesso!');
-      await fetchRoles(); // Recarregar lista
+      await fetchRoles();
       return data;
     } catch (error: any) {
       console.error('Erro ao criar role:', error);
-      toast.error('Erro ao criar role: ' + error.message);
       throw error;
     } finally {
       setIsCreating(false);
@@ -82,11 +80,9 @@ export const useRoles = () => {
 
       if (error) throw error;
 
-      toast.success('Role atualizada com sucesso!');
-      await fetchRoles(); // Recarregar lista
+      await fetchRoles();
     } catch (error: any) {
       console.error('Erro ao atualizar role:', error);
-      toast.error('Erro ao atualizar role: ' + error.message);
       throw error;
     } finally {
       setIsUpdating(false);
@@ -105,7 +101,10 @@ export const useRoles = () => {
       if (usersError) throw usersError;
 
       if (usersWithRole && usersWithRole.length > 0) {
-        toast.error(`Não é possível deletar: ${usersWithRole.length} usuário(s) ainda usa(m) esta role`);
+        showModernError(
+          'Não é possível excluir',
+          `${usersWithRole.length} usuário(s) ainda usa(m) este papel`
+        );
         return;
       }
 
@@ -116,11 +115,9 @@ export const useRoles = () => {
 
       if (error) throw error;
 
-      toast.success('Role deletada com sucesso!');
-      await fetchRoles(); // Recarregar lista
+      await fetchRoles();
     } catch (error: any) {
       console.error('Erro ao deletar role:', error);
-      toast.error('Erro ao deletar role: ' + error.message);
       throw error;
     } finally {
       setIsDeleting(false);
