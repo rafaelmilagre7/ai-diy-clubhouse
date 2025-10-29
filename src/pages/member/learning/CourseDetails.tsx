@@ -1,7 +1,8 @@
 
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { useLearningRedirect } from '@/hooks/learning/useLearningRedirect';
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { CourseDetailsSkeleton } from "@/components/learning/member/CourseDetailsSkeleton";
 import { CourseModules } from "@/components/learning/member/CourseModules";
@@ -12,6 +13,7 @@ import { ArrowLeft, AlertCircle } from "lucide-react";
 import { useCourseDetails } from "@/hooks/learning/useCourseDetails";
 import { useCourseStats } from "@/hooks/learning/useCourseStats";
 import { useCourseSearch } from "@/hooks/learning/useCourseSearch";
+import { useProgressSync } from "@/hooks/learning/useProgressSync";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { usePremiumUpgradeModal } from "@/hooks/usePremiumUpgradeModal";
 import { AuroraUpgradeModal } from "@/components/ui/aurora-upgrade-modal";
@@ -20,8 +22,12 @@ const CourseDetails = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
+  const queryClient = useQueryClient();
   const [searchQuery, setSearchQuery] = useState("");
   const { modalState, hideUpgradeModal } = usePremiumUpgradeModal();
+  
+  // Sistema de sincronização de progresso entre páginas
+  useProgressSync();
   
   // Sistema de validação e redirecionamento automático
   useLearningRedirect({
@@ -55,6 +61,35 @@ const CourseDetails = () => {
     allLessons: allLessons || [],
     searchQuery
   });
+
+  // Revalidar dados quando a página recebe foco (usuário volta da aula)
+  useEffect(() => {
+    const handleFocus = async () => {
+      // Verificar se houve atualização de progresso
+      const lastUpdate = sessionStorage.getItem('learning_progress_updated');
+      
+      if (lastUpdate) {
+        console.log('[COURSE-DETAILS] 🔄 Detectada atualização de progresso, revalidando dados...');
+        
+        // Refetch de todas as queries relacionadas
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ["course-details", id] }),
+          queryClient.refetchQueries({ queryKey: ["learning-user-progress"] })
+        ]);
+        
+        // Limpar flag de atualização
+        sessionStorage.removeItem('learning_progress_updated');
+      }
+    };
+
+    // Executar ao montar e quando ganhar foco
+    handleFocus();
+    window.addEventListener('focus', handleFocus);
+    
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [id, queryClient]);
 
   // Se ainda está carregando, mostrar skeleton
   if (isLoading) {

@@ -123,30 +123,39 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       
       return { ...data, completed: completed };
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       console.log('[PROGRESS-LEGACY] ✅ Progresso salvo com sucesso:', { completed: result.completed, lessonId });
       
       setIsCompleted(result.completed);
-      refetchProgress();
       
       if (result.completed) {
         toast.success("Aula concluída com sucesso!");
+        
+        // Sinalizar para outras páginas que houve atualização
+        sessionStorage.setItem('learning_progress_updated', Date.now().toString());
       }
       
       // Invalidar TODAS as queries relacionadas
       console.log('[PROGRESS-LEGACY] 🔄 Invalidando todas as queries relacionadas');
-      queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-lesson-progress"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] });
-      queryClient.invalidateQueries({ queryKey: ["course-details"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-courses"] });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] }),
+        queryClient.invalidateQueries({ queryKey: ["learning-lesson-progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["course-details"] }),
+        queryClient.invalidateQueries({ queryKey: ["learning-courses"] })
+      ]);
       
-      // Forçar refresh após delay
-      setTimeout(() => {
-        console.log('[PROGRESS-LEGACY] 🔄 Refresh automático das queries');
-        queryClient.refetchQueries({ queryKey: ["learning-lesson-progress", lessonId] });
-        queryClient.refetchQueries({ queryKey: ["course-details"] });
-      }, 500);
+      // Forçar refetch imediato e após delay
+      await refetchProgress();
+      
+      setTimeout(async () => {
+        console.log('[PROGRESS-LEGACY] 🔄 Refresh automático com refetch forçado');
+        await Promise.all([
+          queryClient.refetchQueries({ queryKey: ["learning-lesson-progress", lessonId] }),
+          queryClient.refetchQueries({ queryKey: ["course-details"] }),
+          queryClient.refetchQueries({ queryKey: ["learning-user-progress"] })
+        ]);
+      }, 300);
     },
     onError: (error: any) => {
       console.error("Erro ao salvar progresso:", error);

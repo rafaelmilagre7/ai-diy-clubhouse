@@ -61,22 +61,39 @@ export function useCourseStats({ modules, allLessons, userProgress }: CourseStat
   
   // Calcular progresso do curso
   const courseProgress = useMemo(() => {
-    if (!allLessons || !userProgress || allLessons.length === 0) return 0;
+    if (!allLessons || !userProgress || allLessons.length === 0) {
+      console.log('[COURSE-STATS] ⚠️ Dados insuficientes para calcular progresso', {
+        hasLessons: !!allLessons,
+        lessonsCount: allLessons?.length,
+        hasProgress: !!userProgress,
+        progressCount: userProgress?.length
+      });
+      return 0;
+    }
     
     // Extrair IDs de todas as lições do curso
     const allLessonIds = allLessons.map(lesson => lesson.id);
     
-    // Contar lições completadas
+    // Contar lições completadas (progresso >= 100%)
     let completedLessons = 0;
     if (userProgress) {
       userProgress.forEach(progress => {
-        if (allLessonIds.includes(progress.lesson_id) && progress.progress_percentage === 100) {
+        if (allLessonIds.includes(progress.lesson_id) && progress.progress_percentage >= 100) {
           completedLessons++;
         }
       });
     }
     
-    return Math.round((completedLessons / allLessonIds.length) * 100);
+    const percentage = Math.round((completedLessons / allLessonIds.length) * 100);
+    
+    console.log('[COURSE-STATS] 📊 Progresso calculado:', {
+      totalLessons: allLessonIds.length,
+      completedLessons,
+      percentage,
+      timestamp: new Date().toISOString()
+    });
+    
+    return percentage;
   }, [allLessons, userProgress]);
 
   return {
