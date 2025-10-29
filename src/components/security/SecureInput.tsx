@@ -154,27 +154,36 @@ export const SecureInput: React.FC<SecureInputProps> = ({
         />
         
         {/* Indicador de segurança */}
-        <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center space-x-1">
+        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+          {hasError && (
+            <AlertTriangle 
+              className="h-4 w-4 text-status-error flex-shrink-0" 
+              aria-label="Erro de validação" 
+            />
+          )}
+          
           {type === 'password' && (
             <Button
               type="button"
               variant="ghost"
               size="sm"
               onClick={togglePasswordVisibility}
-              className="h-6 w-6 p-0 hover:bg-transparent"
+              className="h-6 w-6 p-0 hover:bg-transparent flex items-center justify-center"
               tabIndex={-1}
               aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
             >
-              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              {showPassword ? 
+                <EyeOff className="h-4 w-4 flex-shrink-0" /> : 
+                <Eye className="h-4 w-4 flex-shrink-0" />
+              }
             </Button>
           )}
           
-          {isFocused && (
-            <Shield className="h-4 w-4 text-operational" aria-label="Entrada protegida" />
-          )}
-          
-          {hasError && (
-            <AlertTriangle className="h-4 w-4 text-status-error" aria-label="Erro de validação" />
+          {isFocused && !hasError && (
+            <Shield 
+              className="h-4 w-4 text-operational flex-shrink-0" 
+              aria-label="Entrada protegida" 
+            />
           )}
         </div>
       </div>
