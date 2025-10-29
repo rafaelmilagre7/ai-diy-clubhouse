@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { OnboardingSuccess } from '@/components/celebration/OnboardingSuccess';
 import { TeamInviteSection } from '@/components/onboarding/TeamInviteSection';
+import { useToastModern } from '@/hooks/useToastModern';
 
 interface Step6WelcomeProps {
   ninaMessage?: string;
@@ -20,9 +21,11 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
   userName = "Usuário"
 }) => {
   const navigate = useNavigate();
+  const { showLoading, showSuccess: showSuccessToast, showError } = useToastModern();
   const [isCompleting, setIsCompleting] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
   const [showTeamInvites, setShowTeamInvites] = useState(false);
+  const [loadingToastId, setLoadingToastId] = useState<string | number | null>(null);
   
   const handleContinueToTeamInvites = () => {
     console.log('[STEP6] 🚀 Botão "Continuar" clicado - iniciando finalização');
@@ -49,6 +52,14 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
     
     setIsCompleting(true);
     
+    // Mostrar toast de loading
+    const toastId = showLoading(
+      "Finalizando seu onboarding...",
+      "Estamos preparando tudo para você começar sua jornada! 🚀"
+    );
+    setLoadingToastId(toastId);
+    console.log('[STEP6] 📢 Toast de loading exibido:', toastId);
+    
     try {
       console.log('[STEP6] 🔄 Chamando onFinish...');
       const success = await onFinish();
@@ -56,13 +67,25 @@ export const Step6Welcome: React.FC<Step6WelcomeProps> = ({
       
       if (success) {
         console.log('[STEP6] ✅ Sucesso! Mostrando animação de celebração');
+        showSuccessToast(
+          "🎉 Onboarding concluído!",
+          "Sua jornada no Viver de IA está pronta para começar!"
+        );
         setShowSuccess(true);
       } else {
         console.error('[STEP6] ❌ FALHA ao finalizar onboarding');
+        showError(
+          "Erro ao finalizar",
+          "Não foi possível concluir o onboarding. Por favor, tente novamente."
+        );
         setIsCompleting(false);
       }
     } catch (error) {
       console.error('[STEP6] ❌ ERRO CRÍTICO:', error);
+      showError(
+        "Erro inesperado",
+        "Ocorreu um erro ao finalizar o onboarding. Tente novamente em alguns instantes."
+      );
       setIsCompleting(false);
     }
   };

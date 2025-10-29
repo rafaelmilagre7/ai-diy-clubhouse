@@ -579,6 +579,10 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         
         if (onboardingError) {
           console.error('[ONBOARDING] ❌ Erro ao atualizar onboarding_final:', onboardingError);
+          showError(
+            "Erro ao salvar progresso",
+            "Não foi possível atualizar seus dados de onboarding."
+          );
           throw onboardingError;
         }
         
@@ -596,6 +600,10 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         
         if (profileError) {
           console.error('[ONBOARDING] ❌ Erro ao atualizar profiles:', profileError);
+          showError(
+            "Erro ao atualizar perfil",
+            "Não foi possível marcar seu perfil como completo."
+          );
           throw profileError;
         }
         
@@ -606,6 +614,10 @@ Vamos começar? Sua trilha personalizada já está pronta! 🚀`;
         
       } catch (updateError) {
         console.error('[ONBOARDING] ❌ Erro ao finalizar onboarding:', updateError);
+        showError(
+          "Erro ao finalizar",
+          "Ocorreu um erro ao finalizar seu onboarding. Tente novamente."
+        );
         throw updateError;
       }
 
