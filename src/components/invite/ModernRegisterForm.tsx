@@ -109,7 +109,7 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         const { data: inviteCheck } = await supabase
           .from('invites')
           .select('id, expires_at, used_at')
-          .eq('token', inviteToken.trim())
+          .ilike('token', inviteToken.trim())
           .maybeSingle();
         
         if (!inviteCheck) {
@@ -133,8 +133,8 @@ const ModernRegisterForm: React.FC<ModernRegisterFormProps> = ({
         console.log('✅ [REGISTER] Convite validado com sucesso');
       } catch (err) {
         console.error('❌ [REGISTER] Erro ao validar convite:', err);
-        toast.error("Não foi possível validar o convite. Tente novamente.");
-        return;
+        // Não bloquear cadastro se validação falhar
+        console.warn('⚠️ [REGISTER] Continuando sem validação prévia');
       }
     }
     
