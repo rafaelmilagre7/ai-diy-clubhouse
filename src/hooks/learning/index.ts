@@ -11,6 +11,7 @@ export { useLearningRedirect } from './useLearningRedirect';
 export { useClearLearningCache } from './useClearLearningCache';
 export { useLessonNavigation } from './useLessonNavigation';
 export { useLMSStructure } from './useLMSStructure';
+export { useLessonCompletion } from './useLessonCompletion';
 
 // Hooks de certificados
 export { useCertificateRefresh } from '../certificates/useCertificateRefresh';

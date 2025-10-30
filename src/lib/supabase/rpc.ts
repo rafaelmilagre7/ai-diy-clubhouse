@@ -173,3 +173,18 @@ export const getChecklistTemplate = async (solutionId: string, checklistType: st
   
   return data;
 };
+
+export const completeLessonV2 = async (lessonId: string, progressPercentage: number = 100) => {
+  const { data, error } = await supabase.rpc('complete_lesson_v2', {
+    p_lesson_id: lessonId,
+    p_progress_percentage: progressPercentage,
+    p_completed_at: new Date().toISOString()
+  });
+  
+  if (error) {
+    console.error('Erro ao concluir aula:', error);
+    throw error;
+  }
+  
+  return data;
+};

@@ -1,47 +1,38 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Loader2 } from "lucide-react";
+import { useLessonCompletion } from "@/hooks/learning";
 
 interface LessonCompleteButtonProps {
+  lessonId: string;
   isCompleted: boolean;
-  onComplete: () => void;
+  onComplete?: () => void;
   className?: string;
-  isUpdating?: boolean;
 }
 
 export const LessonCompleteButton: React.FC<LessonCompleteButtonProps> = ({
-  isCompleted,
+  lessonId,
+  isCompleted: initialCompleted,
   onComplete,
-  className = "",
-  isUpdating = false
+  className = ""
 }) => {
-  const [isProcessing, setIsProcessing] = useState(false);
-  
-  const handleClick = async () => {
-    if (isCompleted || isProcessing || isUpdating) return;
-    
-    setIsProcessing(true);
-    try {
-      await onComplete();
-    } catch (error) {
-      console.error('[COMPLETE-BTN] ❌ Erro:', error);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
+  const { completeLesson, isCompleting, isCompleted } = useLessonCompletion({
+    lessonId,
+    onSuccess: onComplete
+  });
 
-  const loading = isProcessing || isUpdating;
+  const completed = isCompleted || initialCompleted;
 
   return (
     <div className={`flex justify-end ${className}`}>
       <Button
-        onClick={handleClick}
-        disabled={isCompleted || loading}
+        onClick={completeLesson}
+        disabled={completed || isCompleting}
         className="gap-2"
-        variant={isCompleted ? "outline" : "default"}
+        variant={completed ? "outline" : "default"}
       >
-        {loading ? (
+        {isCompleting ? (
           <>
             <Loader2 className="h-4 w-4 animate-spin" />
             Salvando...
@@ -49,7 +40,7 @@ export const LessonCompleteButton: React.FC<LessonCompleteButtonProps> = ({
         ) : (
           <>
             <CheckCircle className="h-4 w-4" />
-            {isCompleted ? "Aula concluída" : "Marcar como concluída"}
+            {completed ? "Aula concluída" : "Marcar como concluída"}
           </>
         )}
       </Button>

@@ -214,95 +214,77 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     }
   };
   
-  // Marcar lição como concluída
+  // Marcar lição como concluída (REFATORADO - usa nova RPC)
   const completeLesson = async (): Promise<boolean> => {
-    console.log('[COMPLETE] 🎯 INÍCIO - lessonId:', lessonId);
-    console.log('[COMPLETE] 📊 Estado atual:', {
-      isCompleted,
-      isPending: updateProgressMutation.isPending,
-      isCreating: isCreatingInitialProgress.current
-    });
+    console.log('[COMPLETE-V2] 🎯 INÍCIO - lessonId:', lessonId);
     
     // Verificar se já está completada
     if (isCompleted) {
-      console.log('[COMPLETE] ⚠️ Já está completada, retornando true');
+      console.log('[COMPLETE-V2] ⚠️ Já está completada, retornando true');
       return true;
     }
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('[COMPLETE] ❌ Usuário não encontrado');
+      console.error('[COMPLETE-V2] ❌ Usuário não encontrado');
       toast.error('Você precisa estar logado para marcar a aula como concluída');
       return false;
     }
     
     if (!lessonId) {
-      console.error('[COMPLETE] ❌ lessonId não encontrado');
+      console.error('[COMPLETE-V2] ❌ lessonId não encontrado');
       toast.error('Erro: ID da aula não encontrado');
       return false;
     }
     
-    console.log('[COMPLETE] ✅ Validações OK - User:', user.id, 'Lesson:', lessonId);
-    
-    // ETAPA 2: Forçar reset se necessário
-    if (isCreatingInitialProgress.current) {
-      console.warn('[COMPLETE] ⚠️ Reset forçado de isCreatingInitialProgress');
-      isCreatingInitialProgress.current = false;
-    }
+    console.log('[COMPLETE-V2] ✅ Validações OK - User:', user.id, 'Lesson:', lessonId);
     
     try {
-      console.log('[COMPLETE] 🔄 Iniciando mutation com timeout de 5s...');
+      console.log('[COMPLETE-V2] 🔄 Chamando complete_lesson_v2...');
       
-      // ETAPA 3: Adicionar timeout de 5 segundos
-      const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Timeout: operação demorou mais de 5s')), 5000);
-      });
-      
-      await Promise.race([
-        updateProgressMutation.mutateAsync(true),
-        timeoutPromise
-      ]);
-      
-      // Aguardar um ciclo de render para garantir que onSuccess executou
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      console.log('[COMPLETE] ✅ Mutation e onSuccess concluídos!');
-      return true;
-      
-    } catch (mutationError) {
-      console.error('[COMPLETE] ❌ Mutation falhou:', mutationError);
-      
-      // ETAPA 4: Fallback com RPC (bypassa RLS)
-      console.log('[COMPLETE] 🔄 Tentando RPC direto...');
-      
-      try {
-        const { data: rpcData, error: rpcError } = await supabase.rpc(
-          'safe_upsert_learning_progress',
-          {
-            p_lesson_id: lessonId,
-            p_progress_percentage: 100,
-            p_completed_at: new Date().toISOString()
-          }
-        );
-        
-        if (rpcError) {
-          console.error('[COMPLETE] ❌ RPC também falhou:', rpcError);
-          toast.error('Erro ao salvar progresso');
-          return false;
+      // ✅ Usar nova RPC simplificada e atômica
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'complete_lesson_v2',
+        {
+          p_lesson_id: lessonId,
+          p_progress_percentage: 100,
+          p_completed_at: new Date().toISOString()
         }
-        
-        console.log('[COMPLETE] ✅ RPC bem-sucedido!', rpcData);
-        toast.success('Aula marcada como concluída!');
-        
-        // Refetch para atualizar a UI
-        await refetchProgress();
-        
-        return true;
-      } catch (fallbackError) {
-        console.error('[COMPLETE] ❌ Fallback falhou:', fallbackError);
+      );
+      
+      if (rpcError) {
+        console.error('[COMPLETE-V2] ❌ Erro na RPC:', rpcError);
         toast.error('Erro ao salvar progresso');
         return false;
       }
+      
+      console.log('[COMPLETE-V2] ✅ RPC bem-sucedido!', rpcData);
+      
+      // Atualizar estado local
+      setIsCompleted(true);
+      toast.success('Aula marcada como concluída!');
+      
+      // Invalidar caches relevantes
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] }),
+        queryClient.invalidateQueries({ queryKey: ["learning-lesson-progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] }),
+        queryClient.invalidateQueries({ queryKey: ["learning-course-stats"] }),
+        queryClient.invalidateQueries({ queryKey: ["course-details"] })
+      ]);
+      
+      // Refetch para atualizar a UI
+      await refetchProgress();
+      
+      // Sinalizar update no sessionStorage para sync entre tabs
+      sessionStorage.setItem('learning_progress_updated', Date.now().toString());
+      
+      return true;
+      
+    } catch (error) {
+      console.error('[COMPLETE-V2] ❌ Erro inesperado:', error);
+      toast.error('Erro ao salvar progresso');
+      return false;
     }
   };
 
