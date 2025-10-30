@@ -288,28 +288,93 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
   
   // Marcar lição como concluída
   const completeLesson = async (): Promise<boolean> => {
-    console.log('[PROGRESS] 🎯 completeLesson INICIADO');
+    console.log('[COMPLETE] 🎯 INÍCIO - lessonId:', lessonId);
+    console.log('[COMPLETE] 📊 Estado atual:', {
+      isCompleted,
+      isPending: updateProgressMutation.isPending,
+      isCreating: isCreatingInitialProgress.current
+    });
+    
+    // Verificar se já está completada
+    if (isCompleted) {
+      console.log('[COMPLETE] ⚠️ Já está completada, retornando true');
+      return true;
+    }
     
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      console.error('[PROGRESS] ❌ Usuário não encontrado');
+      console.error('[COMPLETE] ❌ Usuário não encontrado');
       toast.error('Você precisa estar logado para marcar a aula como concluída');
       return false;
     }
     
-    console.log('[PROGRESS] ✅ Usuário:', user.id, 'Lesson:', lessonId);
+    if (!lessonId) {
+      console.error('[COMPLETE] ❌ lessonId não encontrado');
+      toast.error('Erro: ID da aula não encontrado');
+      return false;
+    }
+    
+    console.log('[COMPLETE] ✅ Validações OK - User:', user.id, 'Lesson:', lessonId);
+    
+    // ETAPA 2: Forçar reset se necessário
+    if (isCreatingInitialProgress.current) {
+      console.warn('[COMPLETE] ⚠️ Reset forçado de isCreatingInitialProgress');
+      isCreatingInitialProgress.current = false;
+    }
     
     try {
-      console.log('[PROGRESS] 🔄 Chamando mutateAsync(true)...');
-      await updateProgressMutation.mutateAsync(true);
+      console.log('[COMPLETE] 🔄 Iniciando mutation com timeout de 5s...');
       
-      console.log('[PROGRESS] ✅ Mutation concluída com sucesso!');
+      // ETAPA 3: Adicionar timeout de 5 segundos
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Timeout: operação demorou mais de 5s')), 5000);
+      });
+      
+      await Promise.race([
+        updateProgressMutation.mutateAsync(true),
+        timeoutPromise
+      ]);
+      
+      console.log('[COMPLETE] ✅ Mutation concluída com sucesso!');
       setIsCompleted(true);
       return true;
-    } catch (error) {
-      console.error('[PROGRESS] ❌ Erro no mutation:', error);
-      toast.error('Erro ao salvar progresso');
-      return false;
+      
+    } catch (mutationError) {
+      console.error('[COMPLETE] ❌ Mutation falhou:', mutationError);
+      
+      // ETAPA 4: Fallback direto ao banco
+      console.log('[COMPLETE] 🔄 Tentando UPDATE direto no banco...');
+      
+      try {
+        const { error: directError } = await supabase
+          .from("learning_progress")
+          .update({
+            progress_percentage: 100,
+            completed_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          })
+          .eq("user_id", user.id)
+          .eq("lesson_id", lessonId);
+        
+        if (directError) {
+          console.error('[COMPLETE] ❌ UPDATE direto também falhou:', directError);
+          toast.error('Erro ao salvar progresso');
+          return false;
+        }
+        
+        console.log('[COMPLETE] ✅ UPDATE direto bem-sucedido!');
+        setIsCompleted(true);
+        toast.success('Aula marcada como concluída!');
+        
+        // Refetch para atualizar a UI
+        refetchProgress();
+        
+        return true;
+      } catch (fallbackError) {
+        console.error('[COMPLETE] ❌ Fallback falhou:', fallbackError);
+        toast.error('Erro ao salvar progresso');
+        return false;
+      }
     }
   };
 
