@@ -61,6 +61,7 @@ const ImplementationTabsContainer: React.FC = () => {
           solutionId={id!} 
           onComplete={() => handleTabComplete('tools')} 
           onAdvanceToNext={() => handleAdvanceToNextTab('tools')}
+          isCompleted={isTabCompleted('tools')}
         />;
       case 'resources':
         return <ResourcesTab solutionId={id!} onComplete={() => handleTabComplete('resources')} />;

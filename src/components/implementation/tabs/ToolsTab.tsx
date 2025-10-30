@@ -12,6 +12,7 @@ interface ToolsTabProps {
   solutionId: string;
   onComplete: () => void;
   onAdvanceToNext?: () => void;
+  isCompleted?: boolean;
 }
 
 interface ToolWithDetails {
@@ -25,9 +26,9 @@ interface ToolWithDetails {
   tool_benefit_type?: string;
 }
 
-const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete, onAdvanceToNext }) => {
+const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete, onAdvanceToNext, isCompleted }) => {
   const [viewedTools, setViewedTools] = useState<string[]>([]);
-  const [isAware, setIsAware] = useState(false);
+  const [isAware, setIsAware] = useState(isCompleted || false);
   const { showSuccess } = useToastModern();
   const completedRef = useRef(false);
 
