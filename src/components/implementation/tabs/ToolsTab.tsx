@@ -11,6 +11,7 @@ import { useToastModern } from "@/hooks/useToastModern";
 interface ToolsTabProps {
   solutionId: string;
   onComplete: () => void;
+  onAdvanceToNext?: () => void;
 }
 
 interface ToolWithDetails {
@@ -24,7 +25,7 @@ interface ToolWithDetails {
   tool_benefit_type?: string;
 }
 
-const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
+const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete, onAdvanceToNext }) => {
   const [viewedTools, setViewedTools] = useState<string[]>([]);
   const [isAware, setIsAware] = useState(false);
   const { showSuccess } = useToastModern();
@@ -84,6 +85,13 @@ const ToolsTab: React.FC<ToolsTabProps> = ({ solutionId, onComplete }) => {
       setIsAware(true);
       showSuccess("Ótimo!", "Você está ciente das ferramentas necessárias.");
       onComplete();
+      
+      // Avançar para próxima aba após 1 segundo
+      if (onAdvanceToNext) {
+        setTimeout(() => {
+          onAdvanceToNext();
+        }, 1000);
+      }
     }
   };
 

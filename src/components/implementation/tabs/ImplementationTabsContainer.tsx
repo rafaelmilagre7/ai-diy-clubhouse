@@ -39,6 +39,15 @@ const ImplementationTabsContainer: React.FC = () => {
     await markTabComplete(tabId, progressData);
   }, [markTabComplete]);
 
+  // Função para avançar para próxima aba
+  const handleAdvanceToNextTab = React.useCallback((currentTabId: string) => {
+    const currentIndex = IMPLEMENTATION_TABS.findIndex(tab => tab.id === currentTabId);
+    if (currentIndex !== -1 && currentIndex < IMPLEMENTATION_TABS.length - 1) {
+      const nextTab = IMPLEMENTATION_TABS[currentIndex + 1];
+      setActiveTab(nextTab.id);
+    }
+  }, []);
+
   const progress = React.useMemo(() => {
     const isCompleted = completedTabs.includes('completion');
     const percentage = completedTabs.length / (IMPLEMENTATION_TABS.length - 1) * 100;
@@ -48,7 +57,11 @@ const ImplementationTabsContainer: React.FC = () => {
   const renderTabContent = () => {
     switch (activeTab) {
       case 'tools':
-        return <ToolsTab solutionId={id!} onComplete={() => handleTabComplete('tools')} />;
+        return <ToolsTab 
+          solutionId={id!} 
+          onComplete={() => handleTabComplete('tools')} 
+          onAdvanceToNext={() => handleAdvanceToNextTab('tools')}
+        />;
       case 'resources':
         return <ResourcesTab solutionId={id!} onComplete={() => handleTabComplete('resources')} />;
       case 'video':
