@@ -24,12 +24,16 @@ interface UnifiedChecklistTabProps {
   solutionId: string;
   checklistType?: 'implementation' | 'user' | 'verification';
   onComplete?: () => void;
+  onAdvanceToNext?: () => void;
+  isCompleted?: boolean;
 }
 
 const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({ 
   solutionId, 
   checklistType = 'implementation', 
-  onComplete 
+  onComplete,
+  onAdvanceToNext,
+  isCompleted
 }) => {
   // 🐛 LOG INICIAL - Debug de render
   console.log('🎯 [UnifiedChecklistTab] Render inicial:', {
@@ -186,22 +190,30 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
     handleItemUpdate(itemId, item?.completed || false, notes);
   };
 
-  // Verificar se todos os itens estão completos para chamar onComplete
-  const allCompleted = React.useMemo(() => {
+  // ✅ NOVA LÓGICA: Verificar se todos os cards estão na coluna "done"
+  const allInDoneColumn = React.useMemo(() => {
     if (checklistItems.length === 0) return false;
-    return checklistItems.every(item => item.completed);
+    return checklistItems.every(item => item.column === 'done');
   }, [checklistItems]);
 
   const completionCalledRef = React.useRef(false);
 
   useEffect(() => {
-    if (allCompleted && onComplete && !completionCalledRef.current) {
+    if (allInDoneColumn && onComplete && !completionCalledRef.current) {
       completionCalledRef.current = true;
+      console.log('🎉 [UnifiedChecklistTab] Todos os cards estão em "Concluído"!');
       onComplete();
-    } else if (!allCompleted) {
+      
+      // Avançar para próxima aba após 1 segundo
+      setTimeout(() => {
+        if (onAdvanceToNext) {
+          onAdvanceToNext();
+        }
+      }, 1000);
+    } else if (!allInDoneColumn) {
       completionCalledRef.current = false;
     }
-  }, [allCompleted, onComplete]);
+  }, [allInDoneColumn, onComplete, onAdvanceToNext]);
 
   if (isLoadingTemplate || isLoadingProgress) {
     return <KanbanLoading />;
@@ -312,6 +324,7 @@ const UnifiedChecklistTab: React.FC<UnifiedChecklistTabProps> = ({
         checklistData={checklistDataForKanban}
         solutionId={solutionId}
         checklistType={checklistType}
+        onAllCompleted={allInDoneColumn}
       />
     </div>
   );

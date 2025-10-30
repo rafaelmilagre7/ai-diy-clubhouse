@@ -13,6 +13,8 @@ import { UnifiedChecklistData } from "@/hooks/useUnifiedChecklists";
 interface LearningChecklistTabProps {
   solutionId: string;
   onComplete?: () => void;
+  onAdvanceToNext?: () => void;
+  isCompleted?: boolean;
 }
 
 interface ChecklistItemData {
@@ -23,7 +25,9 @@ interface ChecklistItemData {
 
 const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({ 
   solutionId, 
-  onComplete 
+  onComplete,
+  onAdvanceToNext,
+  isCompleted
 }) => {
   const { user } = useAuth();
   const { showSuccess, showError } = useToastModern();
@@ -158,17 +162,29 @@ const LearningChecklistTab: React.FC<LearningChecklistTabProps> = ({
     return userChecklist.checklist_data.items.filter(item => item.completed).length;
   }, [userChecklist]);
 
-  // Verificar conclusão total
+  // ✅ Verificar conclusão total baseado em column === 'done'
+  const completionCalledRef = React.useRef(false);
+  
   useEffect(() => {
     if (!userChecklist?.checklist_data?.items) return;
     
-    const allDone = userChecklist.checklist_data.items.every(item => item.completed);
+    const allInDoneColumn = userChecklist.checklist_data.items.every(item => item.column === 'done');
     
-    if (allDone && onComplete) {
+    if (allInDoneColumn && onComplete && !completionCalledRef.current) {
+      completionCalledRef.current = true;
       onComplete();
       showSuccess("🎉 Parabéns!", "Você completou todas as tarefas!");
+      
+      // Avançar para próxima aba após 1 segundo
+      setTimeout(() => {
+        if (onAdvanceToNext) {
+          onAdvanceToNext();
+        }
+      }, 1000);
+    } else if (!allInDoneColumn) {
+      completionCalledRef.current = false;
     }
-  }, [userChecklist, onComplete]);
+  }, [userChecklist, onComplete, onAdvanceToNext]);
 
   if (loadingChecklist) {
     return <KanbanLoading />;

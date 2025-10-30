@@ -23,6 +23,7 @@ interface SimpleKanbanProps {
   checklistData: UnifiedChecklistData;
   solutionId: string;
   checklistType: string;
+  onAllCompleted?: boolean;
 }
 
 const COLUMNS = [
@@ -36,6 +37,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
   checklistData,
   solutionId,
   checklistType,
+  onAllCompleted,
 }) => {
   const { user } = useAuth(); // ✅ Garantir acesso ao user_id
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -165,10 +167,17 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
     const itemId = active.id as string;
     const newColumn = over.id as ("todo" | "in_progress" | "done");
 
-    // Atualizar estado local IMEDIATAMENTE para feedback visual
+    // ✅ Atualizar estado local IMEDIATAMENTE com sincronização de completed
     setLocalItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === itemId ? { ...item, column: newColumn } : item
+        item.id === itemId 
+          ? { 
+              ...item, 
+              column: newColumn,
+              completed: newColumn === 'done', // ✅ Sincronizar completed com column
+              completedAt: newColumn === 'done' ? new Date().toISOString() : undefined
+            } 
+          : item
       )
     );
 
@@ -190,7 +199,7 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
         const totalCount = currentItems.length;
         const progressPercent = Math.round((completedCount / totalCount) * 100);
 
-        // Preparar dados com items ATUALIZADOS
+        // ✅ Preparar dados com items ATUALIZADOS e logs detalhados
         const updatedChecklistData: UnifiedChecklistData = {
           ...currentChecklistData,
           user_id: currentChecklistData.user_id || user?.id || '',
@@ -204,6 +213,15 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           is_completed: completedCount === totalCount && totalCount > 0,
         };
 
+        console.log('💾 [SimpleKanban] Salvando progresso:', {
+          user_id: updatedChecklistData.user_id,
+          solution_id: currentSolutionId,
+          completed: completedCount,
+          total: totalCount,
+          progress: progressPercent,
+          itemsCount: currentItems.length
+        });
+
         // Salvar no banco
         updateMutation.mutate({
           checklistData: updatedChecklistData,
@@ -211,15 +229,17 @@ const SimpleKanban: React.FC<SimpleKanbanProps> = ({
           checklistType: currentChecklistType,
           templateId: currentChecklistData.template_id,
         }, {
-          onError: () => {
+          onError: (error) => {
+            console.error('❌ [SimpleKanban] Erro ao salvar:', error);
             toast.error("Erro ao salvar alteração");
             setLocalItems(checklistItems);
           },
           onSuccess: (savedData) => {
+            console.log('✅ [SimpleKanban] Progresso salvo com sucesso!', savedData);
             toast.success("Posição salva!");
             
             // Atualizar checklistDataRef com o novo ID (caso seja INSERT)
-            if (!currentChecklistData.id && savedData.id) {
+            if (!currentChecklistData.id && savedData?.id) {
               checklistDataRef.current = { ...checklistDataRef.current, id: savedData.id };
             }
           },

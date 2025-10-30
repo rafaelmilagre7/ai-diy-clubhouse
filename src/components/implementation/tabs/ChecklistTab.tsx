@@ -7,9 +7,11 @@ import LearningChecklistTab from "./LearningChecklistTab";
 interface ChecklistTabProps {
   solutionId: string;
   onComplete: () => void;
+  onAdvanceToNext?: () => void;
+  isCompleted?: boolean;
 }
 
-const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) => {
+const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete, onAdvanceToNext, isCompleted }) => {
   console.log('🎯 [ChecklistTab] Renderizando com solutionId:', solutionId);
 
   // Verificar se é uma solução do Builder (ai_generated_solutions)
@@ -57,6 +59,8 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
         solutionId={solutionId}
         checklistType="implementation"
         onComplete={onComplete}
+        onAdvanceToNext={onAdvanceToNext}
+        isCompleted={isCompleted}
       />
     );
   }
@@ -65,6 +69,8 @@ const ChecklistTab: React.FC<ChecklistTabProps> = ({ solutionId, onComplete }) =
     <LearningChecklistTab 
       solutionId={solutionId}
       onComplete={onComplete}
+      onAdvanceToNext={onAdvanceToNext}
+      isCompleted={isCompleted}
     />
   );
 };
