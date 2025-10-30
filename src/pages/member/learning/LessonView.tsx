@@ -77,7 +77,6 @@ const LessonView = () => {
   const {
     isCompleted,
     updateProgress,
-    completeLesson,
     isUpdating,
     resetMutations
   } = useLessonProgress({ lessonId });
@@ -177,8 +176,7 @@ const LessonView = () => {
                   videos={safeVideos}
                   resources={safeResources}
                   isCompleted={isCompleted}
-                  onProgressUpdate={handleProgressUpdate} 
-                  onComplete={completeLesson}
+                  onProgressUpdate={handleProgressUpdate}
                   prevLesson={prevLesson}
                   nextLesson={nextLesson}
                   courseId={validCourseId} // Usar courseId válido

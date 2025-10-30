@@ -20,7 +20,6 @@ interface LessonContentProps {
   resources?: any[];
   isCompleted?: boolean;
   onProgressUpdate?: (videoId: string, progress: number) => void;
-  onComplete?: () => Promise<boolean> | void;
   prevLesson?: any;
   nextLesson?: any;
   courseId?: string;
@@ -37,7 +36,6 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   resources = [],
   isCompleted = false,
   onProgressUpdate,
-  onComplete,
   prevLesson,
   nextLesson,
   courseId,
@@ -49,13 +47,14 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
-  // ✅ Usar hook otimizado para conclusão
+  // ✅ Usar hook otimizado para conclusão com sincronização de estado
   const { 
     completeLesson: completeWithHook, 
     isCompleting, 
     isCompleted: hookCompleted 
   } = useLessonCompletion({
     lessonId: lesson.id,
+    initialCompleted: isCompleted,
     onSuccess: () => {
       console.log('[LESSON-CONTENT] ✅ Hook onSuccess - Abrindo modal NPS...');
       setCompletionDialogOpen(true);

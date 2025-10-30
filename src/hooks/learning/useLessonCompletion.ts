@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
@@ -6,13 +6,20 @@ import { toast } from "sonner";
 
 interface UseLessonCompletionOptions {
   lessonId: string;
+  initialCompleted?: boolean;
   onSuccess?: () => void;
 }
 
-export const useLessonCompletion = ({ lessonId, onSuccess }: UseLessonCompletionOptions) => {
+export const useLessonCompletion = ({ lessonId, initialCompleted = false, onSuccess }: UseLessonCompletionOptions) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [isCompleted, setIsCompleted] = useState(false);
+  const [isCompleted, setIsCompleted] = useState(initialCompleted);
+
+  // Sincronizar com prop externo
+  useEffect(() => {
+    console.log('🔄 [LESSON-COMPLETION] Sync state:', { initialCompleted, isCompleted });
+    setIsCompleted(initialCompleted);
+  }, [initialCompleted]);
 
   const completeMutation = useMutation({
     mutationFn: async () => {
