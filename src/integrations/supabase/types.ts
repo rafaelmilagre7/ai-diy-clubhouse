@@ -7325,14 +7325,19 @@ export type Database = {
       complete_invite_registration:
         | { Args: { p_token: string; p_user_id: string }; Returns: Json }
         | { Args: { p_invite_token: string; p_user_id: string }; Returns: Json }
-      complete_lesson_v2: {
-        Args: {
-          p_completed_at?: string
-          p_lesson_id: string
-          p_progress_percentage?: number
-        }
-        Returns: Json
-      }
+      complete_lesson_v2:
+        | {
+            Args: {
+              p_completed_at?: string
+              p_lesson_id: string
+              p_progress_percentage?: number
+            }
+            Returns: Json
+          }
+        | {
+            Args: { p_lesson_id: string; p_progress_percentage?: number }
+            Returns: Json
+          }
       complete_onboarding_and_unlock_features: {
         Args: { p_user_id: string }
         Returns: Json
