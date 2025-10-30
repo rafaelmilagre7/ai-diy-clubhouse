@@ -66,8 +66,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     enabled: !!user?.id && !!lesson?.id
   });
   
-  // Determinar se está concluída baseado nos dados do banco
-  const isCompleted = progressData?.progress_percentage >= 100 || !!progressData?.completed_at;
+  // Determinar se está concluída baseado nos dados do banco (otimisticamente assume não concluída durante loading)
+  const isCompleted = progressLoading 
+    ? false 
+    : (progressData?.progress_percentage >= 100 || !!progressData?.completed_at);
   
   // ✅ Hook de conclusão
   const { 
@@ -160,7 +162,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           onNext={onNextLesson || (() => {})}
           prevLesson={prevLesson}
           nextLesson={nextLesson}
-          isUpdating={isCompleting || progressLoading}
+          isUpdating={isCompleting}
           currentLessonIndex={currentLessonIndex}
           totalLessons={totalLessons}
         />

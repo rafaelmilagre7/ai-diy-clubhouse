@@ -70,18 +70,7 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
         {/* Botão Marcar como Concluída */}
         <div className="flex justify-center">
           <Button 
-            onClick={(e) => {
-              console.log('[BTN-NAV] 🎯 CLIQUE DETECTADO!');
-              console.log('[BTN-NAV] 📊 Estado:', { isCompleted, isUpdating });
-              e.preventDefault();
-              e.stopPropagation();
-              if (!isCompleted && !isUpdating) {
-                console.log('[BTN-NAV] ✅ Chamando onComplete...');
-                onComplete();
-              } else {
-                console.log('[BTN-NAV] ⚠️ Clique ignorado - já concluída ou salvando');
-              }
-            }}
+            onClick={onComplete}
             disabled={isCompleted || isUpdating}
             className={`gap-2 px-6 py-3 font-medium transition-all duration-300 border-0 ${
               isCompleted 
