@@ -71,7 +71,12 @@ const ImplementationTabsContainer: React.FC = () => {
           isCompleted={isTabCompleted('resources')}
         />;
       case 'video':
-        return <VideoTab solutionId={id!} onComplete={() => handleTabComplete('video')} />;
+        return <VideoTab 
+          solutionId={id!} 
+          onComplete={() => handleTabComplete('video')} 
+          onAdvanceToNext={() => handleAdvanceToNextTab('video')}
+          isCompleted={isTabCompleted('video')}
+        />;
       case 'checklist':
         return <ChecklistTab solutionId={id!} onComplete={() => handleTabComplete('checklist')} />;
       case 'comments':

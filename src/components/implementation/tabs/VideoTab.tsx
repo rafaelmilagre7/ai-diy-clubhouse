@@ -10,6 +10,8 @@ import { useToastModern } from "@/hooks/useToastModern";
 interface VideoTabProps {
   solutionId: string;
   onComplete: () => void;
+  onAdvanceToNext?: () => void;
+  isCompleted?: boolean;
 }
 
 interface VideoLesson {
@@ -21,8 +23,8 @@ interface VideoLesson {
   order_index?: number;
 }
 
-const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
-  const [isWatched, setIsWatched] = useState(false);
+const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete, onAdvanceToNext, isCompleted }) => {
+  const [isWatched, setIsWatched] = useState(isCompleted || false);
   const { showSuccess } = useToastModern();
 
   const extractPandaVideoId = (url: string): string | null => {
@@ -76,8 +78,14 @@ const VideoTab: React.FC<VideoTabProps> = ({ solutionId, onComplete }) => {
 
   const handleMarkAsWatched = () => {
     setIsWatched(true);
-    showSuccess("Ótimo!", "Você assistiu aos vídeos da solução.");
     onComplete();
+    showSuccess("Progresso registrado", "Você assistiu aos vídeos da solução.");
+    
+    setTimeout(() => {
+      if (onAdvanceToNext) {
+        onAdvanceToNext();
+      }
+    }, 1000);
   };
 
   if (isLoading) {
