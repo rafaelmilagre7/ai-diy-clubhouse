@@ -71,13 +71,12 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     ? false 
     : (progressData?.progress_percentage >= 100 || !!progressData?.completed_at);
   
-  // ✅ Hook de conclusão
+  // ✅ Hook de conclusão (sem sincronização de estado)
   const { 
     completeLesson,
     isCompleting,
   } = useLessonCompletion({
     lessonId: lesson.id,
-    initialCompleted: isCompleted,
     onSuccess: () => {
       console.log('[LESSON-CONTENT] ✅ Hook onSuccess - Abrindo modal NPS...');
       setCompletionDialogOpen(true);
@@ -107,11 +106,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       return;
     }
     
-    if (isCompleted) {
+    // Validar usando dados diretos do banco (fonte de verdade)
+    if (progressData?.progress_percentage >= 100 || progressData?.completed_at) {
       toast.info("Esta aula já foi marcada como concluída.");
       return;
     }
     
+    console.log('[LESSON-CONTENT] 🚀 Iniciando conclusão da aula...');
     completeLesson();
   };
 

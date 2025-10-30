@@ -13,13 +13,7 @@ interface UseLessonCompletionOptions {
 export const useLessonCompletion = ({ lessonId, initialCompleted = false, onSuccess }: UseLessonCompletionOptions) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [isCompleted, setIsCompleted] = useState(initialCompleted);
-
-  // Sincronizar com prop externo
-  useEffect(() => {
-    console.log('🔄 [LESSON-COMPLETION] Sync state:', { initialCompleted, isCompleted });
-    setIsCompleted(initialCompleted);
-  }, [initialCompleted]);
+  const [isCompleted, setIsCompleted] = useState(false);
 
   const completeMutation = useMutation({
     mutationFn: async () => {
