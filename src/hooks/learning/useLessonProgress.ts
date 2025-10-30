@@ -82,79 +82,38 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       
       console.log('[MUTATION] 📊 Progresso existente:', existingProgress);
 
-      let data, error;
-
-      if (existingProgress) {
-        console.log('[MUTATION] 🔄 Executando UPDATE...');
-        // UPDATE: Preservar started_at original
-        const { error: updateError } = await supabase
-          .from("learning_progress")
-          .update({
-            progress_percentage: progressPercentage,
-            updated_at: timestamp,
-            completed_at: completed ? timestamp : null,
-            last_position_seconds: 0
-          })
-          .eq("user_id", userData.user.id)
-          .eq("lesson_id", lessonId);
-        
-        if (updateError) {
-          console.error('[MUTATION] ❌ Erro no UPDATE:', updateError);
-          throw new Error(`Erro ao atualizar: ${updateError.message}`);
-        }
-        
-        console.log('[MUTATION] ✅ UPDATE concluído com sucesso!');
-        
-        // Buscar dados atualizados para retornar
-        const { data: updatedData, error: selectError } = await supabase
-          .from("learning_progress")
-          .select("*")
-          .eq("user_id", userData.user.id)
-          .eq("lesson_id", lessonId)
-          .single();
-        
-        if (selectError || !updatedData) {
-          console.warn('[MUTATION] ⚠️ Não foi possível buscar dados atualizados, mas UPDATE foi bem-sucedido');
-          data = { id: existingProgress.id, progress_percentage: progressPercentage };
-        } else {
-          data = updatedData;
-        }
-        
-        error = null;
-      } else {
-        console.log('[MUTATION] 🔄 Executando INSERT...');
-        // INSERT: Criar novo registro
-        const { data: insertedData, error: insertError } = await supabase
-          .from("learning_progress")
-          .insert({
-            user_id: userData.user.id,
-            lesson_id: lessonId,
-            progress_percentage: progressPercentage,
-            started_at: timestamp,
-            updated_at: timestamp,
-            completed_at: completed ? timestamp : null,
-            last_position_seconds: 0
-          })
-          .select()
-          .single();
-        
-        if (insertError) {
-          console.error('[MUTATION] ❌ Erro no INSERT:', insertError);
-          throw new Error(`Erro ao inserir: ${insertError.message}`);
-        }
-        
-        console.log('[MUTATION] ✅ INSERT concluído com sucesso!', insertedData);
-        data = insertedData;
-        error = null;
-      }
-        
-      if (error) {
-        console.error('[MUTATION] ❌ Erro ao salvar:', error);
-        throw new Error(`Erro ao salvar progresso: ${error.message}`);
-      }
-
-      console.log('[MUTATION] ✅ Progresso salvo com sucesso!');
+      // ✅ Usar RPC SECURITY DEFINER (bypassa RLS)
+      console.log('[MUTATION] 🔄 Chamando safe_upsert_learning_progress...');
       
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'safe_upsert_learning_progress',
+        {
+          p_lesson_id: lessonId,
+          p_progress_percentage: progressPercentage,
+          p_completed_at: completed ? timestamp : null
+        }
+      );
+      
+      if (rpcError) {
+        console.error('[MUTATION] ❌ Erro no RPC:', rpcError);
+        throw new Error(`Erro ao salvar: ${rpcError.message}`);
+      }
+      
+      console.log('[MUTATION] ✅ RPC executado com sucesso!', rpcData);
+      
+      // Buscar dados atualizados
+      const { data, error } = await supabase
+        .from("learning_progress")
+        .select("*")
+        .eq("user_id", userData.user.id)
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
+      
+      if (error || !data) {
+        console.warn('[MUTATION] ⚠️ Não foi possível buscar dados atualizados');
+        return { progress_percentage: progressPercentage };
+      }
+        
       return { ...data, completed: completed };
     },
     onSuccess: async (result) => {
@@ -215,18 +174,27 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         return existingProgress;
       }
       
-      // Tentar inserir novo registro com 1% (iniciada)
+      // ✅ Usar RPC para inicializar progresso
+      const { data: rpcData, error: rpcError } = await supabase.rpc(
+        'safe_upsert_learning_progress',
+        {
+          p_lesson_id: lessonId,
+          p_progress_percentage: 1,
+          p_completed_at: null
+        }
+      );
+      
+      if (rpcError) {
+        throw rpcError;
+      }
+      
+      // Buscar dados criados
       const { data, error } = await supabase
         .from("learning_progress")
-        .insert({
-          user_id: userData.user.id,
-          lesson_id: lessonId,
-          progress_percentage: 1,
-          started_at: timestamp,
-          updated_at: timestamp
-        })
-        .select()
-        .single();
+        .select("*")
+        .eq("user_id", userData.user.id)
+        .eq("lesson_id", lessonId)
+        .maybeSingle();
         
       if (error && error.code === '23505') {
         // Se houve erro de duplicata, buscar o registro existente
@@ -344,27 +312,26 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
     } catch (mutationError) {
       console.error('[COMPLETE] ❌ Mutation falhou:', mutationError);
       
-      // ETAPA 4: Fallback direto ao banco
-      console.log('[COMPLETE] 🔄 Tentando UPDATE direto no banco...');
+      // ETAPA 4: Fallback com RPC (bypassa RLS)
+      console.log('[COMPLETE] 🔄 Tentando RPC direto...');
       
       try {
-        const { error: directError } = await supabase
-          .from("learning_progress")
-          .update({
-            progress_percentage: 100,
-            completed_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          })
-          .eq("user_id", user.id)
-          .eq("lesson_id", lessonId);
+        const { data: rpcData, error: rpcError } = await supabase.rpc(
+          'safe_upsert_learning_progress',
+          {
+            p_lesson_id: lessonId,
+            p_progress_percentage: 100,
+            p_completed_at: new Date().toISOString()
+          }
+        );
         
-        if (directError) {
-          console.error('[COMPLETE] ❌ UPDATE direto também falhou:', directError);
+        if (rpcError) {
+          console.error('[COMPLETE] ❌ RPC também falhou:', rpcError);
           toast.error('Erro ao salvar progresso');
           return false;
         }
         
-        console.log('[COMPLETE] ✅ UPDATE direto bem-sucedido!');
+        console.log('[COMPLETE] ✅ RPC bem-sucedido!', rpcData);
         toast.success('Aula marcada como concluída!');
         
         // Refetch para atualizar a UI
