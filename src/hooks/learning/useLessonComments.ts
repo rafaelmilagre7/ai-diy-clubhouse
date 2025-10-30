@@ -3,7 +3,13 @@ import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth";
-import { toast } from "sonner";
+import { 
+  showModernError, 
+  showModernLoading, 
+  showModernSuccess, 
+  showModernErrorWithRetry,
+  dismissModernToast 
+} from '@/lib/toast-helpers';
 import { Comment } from "@/types/learningTypes";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -151,14 +157,22 @@ export const useLessonComments = (lessonId: string) => {
   // Adicionar comentário
   const addComment = async (content: string, parentId: string | null = null) => {
     if (!user) {
-      toast.error("Você precisa estar logado para comentar");
+      showModernError(
+        "Login necessário",
+        "Você precisa estar logado para comentar nesta aula"
+      );
       return;
     }
     
     if (!content.trim()) {
-      toast.error("O comentário não pode estar vazio");
+      showModernError(
+        "Conteúdo obrigatório",
+        "Escreva seu comentário antes de enviar"
+      );
       return;
     }
+    
+    let loadingId: string | number | undefined;
     
     try {
       setIsSubmitting(true);
@@ -170,10 +184,20 @@ export const useLessonComments = (lessonId: string) => {
       });
 
       if (!canComment) {
-        toast.error('Você atingiu o limite de comentários por hora. Tente novamente mais tarde.');
+        showModernError(
+          "Limite atingido",
+          "Você atingiu o limite de comentários por hora. Aguarde um pouco antes de comentar novamente.",
+          { duration: 6000 }
+        );
         setIsSubmitting(false);
         return;
       }
+      
+      // Adicionar loading toast
+      loadingId = showModernLoading(
+        "Enviando comentário...",
+        parentId ? "Publicando sua resposta" : "Publicando seu comentário"
+      );
       
       const { data, error } = await supabase
         .from('learning_comments')
@@ -237,7 +261,11 @@ export const useLessonComments = (lessonId: string) => {
         }
       }
       
-      toast.success(parentId ? "Resposta adicionada!" : "Comentário adicionado!");
+      dismissModernToast(loadingId);
+      showModernSuccess(
+        parentId ? "Resposta publicada!" : "Comentário publicado!",
+        "Seu comentário está visível para todos na comunidade"
+      );
       log('Comentário adicionado com sucesso', { commentId: data?.[0]?.id });
       
       // Invalidar cache para forçar atualização
@@ -246,7 +274,12 @@ export const useLessonComments = (lessonId: string) => {
       return data;
     } catch (error: any) {
       logError("Erro ao adicionar comentário à aula", error);
-      toast.error(`Erro ao enviar comentário: ${error.message}`);
+      if (loadingId) dismissModernToast(loadingId);
+      showModernErrorWithRetry(
+        "Não foi possível enviar",
+        error.message || "Verifique sua conexão e tente novamente",
+        () => addComment(content, parentId)
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -255,12 +288,22 @@ export const useLessonComments = (lessonId: string) => {
   // Excluir comentário
   const deleteComment = async (commentId: string) => {
     if (!user) {
-      toast.error("Você precisa estar logado para excluir comentários");
+      showModernError(
+        "Login necessário", 
+        "Você precisa estar logado para excluir comentários"
+      );
       return;
     }
     
+    let loadingId: string | number | undefined;
+    
     try {
       log('Excluindo comentário da aula', { commentId, lessonId });
+      
+      loadingId = showModernLoading(
+        "Excluindo comentário...",
+        "Removendo o comentário"
+      );
       
       const { error } = await supabase
         .from('learning_comments')
@@ -273,18 +316,29 @@ export const useLessonComments = (lessonId: string) => {
         throw error;
       }
       
-      toast.success("Comentário excluído com sucesso");
+      dismissModernToast(loadingId);
+      showModernSuccess(
+        "Comentário excluído",
+        "O comentário foi removido com sucesso"
+      );
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
     } catch (error: any) {
       logError("Erro ao excluir comentário da aula", error);
-      toast.error(`Erro ao excluir comentário: ${error.message}`);
+      if (loadingId) dismissModernToast(loadingId);
+      showModernError(
+        "Erro ao excluir",
+        error.message || "Não foi possível excluir o comentário. Tente novamente."
+      );
     }
   };
   
   // Curtir comentário
   const likeComment = async (commentId: string) => {
     if (!user) {
-      toast.error("Você precisa estar logado para curtir comentários");
+      showModernError(
+        "Login necessário",
+        "Você precisa estar logado para curtir comentários"
+      );
       return;
     }
     
@@ -359,7 +413,10 @@ export const useLessonComments = (lessonId: string) => {
     } catch (error: any) {
       console.error('Like error:', error);
       logError("Erro ao curtir comentário da aula", error);
-      toast.error(`Erro ao curtir comentário: ${error.message}`);
+      showModernError(
+        "Erro ao curtir",
+        error.message || "Não foi possível processar sua curtida. Tente novamente."
+      );
     }
   };
   
