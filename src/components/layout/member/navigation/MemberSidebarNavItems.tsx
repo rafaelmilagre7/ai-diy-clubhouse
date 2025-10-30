@@ -176,7 +176,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
             icon={Settings}
             sidebarOpen={sidebarOpen}
           />
-          {isMaster && (
+          {isAdmin && (
             <TooltipNavItem
               to="/team-management"
               label="Gestão de Equipe"
