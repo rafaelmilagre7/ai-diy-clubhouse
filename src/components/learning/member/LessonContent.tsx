@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useLessonCompletion } from "@/hooks/learning";
+import { useAuth } from "@/contexts/auth";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -46,6 +47,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   onResetProgress
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
+  const { user } = useAuth();
   
   // ✅ Usar hook otimizado para conclusão com sincronização de estado
   const { 
@@ -88,8 +90,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
+    alert(`🔔 BOTÃO CLICADO!\n\nDados:\n- User ID: ${user?.id || 'N/A'}\n- Lesson ID: ${lesson.id}\n- isCompleted: ${completed}\n- isCompleting: ${isCompleting}`);
+    
     console.log('[LESSON-CONTENT] 🎯 CLIQUE RECEBIDO - Iniciando conclusão');
-    console.log('[LESSON-CONTENT] 📊 Estado:', { completed, isCompleting, lessonId: lesson.id });
+    console.log('[LESSON-CONTENT] 📊 Estado:', { completed, isCompleting, lessonId: lesson.id, userId: user?.id });
     
     if (completed) {
       console.log('[LESSON-CONTENT] ⚠️ Já concluída, ignorando');
@@ -142,6 +146,20 @@ export const LessonContent: React.FC<LessonContentProps> = ({
           />
         </div>
       )}
+      
+      {/* 🔧 PAINEL DE DEBUG - TEMPORÁRIO */}
+      <div className="w-full p-4 bg-yellow-100 dark:bg-yellow-900/20 border-2 border-yellow-500 rounded-lg">
+        <h3 className="text-sm font-bold mb-2 text-yellow-900 dark:text-yellow-100">🐛 DEBUG - Estados da Aula</h3>
+        <div className="grid grid-cols-2 gap-2 text-xs font-mono text-yellow-900 dark:text-yellow-100">
+          <div><strong>User ID:</strong> {user?.id || '❌ NULL'}</div>
+          <div><strong>Lesson ID:</strong> {lesson.id}</div>
+          <div><strong>isCompleted (prop):</strong> {String(isCompleted)}</div>
+          <div><strong>hookCompleted:</strong> {String(hookCompleted)}</div>
+          <div><strong>completed (final):</strong> {String(completed)}</div>
+          <div><strong>isCompleting:</strong> {String(isCompleting)}</div>
+          <div><strong>isUpdating:</strong> {String(isUpdating)}</div>
+        </div>
+      </div>
       
       {/* Barra de navegação logo abaixo do vídeo */}
       <div className="w-full">
