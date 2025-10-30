@@ -187,8 +187,11 @@ export const showModernErrorWithRetry = (
   });
   
   if (!modernToastInstance) {
-    console.warn('Modern toast not initialized, falling back to legacy');
-    showErrorToast(title, message);
+    console.warn('🚨 Modern toast not initialized, using sonner fallback');
+    toast.error(title, {
+      description: message,
+      duration: 5000,
+    });
     return '';
   }
   return modernToastInstance.showErrorWithRetry(title, message, onRetry, options);

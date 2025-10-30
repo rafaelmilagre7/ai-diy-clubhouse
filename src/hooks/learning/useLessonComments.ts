@@ -10,6 +10,7 @@ import {
   showModernErrorWithRetry,
   dismissModernToast 
 } from '@/lib/toast-helpers';
+import { toast } from 'sonner';
 import { Comment } from "@/types/learningTypes";
 import { useLogging } from "@/hooks/useLogging";
 
@@ -219,9 +220,24 @@ export const useLessonComments = (lessonId: string) => {
       console.log('[DEBUG-COMMENT] 🔍 Resposta do banco:', { hasError: !!error, hasData: !!data });
         
       if (error) {
-        console.error('Insert error:', error);
+        console.error('[DEBUG-COMMENT] ❌ Erro do Supabase:', error);
+        console.error('[DEBUG-COMMENT] 📄 Detalhes:', {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint
+        });
         logError('Erro ao adicionar comentário à aula', error);
-        throw error;
+        
+        // Melhorar mensagem de erro para o usuário
+        const userMessage = error.message || 
+          (error.code === '42P01' ? 'Tabela não encontrada no banco de dados' :
+           error.code === '42501' ? 'Sem permissão para adicionar comentário' :
+           'Erro desconhecido ao salvar comentário');
+        
+        const enhancedError = new Error(userMessage);
+        (enhancedError as any).originalError = error;
+        throw enhancedError;
       }
 
       // Log da ação para auditoria
@@ -286,15 +302,31 @@ export const useLessonComments = (lessonId: string) => {
         logError("Erro ao adicionar comentário à aula", error);
         if (loadingId) dismissModernToast(loadingId);
         
-        try {
-          showModernErrorWithRetry(
-            "Não foi possível enviar",
-            error.message || "Verifique sua conexão e tente novamente",
-            () => addComment(content, parentId)
-          );
-        } catch (toastError) {
-          console.error('[DEBUG-COMMENT] ⚠️ Toast falhou, usando alert:', toastError);
-          alert(`Erro ao enviar comentário: ${error.message || 'Erro desconhecido'}`);
+        // Primeiro, tentar toast moderno com retry
+        const toastShown = showModernErrorWithRetry(
+          "Não foi possível enviar",
+          error.message || "Verifique sua conexão e tente novamente",
+          () => addComment(content, parentId)
+        );
+
+        // Se não retornou um ID válido, usar fallback de emergência
+        if (!toastShown) {
+          console.warn('[DEBUG-COMMENT] ⚠️ Toast moderno falhou, usando fallback');
+          // Tentar sonner direto
+          try {
+            toast.error("Erro ao enviar comentário", {
+              description: error.message || "Verifique sua conexão e tente novamente",
+              duration: 5000,
+              action: {
+                label: "Tentar novamente",
+                onClick: () => addComment(content, parentId)
+              }
+            });
+          } catch (sonnerError) {
+            // Último recurso: alert
+            console.error('[DEBUG-COMMENT] 🔴 Todos os toasts falharam, usando alert');
+            alert(`Erro ao enviar comentário: ${error.message || 'Erro desconhecido'}\n\nClique em OK e tente novamente.`);
+          }
         }
       } finally {
         setIsSubmitting(false);
