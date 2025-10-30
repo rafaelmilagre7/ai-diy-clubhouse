@@ -98,13 +98,16 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
           .eq("user_id", userData.user.id)
           .eq("lesson_id", lessonId)
           .select()
-          .single();
+          .maybeSingle();
           
         data = updateResult.data;
         error = updateResult.error;
         
         if (error) {
           console.error('[MUTATION] ❌ Erro no UPDATE:', error);
+        } else if (!data) {
+          console.error('[MUTATION] ❌ Nenhum dado retornado após UPDATE');
+          throw new Error('Nenhum dado retornado após atualizar progresso');
         } else {
           console.log('[MUTATION] ✅ UPDATE concluído com sucesso!', data);
         }
@@ -123,13 +126,16 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
             last_position_seconds: 0
           })
           .select()
-          .single();
+          .maybeSingle();
           
         data = insertResult.data;
         error = insertResult.error;
         
         if (error) {
           console.error('[MUTATION] ❌ Erro no INSERT:', error);
+        } else if (!data) {
+          console.error('[MUTATION] ❌ Nenhum dado retornado após INSERT');
+          throw new Error('Nenhum dado retornado após criar progresso');
         } else {
           console.log('[MUTATION] ✅ INSERT concluído com sucesso!', data);
         }
