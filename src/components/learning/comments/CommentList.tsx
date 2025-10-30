@@ -14,6 +14,7 @@ interface CommentListProps {
   onDelete: (commentId: string) => Promise<void>;
   onLike: (commentId: string) => Promise<void>;
   isLoading?: boolean;
+  isSubmitting?: boolean;
   error?: Error | null;
 }
 
@@ -24,6 +25,7 @@ export const CommentList: React.FC<CommentListProps> = ({
   onDelete,
   onLike,
   isLoading = false,
+  isSubmitting = false,
   error = null
 }) => {
   // Garantir que comments seja sempre um array antes de chamar filter
@@ -90,6 +92,7 @@ export const CommentList: React.FC<CommentListProps> = ({
           onReply={onReply}
           onDelete={onDelete}
           onLike={onLike}
+          isSubmitting={isSubmitting}
         />
       ))}
     </div>

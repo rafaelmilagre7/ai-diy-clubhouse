@@ -67,6 +67,7 @@ export const LessonComments: React.FC<LessonCommentsProps> = ({ lessonId }) => {
         onDelete={deleteComment}
         onLike={likeComment}
         isLoading={isLoading}
+        isSubmitting={isSubmitting}
         error={error as Error | null}
       />
     </div>

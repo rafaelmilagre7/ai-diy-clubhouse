@@ -19,6 +19,7 @@ interface CommentItemProps {
   onDelete: (commentId: string) => Promise<void>;
   onLike: (commentId: string) => Promise<void>;
   isReply?: boolean;
+  isSubmitting?: boolean;
 }
 
 export const CommentItem: React.FC<CommentItemProps> = ({
@@ -27,7 +28,8 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   onReply,
   onDelete,
   onLike,
-  isReply = false
+  isReply = false,
+  isSubmitting = false
 }) => {
   const [isReplying, setIsReplying] = useState(false);
   const { user } = useAuth();
@@ -170,6 +172,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                 placeholder="Escreva sua resposta..."
                 autoFocus={true}
                 replyingTo={comment}
+                isSubmitting={isSubmitting}
               />
             </div>
           )}
@@ -186,6 +189,7 @@ export const CommentItem: React.FC<CommentItemProps> = ({
                   onDelete={onDelete}
                   onLike={onLike}
                   isReply={true}
+                  isSubmitting={isSubmitting}
                 />
               ))}
             </div>
