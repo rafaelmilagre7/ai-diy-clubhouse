@@ -26,7 +26,7 @@ export const useCommunityTopics = ({
           .from('community_topics')
           .select(`
             *,
-            profiles!community_topics_user_id_fkey(name, avatar_url),
+            profiles_community_public!community_topics_user_id_fkey(id, name, avatar_url),
             community_categories!community_topics_category_id_fkey(name, slug)
           `);
 
