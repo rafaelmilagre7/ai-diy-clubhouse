@@ -910,6 +910,13 @@ export type Database = {
             foreignKeyName: "community_posts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -957,6 +964,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -1036,6 +1050,13 @@ export type Database = {
             foreignKeyName: "fk_community_reports_reported_user_id"
             columns: ["reported_user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_reports_reported_user_id"
+            columns: ["reported_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1057,6 +1078,13 @@ export type Database = {
             foreignKeyName: "fk_community_reports_reporter_id"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_reports_reporter_id"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1072,6 +1100,13 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_reports_reviewed_by"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -1155,6 +1190,13 @@ export type Database = {
             foreignKeyName: "community_topics_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_topics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1217,6 +1259,13 @@ export type Database = {
             foreignKeyName: "connection_interactions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_interactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1273,6 +1322,13 @@ export type Database = {
             foreignKeyName: "connection_notifications_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1288,6 +1344,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -1343,6 +1406,13 @@ export type Database = {
             foreignKeyName: "conversations_participant_1_id_fkey"
             columns: ["participant_1_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_1_id_fkey"
+            columns: ["participant_1_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1358,6 +1428,13 @@ export type Database = {
             columns: ["participant_2_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_2_id_fkey"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -1562,6 +1639,13 @@ export type Database = {
             foreignKeyName: "direct_messages_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -1584,6 +1668,13 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -1744,6 +1835,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -1927,6 +2025,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "implementation_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3078,6 +3183,13 @@ export type Database = {
             foreignKeyName: "member_connections_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -3093,6 +3205,13 @@ export type Database = {
             columns: ["requester_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3146,6 +3265,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3223,6 +3349,13 @@ export type Database = {
             foreignKeyName: "message_reports_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -3238,6 +3371,13 @@ export type Database = {
             columns: ["reviewed_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3308,6 +3448,13 @@ export type Database = {
             foreignKeyName: "moderation_actions_moderator_id_fkey"
             columns: ["moderator_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -3323,6 +3470,13 @@ export type Database = {
             columns: ["target_user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3384,6 +3538,13 @@ export type Database = {
             columns: ["updated_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3511,6 +3672,13 @@ export type Database = {
             foreignKeyName: "network_matches_matched_user_id_fkey"
             columns: ["matched_user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_matches_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -3526,6 +3694,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3614,6 +3789,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "networking_match_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -3860,6 +4042,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "networking_profiles_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -4140,6 +4329,13 @@ export type Database = {
             columns: ["actor_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -4951,6 +5147,13 @@ export type Database = {
             foreignKeyName: "referral_benefits_referrer_id_fkey"
             columns: ["referrer_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_benefits_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -5401,6 +5604,13 @@ export type Database = {
             columns: ["created_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "solution_access_overrides_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -5906,6 +6116,13 @@ export type Database = {
             foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
             columns: ["matched_user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -5921,6 +6138,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -6195,6 +6419,13 @@ export type Database = {
             foreignKeyName: "suggestions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -6247,6 +6478,13 @@ export type Database = {
             columns: ["invited_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "team_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -6697,6 +6935,13 @@ export type Database = {
             foreignKeyName: "user_moderation_status_banned_by_fkey"
             columns: ["banned_by"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -6718,6 +6963,13 @@ export type Database = {
             foreignKeyName: "user_moderation_status_suspended_by_fkey"
             columns: ["suspended_by"]
             isOneToOne: false
+            referencedRelation: "profiles_community_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_suspended_by_fkey"
+            columns: ["suspended_by"]
+            isOneToOne: false
             referencedRelation: "profiles_networking_safe"
             referencedColumns: ["id"]
           },
@@ -6733,6 +6985,13 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles_community_public"
             referencedColumns: ["id"]
           },
           {
@@ -6880,6 +7139,27 @@ export type Database = {
           date: string | null
           solutions_generated: number | null
           unique_users: number | null
+        }
+        Relationships: []
+      }
+      profiles_community_public: {
+        Row: {
+          avatar_url: string | null
+          created_at: string | null
+          id: string | null
+          name: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string | null
+          id?: string | null
+          name?: string | null
         }
         Relationships: []
       }

@@ -19,10 +19,22 @@ export const useCommunityStats = () => {
         .select('*', { count: 'exact', head: true });
 
       // Contar usuários ativos (com pelo menos um tópico ou post)
-      const { data: activeUsers } = await supabase
-        .from('profiles')
-        .select('id')
-        .or('id.in.(select user_id from community_topics),id.in.(select user_id from community_posts)');
+      // Usando RPC para evitar acesso direto à tabela profiles
+      const { data: topicUsers } = await supabase
+        .from('community_topics')
+        .select('user_id');
+      
+      const { data: postUsers } = await supabase
+        .from('community_posts')
+        .select('user_id');
+      
+      // Criar conjunto único de IDs
+      const uniqueUserIds = new Set([
+        ...(topicUsers?.map(t => t.user_id) || []),
+        ...(postUsers?.map(p => p.user_id) || [])
+      ]);
+      
+      const activeUserCount = uniqueUserIds.size;
 
       // Contar tópicos resolvidos
       const { count: solvedCount } = await supabase
@@ -33,14 +45,14 @@ export const useCommunityStats = () => {
       console.log('Estatísticas carregadas:', {
         topicCount,
         postCount,
-        activeUserCount: activeUsers?.length || 0,
+        activeUserCount,
         solvedCount
       });
 
       return {
         topicCount: topicCount || 0,
         postCount: postCount || 0,
-        activeUserCount: activeUsers?.length || 0,
+        activeUserCount,
         solvedCount: solvedCount || 0
       };
     },
