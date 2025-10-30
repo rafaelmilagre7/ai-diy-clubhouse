@@ -30,6 +30,8 @@ export const UnifiedCertificatesList = ({
   } = useUnifiedCertificates(courseId);
   
   const handleGeneratePending = () => {
+    console.log('🎯 Iniciando geração de certificados pendentes...');
+    console.log('👤 Usuário atual:', certificates[0]?.user_id || 'não identificado');
     generatePendingCertificates();
   };
 

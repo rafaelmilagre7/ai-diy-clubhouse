@@ -293,25 +293,25 @@ export const useUnifiedCertificates = (courseId?: string) => {
     enabled: !!user
   });
   
-  // Gerar certificados pendentes - versão otimizada com tratamento de erro
+  // Gerar certificados pendentes
   const generatePendingCertificates = useMutation({
     mutationFn: async () => {
       if (!user) throw new Error("Usuário não autenticado");
       
-      console.log('🔄 Verificando certificados pendentes...');
+      console.log('🔄 Verificando certificados pendentes para usuário:', user.id);
       
-      // Tentar função otimizada primeiro
-      try {
-        const { data, error } = await supabase.rpc('generate_pending_certificates_optimized');
-        if (error) throw error;
-        return data;
-      } catch (optimizedError) {
-        // Fallback para função original
-        console.log('⚠️ Função otimizada não disponível, usando original...');
-        const { data, error } = await supabase.rpc('generate_pending_certificates');
-        if (error) throw error;
-        return data;
+      // Chamar diretamente a função existente
+      const { data, error } = await supabase.rpc('generate_pending_certificates', {
+        p_user_id: user.id
+      });
+      
+      if (error) {
+        console.error('❌ Erro ao gerar certificados:', error);
+        throw error;
       }
+      
+      console.log('✅ Resposta da função:', data);
+      return data;
     },
     onSuccess: (data) => {
       const totalGenerated = data.total_generated || 0;
@@ -341,8 +341,16 @@ export const useUnifiedCertificates = (courseId?: string) => {
       queryClient.invalidateQueries({ queryKey: ['unified-certificates'] });
     },
     onError: (error: any) => {
-      console.error("❌ Erro ao gerar certificados pendentes:", error);
-      toast.error('Erro ao verificar certificados pendentes. Tente novamente.');
+      console.error('❌ Erro na mutation:', error);
+      
+      // Mensagens de erro mais específicas
+      if (error.code === 'PGRST202') {
+        toast.error('Erro técnico: Função não encontrada no servidor');
+      } else if (error.message?.includes('não autenticado')) {
+        toast.error('Você precisa estar autenticado para gerar certificados');
+      } else {
+        toast.error('Erro ao verificar certificados pendentes. Tente novamente.');
+      }
     }
   });
   
