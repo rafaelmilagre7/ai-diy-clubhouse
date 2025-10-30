@@ -26,12 +26,15 @@ interface ExternalLink {
 interface ResourcesTabProps {
   solutionId: string;
   onComplete?: () => void;
+  onAdvanceToNext?: () => void;
+  isCompleted?: boolean;
 }
 
-const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) => {
+const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete, onAdvanceToNext, isCompleted }) => {
   const [resources, setResources] = useState<Resource[]>([]);
   const [externalLinks, setExternalLinks] = useState<ExternalLink[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAware, setIsAware] = useState(isCompleted || false);
   const { showError, showSuccess } = useToastModern();
 
   useEffect(() => {
@@ -152,6 +155,20 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
     if (format.includes('video') || fileName.match(/\.(mp4|webm|mov)$/)) return "Vídeo";
     
     return resource.format || "Arquivo";
+  };
+
+  const handleMarkAsAware = () => {
+    setIsAware(true);
+    if (onComplete) {
+      onComplete();
+    }
+    showSuccess("Progresso registrado", "Você marcou os materiais como visualizados.");
+    
+    setTimeout(() => {
+      if (onAdvanceToNext) {
+        onAdvanceToNext();
+      }
+    }, 1000);
   };
 
   const handleDownload = async (resource: Resource) => {
@@ -302,11 +319,12 @@ const ResourcesTab: React.FC<ResourcesTabProps> = ({ solutionId, onComplete }) =
       {resources.length > 0 && onComplete && (
         <div className="flex justify-center pt-6">
           <Button 
-            onClick={onComplete}
+            onClick={handleMarkAsAware}
             variant="outline"
             className="px-8"
+            disabled={isAware}
           >
-            Marcar como visualizado
+            {isAware ? "Concluído ✓" : "Marcar como visualizado"}
           </Button>
         </div>
       )}
