@@ -78,8 +78,11 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   } = useLessonCompletion({
     lessonId: lesson.id,
     onSuccess: () => {
-      console.log('[LESSON-CONTENT] ✅ Hook onSuccess - Abrindo modal NPS...');
+      console.log('[LESSON-CONTENT] ✅ Hook onSuccess DISPARADO!');
+      console.log('[LESSON-CONTENT] 🚪 Abrindo modal NPS... (antes)');
+      console.log('[LESSON-CONTENT] 📊 completionDialogOpen:', completionDialogOpen);
       setCompletionDialogOpen(true);
+      console.log('[LESSON-CONTENT] 🚪 Modal NPS aberto! (depois)');
     }
   });
   
@@ -101,18 +104,32 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   const safeResources = Array.isArray(resources) ? resources : [];
   
   const handleCompleteLesson = () => {
+    console.log('[LESSON-CONTENT] 🎯 handleCompleteLesson CHAMADO');
+    console.log('[LESSON-CONTENT] 📊 Estado atual:', {
+      userId: user?.id,
+      lessonId: lesson.id,
+      progressData,
+      isCompleted,
+      isCompleting,
+      completionDialogOpen
+    });
+    
     if (!user?.id) {
+      console.log('[LESSON-CONTENT] ❌ BLOQUEADO: Usuário não autenticado');
       toast.error("Você precisa estar autenticado para concluir a aula.");
       return;
     }
     
+    console.log('[LESSON-CONTENT] ✅ Usuário autenticado:', user.id);
+    
     // Validar usando dados diretos do banco (fonte de verdade)
     if (progressData?.progress_percentage >= 100 || progressData?.completed_at) {
+      console.log('[LESSON-CONTENT] ❌ BLOQUEADO: Aula já concluída', progressData);
       toast.info("Esta aula já foi marcada como concluída.");
       return;
     }
     
-    console.log('[LESSON-CONTENT] 🚀 Iniciando conclusão da aula...');
+    console.log('[LESSON-CONTENT] ✅ Validações passaram! Chamando completeLesson()...');
     completeLesson();
   };
 
