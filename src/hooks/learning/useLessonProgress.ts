@@ -67,22 +67,11 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       }
       
       console.log('[MUTATION] ✅ Usuário:', userData.user.id);
-      console.log('[MUTATION] 🔄 Verificando progresso existente...');
       
       const timestamp = new Date().toISOString();
       const progressPercentage = completed ? 100 : 1;
-      
-      // Verificar se já existe um registro
-      const { data: existingProgress } = await supabase
-        .from("learning_progress")
-        .select("id, started_at")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
-        .maybeSingle();
-      
-      console.log('[MUTATION] 📊 Progresso existente:', existingProgress);
 
-      // ✅ Usar RPC SECURITY DEFINER (bypassa RLS)
+      // ✅ Usar RPC SECURITY DEFINER (bypassa RLS) - SEM SELECT ANTES
       console.log('[MUTATION] 🔄 Chamando safe_upsert_learning_progress...');
       
       const { data: rpcData, error: rpcError } = await supabase.rpc(
@@ -100,21 +89,18 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       }
       
       console.log('[MUTATION] ✅ RPC executado com sucesso!', rpcData);
+      console.log('[MUTATION] 🔍 Operação realizada:', rpcData?.operation || 'UNKNOWN');
       
-      // Buscar dados atualizados
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .select("*")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
-        .maybeSingle();
-      
-      if (error || !data) {
-        console.warn('[MUTATION] ⚠️ Não foi possível buscar dados atualizados');
-        return { progress_percentage: progressPercentage };
+      // ✅ USAR DADOS DO RPC (sem SELECT adicional)
+      if (!rpcData) {
+        console.warn('[MUTATION] ⚠️ RPC não retornou dados');
+        return { progress_percentage: progressPercentage, completed };
       }
         
-      return { ...data, completed: completed };
+      return { 
+        ...rpcData,
+        completed 
+      };
     },
     onSuccess: async (result) => {
       console.log('[PROGRESS] ✅ Sucesso:', { completed: result.completed });
@@ -161,20 +147,9 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       
       const timestamp = new Date().toISOString();
       
-      // Verificar se já existe progresso antes de tentar criar
-      const { data: existingProgress } = await supabase
-        .from("learning_progress")
-        .select("id, progress_percentage")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
-        .maybeSingle();
-        
-      if (existingProgress) {
-        setIsCompleted(existingProgress.progress_percentage >= 100);
-        return existingProgress;
-      }
+      console.log('[INIT] 🔄 Inicializando progresso via RPC...');
       
-      // ✅ Usar RPC para inicializar progresso
+      // ✅ Usar RPC diretamente (sem SELECT antes) - ele faz UPSERT
       const { data: rpcData, error: rpcError } = await supabase.rpc(
         'safe_upsert_learning_progress',
         {
@@ -185,34 +160,19 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       );
       
       if (rpcError) {
+        console.error('[INIT] ❌ Erro no RPC:', rpcError);
         throw rpcError;
       }
       
-      // Buscar dados criados
-      const { data, error } = await supabase
-        .from("learning_progress")
-        .select("*")
-        .eq("user_id", userData.user.id)
-        .eq("lesson_id", lessonId)
-        .maybeSingle();
-        
-      if (error && error.code === '23505') {
-        // Se houve erro de duplicata, buscar o registro existente
-        const { data: existingData } = await supabase
-          .from("learning_progress")
-          .select("*")
-          .eq("user_id", userData.user.id)
-          .eq("lesson_id", lessonId)
-          .single();
-          
-        if (existingData) {
-          setIsCompleted(existingData.progress_percentage >= 100);
-        }
-        return existingData;
+      console.log('[INIT] ✅ RPC sucesso!', rpcData);
+      console.log('[INIT] 🔍 Operação realizada:', rpcData?.operation || 'UNKNOWN');
+      
+      // ✅ USAR DADOS DO RPC (sem SELECT adicional)
+      if (rpcData) {
+        setIsCompleted(rpcData.progress_percentage >= 100);
       }
       
-      if (error) throw error;
-      return data;
+      return rpcData;
     },
     onSuccess: (data) => {
       if (data) {
