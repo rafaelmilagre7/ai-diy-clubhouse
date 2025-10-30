@@ -83,16 +83,13 @@ export const CommentItem: React.FC<CommentItemProps> = ({
   
   // Garantindo que profiles tenha valores padrão se for null/undefined
   const profileData = comment.profiles || {
+    id: comment.user_id,
     name: "Usuário",
-    role: "",
-    avatar_url: "",
-    id: "",
-    email: ""
+    avatar_url: ""
   };
   
   // Usando os dados do perfil com verificação
   const profileName = profileData.name || "Usuário";
-  const profileRole = profileData.role || "";
   const avatarUrl = profileData.avatar_url || "";
   
   return (
@@ -109,12 +106,6 @@ export const CommentItem: React.FC<CommentItemProps> = ({
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-medium text-foreground">{profileName}</span>
             <span className="text-xs text-muted-foreground/80">{formatDate(comment.created_at)}</span>
-            {profileRole === 'admin' && (
-              <span className="text-xs px-2 py-1 bg-gradient-to-r from-primary/20 to-primary/10 text-primary rounded-full border border-primary/20">Admin</span>
-            )}
-            {profileRole === 'formacao' && (
-              <span className="text-xs px-2 py-1 bg-gradient-to-r from-status-warning/20 to-status-warning/10 text-status-warning rounded-full border border-status-warning/20">Instrutor</span>
-            )}
           </div>
           
           <div className="text-sm text-foreground/90 leading-relaxed">

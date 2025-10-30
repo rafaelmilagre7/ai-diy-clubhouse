@@ -71,10 +71,10 @@ export const useLessonComments = (lessonId: string) => {
           ])
         ];
         
-        // 4. Buscar perfis dos usuários
+        // 4. Buscar perfis dos usuários (usando view pública)
         const { data: userProfiles, error: profilesError } = await supabase
-          .from('profiles')
-          .select('*')
+          .from('profiles_community_public')
+          .select('id, name, avatar_url')
           .in('id', userIds);
           
         if (profilesError) {
@@ -116,9 +116,9 @@ export const useLessonComments = (lessonId: string) => {
             .map(reply => ({
               ...reply,
               profiles: profilesMap[reply.user_id] || {
+                id: reply.user_id,
                 name: "Usuário",
-                avatar_url: "",
-                role: ""
+                avatar_url: ""
               },
               user_has_liked: !!userLikes[reply.id]
             }));
@@ -127,9 +127,9 @@ export const useLessonComments = (lessonId: string) => {
           return {
             ...comment,
             profiles: profilesMap[comment.user_id] || {
+              id: comment.user_id,
               name: "Usuário",
-              avatar_url: "",
-              role: ""
+              avatar_url: ""
             },
             replies: commentReplies,
             user_has_liked: !!userLikes[comment.id]
