@@ -2,10 +2,11 @@ import React, { useMemo } from "react";
 import { UnifiedCertificateCard } from "./UnifiedCertificateCard";
 import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { Skeleton } from "@/components/ui/skeleton";
-import { AlertCircle, Award, BookOpen, TrendingUp, Zap } from "lucide-react";
+import { AlertCircle, Award, BookOpen, TrendingUp, Zap, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 
 interface UnifiedCertificatesListProps {
   courseId?: string;
@@ -20,6 +21,8 @@ export const UnifiedCertificatesList = ({
   selectedCategory = "all", 
   sortBy = "recent" 
 }: UnifiedCertificatesListProps) => {
+  const navigate = useNavigate();
+  
   const { 
     certificates, 
     isLoading, 
@@ -152,44 +155,49 @@ export const UnifiedCertificatesList = ({
           {hasNoCertificates ? (
             <>
               <h3 className="text-2xl font-bold text-foreground">
-                Sua jornada de certificação começa aqui! 🚀
+                🎓 Você ainda não possui certificados
               </h3>
+              
               <p className="text-lg text-muted-foreground">
-                Complete cursos e implemente soluções para conquistar seus primeiros certificados
-                e construir um portfólio sólido de competências.
+                Para conquistar seu primeiro certificado, você precisa completar 100% das aulas de uma formação.
               </p>
               
-              <div className="flex justify-center mt-6">
-          <Button
-            onClick={handleGeneratePending}
-            disabled={isGeneratingPending}
-            size="lg"
-            className="bg-gradient-to-r from-aurora to-primary hover:from-aurora/90 hover:to-primary/90 text-primary-foreground font-bold px-10 py-4 rounded-2xl shadow-2xl hover:shadow-aurora/25 transition-smooth transform hover:scale-105 group"
-          >
-            <Zap className="h-6 w-6 mr-3 group-hover:animate-bounce" />
-            {isGeneratingPending ? "🔍 Verificando..." : "✨ Descobrir Meus Certificados"}
-          </Button>
+              <div className="bg-card border border-border rounded-xl p-6 space-y-3 text-left">
+                <h4 className="font-semibold text-foreground flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5 text-system-healthy" />
+                  Como obter um certificado:
+                </h4>
+                
+                <ul className="space-y-2 text-muted-foreground">
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">✅</span>
+                    <span>Complete todas as aulas publicadas de um curso</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">✅</span>
+                    <span>Chegue a 100% de progresso no curso</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-primary mt-1">✅</span>
+                    <span>O certificado será gerado automaticamente</span>
+                  </li>
+                </ul>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-8 max-w-md mx-auto">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="p-4 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20"
+              <div className="pt-4">
+                <Button
+                  onClick={() => navigate('/learning')}
+                  size="lg"
+                  className="bg-gradient-to-r from-aurora-primary to-primary hover:from-aurora-primary/90 hover:to-primary/90 text-white font-bold px-10 py-4 rounded-2xl shadow-2xl hover:shadow-aurora-primary/25 transition-smooth transform hover:scale-105 group"
                 >
-                  <BookOpen className="h-8 w-8 text-primary mx-auto mb-2" />
-                  <p className="text-sm font-medium text-primary">Cursos Disponíveis</p>
-                  <p className="text-xs text-muted-foreground">Complete aulas e conquiste certificados</p>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  className="p-4 rounded-xl bg-gradient-to-br from-accent/10 to-accent/5 border border-accent/20"
-                >
-                  <TrendingUp className="h-8 w-8 text-accent mx-auto mb-2" />
-                  <p className="text-sm font-medium text-accent">Soluções Práticas</p>
-                  <p className="text-xs text-muted-foreground">Implemente e certifique seu conhecimento</p>
-                </motion.div>
+                  <BookOpen className="h-6 w-6 mr-3 group-hover:animate-bounce" />
+                  Ir para Formações
+                </Button>
               </div>
+              
+              <p className="text-sm text-muted-foreground mt-4">
+                💡 A verificação de certificados acontece automaticamente sempre que você acessa esta página
+              </p>
             </>
           ) : (
             <>

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { CertificatesFilters } from "@/components/learning/certificates/CertificatesFilters";
 import { UnifiedCertificatesList } from "@/components/learning/certificates/UnifiedCertificatesList";
 import { CertificateErrorBoundary } from "@/components/certificates/CertificateErrorBoundary";
-
+import { useUnifiedCertificates } from "@/hooks/learning/useUnifiedCertificates";
 import { useAuth } from "@/contexts/auth";
 import { Award } from "lucide-react";
+import { toast } from "sonner";
 
 
 const CertificatesPage = () => {
@@ -12,6 +13,25 @@ const CertificatesPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
+  
+  // Controle de verificação automática única
+  const hasCheckedOnMount = useRef(false);
+  
+  // Hook para gerar certificados pendentes
+  const { generatePendingCertificates } = useUnifiedCertificates();
+  
+  // Verificação automática ao entrar na página
+  useEffect(() => {
+    if (!hasCheckedOnMount.current && user) {
+      hasCheckedOnMount.current = true;
+      
+      // Toast sutil informando
+      toast.info("🔍 Verificando certificados disponíveis...");
+      
+      // Disparar verificação
+      generatePendingCertificates();
+    }
+  }, [user, generatePendingCertificates]);
   
   return (
     <div className="space-y-8">

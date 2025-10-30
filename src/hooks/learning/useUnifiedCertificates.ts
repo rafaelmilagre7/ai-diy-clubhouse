@@ -334,7 +334,7 @@ export const useUnifiedCertificates = (courseId?: string) => {
           });
         }
       } else {
-        toast.info('✨ Você já possui todos os certificados disponíveis!');
+        toast.info('Você ainda não completou nenhuma formação para gerar certificados.');
       }
       
       // Invalidar cache para recarregar certificados
