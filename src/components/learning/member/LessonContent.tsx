@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { LearningLesson, supabase } from "@/lib/supabase";
+import { LearningLesson } from "@/lib/supabase";
 import { LessonVideoPlayer } from "./LessonVideoPlayer";
 import { LessonComments } from "../comments/LessonComments";
 import { LessonResources } from "./LessonResources";
@@ -12,6 +12,7 @@ import { LessonDescription } from "./LessonDescription";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { useLessonCompletion } from "@/hooks/learning";
 
 interface LessonContentProps {
   lesson: LearningLesson;
@@ -48,6 +49,22 @@ export const LessonContent: React.FC<LessonContentProps> = ({
 }) => {
   const [completionDialogOpen, setCompletionDialogOpen] = useState(false);
   
+  // ✅ Usar hook otimizado para conclusão
+  const { 
+    completeLesson: completeWithHook, 
+    isCompleting, 
+    isCompleted: hookCompleted 
+  } = useLessonCompletion({
+    lessonId: lesson.id,
+    onSuccess: () => {
+      console.log('[LESSON-CONTENT] ✅ Hook onSuccess - Abrindo modal NPS...');
+      setCompletionDialogOpen(true);
+    }
+  });
+  
+  // Estado de conclusão: priorizar o do hook
+  const completed = hookCompleted || isCompleted;
+  
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
     return (
@@ -71,52 +88,22 @@ export const LessonContent: React.FC<LessonContentProps> = ({
     }
   };
   
-  const handleCompleteLesson = async () => {
-    console.log('[LESSON-CONTENT] 🎯 INICIANDO conclusão de aula');
+  const handleCompleteLesson = () => {
+    console.log('[LESSON-CONTENT] 🎯 CLIQUE RECEBIDO - Iniciando conclusão');
+    console.log('[LESSON-CONTENT] 📊 Estado:', { completed, isCompleting, lessonId: lesson.id });
     
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      console.error('[LESSON-CONTENT] ❌ Usuário não autenticado');
-      toast({
-        variant: "destructive",
-        title: "Autenticação necessária",
-        description: "Você precisa estar logado para marcar a aula como concluída"
-      });
+    if (completed) {
+      console.log('[LESSON-CONTENT] ⚠️ Já concluída, ignorando');
       return;
     }
     
-    console.log('[LESSON-CONTENT] ✅ Usuário autenticado:', user.id);
-    
-    if (!onComplete) {
-      console.error('[LESSON-CONTENT] ❌ onComplete não fornecido');
+    if (isCompleting) {
+      console.log('[LESSON-CONTENT] ⚠️ Já está processando, ignorando');
       return;
     }
     
-    try {
-      console.log('[LESSON-CONTENT] 🔄 Chamando onComplete()...');
-      const result = await onComplete();
-      console.log('[LESSON-CONTENT] 📊 Resultado:', result);
-      
-      // Verificação explícita: sucesso APENAS se result === true
-      if (result === true) {
-        console.log('[LESSON-CONTENT] ✅ Progresso salvo! Abrindo modal NPS...');
-        setCompletionDialogOpen(true);
-      } else {
-        console.error('[LESSON-CONTENT] ❌ Falha ao salvar (result não é true):', result);
-        toast({
-          variant: "destructive",
-          title: "Erro ao salvar",
-          description: "Não foi possível salvar seu progresso. Tente novamente."
-        });
-      }
-    } catch (error) {
-      console.error('[LESSON-CONTENT] ❌ Erro na execução:', error);
-      toast({
-        variant: "destructive",
-        title: "Erro",
-        description: error instanceof Error ? error.message : 'Erro ao concluir aula'
-      });
-    }
+    console.log('[LESSON-CONTENT] ✅ Chamando hook completeLesson...');
+    completeWithHook();
   };
 
   // Função para lidar com a navegação para a próxima aula a partir do modal
@@ -160,13 +147,13 @@ export const LessonContent: React.FC<LessonContentProps> = ({
       {/* Barra de navegação logo abaixo do vídeo */}
       <div className="w-full">
         <LessonNavigationBar
-          isCompleted={isCompleted}
+          isCompleted={completed}
           onComplete={handleCompleteLesson}
           onPrevious={onPreviousLesson}
           onNext={onNextLesson || (() => {})}
           prevLesson={prevLesson}
           nextLesson={nextLesson}
-          isUpdating={isUpdating}
+          isUpdating={isCompleting || isUpdating}
           currentLessonIndex={currentLessonIndex}
           totalLessons={totalLessons}
           onResetProgress={onResetProgress}

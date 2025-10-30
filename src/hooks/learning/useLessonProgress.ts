@@ -264,14 +264,9 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       setIsCompleted(true);
       toast.success('Aula marcada como concluída!');
       
-      // Invalidar caches relevantes
-      await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] }),
-        queryClient.invalidateQueries({ queryKey: ["learning-lesson-progress"] }),
-        queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] }),
-        queryClient.invalidateQueries({ queryKey: ["learning-course-stats"] }),
-        queryClient.invalidateQueries({ queryKey: ["course-details"] })
-      ]);
+      // ✅ Invalidar apenas caches essenciais (reduzido para evitar race conditions)
+      queryClient.invalidateQueries({ queryKey: ["learning-progress"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-course-stats"] });
       
       // Refetch para atualizar a UI
       await refetchProgress();
