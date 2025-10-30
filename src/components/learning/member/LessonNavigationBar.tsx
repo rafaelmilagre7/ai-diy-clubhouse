@@ -4,7 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle, Loader2 } from "lucide-react";
 import { LearningLesson } from "@/lib/supabase/types";
 interface LessonNavigationBarProps {
   isCompleted: boolean;
-  onComplete: () => Promise<void> | void;
+  onComplete: () => void;
   onPrevious?: () => void;
   onNext: () => void;
   prevLesson?: LearningLesson | null;
@@ -27,11 +27,10 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
   onResetProgress
 }) => {
   const [showResetButton, setShowResetButton] = React.useState(false);
-  const [isProcessing, setIsProcessing] = React.useState(false);
 
   // Mostrar botão de reset após 5 segundos se ainda estiver salvando
   React.useEffect(() => {
-    if (isUpdating || isProcessing) {
+    if (isUpdating) {
       const timer = setTimeout(() => {
         setShowResetButton(true);
       }, 5000);
@@ -39,25 +38,7 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
     } else {
       setShowResetButton(false);
     }
-  }, [isUpdating, isProcessing]);
-
-  const handleCompleteClick = async () => {
-    if (isCompleted || isUpdating || isProcessing) return;
-    
-    console.log('[NAV-BAR] 🎯 Botão clicado!');
-    setIsProcessing(true);
-    
-    try {
-      console.log('[NAV-BAR] 🔄 Chamando onComplete...');
-      await onComplete();
-      console.log('[NAV-BAR] ✅ onComplete concluído!');
-    } catch (error) {
-      console.error('[NAV-BAR] ❌ Erro no onComplete:', error);
-    } finally {
-      setIsProcessing(false);
-      console.log('[NAV-BAR] 🏁 Processamento finalizado');
-    }
-  };
+  }, [isUpdating]);
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -89,8 +70,8 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
         {/* Botão Marcar como Concluída */}
         <div className="flex justify-center">
           <Button 
-            onClick={handleCompleteClick} 
-            disabled={isCompleted || isUpdating || isProcessing}
+            onClick={onComplete} 
+            disabled={isCompleted || isUpdating}
             className={`gap-2 px-6 py-3 font-medium transition-all duration-300 border-0 ${
               isCompleted 
                 ? "bg-operational/20 text-operational cursor-not-allowed opacity-80" 
@@ -98,7 +79,7 @@ export const LessonNavigationBar: React.FC<LessonNavigationBarProps> = ({
             }`}
           >
             <CheckCircle className={`h-4 w-4 ${isCompleted ? "text-operational" : "text-white"}`} />
-            {(isUpdating || isProcessing) ? (
+            {isUpdating ? (
               <span className="flex items-center gap-2">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 Salvando...
