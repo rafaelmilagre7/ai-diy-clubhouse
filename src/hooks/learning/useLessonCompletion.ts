@@ -23,25 +23,36 @@ export const useLessonCompletion = ({ lessonId, initialCompleted = false, onSucc
 
   const completeMutation = useMutation({
     mutationFn: async () => {
+      console.log('🚀 [MUTATION] Iniciando mutation...');
+      console.log('👤 [MUTATION] User ID:', user?.id);
+      console.log('📚 [MUTATION] Lesson ID:', lessonId);
+      
       if (!user?.id) {
+        console.error('❌ [MUTATION] User ID ausente!');
         throw new Error("Usuário não autenticado");
       }
 
-      console.log('🎯 [LESSON-COMPLETION] Iniciando conclusão:', { lessonId, userId: user.id });
-
-      // Chamar nova RPC simplificada
-      const { data, error } = await supabase.rpc('complete_lesson_v2', {
+      const rpcParams = {
         p_lesson_id: lessonId,
         p_progress_percentage: 100,
         p_completed_at: new Date().toISOString()
-      });
+      };
+
+      console.log('📡 [MUTATION] Chamando RPC complete_lesson_v2 com:', rpcParams);
+
+      const { data, error } = await supabase.rpc('complete_lesson_v2', rpcParams);
 
       if (error) {
-        console.error('❌ [LESSON-COMPLETION] Erro:', error);
+        console.error('❌ [MUTATION] Erro retornado pela RPC:', {
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          hint: error.hint
+        });
         throw error;
       }
 
-      console.log('✅ [LESSON-COMPLETION] Sucesso:', data);
+      console.log('✅ [MUTATION] Sucesso! Data retornada:', data);
       return data;
     },
     onSuccess: (data) => {

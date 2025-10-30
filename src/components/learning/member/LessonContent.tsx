@@ -51,9 +51,10 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // ✅ Usar hook otimizado para conclusão com sincronização de estado
   const { 
-    completeLesson: completeWithHook, 
-    isCompleting, 
-    isCompleted: hookCompleted 
+    completeLesson: completeWithHook,
+    isCompleting: hookIsCompleting,
+    isCompleted: hookCompleted,
+    error: hookError
   } = useLessonCompletion({
     lessonId: lesson.id,
     initialCompleted: isCompleted,
@@ -65,6 +66,7 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   
   // Estado de conclusão: priorizar o do hook
   const completed = hookCompleted || isCompleted;
+  const isCompleting = hookIsCompleting || isUpdating;
   
   // Verificar se temos um objeto lesson válido
   if (!lesson) {
@@ -90,22 +92,36 @@ export const LessonContent: React.FC<LessonContentProps> = ({
   };
   
   const handleCompleteLesson = () => {
-    alert(`🔔 BOTÃO CLICADO!\n\nDados:\n- User ID: ${user?.id || 'N/A'}\n- Lesson ID: ${lesson.id}\n- isCompleted: ${completed}\n- isCompleting: ${isCompleting}`);
-    
     console.log('[LESSON-CONTENT] 🎯 CLIQUE RECEBIDO - Iniciando conclusão');
-    console.log('[LESSON-CONTENT] 📊 Estado:', { completed, isCompleting, lessonId: lesson.id, userId: user?.id });
+    console.log('[LESSON-CONTENT] 📊 Dados:', { 
+      userId: user?.id, 
+      lessonId: lesson.id,
+      completed,
+      isCompleting,
+      hookCompleted,
+      hookIsCompleting
+    });
+    
+    if (!user?.id) {
+      console.error('[LESSON-CONTENT] ❌ Usuário não autenticado!');
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar autenticado para concluir a aula.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     if (completed) {
       console.log('[LESSON-CONTENT] ⚠️ Já concluída, ignorando');
+      toast({
+        title: "Aula já concluída",
+        description: "Esta aula já foi marcada como concluída.",
+      });
       return;
     }
     
-    if (isCompleting) {
-      console.log('[LESSON-CONTENT] ⚠️ Já está processando, ignorando');
-      return;
-    }
-    
-    console.log('[LESSON-CONTENT] ✅ Chamando hook completeLesson...');
+    console.log('[LESSON-CONTENT] ⚡ Chamando completeWithHook...');
     completeWithHook();
   };
 
