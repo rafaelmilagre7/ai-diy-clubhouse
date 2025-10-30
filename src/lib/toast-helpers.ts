@@ -180,6 +180,12 @@ export const showModernErrorWithRetry = (
   onRetry: () => void,
   options?: Omit<ModernToastOptions, 'action'>
 ): ToastId => {
+  console.log('[DEBUG-TOAST] showModernErrorWithRetry chamado', {
+    title,
+    isInitialized: !!modernToastInstance,
+    instance: modernToastInstance
+  });
+  
   if (!modernToastInstance) {
     console.warn('Modern toast not initialized, falling back to legacy');
     showErrorToast(title, message);

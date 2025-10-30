@@ -9,9 +9,17 @@ export const ToastModernProvider = () => {
   const toastInstance = useToastModern();
 
   useEffect(() => {
+    console.log('[DEBUG-TOAST-PROVIDER] 🎨 Inicializando toast moderno');
+    console.log('[DEBUG-TOAST-PROVIDER] toastRef.current:', toastRef.current);
+    console.log('[DEBUG-TOAST-PROVIDER] toastInstance:', toastInstance);
+    
     setGlobalToastRef(toastRef.current);
     setModernToastInstance(toastInstance);
+    
+    console.log('[DEBUG-TOAST-PROVIDER] ✅ Toast moderno configurado');
+    
     return () => {
+      console.log('[DEBUG-TOAST-PROVIDER] 🔄 Limpando toast moderno');
       setGlobalToastRef(null);
       setModernToastInstance(null);
     };

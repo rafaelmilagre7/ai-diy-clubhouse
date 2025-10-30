@@ -156,27 +156,31 @@ export const useLessonComments = (lessonId: string) => {
   
   // Adicionar comentário
   const addComment = async (content: string, parentId: string | null = null) => {
-    if (!user) {
-      showModernError(
-        "Login necessário",
-        "Você precisa estar logado para comentar nesta aula"
-      );
-      return;
-    }
-    
-    if (!content.trim()) {
-      showModernError(
-        "Conteúdo obrigatório",
-        "Escreva seu comentário antes de enviar"
-      );
-      return;
-    }
-    
-    let loadingId: string | number | undefined;
-    
     try {
-      setIsSubmitting(true);
-      log('Adicionando comentário à aula', { lessonId, hasParentId: !!parentId });
+      console.log('[DEBUG-COMMENT] 🚀 Iniciando addComment', { lessonId, hasParentId: !!parentId });
+      
+      if (!user) {
+        showModernError(
+          "Login necessário",
+          "Você precisa estar logado para comentar nesta aula"
+        );
+        return;
+      }
+      
+      if (!content.trim()) {
+        showModernError(
+          "Conteúdo obrigatório",
+          "Escreva seu comentário antes de enviar"
+        );
+        return;
+      }
+      
+      let loadingId: string | number | undefined;
+      
+      try {
+        console.log('[DEBUG-COMMENT] ✅ Dentro do try-catch interno');
+        setIsSubmitting(true);
+        log('Adicionando comentário à aula', { lessonId, hasParentId: !!parentId });
       
       // Verificar rate limiting
       const { data: canComment } = await supabase.rpc('check_comment_rate_limit', {
@@ -198,7 +202,9 @@ export const useLessonComments = (lessonId: string) => {
         "Enviando comentário...",
         parentId ? "Publicando sua resposta" : "Publicando seu comentário"
       );
+      console.log('[DEBUG-COMMENT] 📱 Toast de loading criado:', loadingId);
       
+      console.log('[DEBUG-COMMENT] 💾 Tentando inserir comentário no banco...');
       const { data, error } = await supabase
         .from('learning_comments')
         .insert({
@@ -209,6 +215,8 @@ export const useLessonComments = (lessonId: string) => {
           is_hidden: false
         })
         .select();
+      
+      console.log('[DEBUG-COMMENT] 🔍 Resposta do banco:', { hasError: !!error, hasData: !!data });
         
       if (error) {
         console.error('Insert error:', error);
@@ -272,15 +280,31 @@ export const useLessonComments = (lessonId: string) => {
       queryClient.invalidateQueries({ queryKey: ['learning-comments', lessonId] });
       
       return data;
-    } catch (error: any) {
-      logError("Erro ao adicionar comentário à aula", error);
-      if (loadingId) dismissModernToast(loadingId);
-      showModernErrorWithRetry(
-        "Não foi possível enviar",
-        error.message || "Verifique sua conexão e tente novamente",
-        () => addComment(content, parentId)
+      } catch (error: any) {
+        console.log('[DEBUG-COMMENT] ❌ Erro capturado no catch interno:', error);
+        console.log('[DEBUG-COMMENT] 🔧 loadingId no catch:', loadingId);
+        logError("Erro ao adicionar comentário à aula", error);
+        if (loadingId) dismissModernToast(loadingId);
+        
+        try {
+          showModernErrorWithRetry(
+            "Não foi possível enviar",
+            error.message || "Verifique sua conexão e tente novamente",
+            () => addComment(content, parentId)
+          );
+        } catch (toastError) {
+          console.error('[DEBUG-COMMENT] ⚠️ Toast falhou, usando alert:', toastError);
+          alert(`Erro ao enviar comentário: ${error.message || 'Erro desconhecido'}`);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    } catch (outerError: any) {
+      console.error('[DEBUG-COMMENT] 🔴 ERRO EXTERNO AO TRY-CATCH:', outerError);
+      showModernError(
+        "Erro inesperado",
+        "Ocorreu um erro ao processar seu comentário. Detalhes no console."
       );
-    } finally {
       setIsSubmitting(false);
     }
   };
