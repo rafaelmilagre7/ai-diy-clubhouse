@@ -335,8 +335,10 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         timeoutPromise
       ]);
       
-      console.log('[COMPLETE] ✅ Mutation concluída com sucesso!');
-      setIsCompleted(true);
+      // Aguardar um ciclo de render para garantir que onSuccess executou
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      console.log('[COMPLETE] ✅ Mutation e onSuccess concluídos!');
       return true;
       
     } catch (mutationError) {
@@ -363,11 +365,10 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
         }
         
         console.log('[COMPLETE] ✅ UPDATE direto bem-sucedido!');
-        setIsCompleted(true);
         toast.success('Aula marcada como concluída!');
         
         // Refetch para atualizar a UI
-        refetchProgress();
+        await refetchProgress();
         
         return true;
       } catch (fallbackError) {
