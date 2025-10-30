@@ -58,10 +58,14 @@ export const useLessonCompletion = ({ lessonId, initialCompleted = false, onSucc
     onSuccess: (data) => {
       setIsCompleted(true);
       
-      // Invalidar caches relevantes
+      // Invalidar query local primeiro (para UI imediata)
+      queryClient.invalidateQueries({ queryKey: ["learning-progress", lessonId] });
+      
+      // Invalidar queries globais (para sincronização)
       queryClient.invalidateQueries({ queryKey: ["learning-user-progress"] });
       queryClient.invalidateQueries({ queryKey: ["learning-course-stats"] });
-      queryClient.invalidateQueries({ queryKey: ["learning-progress", lessonId] });
+      queryClient.invalidateQueries({ queryKey: ["course-details"] });
+      queryClient.invalidateQueries({ queryKey: ["learning-completed-lessons"] });
       
       toast.success("Aula concluída com sucesso!");
       

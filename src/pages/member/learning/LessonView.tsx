@@ -11,7 +11,6 @@ import { LessonHeader } from "@/components/learning/member/LessonHeader";
 import { LessonLoadingSkeleton } from "@/components/learning/LessonLoadingSkeleton";
 import { useLessonData } from "@/hooks/learning/useLessonData";
 import { useLessonNavigation } from "@/hooks/learning/useLessonNavigation";
-import { useLessonProgress } from "@/hooks/learning/useLessonProgress";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 
@@ -73,14 +72,6 @@ const LessonView = () => {
     lessons: safeAllCourseLessons // Usar todas as aulas do curso em vez de apenas do módulo
   });
   
-  // Gerenciar progresso da lição
-  const {
-    isCompleted,
-    updateProgress,
-    isUpdating,
-    resetMutations
-  } = useLessonProgress({ lessonId });
-  
   // Buscar lições completadas para o sidebar
   const { data: completedLessonsData = [] } = useQuery({
     queryKey: ["learning-completed-lessons", moduleData?.module?.id],
@@ -108,11 +99,6 @@ const LessonView = () => {
   
   // Garantir que completedLessons é sempre um array
   const completedLessons = Array.isArray(completedLessonsData) ? completedLessonsData : [];
-
-  // Atualizar progresso quando o usuário interage com a lição
-  const handleProgressUpdate = (videoId: string, newProgress: number) => {
-    updateProgress(newProgress);
-  };
 
   if (isLoading) {
     return <LessonLoadingSkeleton />;
@@ -161,8 +147,8 @@ const LessonView = () => {
               title={lesson?.title || ""} 
               moduleTitle={moduleData?.module?.title || ""}
               courseTitle={courseInfo?.title}
-              courseId={validCourseId} // Usar courseId válido
-              progress={isCompleted ? 100 : 0}
+              courseId={validCourseId}
+              progress={0}
             />
             
             <div className="backdrop-blur-sm bg-white/5 rounded-2xl border border-white/10 p-6 shadow-2xl min-h-feature-block">
@@ -175,16 +161,12 @@ const LessonView = () => {
                   lesson={lesson} 
                   videos={safeVideos}
                   resources={safeResources}
-                  isCompleted={isCompleted}
-                  onProgressUpdate={handleProgressUpdate}
                   prevLesson={prevLesson}
                   nextLesson={nextLesson}
-                  courseId={validCourseId} // Usar courseId válido
+                  courseId={validCourseId}
                   allLessons={safeAllCourseLessons}
                   onNextLesson={navigateToNext}
                   onPreviousLesson={navigateToPrevious}
-                  isUpdating={isUpdating}
-                  onResetProgress={resetMutations}
                 />
               </Suspense>
             </div>
