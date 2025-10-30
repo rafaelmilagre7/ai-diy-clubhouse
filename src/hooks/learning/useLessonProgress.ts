@@ -87,7 +87,7 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
       if (existingProgress) {
         console.log('[MUTATION] 🔄 Executando UPDATE...');
         // UPDATE: Preservar started_at original
-        const updateResult = await supabase
+        const { error: updateError } = await supabase
           .from("learning_progress")
           .update({
             progress_percentage: progressPercentage,
@@ -96,25 +96,35 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
             last_position_seconds: 0
           })
           .eq("user_id", userData.user.id)
-          .eq("lesson_id", lessonId)
-          .select()
-          .maybeSingle();
-          
-        data = updateResult.data;
-        error = updateResult.error;
+          .eq("lesson_id", lessonId);
         
-        if (error) {
-          console.error('[MUTATION] ❌ Erro no UPDATE:', error);
-        } else if (!data) {
-          console.error('[MUTATION] ❌ Nenhum dado retornado após UPDATE');
-          throw new Error('Nenhum dado retornado após atualizar progresso');
-        } else {
-          console.log('[MUTATION] ✅ UPDATE concluído com sucesso!', data);
+        if (updateError) {
+          console.error('[MUTATION] ❌ Erro no UPDATE:', updateError);
+          throw new Error(`Erro ao atualizar: ${updateError.message}`);
         }
+        
+        console.log('[MUTATION] ✅ UPDATE concluído com sucesso!');
+        
+        // Buscar dados atualizados para retornar
+        const { data: updatedData, error: selectError } = await supabase
+          .from("learning_progress")
+          .select("*")
+          .eq("user_id", userData.user.id)
+          .eq("lesson_id", lessonId)
+          .single();
+        
+        if (selectError || !updatedData) {
+          console.warn('[MUTATION] ⚠️ Não foi possível buscar dados atualizados, mas UPDATE foi bem-sucedido');
+          data = { id: existingProgress.id, progress_percentage: progressPercentage };
+        } else {
+          data = updatedData;
+        }
+        
+        error = null;
       } else {
         console.log('[MUTATION] 🔄 Executando INSERT...');
         // INSERT: Criar novo registro
-        const insertResult = await supabase
+        const { data: insertedData, error: insertError } = await supabase
           .from("learning_progress")
           .insert({
             user_id: userData.user.id,
@@ -126,19 +136,16 @@ export function useLessonProgress({ lessonId }: UseLessonProgressProps) {
             last_position_seconds: 0
           })
           .select()
-          .maybeSingle();
-          
-        data = insertResult.data;
-        error = insertResult.error;
+          .single();
         
-        if (error) {
-          console.error('[MUTATION] ❌ Erro no INSERT:', error);
-        } else if (!data) {
-          console.error('[MUTATION] ❌ Nenhum dado retornado após INSERT');
-          throw new Error('Nenhum dado retornado após criar progresso');
-        } else {
-          console.log('[MUTATION] ✅ INSERT concluído com sucesso!', data);
+        if (insertError) {
+          console.error('[MUTATION] ❌ Erro no INSERT:', insertError);
+          throw new Error(`Erro ao inserir: ${insertError.message}`);
         }
+        
+        console.log('[MUTATION] ✅ INSERT concluído com sucesso!', insertedData);
+        data = insertedData;
+        error = null;
       }
         
       if (error) {
