@@ -1,13 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 import { Resend } from 'https://esm.sh/resend@4.0.0';
+import { getSecureCorsHeaders, isOriginAllowed, forbiddenOriginResponse } from '../_shared/secureCors.ts';
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<any>) => void };
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
 
 interface SendInviteEmailRequest {
   inviteId: string;
@@ -20,10 +16,18 @@ interface SendInviteEmailRequest {
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getSecureCorsHeaders(req);
+  
   console.log('🚀 [SEND-INVITE-EMAIL-OPTIMIZED] Processamento iniciado - v3.0');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // 🔒 VALIDAÇÃO CORS: Bloquear origens não confiáveis
+  if (!isOriginAllowed(req)) {
+    console.warn('[SECURITY] Origem não autorizada bloqueada:', req.headers.get('origin'));
+    return forbiddenOriginResponse();
   }
 
   if (req.method !== 'POST') {

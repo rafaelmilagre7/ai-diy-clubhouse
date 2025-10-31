@@ -1,11 +1,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getSecureCorsHeaders, isOriginAllowed, forbiddenOriginResponse } from '../_shared/secureCors.ts'
 
 interface WhatsAppInviteRequest {
   phone: string;
@@ -19,8 +15,16 @@ interface WhatsAppInviteRequest {
 }
 
 serve(async (req) => {
+  const corsHeaders = getSecureCorsHeaders(req);
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // 🔒 VALIDAÇÃO CORS: Bloquear origens não confiáveis
+  if (!isOriginAllowed(req)) {
+    console.warn('[SECURITY] Origem não autorizada bloqueada:', req.headers.get('origin'));
+    return forbiddenOriginResponse();
   }
 
   try {

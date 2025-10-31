@@ -1,20 +1,24 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { getSupabaseServiceClient, cleanupConnections } from '../_shared/supabase-client.ts';
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getSecureCorsHeaders, isOriginAllowed, forbiddenOriginResponse } from '../_shared/secureCors.ts';
 
 interface ProcessInviteRequest {
   inviteId: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
+  const corsHeaders = getSecureCorsHeaders(req);
+  
   console.log('⚡ [PROCESS-INVITE] Iniciando processamento automático...');
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // 🔒 VALIDAÇÃO CORS: Bloquear origens não confiáveis
+  if (!isOriginAllowed(req)) {
+    console.warn('[SECURITY] Origem não autorizada bloqueada:', req.headers.get('origin'));
+    return forbiddenOriginResponse();
   }
 
   if (req.method !== 'POST') {
