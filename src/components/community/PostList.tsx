@@ -44,7 +44,7 @@ export const PostList = ({ topicId }: PostListProps) => {
         .from('community_posts')
         .select(`
           *,
-          profiles!community_posts_user_id_fkey(id, name, avatar_url)
+          profiles(id, name, avatar_url)
         `)
         .eq('topic_id', topicId)
         .order('created_at', { ascending: true });
