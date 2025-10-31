@@ -43,6 +43,49 @@ export const useUnifiedFileUpload = ({
   const { toast } = useToast();
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // 🔒 SEGURANÇA: Upload via Edge Function para profile-pictures
+  const uploadViaEdgeFunction = useCallback(async (file: File) => {
+    console.log('[SECURITY] Uploading profile picture via secure edge function');
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    // Obter sessão do usuário
+    const { data: { session } } = await (window as any).supabase.auth.getSession();
+    
+    if (!session?.access_token) {
+      throw new Error('Usuário não autenticado');
+    }
+
+    const supabaseUrl = (window as any).supabase.supabaseUrl || 'https://zotzvtepvpnkcoobdubt.supabase.co';
+    
+    const response = await fetch(
+      `${supabaseUrl}/functions/v1/upload-profile-picture`,
+      {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      }
+    );
+
+    const result = await response.json();
+    
+    if (!result.success) {
+      throw new Error(result.error || 'Erro ao fazer upload');
+    }
+
+    console.log('[SECURITY] Profile picture uploaded securely:', result.publicUrl);
+
+    return {
+      success: true,
+      publicUrl: result.publicUrl,
+      fileName: result.fileName,
+      fileSize: result.fileSize
+    };
+  }, []);
+
   const uploadFile = useCallback(async (file: File) => {
     console.log(`[UNIFIED_UPLOAD] Upload via hook unificado para bucket: ${bucketName}`);
     
@@ -54,18 +97,33 @@ export const useUnifiedFileUpload = ({
     try {
       abortControllerRef.current = new AbortController();
 
-      const result = await legacyUpload(
-        file,
-        bucketName,
-        folder,
-        (progress) => {
-          console.log(`[UNIFIED_UPLOAD] Progresso: ${progress}%`);
-          setProgress(progress);
-        }
-      );
+      let result;
 
-      if (!result.success) {
-        throw new Error((result as any).error);
+      // 🔒 SEGURANÇA: Profile pictures sempre usa edge function
+      if (bucketName === 'profile-pictures') {
+        result = await uploadViaEdgeFunction(file);
+      } else {
+        // Outros buckets usam o sistema unificado padrão
+        const legacyResult = await legacyUpload(
+          file,
+          bucketName,
+          folder,
+          (progress) => {
+            console.log(`[UNIFIED_UPLOAD] Progresso: ${progress}%`);
+            setProgress(progress);
+          }
+        );
+
+        if (!legacyResult.success) {
+          throw new Error((legacyResult as any).error);
+        }
+
+        result = {
+          success: true,
+          publicUrl: legacyResult.publicUrl,
+          fileName: legacyResult.fileName,
+          fileSize: legacyResult.fileSize
+        };
       }
 
       const uploadedFileData = {
@@ -98,7 +156,7 @@ export const useUnifiedFileUpload = ({
       setIsUploading(false);
       abortControllerRef.current = null;
     }
-  }, [bucketName, folder, onUploadComplete, onUploadStart, onUploadError, toast]);
+  }, [bucketName, folder, onUploadComplete, onUploadStart, onUploadError, toast, uploadViaEdgeFunction]);
 
   const cancelUpload = useCallback(() => {
     if (abortControllerRef.current) {
