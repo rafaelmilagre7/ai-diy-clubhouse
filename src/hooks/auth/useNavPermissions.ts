@@ -15,15 +15,43 @@ export const useNavPermissions = () => {
 
   // Helper para verificar permissão em ambos os sistemas
   const checkPermission = (code: string, booleanKey: string): boolean => {
-    // 1. Primeiro verifica permissão por código (sistema novo)
-    if (hasPermission(code)) return true;
-    
-    // 2. Se não encontrou, verifica permissão boolean da role (sistema legado)
-    const rolePermissions = profile?.user_roles?.permissions;
-    if (rolePermissions && typeof rolePermissions === 'object') {
-      return rolePermissions[booleanKey] === true;
+    // Se ainda está carregando, retornar false temporariamente
+    if (permissionsLoading) {
+      return false;
+    }
+
+    // 1. Verificar permissão por código (sistema novo - RPC)
+    const hasCode = hasPermission(code);
+    if (hasCode) {
+      console.log(`✅ [checkPermission] ${code} → granted via RPC`);
+      return true;
     }
     
+    // 2. Verificar permissão boolean da role (sistema legado - JSON)
+    const rolePermissions = profile?.user_roles?.permissions;
+    if (rolePermissions && typeof rolePermissions === 'object') {
+      const hasBool = rolePermissions[booleanKey] === true;
+      if (hasBool) {
+        console.log(`✅ [checkPermission] ${code} → granted via JSON (${booleanKey})`);
+        return true;
+      }
+    }
+    
+    // 3. Fallback para roles premium conhecidos
+    const userRole = profile?.user_roles?.name;
+    if (['admin', 'membro_club', 'master_user'].includes(userRole || '')) {
+      // Roles premium têm acesso a features principais
+      if (['solutions', 'learning', 'tools', 'benefits', 'community', 'networking', 'events'].includes(booleanKey)) {
+        console.log(`✅ [checkPermission] ${code} → granted via premium fallback (role: ${userRole})`);
+        return true;
+      }
+    }
+    
+    console.log(`❌ [checkPermission] ${code} → denied`, { 
+      hasCode, 
+      rolePermissions, 
+      userRole 
+    });
     return false;
   };
 
