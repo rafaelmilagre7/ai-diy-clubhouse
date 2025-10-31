@@ -46,7 +46,7 @@ const TopicView = () => {
         .from('community_topics')
         .select(`
           *,
-          profiles_community_public!community_topics_user_id_fkey(id, name, avatar_url),
+          profiles:user_id(id, name, avatar_url),
           category:community_categories(id, name, slug)
         `)
         .eq('id', topicId)
