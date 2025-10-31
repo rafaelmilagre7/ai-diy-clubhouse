@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts"
 import { getSupabaseServiceClient, cleanupConnections } from '../_shared/supabase-client.ts'
 
+// ⚠️ SEGURANÇA: CORS aberto necessário para webhooks externos
+// Este endpoint recebe requisições de servidores externos (Hubla - não navegadores)
+// Proteção via: Circuit Breaker (5 concurrent max) + Signature validation (x-hubla-signature)
+// Documentação: supabase/functions/_shared/WEBHOOK_SECURITY.md
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-hubla-signature',

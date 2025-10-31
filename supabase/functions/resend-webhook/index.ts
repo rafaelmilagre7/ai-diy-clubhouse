@@ -1,6 +1,10 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
+// ⚠️ SEGURANÇA: CORS aberto necessário para webhooks externos
+// Este endpoint recebe requisições de servidores externos (Resend - não navegadores)
+// Proteção via: HMAC SHA-256 verification (svix-signature) - Rejeita webhooks sem assinatura válida
+// Documentação: supabase/functions/_shared/WEBHOOK_SECURITY.md
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, svix-id, svix-timestamp, svix-signature',
