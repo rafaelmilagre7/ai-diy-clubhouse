@@ -10,6 +10,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   legacyUpload, 
   mapLegacyBucketToContext,
@@ -51,13 +52,13 @@ export const useUnifiedFileUpload = ({
     formData.append('file', file);
 
     // Obter sessão do usuário
-    const { data: { session } } = await (window as any).supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     
     if (!session?.access_token) {
       throw new Error('Usuário não autenticado');
     }
 
-    const supabaseUrl = (window as any).supabase.supabaseUrl || 'https://zotzvtepvpnkcoobdubt.supabase.co';
+    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
     
     const response = await fetch(
       `${supabaseUrl}/functions/v1/upload-profile-picture`,
