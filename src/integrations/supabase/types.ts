@@ -8045,6 +8045,18 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_current_profile_values: {
+        Args: { p_user_id: string }
+        Returns: {
+          current_email: string
+          current_id: string
+          current_is_master_user: boolean
+          current_onboarding_completed: boolean
+          current_organization_id: string
+          current_role_id: string
+          current_status: string
+        }[]
+      }
       get_current_user_role: { Args: never; Returns: string }
       get_current_user_role_safe: { Args: never; Returns: string }
       get_engagement_metrics_by_period: {
