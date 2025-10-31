@@ -1,16 +1,20 @@
 
 // supabase/functions/get-assistant-messages/index.ts
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
+import { getSecureCorsHeaders, isOriginAllowed, forbiddenOriginResponse } from '../_shared/secureCors.ts';
 
 serve(async (req) => {
+  const corsHeaders = getSecureCorsHeaders(req);
+  
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // 🔒 VALIDAÇÃO CORS: Bloquear origens não confiáveis
+  if (!isOriginAllowed(req)) {
+    console.warn('[SECURITY] Origem não autorizada bloqueada:', req.headers.get('origin'));
+    return forbiddenOriginResponse();
   }
 
   try {

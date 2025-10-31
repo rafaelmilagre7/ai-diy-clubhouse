@@ -1,9 +1,17 @@
 import { createClient } from '@supabase/supabase-js'
-import { corsHeaders } from '../_shared/cors.ts'
+import { getSecureCorsHeaders, isOriginAllowed, forbiddenOriginResponse } from '../_shared/secureCors.ts'
 
 Deno.serve(async (req) => {
+  const corsHeaders = getSecureCorsHeaders(req);
+  
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
+  }
+
+  // 🔒 VALIDAÇÃO CORS: Bloquear origens não confiáveis
+  if (!isOriginAllowed(req)) {
+    console.warn('[SECURITY] Origem não autorizada bloqueada:', req.headers.get('origin'));
+    return forbiddenOriginResponse();
   }
 
   try {

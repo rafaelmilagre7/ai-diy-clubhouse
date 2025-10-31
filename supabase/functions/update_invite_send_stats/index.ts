@@ -1,17 +1,20 @@
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3'
-
-// Configuração de CORS
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
+import { getSecureCorsHeaders, isOriginAllowed, forbiddenOriginResponse } from '../_shared/secureCors.ts'
 
 // Lidar com requisição OPTIONS para CORS
 Deno.serve(async (req) => {
+  const corsHeaders = getSecureCorsHeaders(req);
+  
   // Esta função de edge aceita requisições POST apenas
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders })
+  }
+
+  // 🔒 VALIDAÇÃO CORS: Bloquear origens não confiáveis
+  if (!isOriginAllowed(req)) {
+    console.warn('[SECURITY] Origem não autorizada bloqueada:', req.headers.get('origin'));
+    return forbiddenOriginResponse();
   }
 
   try {
