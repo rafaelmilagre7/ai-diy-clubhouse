@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/auth';
 
 export interface PresenceState {
   isOnline: boolean;
@@ -14,29 +15,32 @@ export const useUserPresence = (userId: string) => {
   useEffect(() => {
     if (!userId) return;
 
-    const channel = supabase.channel(`presence:${userId}`);
+    // Buscar last_active do banco de dados
+    const fetchLastActive = async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('last_active')
+        .eq('id', userId)
+        .single();
 
-    channel
-      .on('presence', { event: 'sync' }, () => {
-        const state = channel.presenceState();
-        const userState = state[userId];
+      if (data?.last_active) {
+        const lastActiveDate = new Date(data.last_active);
+        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
         
-        if (userState && userState.length > 0) {
-          setPresence({
-            isOnline: true,
-            lastSeen: new Date(),
-          });
-        } else {
-          setPresence((prev) => ({
-            isOnline: false,
-            lastSeen: prev.lastSeen || new Date(),
-          }));
-        }
-      })
-      .subscribe();
+        setPresence({
+          isOnline: lastActiveDate > fiveMinutesAgo,
+          lastSeen: lastActiveDate,
+        });
+      }
+    };
+
+    fetchLastActive();
+
+    // Atualizar a cada 30 segundos
+    const interval = setInterval(fetchLastActive, 30000);
 
     return () => {
-      supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, [userId]);
 
@@ -77,5 +81,3 @@ export const useBroadcastPresence = () => {
     };
   }, [user]);
 };
-
-import { useAuth } from '@/contexts/auth';

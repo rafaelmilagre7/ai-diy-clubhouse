@@ -39,7 +39,7 @@ export const useDiscoverProfiles = () => {
         .not('id', 'in', `(${excludeIds.join(',')})`)
         .not('name', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(50);
+        .limit(100);
 
       if (error) throw error;
       return data as NetworkingProfile[];

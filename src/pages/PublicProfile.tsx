@@ -85,6 +85,10 @@ export default function PublicProfile() {
     try {
       await removeConnectionAsync(connectionStatus.id);
       setLocalStatus('none');
+      // Redirecionar para a página de conexões após remover
+      setTimeout(() => {
+        navigate('/networking/connections');
+      }, 1000);
     } catch (error) {
       console.error('Erro ao remover conexão:', error);
     }

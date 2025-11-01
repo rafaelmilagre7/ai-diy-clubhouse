@@ -147,6 +147,8 @@ export const useConnections = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['discover-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['networking-stats'] });
       toast.success('Solicitação recusada');
     },
     onError: (error) => {
