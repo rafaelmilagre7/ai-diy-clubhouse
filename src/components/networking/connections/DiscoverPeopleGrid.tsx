@@ -109,13 +109,17 @@ export const DiscoverPeopleGrid = () => {
 
   return (
     <div className="space-y-6">
-      {/* ✅ UPGRADE: Header premium */}
-      <DiscoverHeader 
-        totalMembers={profiles?.length || 0} 
-        isLoading={isLoading} 
-      />
+      {/* Header Simples */}
+      <div className="space-y-1">
+        <h2 className="text-xl font-bold text-foreground">
+          {profiles?.length || 0} membros disponíveis para conexão
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Encontre e conecte-se com outros membros da plataforma
+        </p>
+      </div>
 
-      {/* ✅ UPGRADE: SearchBar com loading state */}
+      {/* SearchBar */}
       <SearchBar 
         onSearch={setSearchQuery}
         placeholder="Buscar por nome, empresa, cargo ou indústria..."
