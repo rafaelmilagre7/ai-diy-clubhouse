@@ -4,12 +4,15 @@ import { Calendar } from '@/components/ui/calendar';
 import { useEvents } from '@/hooks/useEvents';
 import { EventModal } from './EventModal';
 import { Event } from '@/types/events';
-import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval } from 'date-fns';
+import { format, isSameDay, startOfMonth, endOfMonth, eachDayOfInterval, addMonths, subMonths } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { EventDay } from './EventDay';
 import { EventsListModal } from './EventsListModal';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export const EventCalendar = () => {
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [eventsForDay, setEventsForDay] = useState<Event[]>([]);
@@ -48,15 +51,70 @@ export const EventCalendar = () => {
     setSelectedEvent(event);
   };
 
-  const today = new Date();
-  const monthStart = startOfMonth(today);
-  const monthEnd = endOfMonth(today);
+  const handlePreviousMonth = () => {
+    setCurrentMonth(prev => subMonths(prev, 1));
+  };
+
+  const handleNextMonth = () => {
+    setCurrentMonth(prev => addMonths(prev, 1));
+  };
+
+  const handleToday = () => {
+    setCurrentMonth(new Date());
+  };
+
+  const monthStart = startOfMonth(currentMonth);
+  const monthEnd = endOfMonth(currentMonth);
   const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
 
   return (
     <div className="space-y-6">
-      <div className="rounded-lg border shadow-lg bg-card w-full max-w-6xl mx-auto">
+      <div className="rounded-2xl border-2 border-border/60 shadow-xl bg-gradient-to-br from-card via-card to-muted/30 w-full max-w-6xl mx-auto overflow-hidden">
+        {/* Cabeçalho do Calendário */}
+        <div className="bg-gradient-to-r from-aurora-primary/10 via-aurora-primary/5 to-transparent border-b-2 border-border/60 px-6 py-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <h2 className="text-3xl font-bold text-foreground">
+                {format(currentMonth, 'MMMM', { locale: ptBR }).charAt(0).toUpperCase() + format(currentMonth, 'MMMM', { locale: ptBR }).slice(1)}
+              </h2>
+              <span className="text-2xl font-semibold text-muted-foreground">
+                {format(currentMonth, 'yyyy')}
+              </span>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleToday}
+                className="font-medium hover:bg-aurora-primary/10 hover:text-aurora-primary hover:border-aurora-primary/50 transition-colors"
+              >
+                Hoje
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handlePreviousMonth}
+                className="hover:bg-aurora-primary/10 hover:text-aurora-primary hover:border-aurora-primary/50 transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={handleNextMonth}
+                className="hover:bg-aurora-primary/10 hover:text-aurora-primary hover:border-aurora-primary/50 transition-colors"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Calendário */}
         <Calendar
+          month={currentMonth}
+          onMonthChange={setCurrentMonth}
           mode="single"
           locale={ptBR}
           onDayClick={handleDayClick}
@@ -67,23 +125,24 @@ export const EventCalendar = () => {
             )
           }}
           modifiersClassNames={{
-            event: 'bg-aurora-primary/10 font-medium text-aurora-primary hover:bg-aurora-primary/20 transition-colors'
+            event: 'bg-aurora-primary/15 font-semibold text-aurora-primary hover:bg-aurora-primary/25 ring-2 ring-aurora-primary/30 transition-all duration-200'
           }}
-          className="w-full min-h-calendar p-6"
+          className="w-full min-h-calendar p-8"
           classNames={{
             months: "w-full grid grid-cols-1",
-            month: "space-y-4 w-full",
-            caption: "flex justify-center pt-1 relative items-center mb-4",
-            caption_label: "text-lg font-medium",
+            month: "space-y-6 w-full",
+            caption: "hidden", // Ocultar caption padrão, já temos nosso cabeçalho customizado
+            caption_label: "hidden",
+            nav: "hidden", // Ocultar navegação padrão
             table: "w-full border-collapse h-full",
-            head_row: "grid grid-cols-7 gap-1",
-            head_cell: "text-muted-foreground rounded-md font-normal text-calendar h-10 flex items-center justify-center",
-            row: "grid grid-cols-7 gap-1 h-event-row",
-            cell: "relative p-0 text-center text-sm focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md",
-            day: "h-full w-full p-2 font-normal hover:bg-accent/50 rounded-md transition-colors flex flex-col items-center justify-start",
-            day_today: "bg-accent/30",
-            day_selected: "bg-aurora-primary/20 text-aurora-primary hover:bg-aurora-primary/30",
-            day_outside: "opacity-50",
+            head_row: "grid grid-cols-7 gap-2 mb-3",
+            head_cell: "text-muted-foreground/80 rounded-lg font-semibold text-sm h-12 flex items-center justify-center uppercase tracking-wider",
+            row: "grid grid-cols-7 gap-2 h-event-row mb-2",
+            cell: "relative p-0 text-center focus-within:relative focus-within:z-20 [&:has([aria-selected])]:bg-transparent first:[&:has([aria-selected])]:rounded-l-xl last:[&:has([aria-selected])]:rounded-r-xl",
+            day: "h-full w-full p-3 font-medium hover:bg-muted/60 hover:shadow-md rounded-xl transition-all duration-200 flex flex-col items-center justify-start border-2 border-transparent hover:border-aurora-primary/20",
+            day_today: "bg-aurora-primary/10 border-aurora-primary/40 ring-2 ring-aurora-primary/20 font-bold",
+            day_selected: "bg-aurora-primary/25 text-aurora-primary hover:bg-aurora-primary/35 border-aurora-primary/50 shadow-lg",
+            day_outside: "opacity-40 text-muted-foreground/50",
           }}
           components={{
             DayContent: (props) => {
