@@ -109,13 +109,18 @@ export const useConnections = () => {
 
       if (error) throw error;
 
-      // Criar notificação
+      // Criar notificação unificada
       await supabase
-        .from('connection_notifications')
+        .from('notifications')
         .insert({
           user_id: recipientId,
-          sender_id: user.user.id,
-          type: 'request'
+          actor_id: user.user.id,
+          type: 'connection_request',
+          category: 'social',
+          title: 'Nova solicitação de conexão',
+          message: 'Quer se conectar com você',
+          action_url: `/networking/connections`,
+          priority: 'normal'
         });
 
       return data;
@@ -160,13 +165,18 @@ export const useConnections = () => {
 
       if (error) throw error;
 
-      // Criar notificação para quem enviou
+      // Criar notificação unificada para quem enviou
       await supabase
-        .from('connection_notifications')
+        .from('notifications')
         .insert({
           user_id: data.requester_id,
-          sender_id: data.recipient_id,
-          type: 'accepted'
+          actor_id: data.recipient_id,
+          type: 'connection_accepted',
+          category: 'social',
+          title: 'Conexão aceita! 🎉',
+          message: 'Aceitou sua solicitação de conexão',
+          action_url: `/networking/connections`,
+          priority: 'high'
         });
 
       return data;

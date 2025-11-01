@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Sheet,
   SheetContent,
@@ -16,9 +16,10 @@ import { useConversations, Conversation } from '@/hooks/networking/useConversati
 interface InboxDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  initialUserId?: string;
 }
 
-export const InboxDrawer = ({ open, onOpenChange }: InboxDrawerProps) => {
+export const InboxDrawer = ({ open, onOpenChange, initialUserId }: InboxDrawerProps) => {
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [newChatUser, setNewChatUser] = useState<{
     id: string;
@@ -29,6 +30,31 @@ export const InboxDrawer = ({ open, onOpenChange }: InboxDrawerProps) => {
   const [isSearching, setIsSearching] = useState(false);
 
   const { data: conversations = [], isLoading } = useConversations();
+
+  // Quando abrir com initialUserId, buscar o usuário e iniciar conversa
+  useEffect(() => {
+    if (open && initialUserId && conversations.length > 0) {
+      // Procurar conversa existente com esse usuário
+      const existingConv = conversations.find(
+        c => c.other_participant.id === initialUserId
+      );
+      
+      if (existingConv) {
+        setSelectedConversation(existingConv);
+        setNewChatUser(null);
+      } else {
+        // Se não encontrar conversa, buscar perfil do usuário
+        // (isso seria ideal com um hook, mas por ora vamos simplificar)
+        setNewChatUser({
+          id: initialUserId,
+          name: 'Usuário',
+          avatar_url: null,
+          company_name: null,
+        });
+        setSelectedConversation(null);
+      }
+    }
+  }, [open, initialUserId, conversations]);
 
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);

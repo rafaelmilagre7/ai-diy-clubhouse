@@ -98,13 +98,13 @@ export const useConnections = () => {
         .from('notifications')
         .insert({
           user_id: connection.requester_id,
+          actor_id: user?.id,
           type: 'connection_accepted',
+          category: 'social',
           title: 'Conexão aceita! 🎉',
-          message: 'Sua solicitação de conexão foi aceita. Vocês agora podem conversar!',
-          data: {
-            action_url: `/perfil/${connection.recipient_id}`,
-            priority: 'normal'
-          }
+          message: 'Aceitou sua solicitação de conexão',
+          action_url: `/perfil/${connection.recipient_id}`,
+          priority: 'high'
         });
 
       // Criar conversa automaticamente entre os dois usuários
@@ -170,13 +170,18 @@ export const useConnections = () => {
 
       if (error) throw error;
 
-      // Criar notificação para o destinatário
+      // Criar notificação unificada para o destinatário
       const { error: notifError } = await supabase
-        .from('connection_notifications')
+        .from('notifications')
         .insert({
           user_id: recipientId,
-          sender_id: user?.id,
-          type: 'request'
+          actor_id: user?.id,
+          type: 'connection_request',
+          category: 'social',
+          title: 'Nova solicitação de conexão',
+          message: 'Quer se conectar com você',
+          action_url: `/networking/connections`,
+          priority: 'normal'
         });
 
       if (notifError) console.error('Erro ao criar notificação:', notifError);

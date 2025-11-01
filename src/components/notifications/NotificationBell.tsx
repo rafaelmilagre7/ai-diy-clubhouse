@@ -16,9 +16,15 @@ import { cn } from '@/lib/utils';
 import { useNavigate } from 'react-router-dom';
 import { NotificationAvatar } from './NotificationAvatar';
 import { NotificationAvatarStack } from './NotificationAvatarStack';
+import { useState } from 'react';
 
-export const NotificationBell = () => {
+interface NotificationBellProps {
+  onOpenInbox?: (userId?: string) => void;
+}
+
+export const NotificationBell = ({ onOpenInbox }: NotificationBellProps = {}) => {
   const navigate = useNavigate();
+  const [isOpen, setIsOpen] = useState(false);
   const { 
     notifications, 
     unreadCount, 
@@ -41,6 +47,14 @@ export const NotificationBell = () => {
       await markAsRead(idsToMark);
     }
 
+    // Se for notificação de mensagem e tiver callback de abrir inbox
+    if (notification.type === 'new_message' && onOpenInbox) {
+      const senderId = notification.actor_id || notification.data?.sender_id;
+      setIsOpen(false); // Fechar dropdown
+      onOpenInbox(senderId); // Abrir inbox com conversa selecionada
+      return;
+    }
+
     // Navegar e fazer scroll para o elemento se houver
     if (notification.action_url) {
       try {
@@ -50,7 +64,7 @@ export const NotificationBell = () => {
         console.log('🚀 [NAVIGATION] Navegando para:', url.pathname);
         
         // CORREÇÃO: Fechar dropdown ANTES de navegar
-        document.body.click();
+        setIsOpen(false);
         
         // Usar setTimeout para garantir que o dropdown fechou
         setTimeout(() => {
@@ -114,6 +128,14 @@ export const NotificationBell = () => {
       case 'community_post_liked':
         return '👍';
       
+      // Networking
+      case 'connection_request':
+        return '👋';
+      case 'connection_accepted':
+        return '🎉';
+      case 'new_message':
+        return '💬';
+      
       // Eventos
       case 'event_reminder_24h':
         return '📅';
@@ -160,7 +182,7 @@ export const NotificationBell = () => {
   };
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <Button 
           variant="ghost" 

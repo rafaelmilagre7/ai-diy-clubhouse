@@ -6,6 +6,7 @@ import { Menu, MessageCircle } from "lucide-react";
 import { MemberUserMenu } from "./MemberUserMenu";
 import { NotificationsPopover } from "@/components/realtime/NotificationsPopover";
 import { LiveUpdateIndicator } from "@/components/realtime/LiveUpdateIndicator";
+import { NotificationBell } from "@/components/notifications/NotificationBell";
 import { InboxDrawer } from "@/components/networking/chat/InboxDrawer";
 import { useUnreadCount } from "@/hooks/networking/useUnreadCount";
 import { useNavigate } from "react-router-dom";
@@ -30,8 +31,14 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
   setSidebarOpen,
 }) => {
   const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const { data: unreadCount = 0 } = useUnreadCount();
   const navigate = useNavigate();
+
+  const handleOpenInbox = (userId?: string) => {
+    setSelectedUserId(userId);
+    setIsInboxOpen(true);
+  };
 
   return (
     <>
@@ -58,22 +65,22 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
           <Button
             variant="ghost"
             size="icon"
-            className="relative"
-            onClick={() => setIsInboxOpen(true)}
+            className="relative group transition-all duration-fast hover:bg-surface-elevated/50"
+            onClick={() => handleOpenInbox()}
           >
-            <MessageCircle className="h-5 w-5" />
+            <MessageCircle className="h-5 w-5 transition-transform group-hover:scale-110" />
             {unreadCount > 0 && (
               <Badge
                 variant="destructive"
-                className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs"
+                className="absolute -top-1 -right-1 h-5 min-w-5 flex items-center justify-center p-0 text-xs font-bold shadow-glow-sm animate-scale-in"
               >
                 {unreadCount > 99 ? '99+' : unreadCount}
               </Badge>
             )}
           </Button>
 
-          {/* Notificações Popover */}
-          <NotificationsPopover />
+          {/* Sistema de Notificações Unificado */}
+          <NotificationBell onOpenInbox={handleOpenInbox} />
           
           {/* Menu do usuário */}
           <MemberUserMenu />
@@ -81,7 +88,11 @@ export const MemberHeader: React.FC<MemberHeaderProps> = ({
       </header>
 
       {/* Drawer de Inbox */}
-      <InboxDrawer open={isInboxOpen} onOpenChange={setIsInboxOpen} />
+      <InboxDrawer 
+        open={isInboxOpen} 
+        onOpenChange={setIsInboxOpen}
+        initialUserId={selectedUserId}
+      />
     </>
   );
 };

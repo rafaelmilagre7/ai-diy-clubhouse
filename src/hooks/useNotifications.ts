@@ -246,6 +246,36 @@ export const useNotifications = (filters: {
               } : undefined
             });
           }
+      // Notificações de conexões
+      else if (['connection_request', 'connection_accepted'].includes(newNotification.type)) {
+        toast.info(newNotification.title, {
+          description: newNotification.message,
+          action: {
+            label: 'Ver',
+            onClick: () => {
+              if (newNotification.action_url) {
+                window.location.href = newNotification.action_url;
+              }
+            }
+          }
+        });
+      }
+      
+      // Notificações de novas mensagens
+      else if (newNotification.type === 'new_message') {
+        toast.info(newNotification.title, {
+          description: newNotification.message,
+          action: {
+            label: 'Ver',
+            onClick: () => {
+              if (newNotification.action_url) {
+                window.location.href = newNotification.action_url;
+              }
+            }
+          }
+        });
+      }
+      
       // Notificações de comunidade
       else if (['community_reply', 'community_mention', 'community_post_liked'].includes(newNotification.type)) {
         toast.info(newNotification.title, {
