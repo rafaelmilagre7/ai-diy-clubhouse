@@ -153,6 +153,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
                 label="Conexões"
                 icon={Users}
                 sidebarOpen={sidebarOpen}
+                isNew={true}
               />
               <TooltipNavItem
                 to="/networking"

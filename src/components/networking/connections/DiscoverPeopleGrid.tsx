@@ -4,17 +4,29 @@ import { ConnectionCardSkeleton } from './ConnectionCardSkeleton';
 import { ErrorState } from '../common/ErrorState';
 import { EmptyState } from '../common/EmptyState';
 import { SearchBar } from './SearchBar';
-import { Compass, Search, Users } from 'lucide-react';
+import { DiscoverHeader } from './DiscoverHeader';
+import { PaginationInfo } from './PaginationInfo';
+import { Search, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { useConnections } from '@/hooks/networking/useConnections';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/auth';
 import { toast } from 'sonner';
+import { motion, AnimatePresence } from 'framer-motion';
 
 export const DiscoverPeopleGrid = () => {
   const { user } = useAuth();
-  const { data: profiles, isLoading, error, refetch, nextPage, hasMore, page } = useDiscoverProfiles();
+  const { 
+    data: profiles, 
+    isLoading, 
+    error, 
+    refetch, 
+    nextPage, 
+    previousPage, 
+    hasMore, 
+    page,
+    isFetching 
+  } = useDiscoverProfiles();
   const [searchQuery, setSearchQuery] = useState('');
   const { sendConnectionRequestAsync } = useConnections();
   const [connectingIds, setConnectingIds] = useState<Set<string>>(new Set());
@@ -76,12 +88,7 @@ export const DiscoverPeopleGrid = () => {
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface-elevated border border-primary/30">
-          <div className="flex items-center gap-2">
-            <Compass className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-text-primary">Descobrir Pessoas</span>
-          </div>
-        </div>
+        <DiscoverHeader totalMembers={0} isLoading={true} />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {Array.from({ length: 6 }).map((_, i) => (
             <ConnectionCardSkeleton key={i} />
@@ -102,73 +109,89 @@ export const DiscoverPeopleGrid = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header com busca */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface-elevated border border-primary/30">
-          <div className="flex items-center gap-2">
-            <Compass className="w-5 h-5 text-primary" />
-            <span className="font-semibold text-text-primary">Descobrir Pessoas</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Users className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm text-muted-foreground">
-              {filteredProfiles?.length || 0} {filteredProfiles?.length === 1 ? 'membro' : 'membros'}
-            </span>
-          </div>
-        </div>
+      {/* ✅ UPGRADE: Header premium */}
+      <DiscoverHeader 
+        totalMembers={profiles?.length || 0} 
+        isLoading={isLoading} 
+      />
 
-        {/* ✅ MELHORIA #3: Campo de busca com debounce */}
-        <SearchBar 
-          onSearch={setSearchQuery}
-          placeholder="Buscar por nome, empresa, cargo ou indústria..."
-        />
-      </div>
+      {/* ✅ UPGRADE: SearchBar com loading state */}
+      <SearchBar 
+        onSearch={setSearchQuery}
+        placeholder="Buscar por nome, empresa, cargo ou indústria..."
+        isLoading={isFetching}
+        resultsCount={filteredProfiles?.length}
+      />
 
-      {/* Grid de Perfis */}
+      {/* ✅ UPGRADE: Grid com animações */}
       {filteredProfiles && filteredProfiles.length > 0 ? (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredProfiles.map((profile) => (
-              <ConnectionCard 
-                key={profile.id}
-                connection={{
-                  id: profile.id,
-                  requester_id: '',
-                  recipient_id: profile.id,
-                  status: 'none' as any,
-                  created_at: profile.created_at,
-                  updated_at: profile.created_at,
-                  recipient: {
-                    id: profile.id,
-                    name: profile.name,
-                    email: profile.email,
-                    avatar_url: profile.avatar_url,
-                    company_name: profile.company_name,
-                    current_position: profile.current_position,
-                    industry: profile.industry,
-                  }
-                }}
-                variant="discover"
-                onConnect={() => handleConnect(profile.id)}
-                isConnecting={connectingIds.has(profile.id)}
-                showPendingBadge={pendingIds.has(profile.id)}
-              />
-            ))}
-          </div>
-
-          {/* Botão Carregar Mais */}
-          {hasMore && (
-            <div className="flex justify-center pt-6">
-              <Button 
-                onClick={nextPage} 
-                variant="outline" 
-                className="gap-2 hover:bg-aurora/10 hover:border-aurora/40 focus-visible:ring-2 focus-visible:ring-aurora focus-visible:ring-offset-2"
+          {/* Overlay de loading durante fetch */}
+          <AnimatePresence>
+            {isFetching && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="fixed inset-0 bg-background/50 backdrop-blur-sm z-40 flex items-center justify-center"
               >
-                <Users className="w-4 h-4" />
-                Carregar Mais Perfis
-              </Button>
-            </div>
-          )}
+                <div className="flex flex-col items-center gap-3">
+                  <div className="w-12 h-12 border-4 border-aurora/30 border-t-aurora rounded-full animate-spin" />
+                  <p className="text-sm text-muted-foreground">Carregando perfis...</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6"
+          >
+            {filteredProfiles.map((profile, index) => (
+              <motion.div
+                key={profile.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.05, duration: 0.3 }}
+              >
+                <ConnectionCard 
+                  connection={{
+                    id: profile.id,
+                    requester_id: '',
+                    recipient_id: profile.id,
+                    status: 'none' as any,
+                    created_at: profile.created_at,
+                    updated_at: profile.created_at,
+                    recipient: {
+                      id: profile.id,
+                      name: profile.name,
+                      email: profile.email,
+                      avatar_url: profile.avatar_url,
+                      company_name: profile.company_name,
+                      current_position: profile.current_position,
+                      industry: profile.industry,
+                    }
+                  }}
+                  variant="discover"
+                  onConnect={() => handleConnect(profile.id)}
+                  isConnecting={connectingIds.has(profile.id)}
+                  showPendingBadge={pendingIds.has(profile.id)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* ✅ UPGRADE: Indicador de paginação premium */}
+          <PaginationInfo
+            currentPage={page}
+            hasMore={hasMore}
+            totalDisplayed={filteredProfiles.length}
+            onPrevious={previousPage}
+            onNext={nextPage}
+            isFetching={isFetching}
+          />
         </>
       ) : (
         <EmptyState
@@ -179,6 +202,8 @@ export const DiscoverPeopleGrid = () => {
               ? 'Tente ajustar sua busca ou explore outros termos'
               : 'Novos membros aparecerão aqui em breve'
           }
+          actionLabel={searchQuery ? 'Limpar busca' : undefined}
+          onAction={searchQuery ? () => setSearchQuery('') : undefined}
         />
       )}
     </div>

@@ -77,5 +77,6 @@ export const useDiscoverProfiles = () => {
     previousPage: () => setPage(p => Math.max(0, p - 1)),
     page,
     refetch: query.refetch,
+    isFetching: query.isFetching, // ✅ Expor isFetching para loading states
   };
 };
