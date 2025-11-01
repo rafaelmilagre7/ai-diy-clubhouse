@@ -2,21 +2,15 @@ import { Send } from 'lucide-react';
 import { useSentRequests } from '@/hooks/networking/useSentRequests';
 import { useConnections } from '@/hooks/networking/useConnections';
 import { SentRequestCard } from './SentRequestCard';
-import { SentRequestsHeader } from './SentRequestsHeader';
+
 import { EmptyState } from '../common/EmptyState';
 import { ErrorState } from '../common/ErrorState';
 import { AnimatePresence } from 'framer-motion';
-import { useMemo } from 'react';
+
 
 export const SentRequestsList = () => {
   const { sentRequests, isLoading, error } = useSentRequests();
   const { cancelRequest, isCancelingRequest } = useConnections();
-
-  // Calcular taxa de aceitação (mock - seria calculado no backend)
-  const acceptanceRate = useMemo(() => {
-    // Mock: 65% de taxa de aceitação
-    return 65;
-  }, []);
 
   if (isLoading) {
     return (
@@ -37,16 +31,16 @@ export const SentRequestsList = () => {
   if (sentRequests.length === 0) {
     return (
       <>
-        <SentRequestsHeader 
-          totalSent={0}
-          pendingCount={0}
-          acceptanceRate={0}
-          isLoading={isLoading}
-        />
+        <div className="mb-6">
+          <h2 className="text-xl font-semibold mb-1">Solicitações Enviadas</h2>
+          <p className="text-sm text-muted-foreground">
+            0 solicitações aguardando resposta
+          </p>
+        </div>
         <EmptyState 
           icon={Send}
           title="Nenhuma solicitação enviada"
-          description="Você ainda não enviou nenhuma solicitação de conexão. Explore a aba 'Descobrir' para encontrar pessoas interessantes!"
+          description="Você ainda não enviou nenhuma solicitação de conexão. Explore o Networking para encontrar pessoas interessantes!"
         />
       </>
     );
@@ -54,13 +48,13 @@ export const SentRequestsList = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Premium */}
-      <SentRequestsHeader 
-        totalSent={sentRequests.length}
-        pendingCount={sentRequests.length}
-        acceptanceRate={acceptanceRate}
-        isLoading={isLoading}
-      />
+      {/* Header Simples */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold mb-1">Solicitações Enviadas</h2>
+        <p className="text-sm text-muted-foreground">
+          {sentRequests.length} {sentRequests.length === 1 ? 'solicitação aguardando' : 'solicitações aguardando'} resposta
+        </p>
+      </div>
 
       {/* Grid de Solicitações com Animação */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
