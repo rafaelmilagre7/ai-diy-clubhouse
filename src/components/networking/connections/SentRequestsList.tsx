@@ -1,7 +1,7 @@
-import { Send, X, Eye } from 'lucide-react';
+import { Send } from 'lucide-react';
 import { useSentRequests } from '@/hooks/networking/useSentRequests';
 import { useConnections } from '@/hooks/networking/useConnections';
-import { ConnectionCard } from './ConnectionCard';
+import { SentRequestCard } from './SentRequestCard';
 import { SentRequestsHeader } from './SentRequestsHeader';
 import { EmptyState } from '../common/EmptyState';
 import { ErrorState } from '../common/ErrorState';
@@ -63,18 +63,18 @@ export const SentRequestsList = () => {
       />
 
       {/* Grid de Solicitações com Animação */}
-      <AnimatePresence mode="popLayout">
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <AnimatePresence mode="popLayout">
           {sentRequests.map((request) => (
-            <ConnectionCard 
+            <SentRequestCard 
               key={request.id} 
               connection={request}
-              variant="discover"
-              showPendingBadge={true}
+              onCancel={(id) => cancelRequest(id)}
+              isCanceling={isCancelingRequest}
             />
           ))}
-        </div>
-      </AnimatePresence>
+        </AnimatePresence>
+      </div>
     </div>
   );
 };

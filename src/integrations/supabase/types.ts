@@ -903,6 +903,13 @@ export type Database = {
             foreignKeyName: "community_posts_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_posts_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -957,6 +964,13 @@ export type Database = {
             columns: ["post_id"]
             isOneToOne: false
             referencedRelation: "community_posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -1043,6 +1057,13 @@ export type Database = {
             foreignKeyName: "fk_community_reports_reported_user_id"
             columns: ["reported_user_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_reports_reported_user_id"
+            columns: ["reported_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1071,6 +1092,13 @@ export type Database = {
             foreignKeyName: "fk_community_reports_reporter_id"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_reports_reporter_id"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1093,6 +1121,13 @@ export type Database = {
             columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_community_reports_reviewed_by"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -1183,6 +1218,13 @@ export type Database = {
             foreignKeyName: "community_topics_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "community_topics_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1252,6 +1294,13 @@ export type Database = {
             foreignKeyName: "connection_interactions_created_by_fkey"
             columns: ["created_by"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_interactions_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1315,6 +1364,13 @@ export type Database = {
             foreignKeyName: "connection_notifications_sender_id_fkey"
             columns: ["sender_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_notifications_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1337,6 +1393,13 @@ export type Database = {
             columns: ["sender_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "connection_notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -1399,6 +1462,13 @@ export type Database = {
             foreignKeyName: "conversations_participant_1_id_fkey"
             columns: ["participant_1_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_1_id_fkey"
+            columns: ["participant_1_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1421,6 +1491,13 @@ export type Database = {
             columns: ["participant_1_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_participant_2_id_fkey"
+            columns: ["participant_2_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -1632,6 +1709,13 @@ export type Database = {
             foreignKeyName: "direct_messages_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -1661,6 +1745,13 @@ export type Database = {
             columns: ["reply_to_id"]
             isOneToOne: false
             referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "direct_messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -1828,6 +1919,13 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_reminders_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -2020,6 +2118,13 @@ export type Database = {
           user_phone?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "implementation_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "implementation_requests_user_id_fkey"
             columns: ["user_id"]
@@ -3176,6 +3281,13 @@ export type Database = {
             foreignKeyName: "member_connections_recipient_id_fkey"
             columns: ["recipient_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_recipient_id_fkey"
+            columns: ["recipient_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3198,6 +3310,13 @@ export type Database = {
             columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "member_connections_requester_id_fkey"
+            columns: ["requester_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -3258,6 +3377,13 @@ export type Database = {
             columns: ["message_id"]
             isOneToOne: false
             referencedRelation: "direct_messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reactions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -3342,6 +3468,13 @@ export type Database = {
             foreignKeyName: "message_reports_reporter_id_fkey"
             columns: ["reporter_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3364,6 +3497,13 @@ export type Database = {
             columns: ["reporter_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "message_reports_reviewed_by_fkey"
+            columns: ["reviewed_by"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -3441,6 +3581,13 @@ export type Database = {
             foreignKeyName: "moderation_actions_moderator_id_fkey"
             columns: ["moderator_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_moderator_id_fkey"
+            columns: ["moderator_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3463,6 +3610,13 @@ export type Database = {
             columns: ["moderator_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_actions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -3533,6 +3687,13 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "moderation_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "moderation_settings_updated_by_fkey"
             columns: ["updated_by"]
@@ -3665,6 +3826,13 @@ export type Database = {
             foreignKeyName: "network_matches_matched_user_id_fkey"
             columns: ["matched_user_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_matches_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -3687,6 +3855,13 @@ export type Database = {
             columns: ["matched_user_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "network_matches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -3784,6 +3959,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "networking_match_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "networking_match_logs_user_id_fkey"
             columns: ["user_id"]
@@ -4037,6 +4219,13 @@ export type Database = {
           value_proposition?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "networking_profiles_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "networking_profiles_v2_user_id_fkey"
             columns: ["user_id"]
@@ -4324,6 +4513,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "notifications_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "notifications_actor_id_fkey"
             columns: ["actor_id"]
@@ -5140,6 +5336,13 @@ export type Database = {
             foreignKeyName: "referral_benefits_referrer_id_fkey"
             columns: ["referrer_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "referral_benefits_referrer_id_fkey"
+            columns: ["referrer_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -5599,6 +5802,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "solution_access_overrides_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "solution_access_overrides_created_by_fkey"
             columns: ["created_by"]
@@ -6109,6 +6319,13 @@ export type Database = {
             foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
             columns: ["matched_user_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_matched_user_id_fkey"
+            columns: ["matched_user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6131,6 +6348,13 @@ export type Database = {
             columns: ["matched_user_id"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "strategic_matches_v2_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -6412,6 +6636,13 @@ export type Database = {
             foreignKeyName: "suggestions_user_id_fkey"
             columns: ["user_id"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "suggestions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6473,6 +6704,13 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "team_invites_invited_by_fkey"
+            columns: ["invited_by"]
+            isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "team_invites_invited_by_fkey"
             columns: ["invited_by"]
@@ -6709,6 +6947,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_action_rate_limits: {
+        Row: {
+          action_count: number | null
+          action_type: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          action_count?: number | null
+          action_type: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          action_count?: number | null
+          action_type?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       user_activity_tracking: {
         Row: {
           activity_data: Json | null
@@ -6928,6 +7196,13 @@ export type Database = {
             foreignKeyName: "user_moderation_status_banned_by_fkey"
             columns: ["banned_by"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_banned_by_fkey"
+            columns: ["banned_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6956,6 +7231,13 @@ export type Database = {
             foreignKeyName: "user_moderation_status_suspended_by_fkey"
             columns: ["suspended_by"]
             isOneToOne: false
+            referencedRelation: "available_profiles_for_connection"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_suspended_by_fkey"
+            columns: ["suspended_by"]
+            isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
@@ -6978,6 +7260,13 @@ export type Database = {
             columns: ["suspended_by"]
             isOneToOne: false
             referencedRelation: "profiles_safe"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_moderation_status_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "available_profiles_for_connection"
             referencedColumns: ["id"]
           },
           {
@@ -7132,6 +7421,19 @@ export type Database = {
       }
     }
     Views: {
+      available_profiles_for_connection: {
+        Row: {
+          avatar_url: string | null
+          company_name: string | null
+          created_at: string | null
+          current_position: string | null
+          email: string | null
+          id: string | null
+          industry: string | null
+          name: string | null
+        }
+        Relationships: []
+      }
       builder_analytics: {
         Row: {
           avg_generation_time: number | null
@@ -7457,6 +7759,14 @@ export type Database = {
       }
       check_comment_rate_limit_secure: {
         Args: { p_user_id: string }
+        Returns: boolean
+      }
+      check_connection_request_rate_limit: {
+        Args: {
+          p_max_requests?: number
+          p_user_id: string
+          p_window_hours?: number
+        }
         Returns: boolean
       }
       check_course_completion: {
