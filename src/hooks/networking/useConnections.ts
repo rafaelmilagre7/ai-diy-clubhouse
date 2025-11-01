@@ -93,6 +93,14 @@ export const useConnections = () => {
 
       if (error) throw error;
 
+      // Marcar notificação de solicitação como lida
+      await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('type', 'connection_request')
+        .eq('reference_id', connectionId)
+        .eq('reference_type', 'connection');
+
       // Criar notificação de conexão aceita para o solicitante
       await supabase
         .from('notifications')
@@ -104,7 +112,9 @@ export const useConnections = () => {
           title: 'Conexão aceita! 🎉',
           message: 'Aceitou sua solicitação de conexão',
           action_url: `/perfil/${connection.recipient_id}`,
-          priority: 'high'
+          priority: 'high',
+          reference_id: connectionId,
+          reference_type: 'connection'
         });
 
       // Criar conversa automaticamente entre os dois usuários
@@ -127,6 +137,7 @@ export const useConnections = () => {
       queryClient.invalidateQueries({ queryKey: ['active-connections'] });
       queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
       queryClient.invalidateQueries({ queryKey: ['conversations'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast.success('Conexão aceita com sucesso!');
     },
     onError: (error) => {
@@ -144,11 +155,20 @@ export const useConnections = () => {
         .eq('id', connectionId);
 
       if (error) throw error;
+
+      // Marcar notificação como lida
+      await supabase
+        .from('notifications')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('type', 'connection_request')
+        .eq('reference_id', connectionId)
+        .eq('reference_type', 'connection');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
       queryClient.invalidateQueries({ queryKey: ['discover-profiles'] });
       queryClient.invalidateQueries({ queryKey: ['networking-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast.success('Solicitação recusada');
     },
     onError: (error) => {
@@ -227,8 +247,10 @@ export const useConnections = () => {
           category: 'social',
           title: 'Nova solicitação de conexão',
           message: 'Quer se conectar com você',
-          action_url: `/networking/connections`,
-          priority: 'normal'
+          action_url: `/networking/connections?tab=pending&sub=received`,
+          priority: 'normal',
+          reference_id: connection.id,
+          reference_type: 'connection'
         });
 
       if (notifError) console.error('Erro ao criar notificação:', notifError);

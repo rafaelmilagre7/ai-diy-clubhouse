@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Users, Clock, Sparkles, Compass, Inbox, Send } from 'lucide-react';
 import { MyConnectionsGrid } from './MyConnectionsGrid';
@@ -8,17 +8,27 @@ import { DiscoverPeopleGrid } from './DiscoverPeopleGrid';
 import { useNetworkingStats } from '@/hooks/useNetworkingStats';
 import { usePendingRequests } from '@/hooks/networking/usePendingRequests';
 import { useSentRequests } from '@/hooks/networking/useSentRequests';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Brain } from 'lucide-react';
 
 export const ConnectionsHub = () => {
-  const [activeTab, setActiveTab] = useState<string>('connections');
-  const [pendingSubTab, setPendingSubTab] = useState<string>('received');
+  const [searchParams] = useSearchParams();
+  const urlTab = searchParams.get('tab');
+  const urlSub = searchParams.get('sub');
+  
+  const [activeTab, setActiveTab] = useState<string>(urlTab || 'connections');
+  const [pendingSubTab, setPendingSubTab] = useState<string>(urlSub || 'received');
   const { data: stats } = useNetworkingStats();
   const { pendingRequests } = usePendingRequests();
   const { sentRequests } = useSentRequests();
   const navigate = useNavigate();
+
+  // Atualizar tabs quando URL mudar
+  useEffect(() => {
+    if (urlTab) setActiveTab(urlTab);
+    if (urlSub) setPendingSubTab(urlSub);
+  }, [urlTab, urlSub]);
 
   return (
     <div className="space-y-6">
