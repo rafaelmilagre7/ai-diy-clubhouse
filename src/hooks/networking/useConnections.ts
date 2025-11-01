@@ -155,6 +155,29 @@ export const useConnections = () => {
     },
   });
 
+  // Remover conexão
+  const removeConnection = useMutation({
+    mutationFn: async (connectionId: string) => {
+      const { error } = await supabase
+        .from('member_connections')
+        .delete()
+        .eq('id', connectionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['connections'] });
+      queryClient.invalidateQueries({ queryKey: ['active-connections'] });
+      queryClient.invalidateQueries({ queryKey: ['networking-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['connection-status'] });
+      toast.success('Conexão removida com sucesso');
+    },
+    onError: (error) => {
+      console.error('Erro ao remover conexão:', error);
+      toast.error('Erro ao remover a conexão');
+    }
+  });
+
   // Mutation para enviar solicitação de conexão
   const sendConnectionRequest = useMutation({
     mutationFn: async (recipientId: string) => {
@@ -232,6 +255,9 @@ export const useConnections = () => {
     sendConnectionRequest: sendConnectionRequest.mutate,
     sendConnectionRequestAsync: sendConnectionRequest.mutateAsync,
     isSendingRequest: sendConnectionRequest.isPending,
+    removeConnection: removeConnection.mutate,
+    removeConnectionAsync: removeConnection.mutateAsync,
+    isRemovingConnection: removeConnection.isPending,
     useCheckConnectionStatus,
   };
 };

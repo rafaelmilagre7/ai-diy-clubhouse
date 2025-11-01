@@ -12,12 +12,16 @@ import {
   CheckCircle2,
   XCircle,
   Eye,
-  UserPlus
+  UserPlus,
+  Users
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useAuth } from '@/contexts/auth';
 import { Link } from 'react-router-dom';
+import { useMutualConnections } from '@/hooks/networking/useMutualConnections';
+import { useConnectionsCount } from '@/hooks/networking/usePublicProfile';
+import { OnlineIndicator } from '../chat/OnlineIndicator';
 
 interface ConnectionCardProps {
   connection: Connection;
@@ -48,6 +52,10 @@ export const ConnectionCard = ({
   const isRequester = connection.requester_id === user?.id;
   const otherUser = isRequester ? connection.recipient : connection.requester;
 
+  // Buscar conexões mútuas e contador de conexões
+  const { data: mutualConnections } = useMutualConnections(otherUser?.id);
+  const { data: connectionsCount = 0 } = useConnectionsCount(otherUser?.id);
+
   if (!otherUser) return null;
 
   const getInitials = (name: string) => {
@@ -64,12 +72,15 @@ export const ConnectionCard = ({
       <div className="p-6 space-y-4">
         {/* Header: Avatar + Info */}
         <div className="flex items-start gap-4">
-          <Avatar className="w-16 h-16 border-2 border-aurora/20 ring-2 ring-aurora/10">
-            <AvatarImage src={otherUser.avatar_url} alt={otherUser.name} />
-            <AvatarFallback className="bg-aurora/10 text-aurora font-semibold">
-              {getInitials(otherUser.name)}
-            </AvatarFallback>
-          </Avatar>
+          <div className="relative">
+            <Avatar className="w-16 h-16 border-2 border-aurora/20 ring-2 ring-aurora/10">
+              <AvatarImage src={otherUser.avatar_url} alt={otherUser.name} />
+              <AvatarFallback className="bg-aurora/10 text-aurora font-semibold">
+                {getInitials(otherUser.name)}
+              </AvatarFallback>
+            </Avatar>
+            <OnlineIndicator userId={otherUser.id} />
+          </div>
 
           <div className="flex-1 space-y-2">
             <div className="flex items-start justify-between gap-2">
@@ -101,6 +112,21 @@ export const ConnectionCard = ({
                 <span>{otherUser.industry}</span>
               </div>
             )}
+
+            {/* Conexões e Conexões Mútuas */}
+            <div className="flex items-center gap-3 pt-1">
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Users className="w-3 h-3" />
+                <span>{connectionsCount} {connectionsCount === 1 ? 'conexão' : 'conexões'}</span>
+              </div>
+              
+              {mutualConnections && mutualConnections.count > 0 && (
+                <div className="flex items-center gap-1.5 text-xs text-aurora">
+                  <Users className="w-3 h-3" />
+                  <span>{mutualConnections.count} em comum</span>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

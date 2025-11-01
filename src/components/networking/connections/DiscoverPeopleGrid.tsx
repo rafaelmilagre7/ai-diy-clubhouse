@@ -1,4 +1,4 @@
-import { useNetworkingProfiles, NetworkingProfile } from '@/hooks/useNetworkingProfiles';
+import { useDiscoverProfiles } from '@/hooks/networking/useDiscoverProfiles';
 import { ConnectionCard } from './ConnectionCard';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -6,15 +6,46 @@ import { Compass, Search, Users } from 'lucide-react';
 import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { useConnections } from '@/hooks/networking/useConnections';
+import { useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/contexts/auth';
+import { toast } from 'sonner';
 
 export const DiscoverPeopleGrid = () => {
-  const { data: profiles, isLoading, error, refetch } = useNetworkingProfiles();
+  const { user } = useAuth();
+  const { data: profiles, isLoading, error } = useDiscoverProfiles();
   const [searchQuery, setSearchQuery] = useState('');
-  const { sendConnectionRequest, isSendingRequest } = useConnections();
+  const { sendConnectionRequestAsync } = useConnections();
+  const [connectingIds, setConnectingIds] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
   const handleConnect = async (profileId: string) => {
-    await sendConnectionRequest(profileId);
-    refetch(); // Atualizar a lista após enviar solicitação
+    try {
+      setConnectingIds(prev => new Set(prev).add(profileId));
+
+      // Remover card otimisticamente
+      const updatedProfiles = profiles?.filter(p => p.id !== profileId);
+      queryClient.setQueryData(['discover-profiles', user?.id], updatedProfiles);
+
+      await sendConnectionRequestAsync(profileId);
+      
+      // Invalidar queries relacionadas
+      queryClient.invalidateQueries({ queryKey: ['networking-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['pending-requests'] });
+      
+      toast.success('Solicitação enviada!', {
+        description: 'Aguarde a resposta do membro'
+      });
+    } catch (error) {
+      // Em caso de erro, reverter a remoção
+      queryClient.invalidateQueries({ queryKey: ['discover-profiles'] });
+      console.error('Erro ao conectar:', error);
+    } finally {
+      setConnectingIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(profileId);
+        return newSet;
+      });
+    }
   };
 
   // Filtrar perfis baseado na busca
@@ -106,7 +137,7 @@ export const DiscoverPeopleGrid = () => {
               }}
               variant="discover"
               onConnect={() => handleConnect(profile.id)}
-              isConnecting={isSendingRequest}
+              isConnecting={connectingIds.has(profile.id)}
             />
           ))}
         </div>

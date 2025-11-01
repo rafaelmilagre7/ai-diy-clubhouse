@@ -4,6 +4,17 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { LiquidGlassCard } from '@/components/ui/LiquidGlassCard';
 import { 
   UserPlus, 
@@ -20,15 +31,18 @@ import {
   Edit,
   AlertCircle,
   ArrowLeft,
-  Loader2
+  Loader2,
+  UserMinus
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { usePublicProfile, useConnectionsCount, usePostsCount } from '@/hooks/networking/usePublicProfile';
 import { useConnections } from '@/hooks/networking/useConnections';
+import { useMutualConnections } from '@/hooks/networking/useMutualConnections';
 import { isProfileComplete, getProfileCompleteness } from '@/utils/profileValidation';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { useState, useEffect } from 'react';
+import { InboxDrawer } from '@/components/networking/chat/InboxDrawer';
 
 export default function PublicProfile() {
   const { userId } = useParams<{ userId: string }>();
@@ -39,10 +53,12 @@ export default function PublicProfile() {
   const { data: profile, isLoading } = usePublicProfile(userId);
   const { data: connectionsCount = 0 } = useConnectionsCount(userId);
   const { data: postsCount = 0 } = usePostsCount(userId);
+  const { data: mutualConnections } = useMutualConnections(userId);
   
-  const { sendConnectionRequest, isSendingRequest, useCheckConnectionStatus } = useConnections();
+  const { sendConnectionRequest, isSendingRequest, useCheckConnectionStatus, removeConnectionAsync, isRemovingConnection } = useConnections();
   const { data: connectionStatus } = useCheckConnectionStatus(userId);
   const [localStatus, setLocalStatus] = useState<'none' | 'pending' | 'accepted'>('none');
+  const [chatOpen, setChatOpen] = useState(false);
 
   useEffect(() => {
     if (connectionStatus) {
@@ -61,7 +77,17 @@ export default function PublicProfile() {
   };
 
   const handleOpenChat = () => {
-    navigate('/networking/chat');
+    setChatOpen(true);
+  };
+
+  const handleRemoveConnection = async () => {
+    if (!connectionStatus?.id) return;
+    try {
+      await removeConnectionAsync(connectionStatus.id);
+      setLocalStatus('none');
+    } catch (error) {
+      console.error('Erro ao remover conexão:', error);
+    }
   };
 
   const getInitials = (name: string) => {
@@ -241,15 +267,49 @@ export default function PublicProfile() {
 
                     {/* Botão Mensagem (só se conectado) */}
                     {localStatus === 'accepted' && (
-                      <Button
-                        onClick={handleOpenChat}
-                        variant="outline"
-                        size="default"
-                        className="w-full gap-2 border-aurora/30 hover:bg-aurora/5"
-                      >
-                        <MessageSquare className="h-4 w-4" />
-                        <span className="text-sm">Enviar Mensagem</span>
-                      </Button>
+                      <>
+                        <Button
+                          onClick={handleOpenChat}
+                          variant="outline"
+                          size="default"
+                          className="w-full gap-2 border-aurora/30 hover:bg-aurora/5"
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span className="text-sm">Enviar Mensagem</span>
+                        </Button>
+
+                        {/* Botão Remover Conexão */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full gap-2 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                              disabled={isRemovingConnection}
+                            >
+                              <UserMinus className="h-4 w-4" />
+                              <span className="text-xs">Remover Conexão</span>
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Remover Conexão?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Tem certeza que deseja remover <strong>{profile.name}</strong> das suas conexões? Esta ação não pode ser desfeita.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={handleRemoveConnection}
+                                className="bg-destructive hover:bg-destructive/90"
+                              >
+                                Remover
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </>
                     )}
                   </>
                 )}
@@ -307,6 +367,36 @@ export default function PublicProfile() {
                       Membro desde {formatDistanceToNow(new Date(profile.created_at), { addSuffix: true, locale: ptBR })}
                     </span>
                   </div>
+
+                  {/* Conexões Mútuas */}
+                  {mutualConnections && mutualConnections.count > 0 && !isOwnProfile && (
+                    <div className="border-t border-border/30 pt-4 mt-4">
+                      <div className="flex items-center gap-2 text-sm mb-2">
+                        <Users className="w-4 h-4 text-aurora" />
+                        <span className="font-semibold text-foreground">
+                          {mutualConnections.count} {mutualConnections.count === 1 ? 'conexão' : 'conexões'} em comum
+                        </span>
+                      </div>
+                      {mutualConnections.profiles && mutualConnections.profiles.length > 0 && (
+                        <div className="flex items-center gap-2">
+                          <div className="flex -space-x-2">
+                            {mutualConnections.profiles.slice(0, 3).map(profile => (
+                              <Avatar key={profile.id} className="w-8 h-8 border-2 border-background">
+                                <AvatarImage src={profile.avatar_url} />
+                                <AvatarFallback className="text-xs">
+                                  {getInitials(profile.name)}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {mutualConnections.profiles.slice(0, 2).map(p => p.name).join(', ')}
+                            {mutualConnections.count > 2 && ` e mais ${mutualConnections.count - 2}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </LiquidGlassCard>
             </motion.div>
@@ -386,6 +476,13 @@ export default function PublicProfile() {
           </div>
         </div>
       </div>
+
+      {/* Inbox Drawer */}
+      <InboxDrawer 
+        open={chatOpen} 
+        onOpenChange={setChatOpen}
+        initialUserId={userId}
+      />
     </div>
   );
 }
