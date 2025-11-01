@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Clock, Send, Brain } from 'lucide-react';
+import { Users, Clock, Send } from 'lucide-react';
 import { MyConnectionsGrid } from './MyConnectionsGrid';
 import { PendingRequestsList } from './PendingRequestsList';
 import { SentRequestsList } from './SentRequestsList';
-import { Badge } from '@/components/ui/badge';
 import { useNetworkingStats } from '@/hooks/useNetworkingStats';
 import { useSearchParams } from 'react-router-dom';
 
@@ -29,87 +28,83 @@ export const ConnectionsHub = () => {
   return (
     <div className="space-y-6">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        {/* Tabs Simples e Limpas */}
-        <TabsList className="w-full grid grid-cols-4 bg-muted/30 p-1 rounded-lg">
-          <TabsTrigger 
-            value="connections" 
-            className="relative data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            <Users className="w-4 h-4 mr-2" />
-            Conexões
-            {stats.connections > 0 && (
-              <Badge variant="secondary" className="ml-2 bg-aurora/10 text-aurora text-xs px-1.5 py-0">
-                {stats.connections}
-              </Badge>
-            )}
-          </TabsTrigger>
+        {/* Tabs Premium com Glassmorphism - Estilo Soluções */}
+        <div className="relative group">
+          {/* Aurora glow effect */}
+          <div className="absolute -inset-1 bg-gradient-to-r from-primary/20 via-primary/30 to-primary/20 rounded-3xl blur-xl opacity-50 group-hover:opacity-80 transition-opacity duration-500"></div>
+          
+          {/* Container das tabs com glassmorphism avançado */}
+          <div className="relative bg-card/80 backdrop-blur-xl border border-border/30 rounded-2xl p-2 shadow-2xl shadow-primary/10">
+            <TabsList className="bg-transparent p-0 h-auto w-full grid grid-cols-3 gap-2">
+              <TabsTrigger 
+                value="connections" 
+                className="relative px-6 py-4 text-sm font-medium transition-all duration-300 rounded-xl group
+                         data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 
+                         data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30
+                         data-[state=active]:scale-105 data-[state=active]:border-0
+                         hover:bg-muted/50 hover:scale-102 hover:text-foreground hover:shadow-md
+                         text-muted-foreground border border-transparent"
+              >
+                <Users className="w-4 h-4 mr-2" />
+                <span className="relative z-10">Conexões</span>
+                {stats.connections > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/20 text-white data-[state=inactive]:bg-primary/10 data-[state=inactive]:text-primary transition-colors">
+                    {stats.connections}
+                  </span>
+                )}
+                {/* Hover shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
+              </TabsTrigger>
 
-          <TabsTrigger 
-            value="received" 
-            className="relative data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            <Clock className="w-4 h-4 mr-2" />
-            Recebidas
-            {stats.notifications > 0 && (
-              <Badge variant="secondary" className="ml-2 bg-operational/10 text-operational text-xs px-1.5 py-0">
-                {stats.notifications}
-              </Badge>
-            )}
-          </TabsTrigger>
+              <TabsTrigger 
+                value="received" 
+                className="relative px-6 py-4 text-sm font-medium transition-all duration-300 rounded-xl group
+                         data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 
+                         data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30
+                         data-[state=active]:scale-105 data-[state=active]:border-0
+                         hover:bg-muted/50 hover:scale-102 hover:text-foreground hover:shadow-md
+                         text-muted-foreground border border-transparent"
+              >
+                <Clock className="w-4 h-4 mr-2" />
+                <span className="relative z-10">Recebidas</span>
+                {stats.notifications > 0 && (
+                  <span className="ml-2 px-2 py-0.5 text-xs rounded-full bg-white/20 text-white data-[state=inactive]:bg-primary/10 data-[state=inactive]:text-primary transition-colors">
+                    {stats.notifications}
+                  </span>
+                )}
+                {/* Hover shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
+              </TabsTrigger>
 
-          <TabsTrigger 
-            value="sent"
-            className="relative data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            <Send className="w-4 h-4 mr-2" />
-            Enviadas
-          </TabsTrigger>
-
-          <TabsTrigger 
-            value="ai"
-            className="relative data-[state=active]:bg-background data-[state=active]:shadow-sm"
-          >
-            <Brain className="w-4 h-4 mr-2" />
-            IA
-          </TabsTrigger>
-        </TabsList>
+              <TabsTrigger 
+                value="sent"
+                className="relative px-6 py-4 text-sm font-medium transition-all duration-300 rounded-xl group
+                         data-[state=active]:bg-gradient-to-r data-[state=active]:from-primary data-[state=active]:to-primary/90 
+                         data-[state=active]:text-primary-foreground data-[state=active]:shadow-lg data-[state=active]:shadow-primary/30
+                         data-[state=active]:scale-105 data-[state=active]:border-0
+                         hover:bg-muted/50 hover:scale-102 hover:text-foreground hover:shadow-md
+                         text-muted-foreground border border-transparent"
+              >
+                <Send className="w-4 h-4 mr-2" />
+                <span className="relative z-10">Enviadas</span>
+                {/* Hover shimmer effect */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 rounded-xl transition-opacity duration-300"></div>
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        </div>
 
         {/* Tab Content */}
-        <TabsContent value="connections" className="mt-6 space-y-6">
+        <TabsContent value="connections" className="mt-8 animate-fade-in">
           <MyConnectionsGrid />
         </TabsContent>
 
-        <TabsContent value="received" className="mt-6 space-y-6">
+        <TabsContent value="received" className="mt-8 animate-fade-in">
           <PendingRequestsList />
         </TabsContent>
 
-        <TabsContent value="sent" className="mt-6 space-y-6">
+        <TabsContent value="sent" className="mt-8 animate-fade-in">
           <SentRequestsList />
-        </TabsContent>
-
-        <TabsContent value="ai" className="mt-6 space-y-6">
-          {/* Seção IA com Copy Simplificada */}
-          <div className="flex flex-col items-center justify-center py-16 space-y-6">
-            <div className="flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-aurora/10 via-aurora-primary/10 to-operational/5 border border-aurora/20">
-              <Brain className="w-10 h-10 text-aurora" />
-            </div>
-
-            <div className="text-center space-y-3 max-w-md">
-              <h2 className="text-2xl font-bold text-foreground">
-                Networking Inteligente
-              </h2>
-              <p className="text-muted-foreground">
-                Use nossa ferramenta de IA para descobrir conexões ideais baseadas no seu perfil profissional
-              </p>
-            </div>
-
-            <button
-              onClick={() => setActiveTab('connections')}
-              className="mt-4 px-8 py-3 rounded-lg bg-gradient-to-r from-aurora to-aurora-primary hover:from-aurora/90 hover:to-aurora-primary/90 text-white font-medium shadow-md hover:shadow-lg transition-all"
-            >
-              Descobrir Conexões Ideais
-            </button>
-          </div>
         </TabsContent>
       </Tabs>
     </div>

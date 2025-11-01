@@ -42,28 +42,26 @@ export const PendingRequestsList = () => {
 
   if (!pendingRequests || pendingRequests.length === 0) {
     return (
-      <>
-        <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-1">Solicitações Recebidas</h2>
-          <p className="text-sm text-muted-foreground">
-            0 solicitações aguardando sua resposta
-          </p>
-        </div>
-        
-        <div className="text-center py-8 space-y-3">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-muted/50">
-            <Inbox className="w-8 h-8 text-muted-foreground" />
+      <div className="relative overflow-hidden rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40 p-12 shadow-xl">
+        <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5"></div>
+        <div className="relative flex flex-col items-center text-center space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse"></div>
+            <div className="relative p-4 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40">
+              <Inbox className="h-12 w-12 text-primary" />
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-semibold text-foreground">
-              Nenhuma solicitação recebida
+          <div className="space-y-3">
+            <h3 className="text-2xl font-heading font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Nenhuma solicitação pendente
             </h3>
-            <p className="text-sm text-muted-foreground">
-              Novas solicitações aparecerão aqui
+            <p className="text-muted-foreground/80 max-w-md">
+              Quando alguém enviar uma solicitação de conexão, ela aparecerá aqui
             </p>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 

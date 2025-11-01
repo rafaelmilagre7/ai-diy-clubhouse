@@ -74,14 +74,25 @@ export const ActiveConnectionsList = () => {
 
   if (activeConnections.length === 0) {
     return (
-      <div className="text-center py-20 space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-aurora/10 border border-aurora/20">
-          <Users className="w-8 h-8 text-aurora" />
+      <div className="relative overflow-hidden rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40 p-12 shadow-xl">
+        <div className="absolute inset-0 bg-dot-pattern opacity-5"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5"></div>
+        <div className="relative flex flex-col items-center text-center space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 bg-primary/30 rounded-full blur-2xl animate-pulse"></div>
+            <div className="relative p-4 bg-card/80 backdrop-blur-sm rounded-2xl border border-border/40">
+              <Users className="h-12 w-12 text-primary" />
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h3 className="text-2xl font-heading font-semibold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+              Nenhuma conexão ativa
+            </h3>
+            <p className="text-muted-foreground/80 max-w-md">
+              Aceite solicitações pendentes ou descubra novos membros para começar a construir sua rede
+            </p>
+          </div>
         </div>
-        <h3 className="text-xl font-semibold text-text-primary">Nenhuma conexão ativa</h3>
-        <p className="text-text-muted max-w-md mx-auto">
-          Aceite solicitações pendentes ou descubra novos matches para começar a construir sua rede
-        </p>
       </div>
     );
   }
@@ -111,19 +122,26 @@ export const ActiveConnectionsList = () => {
       {/* Grid de Conexões com Animação */}
       <AnimatePresence mode="popLayout">
         {filteredConnections.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredConnections.map((connection) => (
-              <ConnectionCard 
-                key={connection.id} 
-                connection={connection}
-                variant="active"
-                onMessage={() => handleOpenChat(connection)}
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 animate-fade-in">
+            {filteredConnections.map((connection, index) => (
+              <div 
+                key={connection.id}
+                className="animate-scale-in"
+                style={{ animationDelay: `${index * 0.05}s` }}
+              >
+                <ConnectionCard 
+                  connection={connection}
+                  variant="active"
+                  onMessage={() => handleOpenChat(connection)}
+                />
+              </div>
             ))}
           </div>
         ) : (
-          <div className="text-center py-12 space-y-3">
-            <p className="text-muted-foreground">Nenhuma conexão encontrada para "{searchQuery}"</p>
+          <div className="relative overflow-hidden rounded-2xl bg-card/60 backdrop-blur-sm border border-border/40 p-8 shadow-lg">
+            <div className="text-center space-y-3">
+              <p className="text-muted-foreground">Nenhuma conexão encontrada para "{searchQuery}"</p>
+            </div>
           </div>
         )}
       </AnimatePresence>
