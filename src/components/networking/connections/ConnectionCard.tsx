@@ -11,7 +11,8 @@ import {
   Calendar,
   CheckCircle2,
   XCircle,
-  Eye
+  Eye,
+  UserPlus
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
@@ -20,12 +21,14 @@ import { Link } from 'react-router-dom';
 
 interface ConnectionCardProps {
   connection: Connection;
-  variant: 'active' | 'pending';
+  variant: 'active' | 'pending' | 'discover';
   onAccept?: (id: string) => void;
   onReject?: (id: string) => void;
   onMessage?: () => void;
+  onConnect?: () => void;
   isAccepting?: boolean;
   isRejecting?: boolean;
+  isConnecting?: boolean;
 }
 
 export const ConnectionCard = ({ 
@@ -34,8 +37,10 @@ export const ConnectionCard = ({
   onAccept,
   onReject,
   onMessage,
+  onConnect,
   isAccepting,
-  isRejecting
+  isRejecting,
+  isConnecting
 }: ConnectionCardProps) => {
   const { user } = useAuth();
   
@@ -99,16 +104,18 @@ export const ConnectionCard = ({
           </div>
         </div>
 
-        {/* Timestamp */}
-        <div className="flex items-center gap-2 text-xs text-text-muted pt-2 border-t border-border/30">
-          <Calendar className="w-3.5 h-3.5" />
-          <span>
-            {variant === 'pending' 
-              ? `Solicitação recebida ${formatDistanceToNow(new Date(connection.created_at), { addSuffix: true, locale: ptBR })}`
-              : `Conectado ${formatDistanceToNow(new Date(connection.created_at), { addSuffix: true, locale: ptBR })}`
-            }
-          </span>
-        </div>
+        {/* Timestamp - Não mostrar para discover */}
+        {variant !== 'discover' && (
+          <div className="flex items-center gap-2 text-xs text-text-muted pt-2 border-t border-border/30">
+            <Calendar className="w-3.5 h-3.5" />
+            <span>
+              {variant === 'pending' 
+                ? `Solicitação recebida ${formatDistanceToNow(new Date(connection.created_at), { addSuffix: true, locale: ptBR })}`
+                : `Conectado ${formatDistanceToNow(new Date(connection.created_at), { addSuffix: true, locale: ptBR })}`
+              }
+            </span>
+          </div>
+        )}
 
         {/* Actions */}
         {variant === 'pending' && onAccept && onReject && (
@@ -153,6 +160,30 @@ export const ConnectionCard = ({
             >
               <MessageSquare className="h-4 w-4" />
               <span className="text-xs">Mensagem</span>
+            </Button>
+          </div>
+        )}
+
+        {variant === 'discover' && onConnect && (
+          <div className="flex gap-2 pt-2">
+            <Link to={`/perfil/${otherUser.id}`} className="flex-1">
+              <Button 
+                variant="outline"
+                size="sm"
+                className="w-full gap-1.5 hover:bg-aurora/10 hover:border-aurora/30 hover:text-aurora transition-all"
+              >
+                <Eye className="h-4 w-4" />
+                <span className="text-xs">Ver Perfil</span>
+              </Button>
+            </Link>
+            <Button 
+              size="sm"
+              className="flex-1 gap-1.5 bg-gradient-to-r from-aurora to-aurora-primary hover:from-aurora/90 hover:to-aurora-primary/90 text-white shadow-sm hover:shadow-md hover:scale-[1.02] transition-all border-0"
+              onClick={onConnect}
+              disabled={isConnecting}
+            >
+              <UserPlus className="h-4 w-4" />
+              <span className="text-xs">{isConnecting ? 'Conectando...' : 'Conectar'}</span>
             </Button>
           </div>
         )}

@@ -25,6 +25,7 @@ import Networking from '@/pages/member/Networking';
 import NetworkingAnalytics from '@/pages/member/NetworkingAnalytics';
 
 import TeamManagementPage from '@/pages/member/TeamManagementPage';
+import NetworkingConnections from '@/pages/member/NetworkingConnections';
 
 // Builder pages
 import Builder from '@/pages/member/Builder';
@@ -113,7 +114,8 @@ export const memberRoutes: RouteObject[] = [
   },
   createProtectedRoute("/minhas-solucoes", MyAISolutions),
   createProtectedRoute("/networking", Networking),
-    createProtectedRoute("/networking/analytics", NetworkingAnalytics),
+  createProtectedRoute("/networking/connections", NetworkingConnections),
+  createProtectedRoute("/networking/analytics", NetworkingAnalytics),
   createProtectedRoute("/profile", ProfilePage),
   createProtectedRoute("/profile/edit", EditProfile),
   createProtectedRoute("/profile/notifications", NotificationSettingsPage),
