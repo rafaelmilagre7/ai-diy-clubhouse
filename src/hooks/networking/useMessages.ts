@@ -129,6 +129,27 @@ export const useSendMessage = () => {
         .single();
 
       if (error) throw error;
+
+      // ✅ CORREÇÃO CRÍTICA #3: Criar notificação para nova mensagem
+      const { error: notifError } = await supabase
+        .from('notifications')
+        .insert({
+          user_id: recipientId,
+          actor_id: user.id,
+          type: 'new_message',
+          category: 'social',
+          title: 'Nova mensagem',
+          message: content.length > 50 ? content.substring(0, 50) + '...' : content,
+          action_url: `/chat?user=${user.id}`,
+          priority: 'normal',
+          reference_id: data.id,
+          reference_type: 'message'
+        });
+
+      if (notifError) {
+        console.error('Erro ao criar notificação de mensagem:', notifError);
+      }
+
       return data;
     },
     onSuccess: () => {

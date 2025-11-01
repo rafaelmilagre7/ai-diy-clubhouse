@@ -7,7 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Send, MessageCircle } from 'lucide-react';
 import { useMessages, useSendMessage, useMarkAsRead } from '@/hooks/networking/useMessages';
 import { useTypingIndicator } from '@/hooks/networking/useTypingIndicator';
-import { useBroadcastPresence } from '@/hooks/networking/useUserPresence';
 import { OnlineIndicator } from './OnlineIndicator';
 import { FileUploadButton } from './FileUploadButton';
 import { EmojiPickerComponent } from './EmojiPickerComponent';
@@ -17,6 +16,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth';
+// ✅ CORREÇÃO CRÍTICA #1: Remover useBroadcastPresence daqui (já está no RealtimeProviderV2)
 
 interface ActiveChatProps {
   conversationId?: string;
@@ -44,8 +44,7 @@ export const ActiveChat = ({
   const markAsReadMutation = useMarkAsRead();
   const { isTyping, sendTypingSignal } = useTypingIndicator(otherUserId);
 
-  // Broadcast presence
-  useBroadcastPresence();
+  // ✅ CORREÇÃO CRÍTICA #1: Removido useBroadcastPresence() - já está no RealtimeProviderV2
 
   // Auto-scroll ao receber novas mensagens
   useEffect(() => {

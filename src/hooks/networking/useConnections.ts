@@ -111,24 +111,37 @@ export const useConnections = () => {
           category: 'social',
           title: 'Conexão aceita! 🎉',
           message: 'Aceitou sua solicitação de conexão',
-          action_url: `/perfil/${connection.recipient_id}`,
+          action_url: `/perfil/${user?.id}`, // ✅ CORREÇÃO CRÍTICA #2: Usar ID do aceitante, não do solicitante
           priority: 'high',
           reference_id: connectionId,
           reference_type: 'connection'
         });
 
       // Criar conversa automaticamente entre os dois usuários
-      const { error: conversationError } = await supabase
-        .from('conversations')
-        .insert({
-          participant_1_id: connection.requester_id,
-          participant_2_id: connection.recipient_id,
-          last_message_at: new Date().toISOString()
-        });
+      try {
+        const { error: conversationError } = await supabase
+          .from('conversations')
+          .insert({
+            participant_1_id: connection.requester_id,
+            participant_2_id: connection.recipient_id,
+            last_message_at: new Date().toISOString()
+          });
 
-      if (conversationError) {
-        console.error('Erro ao criar conversa:', conversationError);
-        // Não lançar erro para não bloquear a aceitação da conexão
+        if (conversationError) {
+          // ✅ CORREÇÃO CRÍTICA #5: Error handling robusto
+          console.error('❌ Erro ao criar conversa:', conversationError);
+          
+          // Se for erro de duplicata, ignorar (conversa já existe)
+          if (!conversationError.message?.includes('duplicate') && 
+              !conversationError.message?.includes('unique')) {
+            // Para outros erros, notificar mas não bloquear
+            toast.error('Atenção: Conversa não foi criada automaticamente', {
+              description: 'Você pode iniciar o chat manualmente.'
+            });
+          }
+        }
+      } catch (error) {
+        console.error('❌ Erro inesperado ao criar conversa:', error);
       }
 
       return connection;
@@ -225,6 +238,18 @@ export const useConnections = () => {
   // Mutation para enviar solicitação de conexão
   const sendConnectionRequest = useMutation({
     mutationFn: async (recipientId: string) => {
+      // ✅ MELHORIA #4: Rate limiting
+      const { data: canProceed, error: rateLimitError } = await supabase
+        .rpc('check_connection_request_rate_limit');
+
+      if (rateLimitError) {
+        console.error('Erro ao verificar rate limit:', rateLimitError);
+      }
+
+      if (canProceed === false) {
+        throw new Error('Você atingiu o limite de solicitações por hora. Tente novamente mais tarde.');
+      }
+
       const { data: connection, error } = await supabase
         .from('member_connections')
         .insert({

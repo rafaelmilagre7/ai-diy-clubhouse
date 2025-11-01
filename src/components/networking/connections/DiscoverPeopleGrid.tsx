@@ -3,9 +3,9 @@ import { ConnectionCard } from './ConnectionCard';
 import { ConnectionCardSkeleton } from './ConnectionCardSkeleton';
 import { ErrorState } from '../common/ErrorState';
 import { EmptyState } from '../common/EmptyState';
+import { SearchBar } from './SearchBar';
 import { Compass, Search, Users } from 'lucide-react';
 import { useState } from 'react';
-import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useConnections } from '@/hooks/networking/useConnections';
 import { useQueryClient } from '@tanstack/react-query';
@@ -117,17 +117,11 @@ export const DiscoverPeopleGrid = () => {
           </div>
         </div>
 
-        {/* Campo de busca */}
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            type="text"
-            placeholder="Buscar por nome, empresa, cargo ou indústria..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-background/50 backdrop-blur-sm border-border/50"
-          />
-        </div>
+        {/* ✅ MELHORIA #3: Campo de busca com debounce */}
+        <SearchBar 
+          onSearch={setSearchQuery}
+          placeholder="Buscar por nome, empresa, cargo ou indústria..."
+        />
       </div>
 
       {/* Grid de Perfis */}
