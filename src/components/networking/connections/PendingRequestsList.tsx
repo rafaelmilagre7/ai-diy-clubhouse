@@ -4,21 +4,30 @@ import { ConnectionCard } from './ConnectionCard';
 import { ConnectionCardSkeleton } from './ConnectionCardSkeleton';
 import { ErrorState } from '../common/ErrorState';
 import { EmptyState } from '../common/EmptyState';
+import { PendingHeader } from './PendingHeader';
 import { Clock } from 'lucide-react';
+import { AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 
 export const PendingRequestsList = () => {
   const { pendingRequests, isLoading, error } = usePendingRequests();
   const { acceptRequest, rejectRequest, isAccepting, isRejecting } = useConnections();
 
+  const handleAccept = (connectionId: string) => {
+    acceptRequest(connectionId);
+    // Confetti ao aceitar conexão
+    confetti({
+      particleCount: 100,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#7877C6', '#A78BFA', '#C084FC']
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface-elevated border border-aurora/30">
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-operational" />
-            <span className="font-semibold text-text-primary">Solicitações Pendentes</span>
-          </div>
-        </div>
+        <div className="h-48 bg-muted/20 rounded-2xl animate-pulse" />
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {Array.from({ length: 3 }).map((_, i) => (
             <ConnectionCardSkeleton key={i} />
@@ -38,43 +47,54 @@ export const PendingRequestsList = () => {
 
   if (pendingRequests.length === 0) {
     return (
-      <EmptyState
-        icon={Clock}
-        title="Nenhuma solicitação pendente"
-        description="Quando outros membros enviarem solicitações de conexão, elas aparecerão aqui"
-      />
+      <>
+        <PendingHeader 
+          receivedCount={0}
+          unreadCount={0}
+          isLoading={isLoading}
+        />
+        <EmptyState 
+          icon={Clock}
+          title="Nenhuma solicitação pendente"
+          description="Você não possui solicitações de conexão aguardando sua resposta no momento"
+        />
+      </>
     );
   }
 
+  // Contar solicitações não visualizadas (criadas nas últimas 24h)
+  const unreadCount = pendingRequests.filter(req => {
+    const createdAt = new Date(req.created_at);
+    const now = new Date();
+    const hoursDiff = (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60);
+    return hoursDiff < 24;
+  }).length;
+
   return (
     <div className="space-y-6">
-      {/* Header com contador de notificações */}
-      <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface-elevated border border-aurora/30">
-        <div className="flex items-center gap-2">
-          <Clock className="w-5 h-5 text-operational" />
-          <span className="font-semibold text-text-primary">Solicitações Pendentes</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="px-3 py-1 rounded-full bg-operational/20 text-operational text-sm font-medium border border-operational/40 animate-pulse">
-            {pendingRequests.length} {pendingRequests.length === 1 ? 'nova' : 'novas'}
-          </div>
-        </div>
-      </div>
+      {/* Header Premium */}
+      <PendingHeader 
+        receivedCount={pendingRequests.length}
+        unreadCount={unreadCount}
+        isLoading={isLoading}
+      />
 
-      {/* Grid de Solicitações */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-        {pendingRequests.map((request) => (
-          <ConnectionCard 
-            key={request.id} 
-            connection={request}
-            variant="pending"
-            onAccept={acceptRequest}
-            onReject={rejectRequest}
-            isAccepting={isAccepting}
-            isRejecting={isRejecting}
-          />
-        ))}
-      </div>
+      {/* Grid de Solicitações com Animação */}
+      <AnimatePresence mode="popLayout">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {pendingRequests.map((connection) => (
+            <ConnectionCard 
+              key={connection.id} 
+              connection={connection}
+              variant="pending"
+              onAccept={handleAccept}
+              onReject={rejectRequest}
+              isAccepting={isAccepting}
+              isRejecting={isRejecting}
+            />
+          ))}
+        </div>
+      </AnimatePresence>
     </div>
   );
 };
