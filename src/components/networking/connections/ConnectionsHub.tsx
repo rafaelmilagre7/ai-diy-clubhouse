@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Clock, Sparkles, Compass, Inbox, Send } from 'lucide-react';
+import { Users, Clock, Brain, Compass, Inbox, Send } from 'lucide-react';
 import { MyConnectionsGrid } from './MyConnectionsGrid';
 import { PendingRequestsList } from './PendingRequestsList';
 import { SentRequestsList } from './SentRequestsList';
@@ -10,7 +10,6 @@ import { usePendingRequests } from '@/hooks/networking/usePendingRequests';
 import { useSentRequests } from '@/hooks/networking/useSentRequests';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Brain } from 'lucide-react';
 
 export const ConnectionsHub = () => {
   const [searchParams] = useSearchParams();
@@ -61,7 +60,7 @@ export const ConnectionsHub = () => {
             </TabsTrigger>
             
             <TabsTrigger value="ai" className="gap-2 data-[state=active]:bg-background">
-              <Sparkles className="h-4 w-4" />
+              <Brain className="h-4 w-4" />
               <span className="hidden sm:inline">IA</span>
               {stats.matches > 0 && (
                 <span className="ml-1 px-2 py-0.5 rounded-full bg-aurora/20 text-aurora text-xs font-medium">
@@ -127,7 +126,7 @@ export const ConnectionsHub = () => {
         <TabsContent value="ai" className="mt-0">
           <div className="text-center py-20 space-y-6">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-aurora/20 to-aurora-primary/20 border border-aurora/30">
-              <Sparkles className="w-10 h-10 text-aurora" />
+              <Brain className="w-10 h-10 text-aurora" />
             </div>
             <div className="space-y-2 max-w-md mx-auto">
               <h3 className="text-2xl font-semibold text-text-primary">

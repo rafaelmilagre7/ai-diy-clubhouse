@@ -1,8 +1,10 @@
 import { useConnections } from '@/hooks/networking/useConnections';
 import { ConnectionCard } from './ConnectionCard';
-import { LoadingSpinner } from '@/components/common/LoadingSpinner';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Users, MessageCircle } from 'lucide-react';
+import { ConnectionCardSkeleton } from './ConnectionCardSkeleton';
+import { ErrorState } from '../common/ErrorState';
+import { EmptyState } from '../common/EmptyState';
+import { Users } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { InboxDrawer } from '@/components/networking/chat/InboxDrawer';
 
@@ -10,6 +12,7 @@ export const MyConnectionsGrid = () => {
   const { activeConnections, isLoading, error } = useConnections();
   const [chatOpen, setChatOpen] = useState(false);
   const [selectedRecipient, setSelectedRecipient] = useState<{ id: string; name: string; avatar_url?: string } | null>(null);
+  const navigate = useNavigate();
 
   const handleOpenChat = (connection: any) => {
     // Determinar o outro usuário na conexão
@@ -27,10 +30,17 @@ export const MyConnectionsGrid = () => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center py-20">
-        <div className="text-center space-y-4">
-          <LoadingSpinner size="lg" />
-          <p className="text-text-muted">Carregando conexões...</p>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between px-4 py-3 rounded-xl bg-surface-elevated border border-primary/30">
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-primary" />
+            <span className="font-semibold text-text-primary">Minhas Conexões</span>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <ConnectionCardSkeleton key={i} />
+          ))}
         </div>
       </div>
     );
@@ -38,25 +48,21 @@ export const MyConnectionsGrid = () => {
 
   if (error) {
     return (
-      <Alert className="border-destructive/50 bg-destructive/10">
-        <AlertDescription className="text-destructive">
-          Erro ao carregar conexões: {error.message}
-        </AlertDescription>
-      </Alert>
+      <ErrorState
+        message={`Erro ao carregar conexões: ${error.message}`}
+      />
     );
   }
 
   if (activeConnections.length === 0) {
     return (
-      <div className="text-center py-20 space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/10 border border-primary/20">
-          <Users className="w-8 h-8 text-primary" />
-        </div>
-        <h3 className="text-xl font-semibold text-text-primary">Nenhuma conexão ainda</h3>
-        <p className="text-text-muted max-w-md mx-auto">
-          Quando você aceitar solicitações ou se conectar com outros membros, eles aparecerão aqui
-        </p>
-      </div>
+      <EmptyState
+        icon={Users}
+        title="Nenhuma conexão ainda"
+        description="Quando você aceitar solicitações ou se conectar com outros membros, eles aparecerão aqui"
+        actionLabel="Descobrir Pessoas"
+        onAction={() => navigate('/networking/connections?tab=discover')}
+      />
     );
   }
 

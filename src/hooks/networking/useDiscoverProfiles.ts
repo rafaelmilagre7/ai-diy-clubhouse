@@ -2,14 +2,18 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
 import { NetworkingProfile } from '@/hooks/useNetworkingProfiles';
+import { useState } from 'react';
+
+const PAGE_SIZE = 20;
 
 export const useDiscoverProfiles = () => {
   const { user } = useAuth();
+  const [page, setPage] = useState(0);
 
-  return useQuery({
-    queryKey: ['discover-profiles', user?.id],
+  const query = useQuery({
+    queryKey: ['discover-profiles', user?.id, page],
     queryFn: async () => {
-      if (!user?.id) return [];
+      if (!user?.id) return { data: [], count: 0, hasMore: false };
 
       // 1. Buscar IDs de usuários já conectados ou com solicitação pendente
       const { data: connections } = await supabase
@@ -20,8 +24,11 @@ export const useDiscoverProfiles = () => {
       const excludeIds = connections?.flatMap(c => [c.requester_id, c.recipient_id]) || [];
       excludeIds.push(user.id); // Excluir o próprio usuário
 
-      // 2. Buscar TODOS os perfis, exceto os já conectados
-      const { data, error } = await supabase
+      // 2. Buscar perfis com paginação
+      const from = page * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+
+      const { data, error, count } = await supabase
         .from('profiles')
         .select(`
           id,
@@ -35,16 +42,29 @@ export const useDiscoverProfiles = () => {
           professional_bio,
           skills,
           created_at
-        `)
+        `, { count: 'exact' })
         .not('id', 'in', `(${excludeIds.join(',')})`)
         .not('name', 'is', null)
         .order('created_at', { ascending: false })
-        .limit(100);
+        .range(from, to);
 
       if (error) throw error;
-      return data as NetworkingProfile[];
+
+      const hasMore = (count || 0) > (page + 1) * PAGE_SIZE;
+
+      return { data: data as NetworkingProfile[], count: count || 0, hasMore };
     },
     enabled: !!user?.id,
     staleTime: 2 * 60 * 1000, // 2 minutos
   });
+
+  return {
+    ...query,
+    data: query.data?.data,
+    hasMore: query.data?.hasMore || false,
+    nextPage: () => setPage(p => p + 1),
+    previousPage: () => setPage(p => Math.max(0, p - 1)),
+    page,
+    refetch: query.refetch,
+  };
 };

@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/auth';
+import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface PresenceState {
   isOnline: boolean;
   lastSeen?: Date;
 }
 
+/**
+ * Hook para escutar presença em tempo real de um usuário específico
+ */
 export const useUserPresence = (userId: string) => {
   const [presence, setPresence] = useState<PresenceState>({
     isOnline: false,
@@ -15,62 +19,81 @@ export const useUserPresence = (userId: string) => {
   useEffect(() => {
     if (!userId) return;
 
-    // Buscar last_active do banco de dados
-    const fetchLastActive = async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('last_active')
-        .eq('id', userId)
-        .single();
+    let channel: RealtimeChannel;
 
-      if (data?.last_active) {
-        const lastActiveDate = new Date(data.last_active);
-        const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
-        
-        setPresence({
-          isOnline: lastActiveDate > fiveMinutesAgo,
-          lastSeen: lastActiveDate,
-        });
-      }
+    const setupPresence = async () => {
+      channel = supabase.channel(`presence:${userId}`);
+
+      channel
+        .on('presence', { event: 'sync' }, () => {
+          const state = channel.presenceState();
+          const isOnline = Object.keys(state).length > 0;
+          
+          setPresence({
+            isOnline,
+            lastSeen: isOnline ? new Date() : undefined,
+          });
+        })
+        .on('presence', { event: 'join' }, () => {
+          setPresence({
+            isOnline: true,
+            lastSeen: new Date(),
+          });
+        })
+        .on('presence', { event: 'leave' }, () => {
+          setPresence({
+            isOnline: false,
+            lastSeen: new Date(),
+          });
+        })
+        .subscribe();
     };
 
-    fetchLastActive();
-
-    // Atualizar a cada 30 segundos
-    const interval = setInterval(fetchLastActive, 30000);
+    setupPresence();
 
     return () => {
-      clearInterval(interval);
+      if (channel) {
+        supabase.removeChannel(channel);
+      }
     };
   }, [userId]);
 
   return presence;
 };
 
+/**
+ * Hook para broadcast de presença própria (usar uma única vez no layout principal)
+ */
 export const useBroadcastPresence = () => {
   const { user } = useAuth();
 
   useEffect(() => {
     if (!user) return;
 
-    const channel = supabase.channel(`presence:${user.id}`);
+    const channel = supabase.channel(`presence:${user.id}`, {
+      config: { presence: { key: user.id } },
+    });
+
+    channel.on('presence', { event: 'sync' }, () => {
+      if (import.meta.env.DEV) {
+        console.log('✅ Presence synced for user:', user.id);
+      }
+    });
 
     channel.subscribe(async (status) => {
       if (status === 'SUBSCRIBED') {
         await channel.track({
-          online: true,
-          userId: user.id,
-          timestamp: new Date().toISOString(),
+          user_id: user.id,
+          online_at: new Date().toISOString(),
         });
       }
     });
 
-    // Atualizar a cada 30 segundos
+    // Heartbeat a cada 30 segundos
     const interval = setInterval(() => {
       channel.track({
-        online: true,
-        userId: user.id,
-        timestamp: new Date().toISOString(),
+        user_id: user.id,
+        online_at: new Date().toISOString(),
       });
     }, 30000);
 
