@@ -1,17 +1,23 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Users, Clock, Sparkles, Compass } from 'lucide-react';
+import { Users, Clock, Sparkles, Compass, Inbox, Send } from 'lucide-react';
 import { MyConnectionsGrid } from './MyConnectionsGrid';
 import { PendingRequestsList } from './PendingRequestsList';
+import { SentRequestsList } from './SentRequestsList';
 import { DiscoverPeopleGrid } from './DiscoverPeopleGrid';
 import { useNetworkingStats } from '@/hooks/useNetworkingStats';
+import { usePendingRequests } from '@/hooks/networking/usePendingRequests';
+import { useSentRequests } from '@/hooks/networking/useSentRequests';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Brain } from 'lucide-react';
 
 export const ConnectionsHub = () => {
   const [activeTab, setActiveTab] = useState<string>('connections');
+  const [pendingSubTab, setPendingSubTab] = useState<string>('received');
   const { data: stats } = useNetworkingStats();
+  const { pendingRequests } = usePendingRequests();
+  const { sentRequests } = useSentRequests();
   const navigate = useNavigate();
 
   return (
@@ -72,7 +78,36 @@ export const ConnectionsHub = () => {
         </TabsContent>
 
         <TabsContent value="pending" className="mt-0">
-          <PendingRequestsList />
+          <Tabs value={pendingSubTab} onValueChange={setPendingSubTab} className="w-full">
+            <TabsList className="grid w-full max-w-md grid-cols-2 bg-muted/30">
+              <TabsTrigger value="received" className="gap-2">
+                <Inbox className="h-4 w-4" />
+                Recebidas
+                {pendingRequests.length > 0 && (
+                  <span className="ml-1 px-2 py-0.5 rounded-full bg-operational/20 text-operational text-xs font-medium">
+                    {pendingRequests.length}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="sent" className="gap-2">
+                <Send className="h-4 w-4" />
+                Enviadas
+                {sentRequests.length > 0 && (
+                  <span className="ml-1 px-2 py-0.5 rounded-full bg-muted text-muted-foreground text-xs font-medium">
+                    {sentRequests.length}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="received" className="mt-6">
+              <PendingRequestsList />
+            </TabsContent>
+
+            <TabsContent value="sent" className="mt-6">
+              <SentRequestsList />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         <TabsContent value="discover" className="mt-0">

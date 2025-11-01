@@ -157,6 +157,28 @@ export const useConnections = () => {
     },
   });
 
+  // Cancelar solicitação enviada
+  const cancelRequest = useMutation({
+    mutationFn: async (connectionId: string) => {
+      const { error } = await supabase
+        .from('member_connections')
+        .delete()
+        .eq('id', connectionId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['sent-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['discover-profiles'] });
+      queryClient.invalidateQueries({ queryKey: ['networking-stats'] });
+      toast.success('Solicitação cancelada');
+    },
+    onError: (error) => {
+      console.error('Error canceling request:', error);
+      toast.error('Erro ao cancelar solicitação');
+    },
+  });
+
   // Remover conexão
   const removeConnection = useMutation({
     mutationFn: async (connectionId: string) => {
@@ -254,6 +276,8 @@ export const useConnections = () => {
     rejectRequest: rejectRequest.mutate,
     isAccepting: acceptRequest.isPending,
     isRejecting: rejectRequest.isPending,
+    cancelRequest: cancelRequest.mutate,
+    isCancelingRequest: cancelRequest.isPending,
     sendConnectionRequest: sendConnectionRequest.mutate,
     sendConnectionRequestAsync: sendConnectionRequest.mutateAsync,
     isSendingRequest: sendConnectionRequest.isPending,

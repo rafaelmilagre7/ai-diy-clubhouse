@@ -156,7 +156,7 @@ export const MemberSidebarNavItems: React.FC<MemberSidebarNavItemsProps> = ({ si
               />
               <TooltipNavItem
                 to="/networking"
-                label="IA Networking"
+                label="Networking"
                 icon={Network}
                 sidebarOpen={sidebarOpen}
                 isNew={true}
