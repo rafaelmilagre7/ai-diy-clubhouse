@@ -238,9 +238,11 @@ export const useConnections = () => {
   // Mutation para enviar solicitação de conexão
   const sendConnectionRequest = useMutation({
     mutationFn: async (recipientId: string) => {
+      if (!user?.id) throw new Error('Usuário não autenticado');
+
       // ✅ MELHORIA #4: Rate limiting
       const { data: canProceed, error: rateLimitError } = await supabase
-        .rpc('check_connection_request_rate_limit');
+        .rpc('check_connection_request_rate_limit', { target_user_id: user.id });
 
       if (rateLimitError) {
         console.error('Erro ao verificar rate limit:', rateLimitError);

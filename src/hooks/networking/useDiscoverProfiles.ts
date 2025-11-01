@@ -15,33 +15,58 @@ export const useDiscoverProfiles = () => {
     queryFn: async () => {
       if (!user?.id) return { data: [], count: 0, hasMore: false };
 
-      // ✅ MELHORIA #1: Usar view otimizada do banco
       const from = page * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
 
-      const { data, error, count } = await supabase
-        .from('available_profiles_for_connection')
-        .select(`
-          id,
-          name,
-          email,
-          avatar_url,
-          company_name,
-          current_position,
-          industry
-        `, { count: 'exact' })
-        .not('name', 'is', null)
-        .order('created_at', { ascending: false })
-        .range(from, to);
+      try {
+        // ✅ Tentar usar view otimizada primeiro
+        const { data, error, count } = await supabase
+          .from('available_profiles_for_connection')
+          .select(`
+            id,
+            name,
+            email,
+            avatar_url,
+            company_name,
+            current_position,
+            industry
+          `, { count: 'exact' })
+          .not('name', 'is', null)
+          .order('created_at', { ascending: false })
+          .range(from, to);
 
-      if (error) throw error;
+        if (error) {
+          // Se a view não existir, usar query direta (fallback)
+          if (error.message?.includes('does not exist')) {
+            console.warn('View not found, using fallback query');
+            
+            const { data: fallbackData, error: fallbackError, count: fallbackCount } = await supabase
+              .from('profiles')
+              .select('id, name, email, avatar_url, company_name, current_position, industry', { count: 'exact' })
+              .not('name', 'is', null)
+              .neq('id', user.id)
+              .order('created_at', { ascending: false })
+              .range(from, to);
 
-      const hasMore = (count || 0) > (page + 1) * PAGE_SIZE;
+            if (fallbackError) throw fallbackError;
 
-      return { data: data as NetworkingProfile[], count: count || 0, hasMore };
+            const hasMore = (fallbackCount || 0) > (page + 1) * PAGE_SIZE;
+            return { data: fallbackData as NetworkingProfile[], count: fallbackCount || 0, hasMore };
+          }
+          
+          throw error;
+        }
+
+        const hasMore = (count || 0) > (page + 1) * PAGE_SIZE;
+        return { data: data as NetworkingProfile[], count: count || 0, hasMore };
+        
+      } catch (error) {
+        console.error('Error fetching discover profiles:', error);
+        throw error;
+      }
     },
     enabled: !!user?.id,
-    staleTime: 2 * 60 * 1000, // 2 minutos
+    staleTime: 2 * 60 * 1000,
   });
 
   return {
